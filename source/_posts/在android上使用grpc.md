@@ -457,6 +457,7 @@ public class MainActivity extends AppCompatActivity {
 
 ```
 
+完整的demo代码可以点[这里](https://github.com/bluesky466/grpc-android-demo)在我的github中查看
 
 # Android方法数不能超过65535的问题
 
