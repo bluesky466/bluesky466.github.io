@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>Java自定义注解和动态代理 | 修我矛戟</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在学习Retrofit的时候就对它奇特的使用方式感到十分的好奇，为什么定义一个接口，使用”@GET”,”@Query”这些奇怪的注解就能创建出能实际访问服务器的实例出来:
+12345678910public interface GitHubService &amp;#123;    @GET(&quot;/users/&amp;#123;user&amp;#125;/repos&quot;)    List&amp;lt;Repo&amp;gt; list">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java自定义注解和动态代理">
+<meta property="og:url" content="http://yoursite.com/2016/05/27/Java自定义注解和动态代理/index.html">
+<meta property="og:site_name" content="修我矛戟">
+<meta property="og:description" content="在学习Retrofit的时候就对它奇特的使用方式感到十分的好奇，为什么定义一个接口，使用”@GET”,”@Query”这些奇怪的注解就能创建出能实际访问服务器的实例出来:
+12345678910public interface GitHubService &amp;#123;    @GET(&quot;/users/&amp;#123;user&amp;#125;/repos&quot;)    List&amp;lt;Repo&amp;gt; list">
+<meta property="og:updated_time" content="2017-03-03T01:48:26.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java自定义注解和动态代理">
+<meta name="twitter:description" content="在学习Retrofit的时候就对它奇特的使用方式感到十分的好奇，为什么定义一个接口，使用”@GET”,”@Query”这些奇怪的注解就能创建出能实际访问服务器的实例出来:
+12345678910public interface GitHubService &amp;#123;    @GET(&quot;/users/&amp;#123;user&amp;#125;/repos&quot;)    List&amp;lt;Repo&amp;gt; list">
+  
+    <link rel="alternative" href="/atom.xml" title="修我矛戟" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="http://blog.islinjw.cn/head.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">林嘉伟</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">什么都想学</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>標籤</li>
+						
+						<li>友情链接</li>
+						
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+							<li><a href="/tags/读书笔记">读书笔记</a></li>
+				        
+							<li><a href="/tags/技术相关">技术相关</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="http://github.com/bluesky466" title="github">github</a>
+					        
+								<a class="mail" target="_blank" href="mailto:466474482@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/Android/" style="font-size: 18px;">Android</a> <a href="/tags/Http协议/" style="font-size: 12px;">Http协议</a> <a href="/tags/c/" style="font-size: 12px;">c++</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hexo/" style="font-size: 10px;">hexo</a> <a href="/tags/java/" style="font-size: 10px;">java</a> <a href="/tags/lua/" style="font-size: 14px;">lua</a> <a href="/tags/单元测试/" style="font-size: 12px;">单元测试</a> <a href="/tags/技术相关/" style="font-size: 20px;">技术相关</a> <a href="/tags/设计模式/" style="font-size: 12px;">设计模式</a> <a href="/tags/读书笔记/" style="font-size: 16px;">读书笔记</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://blog.guorongfei.com/">荣飞大大的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">林嘉伟</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img lazy-src="http://blog.islinjw.cn/head.jpg" class="js-avatar">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">林嘉伟</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">什么都想学</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+					<li><a href="/tags/读书笔记">读书笔记</a></li>
+		        
+					<li><a href="/tags/技术相关">技术相关</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="http://github.com/bluesky466" title="github">github</a>
+			        
+						<a class="mail" target="_blank" href="mailto:466474482@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-Java自定义注解和动态代理" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/05/27/Java自定义注解和动态代理/" class="article-date">
+  	<time datetime="2016-05-27T11:49:05.000Z" itemprop="datePublished">2016-05-27</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java自定义注解和动态代理
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java/">java</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/技术相关/">技术相关</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在学习Retrofit的时候就对它奇特的使用方式感到十分的好奇，为什么定义一个接口，使用”@GET”,”@Query”这些奇怪的注解就能创建出能实际访问服务器的实例出来:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">GitHubService</span> </span>&#123;</span><br><span class="line">    <span class="annotation">@GET</span>(<span class="string">"/users/&#123;user&#125;/repos"</span>)</span><br><span class="line">    <span class="function">List&lt;Repo&gt; <span class="title">listRepos</span><span class="params">(@Path(<span class="string">"user"</span>)</span> String user)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">RestAdapter restAdapter = <span class="keyword">new</span> RestAdapter.Builder()</span><br><span class="line">    .setEndpoint(<span class="string">"https://api.github.com"</span>)</span><br><span class="line">    .build();</span><br><span class="line">GitHubService service = restAdapter.create(GitHubService.class);</span><br><span class="line">List&lt;Repo&gt; repos = service.listRepos(<span class="string">"octocat"</span>);</span><br></pre></td></tr></table></figure>
+<p>尤其是对如何创建一个接口的实例感到万分的好奇，这几天回学校写毕设论文刚好有点空，于是就抽了点时间研究了一下。</p>
+<h1 id="u81EA_u5B9A_u4E49Java_u6CE8_u89E3"><a href="#u81EA_u5B9A_u4E49Java_u6CE8_u89E3" class="headerlink" title="自定义Java注解"></a>自定义Java注解</h1><p>说起Java的注解，大家都能很自然的想起”@Override”,”@Deprecated”,”@Documented”这些很常用的内置注解。但很多新手应该都不知道其实Java也是支持自定义注解的吧？(反正我以前是不知道的)</p>
+<h2 id="u5143_u6CE8_u89E3"><a href="#u5143_u6CE8_u89E3" class="headerlink" title="元注解"></a>元注解</h2><p>元注解的作用就是负责注解其他注解，Java5.0定义了4个标准的meta-annotation类型，它们被用来提供对其它 annotation类型作说明。Java5.0定义的元注解：</p>
+<ul>
+<li>@Target</li>
+<li>@Retention</li>
+<li>@Documented</li>
+<li>@Inherited</li>
+</ul>
+<h3 id="@Target"><a href="#@Target" class="headerlink" title="@Target"></a>@Target</h3><p>@Target说明了自定义注解的修饰类型，也就是说可以用它来声明自定义注解可以用在什么地方，它的取值范围有：</p>
+<ol>
+<li>ElementType.CONSTRUCTOR : 用于描述构造器</li>
+<li>ElementType.FIELD : 用于描述域</li>
+<li>ElementType.LOCAL_VARIABLE : 用于描述局部变量</li>
+<li>ElementType.METHOD : 用于描述方法</li>
+<li>ElementType.PACKAGE : 用于描述包</li>
+<li>ElementType.PARAMETER : 用于描述参数</li>
+<li>ElementType.TYPE : 用于描述类、接口(包括注解类型) 或enum声明</li>
+</ol>
+<p>例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> TypeAnnotation &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="annotation">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> MethodAnnotation &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="annotation">@Target</span>(ElementType.PARAMETER)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> ParamAnnotation &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>TypeAnnotation可以用来修饰描述类、接口(包括注解类型) 或enum声明，MethodAnnotation可以用来修饰方法，ParamAnnotation可以用来修饰参数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@TypeAnnotation</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">MyInterface</span> </span>&#123;</span><br><span class="line">	<span class="annotation">@MethodAnnotation</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">func</span><span class="params">(@ParamAnnotation String param)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="@Retention"><a href="#@Retention" class="headerlink" title="@Retention"></a>@Retention</h2><p>@Retention 定义了自定义注解的生命长短：某些Annotation仅出现在源代码中，而被编译器丢弃；而另一些却被编译在class文件中；编译在class文件中的Annotation可能会被虚拟机忽略，而另一些在class被装载时将被读取（请注意并不影响class的执行，因为Annotation与class在使用上是被分离的）。使用这个meta-Annotation可以对 Annotation的“生命周期”限制。</p>
+<p>它的取值有下面这些：</p>
+<ol>
+<li>RetentionPolicy.SOURCE : 在源文件中有效（即源文件保留）</li>
+<li>RetentionPolicy.CLASS : 在class文件中有效（即class保留）</li>
+<li>RetentionPolicy.RUNTIME : 时有效（即运行时保留）</li>
+</ol>
+<p>注解也是可以保存数据的，如value属性就是默认的数据保存属性:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> MethodAnnotation &#123;</span><br><span class="line">	<span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> "<span class="keyword">default</span> value"</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassA</span></span>&#123;</span><br><span class="line">	<span class="annotation">@MethodAnnotation</span>()</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span></span>&#123;&#125;</span><br><span class="line">    </span><br><span class="line">	<span class="annotation">@MethodAnnotation</span>(<span class="string">"data"</span>)</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span></span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>比如可以在程序运行的时候（因为声明了@Retention(RetentionPolicy.RUNTIME)）通过反射获取上面的ClassA.func1的注解MethodAnnotation保存的数据（默认值”default value”）和ClassA.func2的注解MethodAnnotation保存的数据（”data”）</p>
+<p>当然如果只能保持一个数据限制就太大了，你可以定义多个数据：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> MethodAnnotation &#123;</span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">enum</span> EnumData&#123; DATA1, DATA2, DATA3&#125;;</span><br><span class="line">	</span><br><span class="line">	<span class="function">String <span class="title">data1</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">int</span> <span class="title">data2</span><span class="params">()</span> <span class="keyword">default</span> 0xffff</span>;</span><br><span class="line">	<span class="function">EnumData <span class="title">data3</span><span class="params">()</span> <span class="keyword">default</span> EnumData.DATA1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassA</span></span>&#123;</span><br><span class="line">	<span class="annotation">@MethodAnnotation</span>(data1=<span class="string">"data1"</span>)</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">func1</span><span class="params">()</span></span>&#123;&#125;</span><br><span class="line">    </span><br><span class="line">	<span class="annotation">@MethodAnnotation</span>(data1=<span class="string">"data1"</span>, data2=<span class="number">0</span>, data3=MethodAnnotation.EnumData.DATA1)</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">func2</span><span class="params">()</span></span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当属性没有用default指定默认值得时候在使用的时候必须由用户设置属性值（如这里的data1）</p>
+<p>注解参数的可支持数据类型：</p>
+<p>1.所有基本数据类型（int,float,boolean,byte,double,char,long,short)<br>2.String类型<br>3.Class类型<br>4.enum类型<br>5.Annotation类型<br>6.以上所有类型的数组</p>
+<h2 id="@Inherited"><a href="#@Inherited" class="headerlink" title="@Inherited"></a>@Inherited</h2><p>@Inherited 元注解是一个标记注解，@Inherited阐述了某个被标注的类型是被继承的。如果一个使用了@Inherited修饰的annotation类型被用于一个class，则这个annotation将被用于该class的子类。</p>
+<h1 id="Java_u52A8_u6001_u4EE3_u7406"><a href="#Java_u52A8_u6001_u4EE3_u7406" class="headerlink" title="Java动态代理"></a>Java动态代理</h1><p>我知道可以用反射调用方法甚至创建对象，但我还真的没有想到怎样创建出一个接口的实例。用了各种形容方式之后终于找到了这种技术的专业名称:”动态代理”，下面是一个简单的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">MyInterface</span></span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">func</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyHandler</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="annotation">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span></span><br><span class="line">			<span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">		System.out.print(<span class="string">"call : "</span> + method.getName());</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">		MyInterface myInterface = (MyInterface)Proxy.newProxyInstance(</span><br><span class="line">        		 MyInterface.class.getClassLoader(), </span><br><span class="line">			     <span class="keyword">new</span> Class[]&#123;MyInterface.class&#125;, </span><br><span class="line">			     <span class="keyword">new</span> MyHandler());</span><br><span class="line">		myInterface.func();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个例子的输出为：</p>
+<blockquote>
+<p>call : func</p>
+</blockquote>
+<p>通过实现InvocationHandler接口，定义自己的handler类，再使用Proxy.newProxyInstance就可以实例化出一个接口的实例。当调用接口的方法的时候，InvocationHandler接口的invoke方法就会被调用，可以在这里编写实际的功能代码。</p>
+<p>当然也能将创建实例的代码抽象出来，实现复用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> &lt;T&gt;<span class="function">T <span class="title">newProxyInstance</span><span class="params">(Class&lt;T&gt; c)</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> (T)Proxy.newProxyInstance(</span><br><span class="line">				c.getClassLoader(),</span><br><span class="line">				<span class="keyword">new</span> Class&lt;?&gt;[]&#123;c&#125;,</span><br><span class="line">				<span class="keyword">new</span> DataBaseHalder(c));</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    <span class="comment">//使用方式</span></span><br><span class="line">    MyInterface myInterface = (MyInterface)newProxyInstance(MyInterface.class, <span class="keyword">new</span> MyHandler());</span><br><span class="line">	myInterface.func();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="u901A_u8FC7_u53CD_u5C04_u83B7_u53D6_u6CE8_u89E3_u4FDD_u5B58_u7684_u6570_u636E"><a href="#u901A_u8FC7_u53CD_u5C04_u83B7_u53D6_u6CE8_u89E3_u4FDD_u5B58_u7684_u6570_u636E" class="headerlink" title="通过反射获取注解保存的数据"></a>通过反射获取注解保存的数据</h1><ul>
+<li>通过Class.getAnnotation(XXXAnnotation.class)可以获取到方法的ElementType.METHOD或者类ElementType.TYPE类型的注解</li>
+<li>通过 Method.getParameterAnnotations()可以获取到方法各个参数的注解（ElementType.PARAMETER类型）</li>
+</ul>
+<p>这部分用代码来解释最直接了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> TypeAnnotation &#123;</span><br><span class="line">	<span class="function">String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="annotation">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> MethodAnnotation &#123;</span><br><span class="line">	<span class="function">String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="annotation">@Target</span>(ElementType.PARAMETER)</span><br><span class="line"><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> ParamAnnotation &#123;</span><br><span class="line">	<span class="function">String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="annotation">@TypeAnnotation</span>(<span class="string">"interface MyInterface"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">MyInterface</span></span>&#123;</span><br><span class="line">	<span class="annotation">@MethodAnnotation</span>(<span class="string">"MyInterface.func"</span>)</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">func</span><span class="params">(@ParamAnnotation(<span class="string">"param1"</span>)</span> String a, @<span class="title">ParamAnnotation</span><span class="params">(<span class="string">"param2"</span>)</span> <span class="keyword">int</span> b)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyHandler</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span></span>&#123;</span><br><span class="line">	<span class="keyword">private</span> Class mClass;</span><br><span class="line">	</span><br><span class="line">	MyHandler(Class c)&#123;</span><br><span class="line">		mClass = c;</span><br><span class="line">		TypeAnnotation typeAnnotation = (TypeAnnotation) mClass.getAnnotation(TypeAnnotation.class);</span><br><span class="line">		System.out.print(<span class="string">"TypeAnnotation : "</span> + typeAnnotation.value() + <span class="string">"\n"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="annotation">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span></span><br><span class="line">			<span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">		</span><br><span class="line">		MethodAnnotation methodAnnotation = (MethodAnnotation)method.getAnnotation(MethodAnnotation.class);</span><br><span class="line">		System.out.print(<span class="string">"MethodAnnotation : "</span> + methodAnnotation.value() + <span class="string">"\n"</span>);</span><br><span class="line"></span><br><span class="line">		Class[] parameterTypes = method.getParameterTypes();</span><br><span class="line">		Annotation[][] parameterAnnotations = method.getParameterAnnotations();</span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt; parameterAnnotations.length ; i++)&#123;</span><br><span class="line">			Class type = parameterTypes[i];</span><br><span class="line">			<span class="keyword">for</span>(Annotation annotation : parameterAnnotations[i])&#123;</span><br><span class="line">				<span class="keyword">if</span>(annotation <span class="keyword">instanceof</span> ParamAnnotation)&#123;</span><br><span class="line">					ParamAnnotation paramAnnotation = (ParamAnnotation) annotation;</span><br><span class="line">					System.out.print(paramAnnotation.value() + <span class="string">" - "</span> + args[i]  + <span class="string">"["</span> + type.getName() + <span class="string">"]"</span>+ <span class="string">"\n"</span>);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//调用</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">		MyInterface myInterface = (MyInterface)Proxy.newProxyInstance(</span><br><span class="line">				MyInterface.class.getClassLoader(), </span><br><span class="line">				<span class="keyword">new</span> Class&lt;?&gt;[]&#123;MyInterface.class&#125;,</span><br><span class="line">				<span class="keyword">new</span> MyHandler(MyInterface.class));</span><br><span class="line">		myInterface.func(<span class="string">"data1"</span>,<span class="number">123</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出如下：</p>
+<blockquote>
+<p>TypeAnnotation : interface MyInterface<br>MethodAnnotation : MyInterface.func<br>param1 - data1[java.lang.String]<br>param2 - 123[int]</p>
+</blockquote>
+<p>这里最难理解的就是这两行代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Class[] parameterTypes = method.getParameterTypes();</span><br><span class="line">Annotation[][] parameterAnnotations = method.getParameterAnnotations();</span><br></pre></td></tr></table></figure>
+<p>method.getParameterTypes() 可以获取到参数的类型，而method.getParameterAnnotations()则获取到一个二维数组，它保存了所有变量的全部注解。</p>
+<h1 id="u4E00_u4E2A_u7B80_u5355_u7684_u5E94_u7528_u5B9E_u4F8B"><a href="#u4E00_u4E2A_u7B80_u5355_u7684_u5E94_u7528_u5B9E_u4F8B" class="headerlink" title="一个简单的应用实例"></a>一个简单的应用实例</h1><p>用过Retrofit的人都知道，这种动态代理技术在框架搭建完成之后，使用起来便十分的便利了，有兴趣的同学可以去看看Retrofit的相关资料。我这里再写一个模拟操作数据库的小例子，展示一下这种框架的便捷性。</p>
+<p>首先是接口的定义：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@DataBase</span>(database=<span class="string">"SchoolSystem"</span>, username=<span class="string">"root"</span>, password=<span class="string">"123456"</span>, ip=<span class="string">"localhost"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IDataBaseOperation</span> </span>&#123;</span><br><span class="line">	<span class="annotation">@Table</span>(<span class="string">"Student"</span>)</span><br><span class="line">	<span class="annotation">@Column</span>(&#123;<span class="string">"name"</span>,<span class="string">"age"</span>,<span class="string">"sex"</span>&#125;)</span><br><span class="line">	List&lt;Map&lt;String,String&gt;&gt; getStudentByName(<span class="annotation">@Condition</span>(<span class="string">"name"</span>)String name);</span><br><span class="line">	</span><br><span class="line">	<span class="annotation">@Table</span>(<span class="string">"Student"</span>)</span><br><span class="line">	<span class="annotation">@Column</span>(&#123;<span class="string">"name"</span>,<span class="string">"age"</span>,<span class="string">"sex"</span>&#125;)</span><br><span class="line">	List&lt;Map&lt;String,String&gt;&gt; getStudentOlder(<span class="annotation">@Condition</span>(value=<span class="string">"age"</span>,compare=<span class="string">"&gt;"</span>)<span class="keyword">int</span> age);</span><br><span class="line"></span><br><span class="line">	<span class="annotation">@Table</span>(<span class="string">"Student"</span>)</span><br><span class="line">	<span class="annotation">@Column</span>(&#123;<span class="string">"name"</span>,<span class="string">"age"</span>,<span class="string">"sex"</span>&#125;)</span><br><span class="line">	List&lt;Map&lt;String,String&gt;&gt; getStudentBySexAndAge(<span class="annotation">@Condition</span>(<span class="string">"sex"</span>)String sex, <span class="annotation">@Condition</span>(<span class="string">"age"</span>)<span class="keyword">int</span> age);</span><br><span class="line">	</span><br><span class="line">	<span class="annotation">@Table</span>(<span class="string">"Teacher join Course on Teacher.id=Course.teacher"</span>)</span><br><span class="line">	<span class="annotation">@Column</span>(&#123;<span class="string">"Course.name"</span>&#125;)</span><br><span class="line">	List&lt;Map&lt;String,String&gt;&gt; getCourseByTeacher(<span class="annotation">@Condition</span>(<span class="string">"Teacher.name"</span>)String teacher);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>让我们先跳过实现细节，直接看它的用法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Main</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">		IDataBaseOperation oprBaseOperation = newProxyInstance(IDataBaseOperation.class, <span class="keyword">new</span> DataBaseHalder(IDataBaseOperation.class));</span><br><span class="line"></span><br><span class="line">		oprBaseOperation.getStudentByName(<span class="string">"小红"</span>);</span><br><span class="line">		oprBaseOperation.getStudentOlder(<span class="number">12</span>);</span><br><span class="line">		oprBaseOperation.getStudentBySexAndAge(<span class="string">"男"</span>, <span class="number">12</span>);</span><br><span class="line">		oprBaseOperation.getCourseByTeacher(<span class="string">"李老师"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> &lt;T&gt;<span class="function">T <span class="title">newProxyInstance</span><span class="params">(Class&lt;T&gt; c, InvocationHandler handler)</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> (T)Proxy.newProxyInstance(</span><br><span class="line">				c.getClassLoader(), </span><br><span class="line">				<span class="keyword">new</span> Class&lt;?&gt;[]&#123;c&#125;,</span><br><span class="line">				handler);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样我们就能看到这样的输出:</p>
+<blockquote>
+<p>===================================</p>
+<p>connect database :<br>ip : localhost<br>username : root<br>password : 123456<br>database : SchoolSystem</p>
+<p>===================================<br>select name,age,sex from Student where name = “小红”;<br>select name,age,sex from Student where age &gt; 12;<br>select name,age,sex from Student where sex = “男” and age = 12;<br>select Course.name from Teacher join Course on Teacher.id=Course.teacher where &gt; &gt; &gt; Teacher.name = “李老师”;</p>
+</blockquote>
+<p>这里没有真的去做数据库操作，只是用打印的方法模拟了一下，但如果真的要实现的话也是不难的。</p>
+<p>但从这几处使用代码来看，这个框架的是十分易用的，如果我们想要增加一个查询操作的话，只需要在IDataBaseOperation接口声明多一个方法，然后直接就能在得到实例后使用了。</p>
+<p>最后将一些细节代码也贴上来：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Column.java</span></span><br><span class="line"><span class="annotation">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> Column &#123;</span><br><span class="line">	String[] value();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//Condition.java</span><br><span class="line">@Target(ElementType.PARAMETER)</span><br><span class="line">@Retention(RetentionPolicy.RUNTIME)</span><br><span class="line">public @interface Condition &#123;</span><br><span class="line">	public String value();</span><br><span class="line">	public String compare() default "=";</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Table.java</span></span><br><span class="line"><span class="annotation">@Target</span>(ElementType.METHOD)</span><br><span class="line"><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> Table &#123;</span><br><span class="line">	<span class="function">String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//DataBase.java</span></span><br><span class="line"><span class="annotation">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="annotation">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> DataBase &#123;</span><br><span class="line">	<span class="function">String <span class="title">ip</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">database</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">username</span><span class="params">()</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">password</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//DataBaseHalder.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DataBaseHalder</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span></span>&#123;</span><br><span class="line">	<span class="keyword">private</span> Class mInterface;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">DataBaseHalder</span><span class="params">(Class object)</span></span>&#123;</span><br><span class="line">		mInterface = object;</span><br><span class="line">		</span><br><span class="line">		DataBase db = (DataBase) mInterface.getAnnotation(DataBase.class);</span><br><span class="line"></span><br><span class="line">		System.out.print(<span class="string">"===================================\n"</span>);</span><br><span class="line">		System.out.print(<span class="string">"connect database : \n"</span>);</span><br><span class="line">		System.out.print(<span class="string">"ip : "</span> + db.ip() + <span class="string">"\n"</span>);</span><br><span class="line">		System.out.print(<span class="string">"username : "</span> + db.username() + <span class="string">"\n"</span>);</span><br><span class="line">		System.out.print(<span class="string">"password : "</span> + db.password() + <span class="string">"\n"</span>);</span><br><span class="line">		System.out.print(<span class="string">"database : "</span> + db.database() + <span class="string">"\n"</span>);</span><br><span class="line">		System.out.print(<span class="string">"===================================\n"</span>);</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="annotation">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span></span><br><span class="line">			<span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">if</span>(method.getName().matches(<span class="string">"^get.*"</span>))&#123;</span><br><span class="line">			String sql =  <span class="string">"select "</span> + getColumns(method) + <span class="string">" from "</span> + getTable(method) </span><br><span class="line">					+ <span class="string">" where "</span> + getCondition(method, args) + <span class="string">";"</span>;</span><br><span class="line">			System.out.print(sql + <span class="string">"\n"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">private</span> String <span class="title">getTable</span><span class="params">(Method method)</span></span>&#123;</span><br><span class="line">		<span class="keyword">return</span> method.getAnnotation(Table.class).value();</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">private</span> String <span class="title">getColumns</span><span class="params">(Method method)</span></span>&#123;</span><br><span class="line">		String result = <span class="string">""</span>;</span><br><span class="line">		String conn = <span class="string">""</span>;</span><br><span class="line">		<span class="keyword">for</span> (String col : method.getAnnotation(Column.class).value()) &#123;</span><br><span class="line">			result += conn + col;</span><br><span class="line">			conn = <span class="string">","</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">private</span> String <span class="title">getCondition</span><span class="params">(Method method, Object[] args)</span> </span>&#123;</span><br><span class="line">		String result = <span class="string">""</span>;</span><br><span class="line">		String andConnect = <span class="string">""</span>;</span><br><span class="line">		Class[] parameterTypes = method.getParameterTypes();</span><br><span class="line"></span><br><span class="line">		Annotation[][] parameterAnnotations = method.getParameterAnnotations();</span><br><span class="line">		<span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i&lt; parameterAnnotations.length ; i++)&#123;</span><br><span class="line">			Class type = parameterTypes[i];</span><br><span class="line">			<span class="keyword">for</span>(Annotation annotation : parameterAnnotations[i])&#123;</span><br><span class="line">				<span class="keyword">if</span>(annotation <span class="keyword">instanceof</span> Condition)&#123;</span><br><span class="line">					result += andConnect + parseCondition(type, args[i], (Condition) annotation);</span><br><span class="line">					andConnect = <span class="string">" and "</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">private</span> String <span class="title">parseCondition</span><span class="params">(Class argType, Object arg, Annotation annotation)</span></span>&#123;</span><br><span class="line">		Condition condition = (Condition) annotation;</span><br><span class="line">		String result = condition.value() + <span class="string">" "</span> + condition.compare() + <span class="string">" "</span>;</span><br><span class="line">		<span class="keyword">if</span>(argType == String.class)&#123;</span><br><span class="line">			result += <span class="string">"\""</span> + arg + <span class="string">"\""</span>;</span><br><span class="line">		&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">			result += arg;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="u53E6_u5916_u7684_u4E00_u4E2A_u5B9E_u7528_u7684_u5C0F_u4F8B_u5B50"><a href="#u53E6_u5916_u7684_u4E00_u4E2A_u5B9E_u7528_u7684_u5C0F_u4F8B_u5B50" class="headerlink" title="另外的一个实用的小例子"></a>另外的一个实用的小例子</h1><p>相信做安卓的同学都遇到过在Activity.onCreate初始化的时候写一大堆的findViewById吧？这种重复性的无趣工作其实也可以用注解来简化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="annotation">@interface</span> ViewField &#123;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Processor</span></span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">process</span><span class="params">(Activity activity)</span> <span class="keyword">throws</span> IllegalAccessException </span>&#123;</span><br><span class="line">            Field[] fields = activity.getClass().getDeclaredFields();</span><br><span class="line">            ViewField ann = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">for</span> (Field field : fields) &#123;</span><br><span class="line">                ann = field.getAnnotation(ViewField.class);</span><br><span class="line">                <span class="keyword">if</span> (ann!=<span class="keyword">null</span>)&#123;</span><br><span class="line">                    field.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">                    field.set(activity, activity.findViewById(ann.value()));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后我们的Activity就可以这样写来让注解自动初始化View变量了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    <span class="annotation">@ViewField</span>(R.id.text)</span><br><span class="line">    <span class="keyword">private</span> TextView mTextView;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@ViewField</span>(R.id.button)</span><br><span class="line">    <span class="keyword">private</span> Button mButton;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@ViewField</span>(R.id.image)</span><br><span class="line">    <span class="keyword">private</span> ImageView mImageView;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            ViewField.Processor.process(<span class="keyword">this</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IllegalAccessException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        mTextView.setText(<span class="string">"text"</span>);</span><br><span class="line">        mButton.setText(<span class="string">"button"</span>);</span><br><span class="line">        mImageView.setImageResource(R.mipmap.ic_launcher);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当然有人说用注解，效率会很低。但我觉得这里的额外消耗其实根本不起眼，用这点小损耗换来编码的便利性是很值得的。但如果真的很在意，也能用下面的泛型方法简化findViewById操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> &lt;T extends View&gt; <span class="function">T <span class="title">generateFindViewById</span><span class="params">(<span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">	<span class="comment">//return返回view时,加上泛型T</span></span><br><span class="line">	<span class="keyword">return</span> (T) findViewById(id);</span><br><span class="line">&#125;</span><br><span class="line">mButton = generateFindViewById(R.id.button);</span><br></pre></td></tr></table></figure>
+<p>这样能减少强制转换的操作，但编写效率还是不如用注解。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/10/23/lua泛型for的原理/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          lua泛型for的原理
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/03/04/学习HTTP协议-用socket实现http访问/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">学习HTTP协议-用socket实现http访问</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share_jia">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到: &nbsp; </span>
+		<a class="jiathis_button_facebook"></a> 
+    <a class="jiathis_button_twitter"></a>
+    <a class="jiathis_button_plus"></a> 
+    <a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+    <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2017 林嘉伟
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>

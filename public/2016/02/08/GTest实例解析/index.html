@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>GTest实例解析 | 修我矛戟</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="gtest是google的一套开源的c++单元测试框架，可以方便程序员对自己的代码进行单元测试。学习这套框架，除了墙外的官方文档之外，我强力推荐玩转Google开源C++单元测试框架Google Test系列。
+这系列的博客已经将gtest讲的十分详细了，所以我这篇博客就不再详细介绍gtest的基本使用方法了，而是通过一个简单的例子，介绍一下如何在实际的项目中使用它。同时也会通过分析gtest的源">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GTest实例解析">
+<meta property="og:url" content="http://yoursite.com/2016/02/08/GTest实例解析/index.html">
+<meta property="og:site_name" content="修我矛戟">
+<meta property="og:description" content="gtest是google的一套开源的c++单元测试框架，可以方便程序员对自己的代码进行单元测试。学习这套框架，除了墙外的官方文档之外，我强力推荐玩转Google开源C++单元测试框架Google Test系列。
+这系列的博客已经将gtest讲的十分详细了，所以我这篇博客就不再详细介绍gtest的基本使用方法了，而是通过一个简单的例子，介绍一下如何在实际的项目中使用它。同时也会通过分析gtest的源">
+<meta property="og:image" content="http://yoursite.com/GTest实例解析/1.jpg">
+<meta property="og:updated_time" content="2017-03-03T01:48:26.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GTest实例解析">
+<meta name="twitter:description" content="gtest是google的一套开源的c++单元测试框架，可以方便程序员对自己的代码进行单元测试。学习这套框架，除了墙外的官方文档之外，我强力推荐玩转Google开源C++单元测试框架Google Test系列。
+这系列的博客已经将gtest讲的十分详细了，所以我这篇博客就不再详细介绍gtest的基本使用方法了，而是通过一个简单的例子，介绍一下如何在实际的项目中使用它。同时也会通过分析gtest的源">
+  
+    <link rel="alternative" href="/atom.xml" title="修我矛戟" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="http://blog.islinjw.cn/head.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">林嘉伟</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">什么都想学</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>標籤</li>
+						
+						<li>友情链接</li>
+						
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+							<li><a href="/tags/读书笔记">读书笔记</a></li>
+				        
+							<li><a href="/tags/技术相关">技术相关</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="http://github.com/bluesky466" title="github">github</a>
+					        
+								<a class="mail" target="_blank" href="mailto:466474482@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/Android/" style="font-size: 18px;">Android</a> <a href="/tags/Http协议/" style="font-size: 12px;">Http协议</a> <a href="/tags/c/" style="font-size: 12px;">c++</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hexo/" style="font-size: 10px;">hexo</a> <a href="/tags/java/" style="font-size: 10px;">java</a> <a href="/tags/lua/" style="font-size: 14px;">lua</a> <a href="/tags/单元测试/" style="font-size: 12px;">单元测试</a> <a href="/tags/技术相关/" style="font-size: 20px;">技术相关</a> <a href="/tags/设计模式/" style="font-size: 12px;">设计模式</a> <a href="/tags/读书笔记/" style="font-size: 16px;">读书笔记</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://blog.guorongfei.com/">荣飞大大的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">林嘉伟</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img lazy-src="http://blog.islinjw.cn/head.jpg" class="js-avatar">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">林嘉伟</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">什么都想学</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+					<li><a href="/tags/读书笔记">读书笔记</a></li>
+		        
+					<li><a href="/tags/技术相关">技术相关</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="http://github.com/bluesky466" title="github">github</a>
+			        
+						<a class="mail" target="_blank" href="mailto:466474482@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-GTest实例解析" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/02/08/GTest实例解析/" class="article-date">
+  	<time datetime="2016-02-08T09:01:49.000Z" itemprop="datePublished">2016-02-08</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      GTest实例解析
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/c/">c++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/单元测试/">单元测试</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/技术相关/">技术相关</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>gtest是google的一套开源的c++单元测试框架，可以方便程序员对自己的代码进行单元测试。学习这套框架，除了墙外的官方文档之外，我强力推荐<a href="http://www.cnblogs.com/coderzh/archive/2009/04/06/1426755.html" target="_blank" rel="external">玩转Google开源C++单元测试框架Google Test系列</a>。</p>
+<p>这系列的博客已经将gtest讲的十分详细了，所以我这篇博客就不再详细介绍gtest的基本使用方法了，而是通过一个简单的例子，介绍一下如何在实际的项目中使用它。同时也会通过分析gtest的源代码，使得大家能够更好的理解gtest的工作原理</p>
+<h2 id="u9700_u8981_u6D4B_u8BD5_u7684_u7C7B"><a href="#u9700_u8981_u6D4B_u8BD5_u7684_u7C7B" class="headerlink" title="需要测试的类"></a><strong>需要测试的类</strong></h2><p>首先我实现了一个简单的类TwoDimensionalMark，它的功能相当于bool二维数组，可以将二维下标标记为true或者false。只不过它内部使用位运算，一个字节可以记录八个标记数据，可以大量节省内存。它的声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> TwoDimensionalMark&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        TwoDimensionalMark(<span class="keyword">int</span> row, <span class="keyword">int</span> col, <span class="keyword">bool</span> flag = <span class="literal">false</span>);</span><br><span class="line">        TwoDimensionalMark(<span class="keyword">const</span> TwoDimensionalMark&amp; cpy)；</span><br><span class="line">        ~TwoDimensionalMark();</span><br><span class="line">        <span class="keyword">const</span> TwoDimensionalMark&amp; <span class="keyword">operator</span> =(<span class="keyword">const</span> TwoDimensionalMark&amp; cpy)；</span><br><span class="line"></span><br><span class="line">        <span class="comment">//将所有的位置标记为true或者false</span></span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">clean</span><span class="params">(<span class="keyword">bool</span> mark)</span></span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//设置(x,y)下标为true或者false</span></span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">set</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y, <span class="keyword">bool</span> mark)</span></span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//获取(x,y)下标的数据</span></span><br><span class="line">        <span class="function"><span class="keyword">bool</span> <span class="title">check</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span><span class="keyword">const</span></span>;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">int</span> <span class="title">getRow</span><span class="params">()</span></span>;</span><br><span class="line">        <span class="function"><span class="keyword">int</span> <span class="title">getCol</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="u5B8C_u6574_u7684_u6D4B_u8BD5_u4EE3_u7801"><a href="#u5B8C_u6574_u7684_u6D4B_u8BD5_u4EE3_u7801" class="headerlink" title="完整的测试代码"></a><strong>完整的测试代码</strong></h2><p>我先把完整的测试代码放在这里，可以先简单浏览一遍。<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">"TwoDimensionalMark.h"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">"gtest/gtest.h"</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;cstdlib&gt;</span></span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;vector&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> MarkSize&#123;</span><br><span class="line">    MarkSize(<span class="keyword">int</span> r, <span class="keyword">int</span> c): row(r),col(c)&#123;&#125;</span><br><span class="line">    <span class="keyword">int</span> row, col;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">class</span> TestWithMarkSize : <span class="keyword">public</span> testing::TestWithParam&lt;MarkSize&gt;&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">struct</span> Coord&#123;</span><br><span class="line">        <span class="keyword">int</span> x, y;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">bool</span>&gt; &gt; CreateContrast(<span class="keyword">int</span> row, <span class="keyword">int</span> col, <span class="keyword">bool</span> flag)&#123;</span><br><span class="line">        <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">bool</span>&gt; &gt; contrast(row);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++)&#123;</span><br><span class="line">            contrast[i] = <span class="built_in">vector</span>&lt;<span class="keyword">bool</span>&gt;(col, flag);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> contrast;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">vector</span>&lt;Coord&gt; CreateRandCoords(<span class="keyword">int</span> row, <span class="keyword">int</span> col)&#123;</span><br><span class="line">        <span class="keyword">int</span> yRange = row * <span class="number">3</span>;</span><br><span class="line">        <span class="keyword">int</span> xRange = col * <span class="number">3</span>;</span><br><span class="line">        <span class="keyword">int</span> numRandCoord = row * col / <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">vector</span>&lt;Coord&gt; coords;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numRandCoord; i++)&#123;</span><br><span class="line">            <span class="keyword">int</span> x = (rand() % xRange) - col;</span><br><span class="line">            <span class="keyword">int</span> y = (rand() % yRange) - row;</span><br><span class="line">            coords.push_back(&#123; x, y &#125;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> coords;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetFlag</span><span class="params">(TwoDimensionalMark* mark,  <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">bool</span>&gt; &gt;* contrast,  </span><br><span class="line">                <span class="keyword">const</span> MarkSize&amp; size, <span class="keyword">const</span> <span class="built_in">vector</span>&lt;Coord&gt;&amp; coords, <span class="keyword">bool</span> flag)</span></span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> c : coords)&#123;</span><br><span class="line">            mark-&gt;<span class="built_in">set</span>(c.x, c.y, flag);</span><br><span class="line">            <span class="comment">//随机位置有可能在row，col之外，要防止溢出</span></span><br><span class="line">            <span class="keyword">if</span> (c.x &gt;= <span class="number">0</span> &amp;&amp; c.x &lt; size.col &amp;&amp; c.y &gt;= <span class="number">0</span> &amp;&amp; c.y &lt; size.row)&#123;</span><br><span class="line">                (*contrast)[c.y][c.x] = flag;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//行数多于列数的情况</span></span><br><span class="line">INSTANTIATE_TEST_CASE_P(RowLTCol, TestWithMarkSize,	testing::Values(MarkSize(<span class="number">200</span>, <span class="number">100</span>), MarkSize(<span class="number">50</span>, <span class="number">30</span>)));</span><br><span class="line"><span class="comment">//行数少于列数的情况</span></span><br><span class="line">INSTANTIATE_TEST_CASE_P(ColLTRow, TestWithMarkSize,	testing::Values(MarkSize(<span class="number">10</span>, <span class="number">100</span>), MarkSize(<span class="number">3</span>, <span class="number">10</span>)));</span><br><span class="line"><span class="comment">//行数等于列数的情况</span></span><br><span class="line">INSTANTIATE_TEST_CASE_P(RowEQCol, TestWithMarkSize,	testing::Values(MarkSize(<span class="number">100</span>, <span class="number">100</span>), MarkSize(<span class="number">3</span>, <span class="number">3</span>)));</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">TEST_P(TestWithMarkSize,testWithTrueClean)&#123;</span><br><span class="line">    MarkSize size = GetParam();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//初始化TwoDimensionalMark和用来做对比的contrast,将他们全部用true填充</span></span><br><span class="line">    <span class="function">TwoDimensionalMark <span class="title">mark</span><span class="params">(size.row, size.col)</span></span>;</span><br><span class="line">    mark.clean(<span class="literal">true</span>);</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">bool</span>&gt; &gt; contrast = CreateContrast(size.row, size.col, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//验证mark和contrast里面都是true</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size.row; i++)&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; size.col; j++)&#123;</span><br><span class="line">            ASSERT_TRUE(mark.check(j, i));</span><br><span class="line">            ASSERT_TRUE(contrast[i][j]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//随机将一些坐标位置,这个函数生成的随机位置有可能在row，col之外</span></span><br><span class="line">    <span class="built_in">vector</span>&lt;Coord&gt; coords = CreateRandCoords(size.row, size.col);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//将mark和contrast的之前随机生成的位置设为false</span></span><br><span class="line">    SetFlag(&amp;mark, &amp;contrast, size, coords, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//检测随机生成的位置上的值有没有设置正确</span></span><br><span class="line">    <span class="comment">//mark若位置超出范围则返回false,而contrast则需要防止溢出</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> c : coords)&#123;</span><br><span class="line">        ASSERT_FALSE(mark.check(c.x,c.y));</span><br><span class="line">        <span class="keyword">if</span> (c.x &gt;= <span class="number">0</span> &amp;&amp; c.x &lt; size.col &amp;&amp; c.y &gt;= <span class="number">0</span> &amp;&amp; c.y &lt; size.row)&#123;</span><br><span class="line">            ASSERT_FALSE(contrast[c.y][c.x]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//对比contrast和mark，两者应该相等</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> y = <span class="number">0</span>; y &lt; size.row; y++)</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> x = <span class="number">0</span>; x &lt; size.col; x++)&#123;</span><br><span class="line">            ASSERT_EQ(contrast[y][x], mark.check(x, y));</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">TEST_P(TestWithMarkSize, testWithFalseClean)&#123;</span><br><span class="line">    MarkSize size = GetParam();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//初始化TwoDimensionalMark和用来做对比的contrast,将他们全部用false填充</span></span><br><span class="line">    <span class="function">TwoDimensionalMark <span class="title">mark</span><span class="params">(size.row, size.col)</span></span>;</span><br><span class="line">    mark.clean(<span class="literal">false</span>);</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">bool</span>&gt; &gt; contrast = CreateContrast(size.row, size.col, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//验证mark和contrast里面都是false</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size.row; i++)&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; size.col; j++)&#123;</span><br><span class="line">            ASSERT_FALSE(mark.check(j, i));</span><br><span class="line">            ASSERT_FALSE(contrast[i][j]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//随机将一些坐标位置,这个函数生成的随机位置有可能在row，col之外</span></span><br><span class="line">    <span class="built_in">vector</span>&lt;Coord&gt; coords = CreateRandCoords(size.row, size.col);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//将mark和contrast的之前随机生成的位置设为true</span></span><br><span class="line">    SetFlag(&amp;mark, &amp;contrast, size, coords, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//检测随机生成的位置上的值有没有设置正确</span></span><br><span class="line">    <span class="comment">//mark若位置超出范围则返回false,而contrast则需要防止溢出</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> c : coords)&#123;</span><br><span class="line">        <span class="keyword">if</span> (c.x &gt;= <span class="number">0</span> &amp;&amp; c.x &lt; size.col &amp;&amp; c.y &gt;= <span class="number">0</span> &amp;&amp; c.y &lt; size.row)&#123;</span><br><span class="line">            ASSERT_TRUE(contrast[c.y][c.x]);</span><br><span class="line">            ASSERT_TRUE(mark.check(c.x, c.y));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span>&#123;</span><br><span class="line">            ASSERT_FALSE(mark.check(c.x, c.y));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>* argv[])</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    testing::InitGoogleTest(&amp;argc, argv);</span><br><span class="line">    <span class="keyword">int</span> result =  RUN_ALL_TESTS();</span><br><span class="line">    getchar();</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="u4F20_u5165_u591A_u4E2A_u53C2_u6570"><a href="#u4F20_u5165_u591A_u4E2A_u53C2_u6570" class="headerlink" title="传入多个参数"></a><strong>传入多个参数</strong></h2><p>为了覆盖各种大小的情况（行和列数量相等，行多于列，行少于列），需要定义多个不同行列数的TwoDimensionalMark。但如果每个测试用例都手动硬编码的话将会有许多的重复代码，这个时候就可以使用参数化的方法去将行列数作为参数传入各个测试用例中，详细的介绍看<a href="http://www.cnblogs.com/coderzh/archive/2009/04/08/1431297.html" target="_blank" rel="external">这里</a>。</p>
+<p>这篇博客只写到了一个参数的处理。但我们这里需要传入行数和列数两个参数应该怎么办？<br>其实很方法也很简单，首先定义一个结构体MarkSize用于保存行数和列数</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> MarkSize&#123;</span><br><span class="line">    MarkSize(<span class="keyword">int</span> r, <span class="keyword">int</span> c): row(r),col(c)&#123;&#125;</span><br><span class="line">    <span class="keyword">int</span> row, col;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>用它作为TestWithParam的模板参数，再声明一个类继承于它。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> TestWithMarkSize : <span class="keyword">public</span> testing::TestWithParam&lt;MarkSize&gt;&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后传入参数，这里我定义了三组参数，每组两个。分别对应行数比较多，列数比较多，行数列数一样多三种情况：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//行数多于列数的情况</span></span><br><span class="line">INSTANTIATE_TEST_CASE_P(RowLTCol, TestWithMarkSize,	testing::Values(MarkSize(<span class="number">200</span>, <span class="number">100</span>), MarkSize(<span class="number">50</span>, <span class="number">30</span>)));</span><br><span class="line"><span class="comment">//行数少于列数的情况</span></span><br><span class="line">INSTANTIATE_TEST_CASE_P(ColLTRow, TestWithMarkSize,	testing::Values(MarkSize(<span class="number">10</span>, <span class="number">100</span>), MarkSize(<span class="number">3</span>, <span class="number">10</span>)));</span><br><span class="line"><span class="comment">//行数等于列数的情况</span></span><br><span class="line">INSTANTIATE_TEST_CASE_P(RowEQCol, TestWithMarkSize,	testing::Values(MarkSize(<span class="number">100</span>, <span class="number">100</span>), MarkSize(<span class="number">3</span>, <span class="number">3</span>)));</span><br></pre></td></tr></table></figure>
+<p>这样一来，只要是 test_case_name 为 TestWithMarkSize 的测试用例都可以使用GetParam方法获取传入的参数了：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">   TEST_P(TestWithMarkSize,testWithTrueClean)&#123;</span><br><span class="line">       MarkSize size = GetParam();</span><br><span class="line">       ...</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   TEST_P(TestWithMarkSize, testWithFalseClean)&#123;</span><br><span class="line">	MarkSize size = GetParam();</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="TEST_P_u6E90_u7801_u89E3_u6790"><a href="#TEST_P_u6E90_u7801_u89E3_u6790" class="headerlink" title="TEST_P源码解析"></a><strong>TEST_P源码解析</strong></h2><p>TEST_P 宏的定义如下</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># define TEST_P(test_case_name, test_name) \</span><br><span class="line">  class GTEST_TEST_CLASS_NAME_(test_case_name, test_name) \</span><br><span class="line">      : public test_case_name &#123; \</span><br><span class="line">  ...</span><br><span class="line">  &#125;; \</span><br><span class="line">  ...</span><br><span class="line">  void GTEST_TEST_CLASS_NAME_(test_case_name, test_name)::TestBody()</span><br></pre></td></tr></table></figure>
+<p>GTEST_TEST_CLASS<em>NAME</em>又是个什么东西？其实它的功能十分简单，就是将类名拼接出来而已，它的定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">define</span> GTEST_TEST_CLASS_NAME_(test_case_name, test_name) \</span><br><span class="line">  test_case_name##_##test_name##_Test</span></span><br></pre></td></tr></table></figure>
+<p>所以我们使用 TEST_P(TestWithMarkSize,testWithTrueClean){…} 实际上就是定义了一个 TestWithMarkSize 的子类 TestWithMarkSize_testWithTrueClean_Test。</p>
+<p>而花括号里面实际上就是void TestWithMarkSize_testWithTrueClean_Test::TestBody()的实现。</p>
+<p>也就是说，实际上我们的测试用例都是TestWithMarkSize的子类。所以我们可以将一些公共的方法和数据结构定义在TestWithMarkSize内，只要将他们声明为protected或者public，就能在TEST_P(TestWithMarkSize,testWithTrueClean){…} 和 TEST_P(TestWithMarkSize,testWithFalseClean){…} 内使用。</p>
+<p>这样既可以提炼重复代码，又能将它们的作用范围限定在测试用例中，防止提炼出来的函数或者定义的数据结构放在全局影响实际的功能代码。</p>
+<p>如我这里定义的 Coord 结构体和CreateContrast、CreateRandCoords 和 SetFlag 方法。</p>
+<p>而GetParam()的定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> ParamType* parameter_;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">const</span> ParamType&amp; <span class="title">GetParam</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123;</span><br><span class="line">    GTEST_CHECK_(parameter_ != <span class="literal">NULL</span>)</span><br><span class="line">        &lt;&lt; <span class="string">"GetParam() can only be called inside a value-parameterized test "</span></span><br><span class="line">        &lt;&lt; <span class="string">"-- did you intend to write TEST_P instead of TEST_F?"</span>;</span><br><span class="line">    <span class="keyword">return</span> *parameter_;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>既然 const T* WithParamInterface<t>::parameter_ 是有一个类静态成员变量，那就不难理解为什么所有继承于 TestWithMarkSize 的测试用例都能拿到同样的参数了。</t></p>
+<h2 id="u6D4B_u8BD5_u7528_u4F8B_u5206_u6790"><a href="#u6D4B_u8BD5_u7528_u4F8B_u5206_u6790" class="headerlink" title="测试用例分析"></a><strong>测试用例分析</strong></h2><p>要知道 TwoDimensionalMark 实际上的功能是和bool二维数组基本一样的，所以我们就很自然的想到使用一个对比用的bool二维数组作为参照，去测试 TwoDimensionalMark 的功能究竟有没有bug。</p>
+<p>TEST_P(TestWithMarkSize,testWithTrueClean) 的测试分下面三个步骤：</p>
+<p>1.根据传入的数组大小，创建了一个 TwoDimensionalMark 和用两重 vector 实现的 bool 二维数组。</p>
+<p>2.将它们全部用true填充，然后验证每一个下标的数据是否均为 true，如此去测试TwoDimensionalMark::clean(true) 的功能</p>
+<p>3.随机生成一些坐标，将 TwoDimensionalMark 和 bool 二维数组对应这些坐标的数据都设为 false 。然后检测设置的位置的数据是否都为false，还有对比两者每个下标的数据是否相等。以测试 set 和 check 方法是否正确。同时因为这些下标有些是超出范围之外的，也能测试 TwoDimensionalMark 对超出范围的操作是否正确</p>
+<p>代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">TEST_P(TestWithMarkSize,testWithTrueClean)&#123;</span><br><span class="line">    MarkSize size = GetParam();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//初始化TwoDimensionalMark和用来做对比的contrast,将他们全部用true填充</span></span><br><span class="line">    <span class="function">TwoDimensionalMark <span class="title">mark</span><span class="params">(size.row, size.col)</span></span>;</span><br><span class="line">    mark.clean(<span class="literal">true</span>);</span><br><span class="line">    <span class="built_in">vector</span>&lt;<span class="built_in">vector</span>&lt;<span class="keyword">bool</span>&gt; &gt; contrast = CreateContrast(size.row, size.col, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//验证mark和contrast里面都是true</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; size.row; i++)&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; size.col; j++)&#123;</span><br><span class="line">            ASSERT_TRUE(mark.check(j, i));</span><br><span class="line">            ASSERT_TRUE(contrast[i][j]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//随机将一些坐标位置,这个函数生成的随机位置有可能在row，col之外</span></span><br><span class="line">    <span class="built_in">vector</span>&lt;Coord&gt; coords = CreateRandCoords(size.row, size.col);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//将mark和contrast的之前随机生成的位置设为false</span></span><br><span class="line">    SetFlag(&amp;mark, &amp;contrast, size, coords, <span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//检测随机生成的位置上的值有没有设置正确</span></span><br><span class="line">    <span class="comment">//mark若位置超出范围则返回false,而contrast则需要防止溢出</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> c : coords)&#123;</span><br><span class="line">        ASSERT_FALSE(mark.check(c.x,c.y));</span><br><span class="line">        <span class="keyword">if</span> (c.x &gt;= <span class="number">0</span> &amp;&amp; c.x &lt; size.col &amp;&amp; c.y &gt;= <span class="number">0</span> &amp;&amp; c.y &lt; size.row)&#123;</span><br><span class="line">            ASSERT_FALSE(contrast[c.y][c.x]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//对比contrast和mark，两者应该相等</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> y = <span class="number">0</span>; y &lt; size.row; y++)</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> x = <span class="number">0</span>; x &lt; size.col; x++)&#123;</span><br><span class="line">            ASSERT_EQ(contrast[y][x], mark.check(x, y));</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>TEST_P(TestWithMarkSize, testWithFalseClean) 和上面的差不多，只不过换成一开始用 false 填充，之后设置随机下标的数据为 true，读者可以自己查看代码，这里就不详细分析了。</p>
+<h2 id="u6D4B_u8BD5_u7ED3_u679C"><a href="#u6D4B_u8BD5_u7ED3_u679C" class="headerlink" title="测试结果"></a><strong>测试结果</strong></h2><p>运行测试代码得到下面的结果：<br><img src="/GTest实例解析/1.jpg"></p>
+<p>全部测试均通过！</p>
+<p>完整代码:<a href="https://github.com/bluesky466/GTestDemo" target="_blank" rel="external">https://github.com/bluesky466/GTestDemo</a><br>（为了方便，我直接将实现写在了头文件里，好孩子不要学~）</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/02/10/读书笔记-《第一行代码——Android》/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          读书笔记 -《第一行代码——Android》
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/01/30/读书笔记-《代码整洁之道》/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">读书笔记 -《代码整洁之道》</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share_jia">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到: &nbsp; </span>
+		<a class="jiathis_button_facebook"></a> 
+    <a class="jiathis_button_twitter"></a>
+    <a class="jiathis_button_plus"></a> 
+    <a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+    <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2017 林嘉伟
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>

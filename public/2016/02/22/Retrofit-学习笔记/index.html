@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>Retrofit 学习笔记 | 修我矛戟</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="工欲善其事必先利其器，使用一些强大方便的器，可以大大的提高开发的效率，我认为 Retrofit 和 RxJava 就是这样的利器。
+Retrofit 是一个开源的 java http 请求库，目前已经更新到 2.0.0-beta4，官方的介绍是：
+
+Type-safe HTTP client for Android and Java by Square, Inc.
+
+我在学习它的过程中遇到了不少问">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Retrofit 学习笔记">
+<meta property="og:url" content="http://yoursite.com/2016/02/22/Retrofit-学习笔记/index.html">
+<meta property="og:site_name" content="修我矛戟">
+<meta property="og:description" content="工欲善其事必先利其器，使用一些强大方便的器，可以大大的提高开发的效率，我认为 Retrofit 和 RxJava 就是这样的利器。
+Retrofit 是一个开源的 java http 请求库，目前已经更新到 2.0.0-beta4，官方的介绍是：
+
+Type-safe HTTP client for Android and Java by Square, Inc.
+
+我在学习它的过程中遇到了不少问">
+<meta property="og:image" content="http://yoursite.com/Retrofit-学习笔记/1.jpg">
+<meta property="og:image" content="http://yoursite.com/Retrofit-学习笔记/2.jpg">
+<meta property="og:image" content="http://yoursite.com/Retrofit-学习笔记/3.jpg">
+<meta property="og:image" content="http://yoursite.com/Retrofit-学习笔记/4.jpg">
+<meta property="og:image" content="http://yoursite.com/Retrofit-学习笔记/5.jpg">
+<meta property="og:image" content="http://yoursite.com/Retrofit-学习笔记/6.jpg">
+<meta property="og:image" content="http://yoursite.com/Retrofit-学习笔记/7.jpg">
+<meta property="og:image" content="http://yoursite.com/Retrofit-学习笔记/8.jpg">
+<meta property="og:updated_time" content="2017-03-03T01:48:26.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Retrofit 学习笔记">
+<meta name="twitter:description" content="工欲善其事必先利其器，使用一些强大方便的器，可以大大的提高开发的效率，我认为 Retrofit 和 RxJava 就是这样的利器。
+Retrofit 是一个开源的 java http 请求库，目前已经更新到 2.0.0-beta4，官方的介绍是：
+
+Type-safe HTTP client for Android and Java by Square, Inc.
+
+我在学习它的过程中遇到了不少问">
+  
+    <link rel="alternative" href="/atom.xml" title="修我矛戟" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="http://blog.islinjw.cn/head.jpg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">林嘉伟</a></h1>
+		</hgroup>
+
+		
+		<p class="header-subtitle">什么都想学</p>
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>菜单</li>
+						<li>標籤</li>
+						
+						<li>友情链接</li>
+						
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+							<li><a href="/tags/读书笔记">读书笔记</a></li>
+				        
+							<li><a href="/tags/技术相关">技术相关</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="http://github.com/bluesky466" title="github">github</a>
+					        
+								<a class="mail" target="_blank" href="mailto:466474482@qq.com" title="mail">mail</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/Android/" style="font-size: 18px;">Android</a> <a href="/tags/Http协议/" style="font-size: 12px;">Http协议</a> <a href="/tags/c/" style="font-size: 12px;">c++</a> <a href="/tags/grpc/" style="font-size: 10px;">grpc</a> <a href="/tags/hexo/" style="font-size: 10px;">hexo</a> <a href="/tags/java/" style="font-size: 10px;">java</a> <a href="/tags/lua/" style="font-size: 14px;">lua</a> <a href="/tags/单元测试/" style="font-size: 12px;">单元测试</a> <a href="/tags/技术相关/" style="font-size: 20px;">技术相关</a> <a href="/tags/设计模式/" style="font-size: 12px;">设计模式</a> <a href="/tags/读书笔记/" style="font-size: 16px;">读书笔记</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://blog.guorongfei.com/">荣飞大大的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">林嘉伟</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img lazy-src="http://blog.islinjw.cn/head.jpg" class="js-avatar">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">林嘉伟</h1>
+			</hgroup>
+			
+			<p class="header-subtitle">什么都想学</p>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+					<li><a href="/tags/读书笔记">读书笔记</a></li>
+		        
+					<li><a href="/tags/技术相关">技术相关</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="http://github.com/bluesky466" title="github">github</a>
+			        
+						<a class="mail" target="_blank" href="mailto:466474482@qq.com" title="mail">mail</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-Retrofit-学习笔记" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/02/22/Retrofit-学习笔记/" class="article-date">
+  	<time datetime="2016-02-22T08:19:56.000Z" itemprop="datePublished">2016-02-22</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Retrofit 学习笔记
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/技术相关/">技术相关</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>工欲善其事必先利其器，使用一些强大方便的器，可以大大的提高开发的效率，我认为 Retrofit 和 RxJava 就是这样的利器。</p>
+<p>Retrofit 是一个开源的 java http 请求库，目前已经更新到 2.0.0-beta4，官方的介绍是：</p>
+<blockquote>
+<p>Type-safe HTTP client for Android and Java by Square, Inc.</p>
+</blockquote>
+<p>我在学习它的过程中遇到了不少问题，于是写了这篇东西把遇到的问题和解决方法都记录一下。</p>
+<h2 id="android_studio__u5BFC_u5165_Retrofit"><a href="#android_studio__u5BFC_u5165_Retrofit" class="headerlink" title="android studio 导入 Retrofit"></a><strong>android studio 导入 Retrofit</strong></h2><p>首先我使用的是 android studio，一开始搜索怎样使用第三方库的时候看到了不少的文章，有介绍导入 jar 包的，有介绍源码库的，但使用方法和我接下来介绍的都显得复杂很多。</p>
+<p>比如现在我们要使用 Retrofit ，先登录 <a href="http://search.maven.org/" target="_blank" rel="external">http://search.maven.org/</a>，搜索 Retrofit 我们可以看到搜出了不少东西，我们直接用最新的版本 2.0.0-beta4，可以看到它有两个版本，点进去看看：</p>
+<img src="/Retrofit-学习笔记/1.jpg">
+<p>原来一个是beta3，一个是beta4：</p>
+<img src="/Retrofit-学习笔记/2.jpg">
+<p>然后我们打开 android studio 项目的 build.gradle(Module: app)， 在它的 dependencies 里面加上  retrofit 的引用:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">dependencies</span> &#123;</span><br><span class="line">    <span class="keyword">compile</span> <span class="keyword">fileTree</span>(dir: <span class="string">'libs'</span>, <span class="keyword">include</span>: [<span class="string">'*.jar'</span>])</span><br><span class="line">    testCompile <span class="string">'junit:junit:4.12'</span></span><br><span class="line">    <span class="keyword">compile</span> <span class="string">'com.android.support:appcompat-v7:23.1.1'</span></span><br><span class="line">    <span class="keyword">compile</span> <span class="string">'com.squareup.retrofit2:retrofit:2.0.0-beta4'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>要使用 <a href="http://search.maven.org/" target="_blank" rel="external">http://search.maven.org/</a>，搜索到的第三方库只需要在 dependencies 里面加上</p>
+<blockquote>
+<p>compile ‘GroupId:ArtifactId:Version’</p>
+</blockquote>
+<p>对应 retrofit 就是这句：</p>
+<blockquote>
+<p>compile ‘com.squareup.retrofit2:retrofit:2.0.0-beta4’</p>
+</blockquote>
+<p>再点击 android studio 弹出的 Sync Now，android studio 就会帮你自动下载和配置第三方库，而你就能直接使用了。</p>
+<img src="/Retrofit-学习笔记/3.jpg">
+<h2 id="u4F7F_u7528_Retrofit__u7684_Call__u7C7B_u83B7_u53D6_github__u7528_u6237_u7684_u4FE1_u606F"><a href="#u4F7F_u7528_Retrofit__u7684_Call__u7C7B_u83B7_u53D6_github__u7528_u6237_u7684_u4FE1_u606F" class="headerlink" title="使用 Retrofit 的 Call 类获取 github 用户的信息"></a><strong>使用 Retrofit 的 Call 类获取 github 用户的信息</strong></h2><p>官方文档一开始就展示了一个简单的demo <a href="http://square.github.io/retrofit/" target="_blank" rel="external">http://square.github.io/retrofit/</a></p>
+<p>可惜都是代码碎片，你按照它写好代码之后就会发现……报异常了。</p>
+<img src="/Retrofit-学习笔记/4.jpg">
+<img src="/Retrofit-学习笔记/5.jpg">
+<p>我先把讲讲我写的demo，最后再告诉你们官方文档到底哪里出问题了。</p>
+<p>首先定义一个 User 类用于保存获取到的用户信息：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String login;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> id;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"login:"</span> + login + <span class="string">", "</span></span><br><span class="line">                + <span class="string">"id:"</span> + id + <span class="string">", "</span></span><br><span class="line">                + <span class="string">"name:"</span> + name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getLogin</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> login;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setLogin</span><span class="params">(String login)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.login = login;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setId</span><span class="params">(<span class="keyword">long</span> id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.id = id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接着定义一个接口用于告诉 Retrofit 怎样去获取数据，如下代码就表明使用 get 方法获取 users 路径下的 user 资源，使用的最终使用的时候，传入的 user 参数会替换 users/{user} 的 {user} 字段。</p>
+<p>不过我还真不知道它这里到底是怎么实现的，看来 java 基础还真要去补一补才行了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">GitHubService</span> </span>&#123;</span><br><span class="line">       <span class="annotation">@GET</span>(<span class="string">"users/&#123;user&#125;"</span>)</span><br><span class="line">       <span class="function">Call&lt;User&gt; <span class="title">getUserInfoByCall</span><span class="params">(@Path(<span class="string">"user"</span>)</span> String user)</span>;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>之后就可以创建一个 GitHubService 实例了（我总觉得有点 java 黑魔法的感觉）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GitHubService service = <span class="keyword">new</span> Retrofit.Builder()</span><br><span class="line">               .baseUrl(<span class="string">"https://api.github.com"</span>)</span><br><span class="line">               .addConverterFactory(GsonConverterFactory.create())</span><br><span class="line">               .build()</span><br><span class="line">               .create(GitHubService.class);</span><br></pre></td></tr></table></figure>
+<p>然后调用 service 的 getUserInfoByCall 方法就能获取到一个 Call 对象了。像如下的代码，就能获取到一个用于访问 <a href="https://api.github.com/users/bluesky466" target="_blank" rel="external">https://api.github.com/users/bluesky466</a> 的 Call 对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> Call&lt;User&gt; call = service.getUserInfoByCall(<span class="string">"bluesky466"</span>);</span><br></pre></td></tr></table></figure>
+<p>最后就能用 call 的 execute 方法访问服务器获取用户数据了。因为 execute 是同步的，而安卓不允许在 ui 线程访问网络，所以我们需要用一个子线程去访问。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="annotation">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Response&lt;User&gt; response = call.execute();</span><br><span class="line">                    User user = response.body();</span><br><span class="line">                    Log.d(<span class="string">"result"</span>, user.toString());</span><br><span class="line">                &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br></pre></td></tr></table></figure>
+<p>结果如下：</p>
+<img src="/Retrofit-学习笔记/6.jpg">
+<p>当然，Retrofit 也提供了异步访问的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">call.enqueue(<span class="keyword">new</span> Callback&lt;User&gt;() &#123;</span><br><span class="line">           <span class="annotation">@Override</span></span><br><span class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onResponse</span><span class="params">(Call&lt;User&gt; call, Response&lt;User&gt; response)</span> </span>&#123;</span><br><span class="line">               User user = response.body();</span><br><span class="line">           	Log.d(<span class="string">"result"</span>, user.toString());</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">           <span class="annotation">@Override</span></span><br><span class="line">           <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onFailure</span><span class="params">(Call&lt;User&gt; call, Throwable t)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">           &#125;</span><br><span class="line">       &#125;);</span><br></pre></td></tr></table></figure>
+<p>Retrofit 用获取到的数据生成了一个User对象。这是什么黑魔法？</p>
+<p>还记得我一开始说的按照官方文档的代码会报异常吗？</p>
+<p>官方文档的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Retrofit retrofit = <span class="keyword">new</span> Retrofit.Builder()</span><br><span class="line">    .baseUrl(<span class="string">"https://api.github.com"</span>)</span><br><span class="line">    .build();</span><br><span class="line"></span><br><span class="line">GitHubService service = retrofit.create(GitHubService.class);</span><br></pre></td></tr></table></figure>
+<p>我的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GitHubService service = <span class="keyword">new</span> Retrofit.Builder()</span><br><span class="line">                    .baseUrl(<span class="string">"https://api.github.com"</span>)</span><br><span class="line">                    .addConverterFactory(GsonConverterFactory.create())</span><br><span class="line">                    .build()</span><br><span class="line">                    .create(GitHubService.class);</span><br></pre></td></tr></table></figure>
+<p>差别就在在这里：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.<span class="function"><span class="title">addConverterFactory</span><span class="params">(GsonConverterFactory.create()</span></span>)</span><br></pre></td></tr></table></figure>
+<p>我这里指定了一个 Gson 转换工厂，因为 <a href="https://api.github.com" target="_blank" rel="external">https://api.github.com</a> 使用josn 格式返回数据，所以我们可以使用 Gson 去解析它，然后生成一个 User 对象。</p>
+<p>不过就算你按我这样写代码又会发现找不到 GsonConverterFactory 的包……</p>
+<img src="/Retrofit-学习笔记/7.jpg">
+<p>原因在于 GsonConverterFactory 使用来转换json的，你也可以指定其他的 Factory 去转换 xml 之类的格式。而这些 Factory 并不包含在 Retrofit 库里面，需要用户自己去导入。</p>
+<img src="/Retrofit-学习笔记/8.jpg">
+<p>在 dependencies 中加入：</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">compile</span> <span class="string">'com.squareup.retrofit2:converter-gson:2.0.0-beta4'</span></span><br></pre></td></tr></table></figure>
+<p>类似的库有下面这些：</p>
+<ul>
+<li><strong>Gson</strong>: com.squareup.retrofit2:converter-gson</li>
+<li><strong>Jackson</strong>: com.squareup.retrofit2:converter-jackson</li>
+<li><strong>Moshi</strong>: com.squareup.retrofit2:converter-moshi</li>
+<li><strong>Protobuf</strong>: com.squareup.retrofit2:converter-protobuf</li>
+<li><strong>Wire</strong>: com.squareup.retrofit2:converter-wire</li>
+<li><strong>Simple</strong> XML: com.squareup.retrofit2:converter-simplexml</li>
+<li><strong>Scalars</strong> (primitives, boxed, and String): com.squareup.retrofit2:converter-scalars</li>
+</ul>
+<h2 id="u4F7F_u7528_Retrofit__u914D_u5408_RxJava__u83B7_u53D6_github__u7528_u6237_u7684_u4FE1_u606F"><a href="#u4F7F_u7528_Retrofit__u914D_u5408_RxJava__u83B7_u53D6_github__u7528_u6237_u7684_u4FE1_u606F" class="headerlink" title="使用 Retrofit 配合 RxJava 获取 github 用户的信息"></a><strong>使用 Retrofit 配合 RxJava 获取 github 用户的信息</strong></h2><p>RxJava 在 GitHub 主页上的自我介绍是 “a library for composing asynchronous and event-based programs using observable sequences for the Java VM”（一个在 Java VM 上使用可观测的序列来组成异步的、基于事件的程序的库）。这就是 RxJava ，概括得非常精准。</p>
+<p>它可以用来替换 AsyncTask 之类的东西。</p>
+<p>关于 RxJava 有一篇很好的博客 – <a href="http://gank.io/post/560e15be2dca930e00da1083" target="_blank" rel="external">给 Android 开发者的 RxJava 详解</a>。这里基本上把 RxJava 讲的很透彻了。我这里就不多说，只是讲一讲怎样在 Retrofit 中使用 RxJava。</p>
+<p>在 Retrofit 中使用 RxJava 首先需要导入 adapter-rxjava 库，而且因为是在安卓上使用，所以需要导入 RxJava 的 Android 平台的扩展 rxandroid 库：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">compile</span> <span class="string">'com.squareup.retrofit2:adapter-rxjava:2.0.0-beta4</span><br><span class="line">   compile '</span>io.reactivex:rxandroid:<span class="number">1</span>.<span class="number">1</span>.<span class="number">0</span><span class="string">'</span></span><br></pre></td></tr></table></figure>
+<p>添加 GitHubService 接口的 RxJava 获取方法：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">GitHubService</span> </span>&#123;</span><br><span class="line">        <span class="annotation">@GET</span>(<span class="string">"users/&#123;user&#125;"</span>)</span><br><span class="line">        <span class="function">Call&lt;User&gt; <span class="title">getUserInfoByCall</span><span class="params">(@Path(<span class="string">"user"</span>)</span> String user)</span>;</span><br><span class="line"></span><br><span class="line">        <span class="annotation">@GET</span>(<span class="string">"users/&#123;user&#125;"</span>)</span><br><span class="line">        <span class="function">Observable&lt;User&gt; <span class="title">getUserInfoByObservable</span><span class="params">(@Path(<span class="string">"user"</span>)</span> String user)</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>然后创建 GitHubService 的时候需要指定 RxJava的适配工厂：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">GitHubService service = <span class="keyword">new</span> Retrofit.Builder()</span><br><span class="line">               .baseUrl(<span class="string">"https://api.github.com"</span>)</span><br><span class="line">               .addConverterFactory(GsonConverterFactory.create())<span class="comment">//指定RxJava适配工厂</span></span><br><span class="line">               .addCallAdapterFactory(RxJavaCallAdapterFactory.create())</span><br><span class="line">               .build()</span><br><span class="line">               .create(GitHubService.class);</span><br></pre></td></tr></table></figure>
+<p>然后就是指定 subscribe 去输出结果了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">service.getUserInfoByObservable(<span class="string">"bluesky466"</span>)</span><br><span class="line">                .subscribeOn(Schedulers.newThread())</span><br><span class="line">                .observeOn(AndroidSchedulers.mainThread())</span><br><span class="line">                .subscribe(<span class="keyword">new</span> Subscriber&lt;User&gt;() &#123;</span><br><span class="line">                    <span class="annotation">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(User user)</span> </span>&#123;</span><br><span class="line">                        <span class="keyword">if</span> (user != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            Log.d(<span class="string">"result"</span>, user.toString());</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="annotation">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCompleted</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="annotation">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(Throwable e)</span> </span>&#123;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br></pre></td></tr></table></figure>
+<h2 id="u4E00_u4E2A_u5C0F_Demo"><a href="#u4E00_u4E2A_u5C0F_Demo" class="headerlink" title="一个小 Demo"></a><strong>一个小 Demo</strong></h2><p>我写了一个 demo 用来展示 Retrofit 的用法，完整源码如下：</p>
+<p>MainActivity：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> GitHubService mService;</span><br><span class="line">    <span class="keyword">private</span> EditText mUserName;</span><br><span class="line">    <span class="keyword">private</span> TextView mResult;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">GitHubService</span> </span>&#123;</span><br><span class="line">        <span class="annotation">@GET</span>(<span class="string">"users/&#123;user&#125;"</span>)</span><br><span class="line">        <span class="function">Call&lt;User&gt; <span class="title">getUserInfoByCall</span><span class="params">(@Path(<span class="string">"user"</span>)</span> String user)</span>;</span><br><span class="line"></span><br><span class="line">        <span class="annotation">@GET</span>(<span class="string">"users/&#123;user&#125;"</span>)</span><br><span class="line">        <span class="function">Observable&lt;User&gt; <span class="title">getUserInfoByObservable</span><span class="params">(@Path(<span class="string">"user"</span>)</span> String user)</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        mUserName = (EditText) findViewById(R.id.username);</span><br><span class="line">        mResult = (TextView) findViewById(R.id.result);</span><br><span class="line"></span><br><span class="line">        Button btnCall = (Button) findViewById(R.id.btnCall);</span><br><span class="line">        btnCall.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">            <span class="annotation">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">                queryByCall(mUserName.getText().toString());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Button btnObservable = (Button) findViewById(R.id.btnObservable);</span><br><span class="line">        btnObservable.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">            <span class="annotation">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">                queryByObservable(mUserName.getText().toString());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        mService = <span class="keyword">new</span> Retrofit.Builder()</span><br><span class="line">                .baseUrl(<span class="string">"https://api.github.com"</span>)</span><br><span class="line">                .addConverterFactory(GsonConverterFactory.create())</span><br><span class="line">                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())</span><br><span class="line">                .build()</span><br><span class="line">                .create(GitHubService.class);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">queryByCall</span><span class="params">(<span class="keyword">final</span> String username)</span> </span>&#123;</span><br><span class="line">        mService.getUserInfoByCall(username).enqueue(<span class="keyword">new</span> Callback&lt;User&gt;() &#123;</span><br><span class="line">            <span class="annotation">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onResponse</span><span class="params">(Call&lt;User&gt; call, Response&lt;User&gt; response)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (response.body() != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    mResult.setText(<span class="string">"[ByCall] "</span> + response.body().toString());</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    mResult.setText(<span class="string">"[ByCall] Not Found"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="annotation">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onFailure</span><span class="params">(Call&lt;User&gt; call, Throwable t)</span> </span>&#123;</span><br><span class="line">                mResult.setText(<span class="string">"[ByCall] Not Found"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">queryByObservable</span><span class="params">(<span class="keyword">final</span> String username)</span> </span>&#123;</span><br><span class="line">        mService.getUserInfoByObservable(username)</span><br><span class="line">                .subscribeOn(Schedulers.newThread())</span><br><span class="line">                .observeOn(AndroidSchedulers.mainThread())</span><br><span class="line">                .subscribe(<span class="keyword">new</span> Subscriber&lt;User&gt;() &#123;</span><br><span class="line">                    <span class="annotation">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCompleted</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="annotation">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onError</span><span class="params">(Throwable e)</span> </span>&#123;</span><br><span class="line">                        mResult.setText(<span class="string">"[ByObservable] Not Found"</span>);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="annotation">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onNext</span><span class="params">(User user)</span> </span>&#123;</span><br><span class="line">                        <span class="keyword">if</span> (user != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            mResult.setText(<span class="string">"[ByObservable] "</span> + user.toString());</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>activity_main.xml:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="title">LinearLayout</span> <span class="attribute">xmlns:android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span></span><br><span class="line">    <span class="attribute">xmlns:tools</span>=<span class="value">"http://schemas.android.com/tools"</span></span><br><span class="line">    <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span></span><br><span class="line">    <span class="attribute">android:layout_height</span>=<span class="value">"match_parent"</span></span><br><span class="line">    <span class="attribute">android:orientation</span>=<span class="value">"vertical"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="title">LinearLayout</span></span><br><span class="line">        <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span></span><br><span class="line">        <span class="attribute">android:layout_height</span>=<span class="value">"wrap_content"</span></span><br><span class="line">        <span class="attribute">android:orientation</span>=<span class="value">"horizontal"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="title">EditText</span></span><br><span class="line">            <span class="attribute">android:id</span>=<span class="value">"@+id/username"</span></span><br><span class="line">            <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span></span><br><span class="line">            <span class="attribute">android:layout_height</span>=<span class="value">"match_parent"</span></span><br><span class="line">            <span class="attribute">android:layout_weight</span>=<span class="value">"1"</span></span><br><span class="line">            <span class="attribute">android:hint</span>=<span class="value">"user name"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="title">Button</span></span><br><span class="line">            <span class="attribute">android:id</span>=<span class="value">"@+id/btnCall"</span></span><br><span class="line">            <span class="attribute">android:layout_width</span>=<span class="value">"wrap_content"</span></span><br><span class="line">            <span class="attribute">android:layout_height</span>=<span class="value">"wrap_content"</span></span><br><span class="line">            <span class="attribute">android:text</span>=<span class="value">"Call"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="title">Button</span></span><br><span class="line">            <span class="attribute">android:id</span>=<span class="value">"@+id/btnObservable"</span></span><br><span class="line">            <span class="attribute">android:layout_width</span>=<span class="value">"wrap_content"</span></span><br><span class="line">            <span class="attribute">android:layout_height</span>=<span class="value">"wrap_content"</span></span><br><span class="line">            <span class="attribute">android:text</span>=<span class="value">"Observable"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="title">LinearLayout</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="title">TextView</span></span><br><span class="line">        <span class="attribute">android:id</span>=<span class="value">"@+id/result"</span></span><br><span class="line">        <span class="attribute">android:layout_width</span>=<span class="value">"wrap_content"</span></span><br><span class="line">        <span class="attribute">android:layout_height</span>=<span class="value">"wrap_content"</span></span><br><span class="line">        <span class="attribute">android:text</span>=<span class="value">""</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">LinearLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>User:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String login;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> id;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"login:"</span> + login + <span class="string">", "</span></span><br><span class="line">                + <span class="string">"id:"</span> + id + <span class="string">", "</span></span><br><span class="line">                + <span class="string">"name:"</span> + name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getLogin</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> login;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setLogin</span><span class="params">(String login)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.login = login;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getId</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setId</span><span class="params">(<span class="keyword">long</span> id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.id = id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>dependencies:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">dependencies</span> &#123;</span><br><span class="line">       <span class="keyword">compile</span> <span class="keyword">fileTree</span>(dir: <span class="string">'libs'</span>, <span class="keyword">include</span>: [<span class="string">'*.jar'</span>])</span><br><span class="line">       testCompile <span class="string">'junit:junit:4.12'</span></span><br><span class="line">       <span class="keyword">compile</span> <span class="string">'com.android.support:appcompat-v7:23.1.1'</span></span><br><span class="line">       <span class="keyword">compile</span> <span class="string">'com.squareup.retrofit2:retrofit:2.0.0-beta4'</span></span><br><span class="line">       <span class="keyword">compile</span> <span class="string">'com.squareup.retrofit2:converter-gson:2.0.0-beta4'</span></span><br><span class="line">       <span class="keyword">compile</span> <span class="string">'com.squareup.retrofit2:adapter-rxjava:2.0.0-beta4'</span></span><br><span class="line">       <span class="keyword">compile</span> <span class="string">'io.reactivex:rxandroid:1.1.0'</span></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/03/03/学习HTTP协议-在安卓上的使用Cookie与Session/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          学习HTTP协议-在安卓上的使用Cookie与Session
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/02/15/GTest源码剖析-测试代码的注册/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">GTest源码剖析 - 测试代码的注册</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share_jia">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">分享到: &nbsp; </span>
+		<a class="jiathis_button_facebook"></a> 
+    <a class="jiathis_button_twitter"></a>
+    <a class="jiathis_button_plus"></a> 
+    <a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+    <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2017 林嘉伟
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css" type="text/css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js" type="text/javascript"></script>
+<script src="/js/main.js" type="text/javascript"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
