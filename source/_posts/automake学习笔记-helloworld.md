@@ -219,3 +219,54 @@ Makefile都已经生成了，现在就可以使用make命令编译工程啦
 > ../configure
 
 这样就在build目录下生成Makefile了,于是现在我们在build中使用make命令编辑工程就会发现编译产生的.o文件和目标文件都在build中而不会污染源代码了。
+
+## 使用autoscan生成configure.ac                                                  
+                                                                                 
+如果直接手写configure.ac的话是比较困难的,很容易漏掉一些依赖项没有检查。所以就出现了autoscan这个工具,它可以帮我们检查工程中的依赖项生成configure.ac的模板,然后我们只需要在它生成的模板上略加改动就可以了。
+                                                                                 
+我们在工程目录下使用autoscan命令,会得到下面的两个文件:                           
+                                                                                 
+1. autoscan.log                                                                  
+                                                                                 
+2. configure.scan                                                                
+                                                                                 
+autoscan.log是一个日志文件,通过它我们可以知道一些配置为什么会被需要              
+                                                                                 
+而configure.scan就是生成出来的configure.ac的模板了,在easylog工程目录使用autoscan,生成的configure.scan内容如下
+                                                                                 
+```                                                                              
+#                                               -*- Autoconf -*-                 
+# Process this file with autoconf to produce a configure script.                 
+                                                                                 
+AC_PREREQ([2.69])                                                                
+AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])                    
+AC_CONFIG_SRCDIR([log_interface.h])                                              
+AC_CONFIG_HEADERS([config.h])                                                    
+                                                                                 
+# Checks for programs.                                                           
+AC_PROG_CXX                                                                      
+AC_PROG_CC                                                                       
+                                                                                 
+# Checks for libraries.                                                          
+                                                                                 
+# Checks for header files.                                                       
+                                                                                 
+# Checks for typedefs, structures, and compiler characteristics.                 
+                                                                                 
+# Checks for library functions.                                                  
+                                                                                 
+AC_CONFIG_FILES([Makefile])                                                      
+AC_OUTPUT                                                                        
+```                                                                              
+                                                                                 
+看是不是和我们之前手写的很像?我们只有在上面进行一些小的修改就能得到最终我们需要的configure.ac了
+
+这里有两个宏我们是没有见过的
+
+- AC\_PREREQ
+
+用于检查autoconf的最低版本
+
+- AC\_CONFIG\_SRCDIR
+
+用一个项目中一定存在的文件去确定源码目录的有效性,这是一个安全检查宏。configure有一个--srcdir的参数可以指定源码目录,这个宏就可以检查出源码目录是否不小心配置错了
