@@ -1,8 +1,8 @@
 title: 学习HTTP协议-用socket实现http访问
 date: 2016-03-04 22:16:30
 tags:
-	- Http协议
 	- 技术相关
+	- Http协议
 ---
 
 相信大家都知道 http 报文这东西吧？http 报文分两种，请求报文和响应报文。

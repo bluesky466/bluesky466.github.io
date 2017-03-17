@@ -1,8 +1,8 @@
 title: Retrofit 学习笔记
 date: 2016-02-22 16:19:56
 tags:
-	- Android
 	- 技术相关
+	- Android
 ---
 
 工欲善其事必先利其器，使用一些强大方便的器，可以大大的提高开发的效率，我认为 Retrofit 和 RxJava 就是这样的利器。

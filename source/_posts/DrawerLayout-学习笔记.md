@@ -1,8 +1,8 @@
 title: DrawerLayout 学习笔记
 date: 2016-01-27 17:44:24
 tags:
-	- Android
 	- 技术相关
+	- Android
 ---
 
 DrawerLayout的使用十分简单，使用android.support.v4.widget.DrawerLayout标签即可，DrawerLayout的第一个子标签就是正文，其他布局都是抽屉布局（默认隐藏在屏幕外）。可以使用android:layout_gravity属性指定是隐藏在屏幕的左边或者右边。

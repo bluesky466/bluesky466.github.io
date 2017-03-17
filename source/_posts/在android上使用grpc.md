@@ -1,9 +1,8 @@
 title: 在android上使用grpc
 date: 2017-03-03 09:49:37
 tags:
-	- Android
-	- grpc
 	- 技术相关
+	- Android
 ---
 
 最近的一个项目使用到了grpc实现跨平台的远程调用，在安卓端使用的时候遇到了一些坑，这里记录一下。

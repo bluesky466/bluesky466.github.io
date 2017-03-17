@@ -1,9 +1,8 @@
 title: automake学习笔记 - helloworld
 date: 2017-03-17 01:11:40
 tags:
-	- automake
-	- 编译相关
 	- 技术相关
+	- 编译相关
 ---
 
 虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃[文档](http://www.gnu.org/software/automake/manual/automake.html),并将学的的东西记录下来。

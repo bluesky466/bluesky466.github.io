@@ -1,8 +1,8 @@
 title: 使用hexo搭建个人博客
 date: 2016-01-19 21:10:24
 tags: 
-    - hexo
     - 技术相关
+    - hexo
 ---
 
 ## 一、安装hexo

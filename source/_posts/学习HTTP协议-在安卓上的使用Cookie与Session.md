@@ -1,9 +1,8 @@
 title: 学习HTTP协议-在安卓上的使用Cookie与Session
 date: 2016-03-03 20:43:26
 tags:
-	- Http协议
-	- Android
 	- 技术相关
+	- Http协议
 ---
 
 大三的时候写过一段时间的 php ，那时候已经对 html、css、js、cookie、session 这些东西了一点认知，但基本都是浮于表面，知其然而不知其所以然。于是这几天翻了翻《图解http》，书上的知识和自己的以前的理解结合起来，感觉对于 http 协议有了一些比较深刻的理解。

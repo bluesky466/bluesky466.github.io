@@ -1,0 +1,152 @@
+# Blog info
+blog_name: LinJW
+slogan: 有趣的东西那么多，为什么不去学呢？
+url: http://blog.islinjw.cn
+
+# Set avatar (Absolute url and relative url)
+avatar: /images/avatar.jpeg
+
+# Set favicon
+favicon: /favicon.ico
+
+# For seo
+keywords: c/c++,java,Android
+
+home_nav:
+  - name: Blog
+    url: /archives
+    target_blank: false #不在新页面打开
+  - name: Github
+    url: https://github.com/bluesky466
+    target_blank: true
+
+# config page nav
+page_nav:
+  - name: 博客
+    url: /archives/
+    target_blank: false # 不在新页面打开
+  - name: 标签
+    url: /tag/
+    target_blank: false
+  - name: 友链
+    url: /link/
+    target_blank: false
+  - name: 关于
+    url: /about/
+    target_blank: false
+
+page_nav_style: CIRCLE  # CIRCLE|ROUND_RECT
+
+# 面包屑
+breadcrumb:
+  isShow: true # true|fase
+
+# 盒子
+toolbox:
+  isShow: true # true|fase
+  text: 盒子
+
+search_slogan:
+  isShow: false # true|fase
+  text: 什么都想学
+
+link_slogan:
+  isShow: false # true|fase
+  text: 交换友链可以邮件 bluesky466@qq.com
+
+
+# set backtop show or hide
+backtop:
+  home: false
+  archive: false
+  category: true
+  tag: true
+  post: true
+  link: false
+  about: false
+
+donation:
+  show: false
+  btn_text: 支持一下
+  tip: 扫一扫，支持forsigner
+  items:
+    - type: 微信
+      text: 微信扫一扫
+      imgUrl: /images/qr-wechat.png
+    - type: 支付宝
+      text: 支付宝扫一扫
+      imgUrl: /images/qr-alipay.png
+
+
+post:
+  header_align: CENTER # LEFT|CENTER
+  showToc: true # true|false
+  showComments: true
+  open_in_new_window: false
+  show_prev_next: true
+
+# =========================================================
+# 个性化设置
+# =========================================================
+
+# Custom CSS style, 推荐把样式文件放在blog源码文件夹，而不是主题里面
+personal_style: /css/personal-style.css
+
+# 这个值取决于你得背景图片是深色还是浅色，深色用dark，浅色用light
+home_background_scheme: light # dark、light
+
+# custom font-family 暂时只支持这3种英文字体，你可以完全自定义字体(看文档)
+blog_name_font_familiy: calligraffittiregular
+# blog_name_font_familiy: Lobster-Regular
+# blog_name_font_familiy: PoiretOne-Regular
+
+init_page_content: POST  # HOME_NAV | POST
+
+
+# =========================================================
+# 第三方服务
+# =========================================================
+# Stats
+google_analytics:
+baidu_analytics: 57e94d016e201fba3603a8a2b0263af0
+
+# Comment service
+disqus_shortname: forsigner
+# duoshuo_shortname: forsigner
+# gentie_key: d16a7241e7cd4b389584ed8db2a4e8bc
+
+# 不算子,文章访问量统计和显示
+busuanzi: true
+
+# =========================================================
+# 页面内容设置
+# =========================================================
+about:
+  - type: me
+    icon: icon-user
+    text_value:
+    - "什么都想学."
+  - type: Github
+    icon: icon-github
+    text_key: Github
+    text_value: "@bluesky466"
+    text_value_url: https://github.com/bluesky466
+  - type: mail
+    icon: icon-mail
+    text_key: QQMail
+    text_value: "bluesky466@qq.com"
+  - type: location
+    icon: icon-location
+    text_value: 广州
+
+link:
+  - name: 郭荣飞
+    info: 荣飞大大的博客
+    url: http://blog.guorongfei.com/
+    avatar: https://avatars0.githubusercontent.com/u/6194686?v=3&s=460
+
+project:
+  - type: personal
+    name: Cocos2dxUsefulClasses
+    url: https://github.com/bluesky466/Cocos2dxUsefulClasses
+    intro: some easy and userful classes for cocos2d-x 2.2.3 and cocos2d-x 3.2

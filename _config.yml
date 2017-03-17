@@ -3,7 +3,7 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: 修我矛戟
+title: LinJW
 subtitle: 什么都想学
 description: 林嘉伟的个人博客
 author: 林嘉伟
@@ -63,7 +63,7 @@ pagination_dir: page
 # Extensions
 ## Plugins: http://hexo.io/plugins/
 ## Themes: http://hexo.io/themes/
-theme: yilia
+theme: fexo
 
 # Deployment
 ## Docs: http://hexo.io/docs/deployment.html

@@ -3,7 +3,6 @@ date: 2016-02-08 17:01:49
 tags:
 	- 技术相关
 	- 单元测试
-	- c++
 ---
 gtest是google的一套开源的c++单元测试框架，可以方便程序员对自己的代码进行单元测试。学习这套框架，除了墙外的官方文档之外，我强力推荐[玩转Google开源C\+\+单元测试框架Google Test系列](http://www.cnblogs.com/coderzh/archive/2009/04/06/1426755.html)。
 

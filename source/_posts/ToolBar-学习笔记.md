@@ -1,8 +1,8 @@
 title: ToolBar 学习笔记
 date: 2016-01-25 14:56:42
 tags:
-    - Android
     - 技术相关
+    - Android
 ---
 
 虽然android studio在新建项目的时候就可以创建一个默认带有ToolBar的MainActivity，但是抱着学习学全套的精神，我们就从一个没有Activity的空项目入手，一步一步把ToolBar学透。
