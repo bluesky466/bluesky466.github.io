@@ -25,7 +25,7 @@
 <meta property="og:description" content="虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃文档,并将学的的东西记录下来。
 这篇文章用一个简单的log工具的编译先对automake做一个hello world级别的介绍。
 代码我们的demo有6个文件cout_log_interface.h, cout_log_interface.cpp, log_interface.h,">
-<meta property="og:updated_time" content="2017-03-17T20:43:50.776Z">
+<meta property="og:updated_time" content="2017-03-18T08:15:57.946Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="automake学习笔记 - helloworld">
 <meta name="twitter:description" content="虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃文档,并将学的的东西记录下来。
@@ -156,7 +156,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#u4EE3_u7801"><span class="toc-text">代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Makefil-am"><span class="toc-text">Makefil.am</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#configure-ac"><span class="toc-text">configure.ac</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u751F_u6210Makefile"><span class="toc-text">生成Makefile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u7F16_u8BD1_u5DE5_u7A0B"><span class="toc-text">编译工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u5728build_u76EE_u5F55_u4E2D_u7F16_u8BD1_u9879_u76EE"><span class="toc-text">在build目录中编译项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4F7F_u7528autoscan_u751F_u6210configure-ac"><span class="toc-text">使用autoscan生成configure.ac</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#u4EE3_u7801"><span class="toc-text">代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Makefil-am"><span class="toc-text">Makefil.am</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#configure-ac"><span class="toc-text">configure.ac</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u751F_u6210Makefile"><span class="toc-text">生成Makefile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u7F16_u8BD1_u5DE5_u7A0B"><span class="toc-text">编译工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u5728build_u76EE_u5F55_u4E2D_u7F16_u8BD1_u9879_u76EE"><span class="toc-text">在build目录中编译项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4F7F_u7528autoscan_u751F_u6210configure-ac"><span class="toc-text">使用autoscan生成configure.ac</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo_u9879_u76EE"><span class="toc-text">Demo项目</span></a></li></ol>
   </div>
 
 
@@ -325,6 +325,7 @@ AC_OUTPUT
 <li>AC_CONFIG_SRCDIR</li>
 </ul>
 <p>用一个项目中一定存在的文件去确定源码目录的有效性,这是一个安全检查宏。configure有一个–srcdir的参数可以指定源码目录,这个宏就可以检查出源码目录是否不小心配置错了</p>
+<h2 id="Demo_u9879_u76EE"><a href="#Demo_u9879_u76EE" class="headerlink" title="Demo项目"></a>Demo项目</h2><p>可以在<a href="https://github.com/bluesky466/automake-demo/tree/v0.0.1" target="_blank" rel="external">这里</a>查看完整的项目代码</p>
 
     
   </div>

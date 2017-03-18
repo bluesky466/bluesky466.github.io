@@ -269,3 +269,7 @@ AC_OUTPUT
 - AC\_CONFIG\_SRCDIR
 
 用一个项目中一定存在的文件去确定源码目录的有效性,这是一个安全检查宏。configure有一个--srcdir的参数可以指定源码目录,这个宏就可以检查出源码目录是否不小心配置错了
+
+## Demo项目
+
+可以在[这里](https://github.com/bluesky466/automake-demo/tree/v0.0.1)查看完整的项目代码
