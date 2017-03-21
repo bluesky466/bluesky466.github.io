@@ -1,4 +1,4 @@
-title: automake学习笔记-模块化编译
+title: automake学习笔记 - 模块化编译
 date: 2017-03-21 13:36:36
 tags:
 	- 技术相关
