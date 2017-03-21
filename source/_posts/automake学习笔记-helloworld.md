@@ -112,9 +112,9 @@ int main()
 }
 ```
 
-## Makefil.am
+## Makefile.am
 
-automake使用Makefil.am配置工程的源码,它的内容如下:
+automake使用Makefile.am配置工程的源码,它的内容如下:
 
 ```
 bin_PROGRAMS = easylog
@@ -176,7 +176,7 @@ AC_OUTPUT
 
 - AC\_CONFIG\_FILES 
 
-指定了Makefile.am的路径,这里把后缀省略了,同时因为Makefile.am和configure.ac在同级目录,所以直接写Makefile就好了。在文字的后面我会介绍当Makefile.am和configure.ac不在同级目录的时候需要怎么配置
+指定了需要configure生成的Makefile,autoreconf的时候会通过Makefile.am生成Makefile.in。而configure的时候会通过Makefile.in生成Makefile。因为Makefile.am和configure.ac在同级目录,所以直接写Makefile就好了。在文字的后面我会介绍当Makefile.am和configure.ac不在同级目录的时候需要怎么配置
 
 - AC\_OUTPUT
 
