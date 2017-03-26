@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>automake学习笔记-模块化编译 | LinJW</title>
+  <title>automake学习笔记 - 模块化编译 | LinJW</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -15,7 +15,7 @@
     <meta name="keywords" content="技术相关,编译相关," />
   
 
-  <meta name="description" content="一般来说一个工程会由许多不同的模块组成。源码放在一个地方,示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？
+  <meta name="description" content="一般来说一个工程会由许多不同的模块组成。源码放在一个地方，示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？
 这篇文章就讨论了一下如何使用automake去进行模块化编译
 我们还是用easylog来做例子，下面是我们修改后的easylog工程的根目录下的文件:
 
@@ -23,20 +23,20 @@ configure.ac  examples  Makefile.am  src
 
 src目录">
 <meta property="og:type" content="article">
-<meta property="og:title" content="automake学习笔记-模块化编译">
+<meta property="og:title" content="automake学习笔记 - 模块化编译">
 <meta property="og:url" content="http://yoursite.com/2017/03/21/automake学习笔记-模块化编译/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="一般来说一个工程会由许多不同的模块组成。源码放在一个地方,示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？
+<meta property="og:description" content="一般来说一个工程会由许多不同的模块组成。源码放在一个地方，示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？
 这篇文章就讨论了一下如何使用automake去进行模块化编译
 我们还是用easylog来做例子，下面是我们修改后的easylog工程的根目录下的文件:
 
 configure.ac  examples  Makefile.am  src
 
 src目录">
-<meta property="og:updated_time" content="2017-03-21T05:51:51.806Z">
+<meta property="og:updated_time" content="2017-03-26T07:14:51.799Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="automake学习笔记-模块化编译">
-<meta name="twitter:description" content="一般来说一个工程会由许多不同的模块组成。源码放在一个地方,示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？
+<meta name="twitter:title" content="automake学习笔记 - 模块化编译">
+<meta name="twitter:description" content="一般来说一个工程会由许多不同的模块组成。源码放在一个地方，示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？
 这篇文章就讨论了一下如何使用automake去进行模块化编译
 我们还是用easylog来做例子，下面是我们修改后的easylog工程的根目录下的文件:
 
@@ -168,7 +168,7 @@ src目录">
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#src_u76EE_u5F55"><span class="toc-text">src目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#examples_u76EE_u5F55"><span class="toc-text">examples目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u6839_u76EE_u5F55"><span class="toc-text">根目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u7F16_u8BD1_u5DE5_u7A0B"><span class="toc-text">编译工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u9759_u6001_u5E93_u548C_u52A8_u6001_u5E93_u7684_u533A_u522B"><span class="toc-text">静态库和动态库的区别</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#src_u76EE_u5F55"><span class="toc-text">src目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#examples_u76EE_u5F55"><span class="toc-text">examples目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u6839_u76EE_u5F55"><span class="toc-text">根目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u7F16_u8BD1_u5DE5_u7A0B"><span class="toc-text">编译工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u9759_u6001_u5E93_u548C_u52A8_u6001_u5E93_u7684_u533A_u522B"><span class="toc-text">静态库和动态库的区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo_u9879_u76EE"><span class="toc-text">Demo项目</span></a></li></ol>
   </div>
 
 
@@ -176,7 +176,7 @@ src目录">
 <div class="content content-post CENTER">
    <article id="post-automake学习笔记-模块化编译" class="article article-type-post" itemprop="blogPost">
   <header class="article-header">
-    <h1 class="post-title">automake学习笔记-模块化编译</h1>
+    <h1 class="post-title">automake学习笔记 - 模块化编译</h1>
 
     <div class="article-meta">
       <span>
@@ -216,7 +216,7 @@ src目录">
 
   <div class="article-content">
     
-      <p>一般来说一个工程会由许多不同的模块组成。源码放在一个地方,示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？</p>
+      <p>一般来说一个工程会由许多不同的模块组成。源码放在一个地方，示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？</p>
 <p>这篇文章就讨论了一下如何使用automake去进行模块化编译</p>
 <p>我们还是用easylog来做例子，下面是我们修改后的easylog工程的根目录下的文件:</p>
 <blockquote>
@@ -226,7 +226,7 @@ src目录">
 <p>src目录中有下面几个文件log_interface.h，easy_log.h，easy_log.cpp，cout_log_interface.h，cout_log_interface.cpp，Makefile.am。实际上就是除了main.cpp，其他文件都放到了这里来。因为我们提供给别的是一个库而不是一个可执行程序，所以main.cpp可以不需要编译到目标文件中</p>
 <p>.h和.cpp的内容和上一篇<a href="http://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="external">文章</a>的内容是一样的。这里的重点其实是Makefile.am。让我们先来看看它的内容:</p>
 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lib_LTLIBRARIES = libeasylog<span class="class">.la</span>                                                             </span><br><span class="line">libeasylog_la_SOURCES = cout_log_interface<span class="class">.cpp</span> \                                            </span><br><span class="line">                     easy_log.cpp</span><br></pre></td></tr></table></figure>
-<p>其实它的内容很简单，就是指定了要编译的库的名字和库的源码。但是有一个问题，我们这里需要编译的是但为什么这里的目标文件却是libeasylog.la呢?</p>
+<p>其实它的内容很简单，就是指定了要编译的库的名字和库的源码。但是有一个问题，我们这里需要编译的是但为什么这里的目标文件是libeasylog.la呢?</p>
 <p>Libtool是一种属于GNU构建系统的GNU程序设计工具,它将静态库和动态库抽象成了一种统一的叫做libtool库的概念。libtool库使用la作为后缀。它可以用来构建静态库也能用来构建动态库，而最终编译出来的到底是哪一种，在最后执行configure命令的时候才能确定。同时它编译的时候产生的文件就不再是.o文件而是.lo文件。  </p>
 <p>这里lib_LTLIBRARIES的lib前缀表示的就是目标文件是一个动态库而不是可执行文件(bin前缀表示目标文件是可执行文件,noinst_LTLIBRARIES表示目标文件是静态库)。而LTLIBRARIES的LT指的就是Libtool。还有一点是一般编译库文件的话我们会在文件名钱加上lib前缀，所以我们的目标文件是libeasylog.la。</p>
 <p>而下面的libeasylog_la_SOURCES就是指定编译libeasylog.la使用的源代码</p>
@@ -251,6 +251,8 @@ src目录">
 <p>三是多了AM_PROG_AR和LT_INIT。如果不定义这两个宏的话,执行autoreconf –install命令得到了下面的错误日志:</p>
 <figure class="highlight vhdl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">src/Makefile.am:<span class="number">1</span>: error: Libtool <span class="keyword">library</span> used but <span class="attribute">'LIBTOOL</span>' <span class="keyword">is</span> undefined</span><br><span class="line">src/Makefile.am:<span class="number">1</span>:   The usual way <span class="keyword">to</span> define <span class="attribute">'LIBTOOL</span>' <span class="keyword">is</span> <span class="keyword">to</span> add <span class="attribute">'LT_INIT</span>'</span><br><span class="line">src/Makefile.am:<span class="number">1</span>:   <span class="keyword">to</span> <span class="attribute">'configure</span>.ac' <span class="keyword">and</span> run <span class="attribute">'aclocal</span>' <span class="keyword">and</span> <span class="attribute">'autoconf</span>' again.</span><br><span class="line">src/Makefile.am:<span class="number">1</span>:   <span class="keyword">If</span> <span class="attribute">'LT_INIT</span>' <span class="keyword">is</span> <span class="keyword">in</span> <span class="attribute">'configure</span>.ac', make sure</span><br><span class="line">src/Makefile.am:<span class="number">1</span>:   its definition <span class="keyword">is</span> <span class="keyword">in</span> aclocal<span class="attribute">'s</span> search path.</span><br><span class="line">automake: warnings are treated as errors</span><br><span class="line">/usr/share/automake-<span class="number">1.15</span>/am/ltlibrary.am: warning: <span class="attribute">'libeasylog</span>.la': linking libtool libraries using a non-POSIX</span><br><span class="line">/usr/share/automake-<span class="number">1.15</span>/am/ltlibrary.am: archiver requires <span class="attribute">'AM_PROG_AR</span>' <span class="keyword">in</span> <span class="attribute">'configure</span>.ac'</span><br><span class="line">src/Makefile.am:<span class="number">1</span>:   <span class="keyword">while</span> processing Libtool <span class="keyword">library</span> <span class="attribute">'libeasylog</span>.la'</span><br><span class="line">autoreconf: automake failed <span class="keyword">with</span> <span class="keyword">exit</span> status: <span class="number">1</span></span><br></pre></td></tr></table></figure>
 <p>注意AM_PROG_AR 要放在 LT_INIT 之前,要不然 autoreconf –install 的时候会报warn</p>
+<p>如果已经加上了 LT_INIT 但还是会报错的话就是系统中没有安装libtool了,必须先安装一下:</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-<span class="keyword">get</span> install libtool</span><br></pre></td></tr></table></figure>
 <h2 id="u7F16_u8BD1_u5DE5_u7A0B"><a href="#u7F16_u8BD1_u5DE5_u7A0B" class="headerlink" title="编译工程"></a>编译工程</h2><ol>
 <li><p>在工程根目录创建子build目录用于编译</p>
 </li>
@@ -272,6 +274,7 @@ src目录">
 <p>但如果将Makefile.am改成生成静态库则不会报错，因为静态库将库的代码也编译到可执行程序之中了。</p>
 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">noinst_LTLIBRARIES = libeasylog<span class="class">.la</span>                                               </span><br><span class="line">libeasylog_la_SOURCES = cout_log_interface<span class="class">.cpp</span> \                                    </span><br><span class="line">                     easy_log.cpp</span><br></pre></td></tr></table></figure>
 <p>这里的noinst代表的其实是no install的意思</p>
+<h2 id="Demo_u9879_u76EE"><a href="#Demo_u9879_u76EE" class="headerlink" title="Demo项目"></a>Demo项目</h2><p>可以在<a href="https://github.com/bluesky466/automake-demo/tree/v0.0.2" target="_blank" rel="external">这里</a>查看完整的项目代码</p>
 
     
   </div>
@@ -285,7 +288,7 @@ src目录">
     <a class="show pull-left" href="/2017/03/17/automake学习笔记-helloworld/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2017/03/26/automake学习笔记-安装与发布/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>

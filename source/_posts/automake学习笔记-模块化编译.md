@@ -156,6 +156,12 @@ autoreconf: automake failed with exit status: 1
 
 注意AM\_PROG\_AR 要放在 LT\_INIT 之前,要不然 autoreconf --install 的时候会报warn
 
+如果已经加上了 LT\_INIT 但还是会报错的话就是系统中没有安装libtool了,必须先安装一下:
+
+```
+sudo apt-get install libtool
+```
+
 
 ## 编译工程
 
