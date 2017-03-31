@@ -36,6 +36,13 @@ Libtool是一种属于GNU构建系统的GNU程序设计工具,它将静态库和
 而下面的libeasylog\_la\_SOURCES就是指定编译libeasylog.la使用的源代码
 
 
+这里顺便说一点,如果这里需要链接其他的库的话需要用 \_LIBADD 去指定。如需要链接libpthread这个库的话就需要这样写:
+
+```
+libeasylog_la_LIBADD = -lpthread
+```
+
+
 
 ## examples目录
 
@@ -161,7 +168,6 @@ autoreconf: automake failed with exit status: 1
 ```
 sudo apt-get install libtool
 ```
-
 
 ## 编译工程
 
