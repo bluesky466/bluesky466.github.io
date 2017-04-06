@@ -177,7 +177,36 @@ export PATH=$PATH:$TOOLCHAIN_HOME/bin
 ../configure --prefix=`pwd` --host arm-linux-androideabi
 ```
 
-之后就能使用make install命令编译并安装了。完成后再bin目录可以见到 __example__ ,在lib目录可以看到 __libeasylog.so__。
+之后就能使用make install命令编译并安装了。
+
+在某些机器上编译时会报找不到shared_ptr的错误,解决方法是在src/Makefile.am和examples/Makefile.am的CPPFLAGS宏加上-std=c++11:
+
+```
+#src/Makefile.am
+lib_LTLIBRARIES = libeasylog.la
+
+libeasylog_la_SOURCES = cout_log_interface.cpp \
+						easy_log.cpp
+
+libeasylog_la_CPPFLAGS = -std=c++11
+
+libeasylog_la_LDFLAGS = -no-undefined
+```
+
+```
+#examples/Makefile.am
+AM_CPPFLAGS = -I$(top_srcdir)/src \
+              -std=c++11
+
+bin_PROGRAMS = example
+example_SOURCES = example.cpp
+
+example_LDADD = -L$(top_builddir)/src \
+				-leasylog
+
+```
+
+编译安装完成后再bin目录可以见到 __example__ ,在lib目录可以看到 __libeasylog.so__。
 
 虽然看起来和linux程序一样，但是直接运行example的话会报错:
 
