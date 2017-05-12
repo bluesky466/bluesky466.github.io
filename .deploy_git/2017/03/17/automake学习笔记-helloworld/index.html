@@ -25,7 +25,7 @@
 <meta property="og:description" content="虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃文档,并将学的的东西记录下来。
 这篇文章用一个简单的log工具的编译先对automake做一个hello world级别的介绍。
 代码我们的demo有6个文件cout_log_interface.h, cout_log_interface.cpp, log_interface.h,">
-<meta property="og:updated_time" content="2017-03-17T20:43:50.776Z">
+<meta property="og:updated_time" content="2017-05-12T22:52:13.143Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="automake学习笔记 - helloworld">
 <meta name="twitter:description" content="虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃文档,并将学的的东西记录下来。
@@ -156,7 +156,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#u4EE3_u7801"><span class="toc-text">代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Makefil-am"><span class="toc-text">Makefil.am</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#configure-ac"><span class="toc-text">configure.ac</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u751F_u6210Makefile"><span class="toc-text">生成Makefile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u7F16_u8BD1_u5DE5_u7A0B"><span class="toc-text">编译工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u5728build_u76EE_u5F55_u4E2D_u7F16_u8BD1_u9879_u76EE"><span class="toc-text">在build目录中编译项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4F7F_u7528autoscan_u751F_u6210configure-ac"><span class="toc-text">使用autoscan生成configure.ac</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#u4EE3_u7801"><span class="toc-text">代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Makefile-am"><span class="toc-text">Makefile.am</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#configure-ac"><span class="toc-text">configure.ac</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u751F_u6210Makefile"><span class="toc-text">生成Makefile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u7F16_u8BD1_u5DE5_u7A0B"><span class="toc-text">编译工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u5728build_u76EE_u5F55_u4E2D_u7F16_u8BD1_u9879_u76EE"><span class="toc-text">在build目录中编译项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4F7F_u7528autoscan_u751F_u6210configure-ac"><span class="toc-text">使用autoscan生成configure.ac</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo_u9879_u76EE"><span class="toc-text">Demo项目</span></a></li></ol>
   </div>
 
 
@@ -219,7 +219,7 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> COutLogInterface::DoLog(LogLevel level, <span class="keyword">const</span> <span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">string</span>&amp; <span class="built_in">log</span>) &#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">log</span>&lt;&lt;endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>当然需要有个main函数:</p>
 <figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="constant">EasyLog </span>log(<span class="symbol">std:</span><span class="symbol">:make_shared&lt;COutLogInterface&gt;</span>());</span><br><span class="line">    log.<span class="constant">Debug(</span><span class="string">"test"</span>, <span class="string">"testlog"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="Makefil-am"><a href="#Makefil-am" class="headerlink" title="Makefil.am"></a>Makefil.am</h2><p>automake使用Makefil.am配置工程的源码,它的内容如下:</p>
+<h2 id="Makefile-am"><a href="#Makefile-am" class="headerlink" title="Makefile.am"></a>Makefile.am</h2><p>automake使用Makefile.am配置工程的源码,它的内容如下:</p>
 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">bin_PROGRAMS = easylog</span><br><span class="line">easylog_SOURCES = cout_log_interface<span class="class">.cpp</span> \</span><br><span class="line">                  easy_log<span class="class">.cpp</span> \</span><br><span class="line">                  main.cpp</span><br></pre></td></tr></table></figure>
 <p>bin_PROGRAMS 指定了要编译生成的目标程序的名字,在这里我们最终编译出来的目标程序的文件名是easylog</p>
 <p>之后的 easylog_SOURCES 指定了需要参与编译的源代码。</p>
@@ -251,7 +251,7 @@
 <ul>
 <li>AC_CONFIG_FILES </li>
 </ul>
-<p>指定了Makefile.am的路径,这里把后缀省略了,同时因为Makefile.am和configure.ac在同级目录,所以直接写Makefile就好了。在文字的后面我会介绍当Makefile.am和configure.ac不在同级目录的时候需要怎么配置</p>
+<p>指定了需要configure生成的Makefile,autoreconf的时候会通过Makefile.am生成Makefile.in。而configure的时候会通过Makefile.in生成Makefile。因为Makefile.am和configure.ac在同级目录,所以直接写Makefile就好了。在后面我会介绍当Makefile.am和configure.ac不在同级目录的时候需要怎么配置</p>
 <ul>
 <li>AC_OUTPUT</li>
 </ul>
@@ -325,6 +325,7 @@ AC_OUTPUT
 <li>AC_CONFIG_SRCDIR</li>
 </ul>
 <p>用一个项目中一定存在的文件去确定源码目录的有效性,这是一个安全检查宏。configure有一个–srcdir的参数可以指定源码目录,这个宏就可以检查出源码目录是否不小心配置错了</p>
+<h2 id="Demo_u9879_u76EE"><a href="#Demo_u9879_u76EE" class="headerlink" title="Demo项目"></a>Demo项目</h2><p>可以在<a href="https://github.com/bluesky466/automake-demo/tree/v0.0.1" target="_blank" rel="external">这里</a>查看完整的项目代码</p>
 
     
   </div>
@@ -338,7 +339,7 @@ AC_OUTPUT
     <a class="show pull-left" href="/2017/03/03/在android上使用grpc/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2017/03/21/automake学习笔记-模块化编译/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>

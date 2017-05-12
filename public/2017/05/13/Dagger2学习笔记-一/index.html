@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Dagger2学习笔记(一) | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Android,技术相关," />
+  
+
+  <meta name="description" content="依赖注入是一种十分好的技巧，它能解偶高层次模块和低层次模块，使得高层模块不用将底层模块硬编码到内部。所有依赖的底层模块都由外部注入，实际是一种面向接口编程。高层模块不依赖底层模块的实现细节，可以方便的做到替换底层模块。这种技术在编写跨平台程序的时候可以很容易的替换调依赖系统的底层模块，并且在做单元测试的时候也可以很容易的使用stub对象注入宿主类中从而方便宿主类的测试代码的编写。
+使用Dagger">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dagger2学习笔记(一)">
+<meta property="og:url" content="http://yoursite.com/2017/05/13/Dagger2学习笔记-一/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="依赖注入是一种十分好的技巧，它能解偶高层次模块和低层次模块，使得高层模块不用将底层模块硬编码到内部。所有依赖的底层模块都由外部注入，实际是一种面向接口编程。高层模块不依赖底层模块的实现细节，可以方便的做到替换底层模块。这种技术在编写跨平台程序的时候可以很容易的替换调依赖系统的底层模块，并且在做单元测试的时候也可以很容易的使用stub对象注入宿主类中从而方便宿主类的测试代码的编写。
+使用Dagger">
+<meta property="og:updated_time" content="2017-05-12T23:00:24.403Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dagger2学习笔记(一)">
+<meta name="twitter:description" content="依赖注入是一种十分好的技巧，它能解偶高层次模块和低层次模块，使得高层模块不用将底层模块硬编码到内部。所有依赖的底层模块都由外部注入，实际是一种面向接口编程。高层模块不依赖底层模块的实现细节，可以方便的做到替换底层模块。这种技术在编写跨平台程序的时候可以很容易的替换调依赖系统的底层模块，并且在做单元测试的时候也可以很容易的使用stub对象注入宿主类中从而方便宿主类的测试代码的编写。
+使用Dagger">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#u4F7F_u7528Dagger2_u5B9E_u73B0_u4F9D_u8D56_u6CE8_u5165"><span class="toc-text">使用Dagger2实现依赖注入</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Dagger2_u7684_u4E24_u4E2A_u91CD_u8981_u7EC4_u4EF6"><span class="toc-text">Dagger2的两个重要组件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4E3E_u4E2A_u6817_u5B50"><span class="toc-text">举个栗子</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Dagger2_u7684_u5F15_u5165"><span class="toc-text">Dagger2的引入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u5B9A_u4E49Module"><span class="toc-text">定义Module</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u4E3A_u9AD8_u5C42_u7C7B_u9700_u8981_u6CE8_u5165_u7684_u6210_u5458_u53D8_u91CF_u6DFB_u52A0@Inject_u6CE8_u89E3"><span class="toc-text">为高层类需要注入的成员变量添加@Inject注解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u5B9A_u4E49Component"><span class="toc-text">定义Component</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u5728_u5408_u9002_u7684_u5730_u65B9_u8C03_u7528_u6CE8_u5165_u65B9_u6CD5_u5B9E_u73B0_u6CE8_u5165"><span class="toc-text">在合适的地方调用注入方法实现注入</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u518D_u4E3E_u4E2A_u6817_u5B50"><span class="toc-text">再举个栗子</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Dagger2学习笔记-一" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Dagger2学习笔记(一)</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.05.13</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2017/05/13/Dagger2学习笔记-一/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>依赖注入是一种十分好的技巧，它能解偶高层次模块和低层次模块，使得高层模块不用将底层模块硬编码到内部。<br>所有依赖的底层模块都由外部注入，实际是一种面向接口编程。高层模块不依赖底层模块的实现细节，可以方便的做到替换底层模块。<br>这种技术在编写跨平台程序的时候可以很容易的替换调依赖系统的底层模块，并且在做单元测试的时候也可以很容易的使用stub对象注入宿主类中从而方便宿主类的测试代码的编写。</p>
+<h1 id="u4F7F_u7528Dagger2_u5B9E_u73B0_u4F9D_u8D56_u6CE8_u5165"><a href="#u4F7F_u7528Dagger2_u5B9E_u73B0_u4F9D_u8D56_u6CE8_u5165" class="headerlink" title="使用Dagger2实现依赖注入"></a>使用Dagger2实现依赖注入</h1><p>如果不使用DI框架，我们也可以在构造方法里传入依赖类或着用setter方法来将依赖类注入宿主类。但是这样的话就会需要我们在业务逻辑中处理依赖类的生成和注入，其实这些依赖的注入代码和业务都没有什么关系仅仅是一些初始化的操作而已，如果可以将这些与业务逻辑无关的代码都独立出去，这样的话我们的代码逻辑就会更加的简洁和清晰。Dagger2就是一个十分强大的DI框架，它可以帮助我们轻松的在业务逻辑之外实现依赖注入。</p>
+<h2 id="Dagger2_u7684_u4E24_u4E2A_u91CD_u8981_u7EC4_u4EF6"><a href="#Dagger2_u7684_u4E24_u4E2A_u91CD_u8981_u7EC4_u4EF6" class="headerlink" title="Dagger2的两个重要组件"></a>Dagger2的两个重要组件</h2><p>Dagger2有两个十分重要的组件：Module和Component。</p>
+<ul>
+<li><p>Module</p>
+<p>  Module是依赖的提供者，Dagger2框架通过Module的Provides方法获取被依赖类的实例。</p>
+</li>
+<li><p>Component</p>
+<p>  Component是一个注入接口，Dagger2框架通过Component将依赖注入到高层类中。</p>
+<p>  用一个形象的比喻来说明就是Module是装有被依赖类的针筒，Component是针头。Dagger2通过选择针筒和针头的不同组合可以将不同的被依赖实例注入到高层模块中。</p>
+</li>
+</ul>
+<h2 id="u4E3E_u4E2A_u6817_u5B50"><a href="#u4E3E_u4E2A_u6817_u5B50" class="headerlink" title="举个栗子"></a>举个栗子</h2><p>下面我们使用MVP模式写一个展示github头像和用户名的小Demo来具体介绍Dagger2的用法。</p>
+<h3 id="Dagger2_u7684_u5F15_u5165"><a href="#Dagger2_u7684_u5F15_u5165" class="headerlink" title="Dagger2的引入"></a>Dagger2的引入</h3><p>Dagger2没有使用反射，它是通过编译时生成代码来实现依赖注入的。所以需要引入apt:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//build.gradle(project)</span></span><br><span class="line">...</span><br><span class="line"><span class="keyword">buildscript</span> &#123;</span><br><span class="line">	<span class="keyword">repositories</span> &#123;</span><br><span class="line">		jcenter()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">dependencies</span> &#123;</span><br><span class="line">		<span class="keyword">classpath</span> <span class="string">'com.android.tools.build:gradle:2.3.0'</span></span><br><span class="line">		<span class="keyword">classpath</span> <span class="string">'com.neenbedankt.gradle.plugins:android-apt:1.8'</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//build.gradle(app)</span></span><br><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.android.application'</span></span><br><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.neenbedankt.android-apt'</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>之后再引入javax.annotation和dagger2:<br><figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//build.gradle(app)</span></span><br><span class="line">...</span><br><span class="line"><span class="keyword">dependencies</span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">compile</span> <span class="string">'com.google.dagger:dagger:2.4'</span></span><br><span class="line">	apt <span class="string">'com.google.dagger:dagger-compiler:2.4'</span></span><br><span class="line">	<span class="keyword">compile</span> <span class="string">'org.glassfish:javax.annotation:10.0-b28'</span></span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="u5B9A_u4E49Module"><a href="#u5B9A_u4E49Module" class="headerlink" title="定义Module"></a>定义Module</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfoLoaderModule</span> </span>&#123;</span><br><span class="line">    <span class="annotation">@Provides</span></span><br><span class="line">	<span class="function">UserInfoLoader <span class="title">provideUserInfoLoader</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	    <span class="keyword">return</span> <span class="keyword">new</span> UserInfoLoader();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Module类首先需要使用@Module注解标注，让Dagger2知道这是一个Module，然后内部的使用@Provides注解标注的方法就是用来获取被依赖类的实例的方法</p>
+<p>这里的UserInfoLoader就是一个底层的被依赖类，它用来通过网络去请求github服务器，查询用户的头像和用户名信息</p>
+<p>Dagger2可以通过provideUserInfoLoader方法获取到被依赖类的实例。</p>
+<h3 id="u4E3A_u9AD8_u5C42_u7C7B_u9700_u8981_u6CE8_u5165_u7684_u6210_u5458_u53D8_u91CF_u6DFB_u52A0@Inject_u6CE8_u89E3"><a href="#u4E3A_u9AD8_u5C42_u7C7B_u9700_u8981_u6CE8_u5165_u7684_u6210_u5458_u53D8_u91CF_u6DFB_u52A0@Inject_u6CE8_u89E3" class="headerlink" title="为高层类需要注入的成员变量添加@Inject注解"></a>为高层类需要注入的成员变量添加@Inject注解</h3><p>我们的高层类是UserInfoPresenter,是MVP模式中的Presenter，UserInfoLoader是它的一个成员变量。</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfoPresenter</span> &#123;</span></span><br><span class="line">	...</span><br><span class="line">	<span class="annotation">@Inject</span></span><br><span class="line">	UserInfoLoader mUserInfoLoader;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们通过@Inject注解告诉Dagger2哪些成员变量是需要被注入的，这里需要注意的是被@Inject标注的成员变量不可以是private的，因为Dagger2没有用到反射，而是通过生成代码去完成注入的，所以一旦你将成员变量声明成private的，那Dagger2就不能访问到它，从而无法无法完成注入了。</p>
+<h3 id="u5B9A_u4E49Component"><a href="#u5B9A_u4E49Component" class="headerlink" title="定义Component"></a>定义Component</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@dagger</span>.Component(modules = &#123;UserInfoLoaderModule.<span class="keyword">class</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Component</span> &#123;</span></span><br><span class="line">    <span class="typename">void</span> inject(UserInfoPresenter presenter);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Component是一个被@Component注解标注的接口，Dagger2会自动生成实现这个接口的类，去完成注入的功能。我们需要用modules去告诉Component从哪个Module中获取被依赖类的实例。</p>
+<h3 id="u5728_u5408_u9002_u7684_u5730_u65B9_u8C03_u7528_u6CE8_u5165_u65B9_u6CD5_u5B9E_u73B0_u6CE8_u5165"><a href="#u5728_u5408_u9002_u7684_u5730_u65B9_u8C03_u7528_u6CE8_u5165_u65B9_u6CD5_u5B9E_u73B0_u6CE8_u5165" class="headerlink" title="在合适的地方调用注入方法实现注入"></a>在合适的地方调用注入方法实现注入</h3><p>Dagger2会生成实现Component接口的类,这个类会在接口的前面加上Dagger前缀，我们通过调用inject方法就可以将UserInfoLoader注入到UserInfoPresenter中:</p>
+<figure class="highlight vhdl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Component</span> <span class="keyword">component</span> = DaggerComponent.builder().build();</span><br><span class="line"><span class="keyword">component</span>.inject(mPresenter);</span><br></pre></td></tr></table></figure>
+<p>它实际是通过查找UserInfoPresenter中带有@Inject注解的成员变量知道哪个变量需要被注入，然后通过UserInfoLoaderModule的provide方法获取到这个被依赖类的实例去实现注入的。</p>
+<h2 id="u518D_u4E3E_u4E2A_u6817_u5B50"><a href="#u518D_u4E3E_u4E2A_u6817_u5B50" class="headerlink" title="再举个栗子"></a>再举个栗子</h2><p>有时候被依赖类的构造方法是需要传参的，例如这里的UserInfoPresenter在构造的时候需要参入UserInfoView:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfoPresenter</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">private</span> UserInfoView mView;</span><br><span class="line"></span><br><span class="line">	<span class="annotation">@Inject</span></span><br><span class="line">	UserInfoLoader mUserInfoLoader;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">UserInfoPresenter</span><span class="params">(UserInfoView view)</span> </span>&#123;</span><br><span class="line">		mView = view;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们也希望通过Dagger2将它注入到Activity中。这样的话就要这么定义Module了:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="annotation">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfoPresenterModule</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> UserInfoView mView;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">UserInfoPresenterModule</span><span class="params">(UserInfoView view)</span> </span>&#123;</span><br><span class="line">	        mView = view;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="annotation">@Provides</span></span><br><span class="line">	<span class="function">UserInfoPresenter <span class="title">provideUserInfoPresenter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> UserInfoPresenter(mView);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后在Component中加入UserInfoPresenter的注入方法:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">@dagger.Component(modules = &#123;UserInfoPresenterModule.<span class="keyword">class</span>, UserInfoLoaderModule.<span class="keyword">class</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> Component &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(UserInfoPresenter presenter);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">void</span> <span class="keyword">inject</span>(MainActivity activity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在最后实际注入的时候需要将UserInfoPresenterModule从外部传到DaggerComponent中，因为UserInfoPresenterModule的构造函数带参数，所以必须在外面创建好，然后通过userInfoPresenterModule方法传给DaggerComponent builder。</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Component component = DaggerComponent.builder()</span><br><span class="line">        .userInfoPresenterModule(<span class="keyword">new</span> UserInfoPresenterModule(<span class="keyword">this</span>))</span><br><span class="line">		.build();</span><br><span class="line">component.<span class="keyword">inject</span>(<span class="keyword">this</span>);</span><br><span class="line">component.<span class="keyword">inject</span>(mPresenter);</span><br></pre></td></tr></table></figure>
+<p>这段代码是在MainActivity中的，UserInfoPresenter是MainActivity的一个需要注入的成员变量。具体的实现细节可以查看<a href="https://github.com/bluesky466/Dagger2Demo/tree/v0.1" target="_blank" rel="external">完整代码</a>。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/04/02/automake学习笔记-交叉编译/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://yoursite.com/2017/05/13/Dagger2学习笔记-一/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

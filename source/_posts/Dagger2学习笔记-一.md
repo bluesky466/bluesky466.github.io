@@ -192,5 +192,7 @@ component.inject(mPresenter);
 
 ```
 
-这段代码是在MainActivity中的，UserInfoPresenter是MainActivity的一个需要注入的成员变量。具体的实现细节可以查看完整代码。
+这段代码是在MainActivity中的，UserInfoPresenter是MainActivity的一个需要注入的成员变量。具体的实现细节可以查看[完整代码](https://github.com/bluesky466/Dagger2Demo/tree/v0.1)。
+
+
 
