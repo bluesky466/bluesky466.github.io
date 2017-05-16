@@ -170,3 +170,92 @@ component.inject(mSearchPresenter);
 它实际是通过查找SearchActivity和SearchPresenter中带有@Inject注解的成员变量知道哪个变量需要被注入，然后通过SearchPresenterModule的provide方法和SearchPresenter被标注的构造方法获取到被依赖类的实例去实现注入的。
 
 这里有一点需要注意的是调用顺序，inject(SearchActivity activity)要在inject(SearchPresenter presenter)前面调用，因为需要先将SearchActivity.this的mSearchPresenter注入，才能向mSearchPresenter中再注入SearchActivity
+
+### 指定构造函数
+
+我们在前面讲到过@Inject可以指定构造函数，其实它还有另一重意义，就是存在多个构造函数的时候选择其中一种。
+
+我们先在添加另外一种SearchPresenter构造函数,然后中添加打印:
+
+```
+public class SearchPresenter{
+	...
+	@Inject
+	SearchView mSearchView;
+
+    @Inject
+    Context mContext;
+
+	@Inject
+    public SearchPresenter() {
+        Log.d(TAG, "SearchPresenter()");
+    }
+
+	public SearchPresenter(Context context) {
+	    Log.d(TAG, "SearchPresenter(Context context)");
+		mContext = context;
+	}
+	...
+}
+```
+
+让我们看看运行的时候到底调的是哪个构造函数吧:
+
+> D/SearchPresenter(27333): SearchPresenter()
+
+如果我们把SearchPresenter类修改一下呢?
+
+```
+public class SearchPresenter{
+	...
+	@Inject
+	SearchView mSearchView;
+
+    // @Inject 注释掉
+    Context mContext;
+
+	// @Inject 注释掉
+    public SearchPresenter() {
+        Log.d(TAG, "SearchPresenter()");
+    }
+
+	@Inject // 添加@Inject
+	public SearchPresenter(Context context) {
+	    Log.d(TAG, "SearchPresenter(Context context)");
+		mContext = context;
+	}
+	...
+}
+```
+
+先在可以看到打印:
+
+> D/SearchPresenter(27693): SearchPresenter(Context context)
+
+从打印来看，@Inject的确是可以选择构造函数的。但还有个细节不知道大家有没有注意到,我们去掉了mContext的@Inject,改由构造函数传入。这个传入构造函数的Context又是怎么来的呢？
+
+答案在SearchPresenterModule里:
+
+```
+@Module
+public class SearchPresenterModule {
+    private SearchActivity mSearchActivity;
+
+    public SearchPresenterModule(SearchActivity view) {
+        mSearchActivity = view;
+    }
+
+    @Provides
+    SearchView provideSearchView() {
+        return mSearchActivity;
+    }
+
+	// 是它,是它,就是它
+    @Provides
+    Context provideContext() {
+        return mSearchActivity;
+    }
+}
+```
+
+没错SearchPresenterModule.provideContext()这个方法还能创建Context出来给SearchPresenter的构造函数使用！
