@@ -4,7 +4,7 @@ tags:
     - 技术相关
     - Android
 ---
-前段时间在学习Dagger2,对它生成代码的原理充满了好奇。google了之后发现原来java原生就是代码生成的。
+前段时间在学习Dagger2,对它生成代码的原理充满了好奇。google了之后发现原来java原生就是支持代码生成的。
 
 通过Annotation Processor可以在编译的时候处理注解,生成我们自定义的代码,这些生成的代码会和其他手写的代码一样被javac编译。注意Annotation Processor只能用来生成代码,而不能对原来的代码进行修改。
 
@@ -158,6 +158,14 @@ public class InjectorProcessor extends AbstractProcessor {
 
         //遍历所有被InjectView注释的元素
         for (Element element : elements) {
+            //如果标注的对象不是FIELD则报错,这个错误其实不会发生因为InjectView的Target已经声明为ElementType.FIELD了
+            if (element.getKind()!= ElementKind.FIELD) {
+                mMessager.printMessage(Diagnostic.Kind.ERROR, "is not a FIELD", element);
+            }
+
+            //这里可以先将element转换为VariableElement,但我们这里不需要
+            //VariableElement variableElement = (VariableElement) element;
+
             //如果不是View的子类则报错
             if (!isView(element.asType())){
                 mMessager.printMessage(Diagnostic.Kind.ERROR, "is not a View", element);
@@ -197,6 +205,7 @@ public class InjectorProcessor extends AbstractProcessor {
         return true;
     }
 
+    //递归判断android.view.View是不是其父类
     private boolean isView(TypeMirror type) {
         List<? extends TypeMirror> supers = mTypeUtils.directSupertypes(type);
         if (supers.size() == 0) {
@@ -209,7 +218,6 @@ public class InjectorProcessor extends AbstractProcessor {
         }
         return false;
     }
-
 
     private void addElement(Map<Element, List<Element>> map, Element clazz, Element field) {
         List<Element> list = map.get(clazz);
