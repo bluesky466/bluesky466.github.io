@@ -86,7 +86,7 @@ When building compiler tools: the system for which the tools will create output.
 
 有人可能会问，为什么需要在linux上编译这么蛋疼而不直接在windows上编译呢？
 
-就按我遇到的情况来说吧。我们部门的自动构建服务器就是liunx的，我们的项目都需要通过它来编译、检查和发布，我们也习惯于子啊linux上编程，最重要的是我们的项目就是跨平台的，不管是windows、linux还是android上都需要可以运行，所以没有必要为每个平台搭建一套编译环境。直接在linux上编译所有平台的软件是最好的选择。
+就按我遇到的情况来说吧。我们部门的自动构建服务器就是liunx的，我们的项目都需要通过它来编译、检查和发布，我们也习惯于在linux上编程，最重要的是我们的项目就是跨平台的，不管是windows、linux还是android上都需要可以运行，所以没有必要为每个平台搭建一套编译环境。直接在linux上编译所有平台的软件是最好的选择。
 
 为了在linux上交叉编译windows的程序，我们先要搭建一下交叉编译的环境:
 
