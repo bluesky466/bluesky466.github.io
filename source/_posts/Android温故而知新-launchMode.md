@@ -220,7 +220,7 @@ singleTask的作用就是在任务栈中寻找将要启动的Activity,如果找�
 
 > 与“singleTask"”相同，只是系统不会将任何其他 Activity 启动到包含实例的任务中。 该 Activity 始终是其任务唯一仅有的成员。
 
-就是说系统会为singleInstance Activity单独创建一个任务栈,这个任务栈里面只有这个Activity。当Activity已经存在于系统的某一任务栈中,就会直接跳到那个任务栈的Activity中,而不会新启动一个Activity。
+就是说系统会为singleInstance Activity单独创建一个任务栈,这个任务栈里是这个Activity独占的,不会再压入其他的Activity。而且它是系统唯一的,当就是说系统会为singleInstance Activity已经存在于系统的某一任务栈中,就会直接跳到那个任务栈的Activity中,而不会新启动一个Activity。
 
 我们将FirstActivity设为standard, SecondActivity设为singleInstance。启动demo之后先按“GOTO SECOND ACTIVITY”再按“GOTO FIRST ACTIVITY”。然后再一直按返回键到退出应用。截图如下:
 
@@ -241,4 +241,4 @@ singleTask的作用就是在任务栈中寻找将要启动的Activity,如果找�
 
 这个时候按返回键会将当前的Activity弹出栈,于是就跳到了一开始的FirstActivity。之后再按返回键,因为Task 19这个任务栈空了,就会去到SecondActivity的栈,于是就去到了SecondActivity。最后再按返回键就会推出应用了。
 
-要注意的是singleInstance的Activity是系统唯一的,也就是说你在demo这里启动了这个SecondActivity的SecondActivity,然后按home键去到launcher启动其他应用,从其他应用再启动一个SecondActivity也是去到原来的SecondActivity
+要再次提醒需要注意的是singleInstance的Activity是系统唯一的,也就是说你在demo这里启动了这个SecondActivity的SecondActivity,然后按home键去到launcher启动其他应用,从其他应用再启动一个SecondActivity也是去到原来的SecondActivity
