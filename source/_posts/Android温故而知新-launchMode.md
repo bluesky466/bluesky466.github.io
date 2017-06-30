@@ -111,7 +111,7 @@ public class Utils {
 
 我们可以在adb shell中使用dumpsys activity可以看到任务栈。这个命令的打印会比较多,但是有两个部分是比较重要的。
 
-一个是Recent tasks,这里可以看到各个任务栈的总体信息,如我们的demo在第0个任务栈,它的Task id 是483,包名是linjw.demo.launchmodedem,栈里面有6个Activity
+一个是Recent tasks,这里可以看到各个任务栈的总体信息,如我们的demo在第0个任务栈,它的Task id 是483,包名是linjw.demo.launchmodedemo,栈里面有6个Activity
 
 ```
 ACTIVITY MANAGER RECENT TASKS (dumpsys activity recents)
@@ -220,7 +220,7 @@ singleTask的作用就是在任务栈中寻找将要启动的Activity,如果找�
 
 > 与“singleTask"”相同，只是系统不会将任何其他 Activity 启动到包含实例的任务中。 该 Activity 始终是其任务唯一仅有的成员。
 
-就是说系统会为这个Activity单独创建一个任务栈,这个任务重里面只有这个Activity。当Activity已经存在于系统的某一任务栈中,就会直接跳到那个任务栈的Activity中,而不会新启一个任务栈和Activity。
+就是说系统会为singleInstance Activity单独创建一个任务栈,这个任务栈里面只有这个Activity。当Activity已经存在于系统的某一任务栈中,就会直接跳到那个任务栈的Activity中,而不会新启动一个Activity。
 
 我们将FirstActivity设为standard, SecondActivity设为singleInstance。启动demo之后先按“GOTO SECOND ACTIVITY”再按“GOTO FIRST ACTIVITY”。然后再一直按返回键到退出应用。截图如下:
 
@@ -233,6 +233,12 @@ singleTask的作用就是在任务栈中寻找将要启动的Activity,如果找�
 {% img /Android温故而知新-launchMode/singleInstance3.png %}
 
 
-在SecondActivity启动FirstActivity会回到原来的栈上,这个时候再按按返回键就不是回到SecondActivity了,因为它在其他的任务栈里面,要先将当前任务栈清空。所以这个时候按返回键会将当前的Activity弹出栈,于是就跳到了一开始的FirstActivity。之后再按返回键因为栈空了,就会去到SecondActivity的栈,于是就去到了SecondActivity。最后再按返回键就会推出应用了。
+启动应用之后先点击“GOTO SECOND ACTIVITY”,这个时候系统会新建一个任务栈(Task 20)来放SecondActivity
 
-要注意的是这个时候SecondActivity是系统唯一的,也就是说你在demo这里启动了Activity,然后按home键去到launcher启动其他应用,从其他应用启动SecondActivity也是去到原来的SecondActivity
+在SecondActivity中再启动FirstActivity因为Task 20这个任务栈是SecondActivity独占的。所以不会在这个任务栈压入其他Activity,而会回到原来的任务栈上(Task 19)。又因为FirstActivity的launchMode是standard,所以不管原来的栈里面有没有FirstActivity,都会压入一个新的FirstActivity。
+
+这个时候再按返回键就不是回到SecondActivity了,因为它在其他的任务栈里面,要先将当前任务栈清空。
+
+这个时候按返回键会将当前的Activity弹出栈,于是就跳到了一开始的FirstActivity。之后再按返回键,因为Task 19这个任务栈空了,就会去到SecondActivity的栈,于是就去到了SecondActivity。最后再按返回键就会推出应用了。
+
+要注意的是singleInstance的Activity是系统唯一的,也就是说你在demo这里启动了这个SecondActivity的SecondActivity,然后按home键去到launcher启动其他应用,从其他应用再启动一个SecondActivity也是去到原来的SecondActivity
