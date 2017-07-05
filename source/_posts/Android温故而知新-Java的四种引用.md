@@ -121,7 +121,7 @@ public class DemoActivity extends AppCompatActivity {
 }
 ```
 
-不知道大家有没有看过我之前写的一篇[关于Handler的博客](http://www.jianshu.com/p/66a39db072d8),如果没有没有看过,而对Handler又不太熟悉的同学可以去看一下。
+不知道大家有没有看过我之前写的一篇[关于Handler的博客](http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/),如果没有没有看过,而对Handler又不太熟悉的同学可以去看一下。
 
 我们知道Handler是和Looper还有MessageQueue一起工作的。当安卓应用启动之后,系统会在主线程创建一个Looper和MessageQueue,它们的生命周期贯穿整个应用的生命周期。
 
