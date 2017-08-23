@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>安卓皮肤包机制的原理 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Android,技术相关," />
+  
+
+  <meta name="description" content="许多常见的应用都有换肤的功能,甚至支持用户自定义皮肤。如果将所有皮肤用到的资源都打包到apk里面不仅会使得apk的大小急剧上升,也会大大增加维护的难度。所以大部分的开发者都会选择将这些资源从apk中剥离出来放到其他地方。
+一种常用的方案就是将使用到的字符串、图片等资源打包到一个皮肤apk中，这个皮肤apk中只包含资源，没有任何的代码。主apk在启动之后从这个皮肤apk中加载资源，从而减少主apk的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓皮肤包机制的原理">
+<meta property="og:url" content="http://yoursite.com/2017/08/01/安卓皮肤包机制的原理/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="许多常见的应用都有换肤的功能,甚至支持用户自定义皮肤。如果将所有皮肤用到的资源都打包到apk里面不仅会使得apk的大小急剧上升,也会大大增加维护的难度。所以大部分的开发者都会选择将这些资源从apk中剥离出来放到其他地方。
+一种常用的方案就是将使用到的字符串、图片等资源打包到一个皮肤apk中，这个皮肤apk中只包含资源，没有任何的代码。主apk在启动之后从这个皮肤apk中加载资源，从而减少主apk的">
+<meta property="og:image" content="http://yoursite.com/安卓皮肤包机制的原理/image.jpeg">
+<meta property="og:updated_time" content="2017-08-01T01:09:01.486Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓皮肤包机制的原理">
+<meta name="twitter:description" content="许多常见的应用都有换肤的功能,甚至支持用户自定义皮肤。如果将所有皮肤用到的资源都打包到apk里面不仅会使得apk的大小急剧上升,也会大大增加维护的难度。所以大部分的开发者都会选择将这些资源从apk中剥离出来放到其他地方。
+一种常用的方案就是将使用到的字符串、图片等资源打包到一个皮肤apk中，这个皮肤apk中只包含资源，没有任何的代码。主apk在启动之后从这个皮肤apk中加载资源，从而减少主apk的">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#u83B7_u53D6_u76AE_u80A4apk_u7684Resources"><span class="toc-text">获取皮肤apk的Resources</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#u65B9_u6CD5_u4E00"><span class="toc-text">方法一</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u65B9_u6CD5_u4E8C"><span class="toc-text">方法二</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u52A0_u8F7D_u8D44_u6E90"><span class="toc-text">加载资源</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Demo"><span class="toc-text">Demo</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u5B8C_u6574_u4EE3_u7801"><span class="toc-text">完整代码</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓皮肤包机制的原理" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓皮肤包机制的原理</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.08.01</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2017/08/01/安卓皮肤包机制的原理/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>许多常见的应用都有换肤的功能,甚至支持用户自定义皮肤。如果将所有皮肤用到的资源都打包到apk里面不仅会使得apk的大小急剧上升,也会大大增加维护的难度。所以大部分的开发者都会选择将这些资源从apk中剥离出来放到其他地方。</p>
+<p>一种常用的方案就是将使用到的字符串、图片等资源打包到一个皮肤apk中，这个皮肤apk中只包含资源，没有任何的代码。主apk在启动之后从这个皮肤apk中加载资源，从而减少主apk的大小，同时也将不同皮肤的资源分别放到不同项目中，提高可维护性。</p>
+<h1 id="u83B7_u53D6_u76AE_u80A4apk_u7684Resources"><a href="#u83B7_u53D6_u76AE_u80A4apk_u7684Resources" class="headerlink" title="获取皮肤apk的Resources"></a>获取皮肤apk的Resources</h1><p>我们都知道安卓应用的资源是通过Resources去管理的,只要能获取到皮肤apk的Resources,那么就能够读取到皮肤apk中的资源文件。</p>
+<h2 id="u65B9_u6CD5_u4E00"><a href="#u65B9_u6CD5_u4E00" class="headerlink" title="方法一"></a>方法一</h2><p>第一种获取Resources的方式是通过皮肤apk的Context去获取:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function">Resources <span class="title">getResourcesByContext</span><span class="params">(Context context, String skinApkPackage)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> context.createPackageContext(skinApkPackage, Context.CONTEXT_IGNORE_SECURITY)</span><br><span class="line">                    .getResources();</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (PackageManager.NameNotFoundException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>这种方式很简单,但是却有一定的局限性。因为要使用这种方式去获取Resources,必须将皮肤apk也安装到系统。</p>
+<h2 id="u65B9_u6CD5_u4E8C"><a href="#u65B9_u6CD5_u4E8C" class="headerlink" title="方法二"></a>方法二</h2><p>第二种方法是通过获取皮肤apk的AssetManager,直接new一个Resources出来:</p>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">private <span class="type">Resources</span> getResourcesByAssetManager(<span class="type">Context</span> context, <span class="type">String</span> skinApkPath) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">Method</span> <span class="keyword">method</span> = <span class="type">AssetManager</span>.class.getDeclaredMethod(<span class="string">"addAssetPath"</span>, <span class="type">String</span>.class);</span><br><span class="line">            <span class="type">AssetManager</span> assetManager = <span class="type">AssetManager</span>.class.newInstance();</span><br><span class="line">            <span class="keyword">method</span>.invoke(assetManager, skinApkPath);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> new <span class="type">Resources</span>(</span><br><span class="line">                    assetManager,</span><br><span class="line">                    context.getResources().getDisplayMetrics(),</span><br><span class="line">                    context.getResources().getConfiguration()</span><br><span class="line">            );</span><br><span class="line">        &#125; catch (<span class="type">NoSuchMethodException</span> e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125; catch (<span class="type">IllegalAccessException</span> e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125; catch (<span class="type">InstantiationException</span> e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125; catch (<span class="type">InvocationTargetException</span> e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> null;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>这种方向需要用到反射去调用AssetManager.addAssetPath,但是只需要将皮肤apk下载下来,并不需要安装也能读取到里面的资源。</p>
+<h1 id="u52A0_u8F7D_u8D44_u6E90"><a href="#u52A0_u8F7D_u8D44_u6E90" class="headerlink" title="加载资源"></a>加载资源</h1><p>一般我们都是通过资源的id从Resources中加载资源的,但是当资源在其他apk里面的时候,我们没有办法直接通过R类知道资源的id,所以需要使用Resources的getIdentifier方法去获取id:</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="built_in">int</span> getIdentifier(<span class="keyword">String</span> name, <span class="keyword">String</span> defType, <span class="keyword">String</span> defPackage) &#123;</span><br><span class="line">        <span class="keyword">return</span> mResourcesImpl.getIdentifier(name, defType, defPackage);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>获取到id之后就能直接加载资源了:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public String getString(String <span class="property">name</span>) &#123;</span><br><span class="line">        int <span class="property">id</span> = mResources.getIdentifier(<span class="property">name</span>, <span class="string">"string"</span>, SKIN_APK_PACKAGE);</span><br><span class="line">        <span class="keyword">if</span> (<span class="property">id</span> == <span class="number">0</span>) &#123;</span><br><span class="line"><span class="command">            return</span> null;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="command">        return</span> mResources.getString(<span class="property">id</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public Drawable getDrawable(String <span class="property">name</span>) &#123;</span><br><span class="line">        int <span class="property">id</span> = mResources.getIdentifier(<span class="property">name</span>, <span class="string">"drawable"</span>, SKIN_APK_PACKAGE);</span><br><span class="line">        <span class="keyword">if</span> (<span class="property">id</span> == <span class="number">0</span>) &#123;</span><br><span class="line"><span class="command">            return</span> null;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="command">        return</span> mResources.getDrawable(<span class="property">id</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h1><p>这个demo很简单</p>
+<p>首先新建一个皮肤应用项目,在皮肤应用项目中放入img.png和创建一个字符串:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;resources&gt;</span><br><span class="line">    &lt;<span class="type">string</span> <span class="property">name</span>=<span class="string">"app_name"</span>&gt;Skin&lt;/<span class="type">string</span>&gt;</span><br><span class="line">    &lt;<span class="type">string</span> <span class="property">name</span>=<span class="string">"label"</span>&gt;hello world&lt;/<span class="type">string</span>&gt;</span><br><span class="line">&lt;/resources&gt;</span><br></pre></td></tr></table></figure>
+<p>然后创建一个主应用项目在MainActivity中从皮肤apk加载图片和字符串显示出来</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AppCompatActivity</span> &#123;</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> static <span class="type">String</span> <span class="type">SKIN_APK_PACKAGE</span> = <span class="string">"demo.linjw.skin"</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> static <span class="type">String</span> <span class="type">SKIN_APK</span> = <span class="string">"skin-debug.apk"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="type">SkinHelper</span> mSkinHelper;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//需要将皮肤apk安装到系统</span></span><br><span class="line">        mSkinHelper = <span class="keyword">new</span> <span class="type">SkinHelper</span>(<span class="keyword">this</span>, <span class="type">SKIN_APK_PACKAGE</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//需要将皮肤apk放到存储卡根目录</span></span><br><span class="line">        <span class="comment">//File skinApk = new File(Environment.getExternalStorageDirectory().getPath(), SKIN_APK);</span></span><br><span class="line">        <span class="comment">//mSkinHelper = new SkinHelper(this, SKIN_APK_PACKAGE, skinApk);</span></span><br><span class="line"></span><br><span class="line">        <span class="type">TextView</span> textView = (<span class="type">TextView</span>) findViewById(<span class="type">R</span>.id.textView);</span><br><span class="line">        textView.setText(mSkinHelper.getString(<span class="string">"label"</span>));</span><br><span class="line"></span><br><span class="line">        <span class="type">ImageView</span> imageView = (<span class="type">ImageView</span>) findViewById(<span class="type">R</span>.id.imageView);</span><br><span class="line">        imageView.setImageDrawable(mSkinHelper.getDrawable(<span class="string">"img"</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>SkinHelper代码如下:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SkinHelper</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Resources mResources;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String mSkinApkPackage;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">SkinHelper</span><span class="params">(Context context, String skinApkPackage)</span> </span>&#123;</span><br><span class="line">        mSkinApkPackage = skinApkPackage;</span><br><span class="line">        mResources = getResourcesByContext(context, skinApkPackage);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">SkinHelper</span><span class="params">(Context context, String skinApkPackage, File skinApk)</span> </span>&#123;</span><br><span class="line">        mSkinApkPackage = skinApkPackage;</span><br><span class="line">        mResources = getResourcesByAssetManager(context, skinApk.getPath());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span><br><span class="line">     * 使用Context.createPackageContext加载Resource</span><br><span class="line">     *</span><br><span class="line">     * <span class="doctag">@param</span> context</span><br><span class="line">     * <span class="doctag">@return</span></span><br><span class="line">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function">Resources <span class="title">getResourcesByContext</span><span class="params">(Context context, String skinApkPackage)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> context.createPackageContext(skinApkPackage, Context.CONTEXT_IGNORE_SECURITY)</span><br><span class="line">                    .getResources();</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (PackageManager.NameNotFoundException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span><br><span class="line">     * 使用反射创建AssertManager加载Resource</span><br><span class="line">     *</span><br><span class="line">     * <span class="doctag">@param</span> context</span><br><span class="line">     * <span class="doctag">@return</span></span><br><span class="line">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function">Resources <span class="title">getResourcesByAssetManager</span><span class="params">(Context context, String skinApkPath)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Method method = AssetManager.class.getDeclaredMethod(<span class="string">"addAssetPath"</span>, String.class);</span><br><span class="line">            AssetManager assetManager = AssetManager.class.newInstance();</span><br><span class="line">            method.invoke(assetManager, skinApkPath);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> Resources(</span><br><span class="line">                    assetManager,</span><br><span class="line">                    context.getResources().getDisplayMetrics(),</span><br><span class="line">                    context.getResources().getConfiguration()</span><br><span class="line">            );</span><br><span class="line">        &#125; <span class="keyword">catch</span> (NoSuchMethodException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IllegalAccessException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InstantiationException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InvocationTargetException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function">String <span class="title">getString</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> id = mResources.getIdentifier(name, <span class="string">"string"</span>, mSkinApkPackage);</span><br><span class="line">        <span class="keyword">if</span> (id == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="function"><span class="keyword">return</span> mResources.<span class="title">getString</span><span class="params">(id)</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function">Drawable <span class="title">getDrawable</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> id = mResources.getIdentifier(name, <span class="string">"drawable"</span>, mSkinApkPackage);</span><br><span class="line">        <span class="keyword">if</span> (id == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="function"><span class="keyword">return</span> mResources.<span class="title">getDrawable</span><span class="params">(id)</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>效果如下:</p>
+<img src="/安卓皮肤包机制的原理/image.jpeg">
+<h1 id="u5B8C_u6574_u4EE3_u7801"><a href="#u5B8C_u6574_u4EE3_u7801" class="headerlink" title="完整代码"></a>完整代码</h1><p>完整代码可以在<a href="https://github.com/bluesky466/SkinDemo" target="_blank" rel="external">这里</a>获取</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/07/06/Android温故而知新-Java的四种引用/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/08/24/Java多线程-如果正确的终止线程/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://yoursite.com/2017/08/01/安卓皮肤包机制的原理/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

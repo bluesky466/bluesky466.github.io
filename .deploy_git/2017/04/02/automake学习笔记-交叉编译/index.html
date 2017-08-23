@@ -29,7 +29,7 @@
 使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:
 
 2.2.8 Cr">
-<meta property="og:updated_time" content="2017-05-12T22:52:13.143Z">
+<meta property="og:updated_time" content="2017-06-29T17:19:22.807Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="automake学习笔记 - 交叉编译">
 <meta name="twitter:description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。
@@ -248,7 +248,7 @@
 </blockquote>
 <p>其实就是我们指定了编译工具的前缀，然后automake就会更加这个前缀，找到对应的编译器去编译我们的程序。</p>
 <h2 id="u5728linux_u4E0A_u7F16_u8BD1windows_u4E0A_u7684_u7A0B_u5E8F"><a href="#u5728linux_u4E0A_u7F16_u8BD1windows_u4E0A_u7684_u7A0B_u5E8F" class="headerlink" title="在linux上编译windows上的程序"></a>在linux上编译windows上的程序</h2><p>有人可能会问，为什么需要在linux上编译这么蛋疼而不直接在windows上编译呢？</p>
-<p>就按我遇到的情况来说吧。我们部门的自动构建服务器就是liunx的，我们的项目都需要通过它来编译、检查和发布，我们也习惯于子啊linux上编程，最重要的是我们的项目就是跨平台的，不管是windows、linux还是android上都需要可以运行，所以没有必要为每个平台搭建一套编译环境。直接在linux上编译所有平台的软件是最好的选择。</p>
+<p>就按我遇到的情况来说吧。我们部门的自动构建服务器就是liunx的，我们的项目都需要通过它来编译、检查和发布，我们也习惯于在linux上编程，最重要的是我们的项目就是跨平台的，不管是windows、linux还是android上都需要可以运行，所以没有必要为每个平台搭建一套编译环境。直接在linux上编译所有平台的软件是最好的选择。</p>
 <p>为了在linux上交叉编译windows的程序，我们先要搭建一下交叉编译的环境:</p>
 <ol>
 <li>安装交叉编译工具</li>

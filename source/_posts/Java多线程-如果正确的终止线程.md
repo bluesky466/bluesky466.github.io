@@ -93,9 +93,9 @@ class WorkThread extends Thread {
 
 这个时候我们只需要调用Thread.interrupt()方法就能安全的中断线程了。
 
-需要提醒一下的是Thread.interrupt()方法并不会像Thread.stop()方法一样立即结束线程,它只是设置了一个中断标志,需要在代码实现中去手动判断这个标志并且推出。
+需要提醒一下的是Thread.interrupt()方法并不会像Thread.stop()方法一样立即结束线程,它只是设置了一个中断标志,需要在代码实现中去手动判断这个标志并且退出。
 
-像下面这个代码就算掉了Thread.interrupt()方法也不会中断线程:
+像下面这个代码就算调了Thread.interrupt()方法也不会中断线程:
 
 ```
 class WorkThread extends Thread {
@@ -112,7 +112,7 @@ class WorkThread extends Thread {
 
 使用Thread.interrupt去中断线程除了可以免去自己实现标志位的烦恼之外,还可以中断sleep和wait中的线程。
 
-还记得我们在调用Thread.sleep()这个方法的时候都需要catch或者抛出InterruptedException这个异常吗:
+还记得我们在调用Thread.sleep()这个方法的时候都需要catch或者在方法签名中抛出InterruptedException这个异常吗:
 
 ```
 try {
