@@ -1,4 +1,4 @@
-title: 一步步教你怎样用PowerMock进行Android的BDD行为驱动开发
+title: 用PowerMock进行Android单元测试与BDD行为驱动开发
 date: 2017-08-26 17:18:28
 tags:
     - 技术相关
