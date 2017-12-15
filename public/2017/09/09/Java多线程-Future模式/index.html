@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Java多线程 - Future模式 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="java,技术相关," />
+  
+
+  <meta name="description" content="什么是Future模式Future模式是多线程开发中非常常见的一种设计模式。它的核心思想是异步调用。当我们需要调用一个函数方法时。如果这个函数执行很慢,那么我们就要进行等待。但有时候,我们可能并不急着要结果。因此,我们可以让被调用者立即返回,让他在后台慢慢处理这个请求。对于调用者来说,则可以先处理一些其他任务,在真正需要数据的场合再去尝试获取需要的数据。
+用生活中的例子来打个比喻,就像叫外卖。比如">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java多线程 - Future模式">
+<meta property="og:url" content="http://139.199.4.241/2017/09/09/Java多线程-Future模式/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="什么是Future模式Future模式是多线程开发中非常常见的一种设计模式。它的核心思想是异步调用。当我们需要调用一个函数方法时。如果这个函数执行很慢,那么我们就要进行等待。但有时候,我们可能并不急着要结果。因此,我们可以让被调用者立即返回,让他在后台慢慢处理这个请求。对于调用者来说,则可以先处理一些其他任务,在真正需要数据的场合再去尝试获取需要的数据。
+用生活中的例子来打个比喻,就像叫外卖。比如">
+<meta property="og:image" content="http://139.199.4.241/Java多线程-Future模式/1.png">
+<meta property="og:updated_time" content="2017-12-14T15:22:08.640Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java多线程 - Future模式">
+<meta name="twitter:description" content="什么是Future模式Future模式是多线程开发中非常常见的一种设计模式。它的核心思想是异步调用。当我们需要调用一个函数方法时。如果这个函数执行很慢,那么我们就要进行等待。但有时候,我们可能并不急着要结果。因此,我们可以让被调用者立即返回,让他在后台慢慢处理这个请求。对于调用者来说,则可以先处理一些其他任务,在真正需要数据的场合再去尝试获取需要的数据。
+用生活中的例子来打个比喻,就像叫外卖。比如">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#u4EC0_u4E48_u662FFuture_u6A21_u5F0F"><span class="toc-text">什么是Future模式</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u7528_u666E_u901A_u65B9_u5F0F_u548CFuture_u6A21_u5F0F_u7684_u5DEE_u522B"><span class="toc-text">用普通方式和Future模式的差别</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Future_u6A21_u5F0F_u7684_u7B80_u5355_u5B9E_u73B0"><span class="toc-text">Future模式的简单实现</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#JDK_u4E2D_u7684Future_u6A21_u5F0F"><span class="toc-text">JDK中的Future模式</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u4E00_u4E2A_u5B9E_u9645_u7684_u4F8B_u5B50"><span class="toc-text">一个实际的例子</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Java多线程-Future模式" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Java多线程 - Future模式</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.09.09</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2017/09/09/Java多线程-Future模式/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="u4EC0_u4E48_u662FFuture_u6A21_u5F0F"><a href="#u4EC0_u4E48_u662FFuture_u6A21_u5F0F" class="headerlink" title="什么是Future模式"></a>什么是Future模式</h1><p>Future模式是多线程开发中非常常见的一种设计模式。它的核心思想是异步调用。当我们需要调用一个函数方法时。如果这个函数执行很慢,那么我们就要进行等待。但有时候,我们可能并不急着要结果。因此,我们可以让被调用者立即返回,让他在后台慢慢处理这个请求。对于调用者来说,则可以先处理一些其他任务,在真正需要数据的场合再去尝试获取需要的数据。</p>
+<p>用生活中的例子来打个比喻,就像叫外卖。比如在午休之前我们可以提前叫外卖,只需要点好食物,下个单。然后我们可以继续工作。到了中午下班的时候外卖也就到了,然后就可以吃个午餐,再美滋滋的睡个午觉。而如果你在下班的时候才叫外卖,那就只能坐在那里干等着外卖小哥,最后拿到外卖吃完午饭,午休时间也差不多结束了。</p>
+<p>使用Future模式,获取数据的时候无法立即得到需要的数据。而是先拿到一个契约,你可以再将来需要的时候再用这个契约去获取需要的数据,这个契约就好比叫外卖的例子里的外卖订单。</p>
+<h1 id="u7528_u666E_u901A_u65B9_u5F0F_u548CFuture_u6A21_u5F0F_u7684_u5DEE_u522B"><a href="#u7528_u666E_u901A_u65B9_u5F0F_u548CFuture_u6A21_u5F0F_u7684_u5DEE_u522B" class="headerlink" title="用普通方式和Future模式的差别"></a>用普通方式和Future模式的差别</h1><p>我们可以看一下使用普通模式和用Future模式的时序图。可以看出来普通模式是串行的,在遇到耗时操作的时候只能等待。而Future模式,只是发起了耗时操作,函数立马就返回了,并不会阻塞客户端线程。所以在工作线程执行耗时操作的时候客户端无需等待,可以继续做其他事情,等到需要的时候再向工作线程获取结果:</p>
+<img src="/Java多线程-Future模式/1.png">
+<h1 id="Future_u6A21_u5F0F_u7684_u7B80_u5355_u5B9E_u73B0"><a href="#Future_u6A21_u5F0F_u7684_u7B80_u5355_u5B9E_u73B0" class="headerlink" title="Future模式的简单实现"></a>Future模式的简单实现</h1><p>首先是FutureData,它是只是一个包装类,创建它不需要耗时。在工作线程准备好数据之后可以使用setData方法将数据传入。而客户端线程只需要在需要的时候调用getData方法即可,如果这个时候数据还没有准备好,那么getData方法就会等待,如果已经准备好了就好直接返回。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FutureData</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> mIsReady = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">private</span> T mData;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">setData</span><span class="params">(T data)</span> </span>&#123;</span><br><span class="line">        mIsReady = <span class="keyword">true</span>;</span><br><span class="line">        mData = data;</span><br><span class="line"></span><br><span class="line">        notifyAll();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> T <span class="title">getData</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (!mIsReady) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                wait();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> mData;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接着是服务端,客户端在向服务端请求数据的时候服务端不会实际去加载数据,它只是创建一个FutureData,然后创建子线程去加载,而它只需要直接返回FutureData就可以了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Server</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> FutureData&lt;String&gt; <span class="title">getString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> FutureData&lt;String&gt; data = <span class="keyword">new</span> FutureData&lt;&gt;();</span><br><span class="line">        <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="annotation">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">2000</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">                data.setData(<span class="string">"world"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> data;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>客户端代码如下,整个程序只需要运行2秒多,但如果不使用Future模式的话就需要三秒了。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Server server = <span class="keyword">new</span> Server();</span><br><span class="line">FutureData&lt;<span class="built_in">String</span>&gt; futureData = server.getString();</span><br><span class="line"></span><br><span class="line"><span class="comment">//先执行其他操作</span></span><br><span class="line"><span class="built_in">String</span> hello = <span class="string">"hello"</span>;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">System.out.<span class="built_in">print</span>(hello + <span class="string">" "</span> + futureData.getData());</span><br></pre></td></tr></table></figure>
+<h1 id="JDK_u4E2D_u7684Future_u6A21_u5F0F"><a href="#JDK_u4E2D_u7684Future_u6A21_u5F0F" class="headerlink" title="JDK中的Future模式"></a>JDK中的Future模式</h1><p>还记得我之前的一篇文章《Java多线程 - 线程池》中写的ExecutorService.execute()和ExecutorService.submit()的区别吗(如果没有看过的读者可以去看一下)？</p>
+<p>execute方法其实是在Executor中定义的,而ExecutorService继承了Executor。它只是简单的提交了一个Runnable给线程池中的线程去调用:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Executor</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ExecutorService</span> <span class="keyword">extends</span> <span class="title">Executor</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>而submit方法是ExecutorService中定义的,它们都会返回一个Future对象。实际上submit方法就是使用的Future模式:</p>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public <span class="keyword">interface</span> <span class="type">ExecutorService</span> extends <span class="type">Executor</span> &#123;</span><br><span class="line">	...</span><br><span class="line">	&lt;T&gt; <span class="type">Future</span>&lt;T&gt; submit(<span class="type">Callable</span>&lt;T&gt; task);</span><br><span class="line">		</span><br><span class="line">	&lt;T&gt; <span class="type">Future</span>&lt;T&gt; submit(<span class="type">Runnable</span> task, T <span class="literal">result</span>);</span><br><span class="line">		</span><br><span class="line">	<span class="type">Future</span>&lt;?&gt; submit(<span class="type">Runnable</span> task);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>Future&lt;?&gt; submit(Runnable task) :</strong></p>
+<p>它的返回值实际上是Future<void>,子线程是不会返回数据的。</void></p>
+<p><strong><t> Future<t> submit(Runnable task, T result) :</t></t></strong></p>
+<p>这个方法是不是很蛋疼,返回的结果在调用的时候已经给出了。如果我一开始就知道结果那我为什么又要发起子线程呢？</p>
+<p>其实不然,这个result可以是一个代理,它不是实际的结果,它只是存储了结果。我这里给出一个例子大家体会一下吧:</p>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">final <span class="type">String</span>[] <span class="literal">result</span> = new <span class="type">String</span>[<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line"><span class="type">Runnable</span> r = new <span class="type">Runnable</span>() &#123;</span><br><span class="line">    public <span class="type">void</span> run() &#123;</span><br><span class="line">        <span class="literal">result</span>[<span class="number">0</span>] = <span class="string">"hello world"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">Future</span>&lt;<span class="type">String</span>[]&gt; future = <span class="type">Executors</span>.newSingleThreadExecutor().submit(r, <span class="literal">result</span>);</span><br><span class="line">    </span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"result[0]: "</span> + future.get()[<span class="number">0</span>]);</span><br><span class="line">&#125; catch (<span class="type">InterruptedException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">ExecutionException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong><t> Future<t> submit(Callable<t> task) :</t></t></t></strong></p>
+<p>这个方法就比较好理解了, Callable.call()方法在子线程中被调用,同时它有返回值,只有将加载的数据直接return出来就好:</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Future&lt;<span class="keyword">String</span>&gt; future = Executors.newSingleThreadExecutor()</span><br><span class="line">        .submit(<span class="keyword">new</span> Callable&lt;<span class="keyword">String</span>&gt;() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">String</span> call() <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="string">"Hello World"</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    System.out.<span class="built_in">print</span>(future.<span class="built_in">get</span>());</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="u4E00_u4E2A_u5B9E_u9645_u7684_u4F8B_u5B50"><a href="#u4E00_u4E2A_u5B9E_u9645_u7684_u4F8B_u5B50" class="headerlink" title="一个实际的例子"></a>一个实际的例子</h1><p>比如我们在计算两个List<integer>中的数的总和的时候就可以用Future模式提高效率:</integer></p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">public <span class="built_in">int</span> getTotal(<span class="keyword">final</span> <span class="built_in">List</span>&lt;Integer&gt; a, <span class="keyword">final</span> <span class="built_in">List</span>&lt;Integer&gt; b) throws ExecutionException, InterruptedException &#123;</span><br><span class="line">    Future&lt;Integer&gt; future = Executors.newCachedThreadPool().submit(<span class="keyword">new</span> Callable&lt;Integer&gt;() &#123;</span><br><span class="line">        <span class="annotation">@Override</span></span><br><span class="line">        public Integer call() throws Exception &#123;</span><br><span class="line">            <span class="built_in">int</span> r = <span class="number">0</span>;</span><br><span class="line">            <span class="keyword">for</span> (<span class="built_in">int</span> <span class="built_in">num</span> : a) &#123;</span><br><span class="line">                r += <span class="built_in">num</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> r;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">int</span> r = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> <span class="built_in">num</span> : b) &#123;</span><br><span class="line">        r += <span class="built_in">num</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> r + future.<span class="literal">get</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/09/05/Java多线程-线程池/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/09/26/Android温故而知新-AIDL/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2017/09/09/Java多线程-Future模式/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

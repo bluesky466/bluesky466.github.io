@@ -133,7 +133,7 @@ Message是在子线程中被创建的。如代码所示,我们可以直接将它
 
 当然你也可以在Message或者Runnable未同步到主线程的时候使用下面的remove方法将他们取消:
 
-- removeMessages(int what) 
+- removeMessages(int what)
 - removeMessages(int what, Object object)
 - removeCallbacks(Runnable r)
 - removeCallbacks(Runnable r, Object token)
@@ -146,7 +146,7 @@ Message是在子线程中被创建的。如代码所示,我们可以直接将它
     {
        return  sendMessageDelayed(getPostMessage(r), 0);
     }
-    
+
     private static Message getPostMessage(Runnable r) {
         Message m = Message.obtain();
         m.callback = r;
@@ -201,7 +201,7 @@ MessageQueue顾名思义,就是Message的队列,我们调用Handler的各种方�
 
 其实安卓在启动主线程的时候就会自动创建一个Looper和执行Looper.loop()的了,不需要自己去手动操作。
 
-至于第二个问题,我们可以直接开口安卓的源码,我们可以在[androidxref](http://androidxref.com/)这个网址中在线浏览多个版本的安卓源码。
+至于第二个问题,我们可以直接看安卓的源码:
 
 一般来讲我们认为ActivityThread.main(String[] args)就是安卓程序运行的入口,也就是我们熟悉的main方法。它其实很短,我们在它的最后可以看到Looper.loop()这个方法的确是被调用了的。
 
@@ -277,7 +277,7 @@ private class H extends Handler {
 
 ```
     private Handler mHandler;
-    
+
     private Thread mThread = new Thread(new Runnable() {
         @Override
         public void run() {

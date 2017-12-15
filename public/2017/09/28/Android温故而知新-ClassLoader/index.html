@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Android温故而知新 - ClassLoader | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Android,技术相关," />
+  
+
+  <meta name="description" content="安卓插件化越来越流行,其中用到的技术不外乎加载外部的资源和加载外部的代码,关于加载外部资源我之前写过一篇文章《安卓皮肤包机制的原理》,感兴趣的同学可以去看一下。
+加载外部代码的作用在于热更新。程序主体定义接口,具体实现放在外部。只需要替换外部代码,就能修复bug甚至是更新功能。相比传统的ota手段更加省流量,用户体验也更加的好,毕竟有很多的用户是不喜欢更新的。
+这篇文章我想复习一下ClassLoa">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android温故而知新 - ClassLoader">
+<meta property="og:url" content="http://139.199.4.241/2017/09/28/Android温故而知新-ClassLoader/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="安卓插件化越来越流行,其中用到的技术不外乎加载外部的资源和加载外部的代码,关于加载外部资源我之前写过一篇文章《安卓皮肤包机制的原理》,感兴趣的同学可以去看一下。
+加载外部代码的作用在于热更新。程序主体定义接口,具体实现放在外部。只需要替换外部代码,就能修复bug甚至是更新功能。相比传统的ota手段更加省流量,用户体验也更加的好,毕竟有很多的用户是不喜欢更新的。
+这篇文章我想复习一下ClassLoa">
+<meta property="og:image" content="http://139.199.4.241/Android温故而知新-ClassLoader/1.png">
+<meta property="og:updated_time" content="2017-12-14T15:22:08.640Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android温故而知新 - ClassLoader">
+<meta name="twitter:description" content="安卓插件化越来越流行,其中用到的技术不外乎加载外部的资源和加载外部的代码,关于加载外部资源我之前写过一篇文章《安卓皮肤包机制的原理》,感兴趣的同学可以去看一下。
+加载外部代码的作用在于热更新。程序主体定义接口,具体实现放在外部。只需要替换外部代码,就能修复bug甚至是更新功能。相比传统的ota手段更加省流量,用户体验也更加的好,毕竟有很多的用户是不喜欢更新的。
+这篇文章我想复习一下ClassLoa">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#u666E_u901Ajava_u7A0B_u5E8F_u7684_u7C7B_u52A0_u8F7D_u673A_u5236"><span class="toc-text">普通java程序的类加载机制</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java_u7C7B_u7684_u52A0_u8F7D_u6D41_u7A0B"><span class="toc-text">Java类的加载流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ClassLoader_u7684_u521B_u5EFA"><span class="toc-text">ClassLoader的创建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u53CC_u4EB2_u59D4_u6258"><span class="toc-text">双亲委托</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u81EA_u5B9A_u4E49ClassLoader"><span class="toc-text">自定义ClassLoader</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Context_ClassLoader"><span class="toc-text">Context ClassLoader</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u5B89_u5353_u4E2D_u7684ClassLoader"><span class="toc-text">安卓中的ClassLoader</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#PathClassLoader"><span class="toc-text">PathClassLoader</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DexClassLoader"><span class="toc-text">DexClassLoader</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u751F_u6210dex_u6587_u4EF6"><span class="toc-text">生成dex文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u52A8_u6001_u52A0_u8F7Ddex_u6587_u4EF6"><span class="toc-text">动态加载dex文件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#u4F7F_u7528_u53CD_u5C04_u7684_u53CD_u5C04_u52A0_u8F7D"><span class="toc-text">使用反射的反射加载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u4F7F_u7528_u63A5_u53E3_u7684_u65B9_u5F0F_u52A0_u8F7D"><span class="toc-text">使用接口的方式加载</span></a></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android温故而知新-ClassLoader" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android温故而知新 - ClassLoader</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.09.28</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2017/09/28/Android温故而知新-ClassLoader/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>安卓插件化越来越流行,其中用到的技术不外乎加载外部的资源和加载外部的代码,关于加载外部资源我之前写过一篇文章<a href="http://blog.islinjw.cn/2017/08/01/%E5%AE%89%E5%8D%93%E7%9A%AE%E8%82%A4%E5%8C%85%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86/" target="_blank" rel="external">《安卓皮肤包机制的原理》</a>,感兴趣的同学可以去看一下。</p>
+<p>加载外部代码的作用在于热更新。程序主体定义接口,具体实现放在外部。只需要替换外部代码,就能修复bug甚至是更新功能。相比传统的ota手段更加省流量,用户体验也更加的好,毕竟有很多的用户是不喜欢更新的。</p>
+<p>这篇文章我想复习一下ClassLoader的相关知识,它是加载外部代码的核心原理。</p>
+<p>虽然android自己实现了一个特殊的虚拟机,它的类加载机制和普通的java程序有点区别。但是我还是想从普通的java程序讲起,一方面多知道点东西总是好的,另一方面它们的基本原理是一样的,对我们理解安卓的类加载机制也有很大的帮助。</p>
+<h1 id="u666E_u901Ajava_u7A0B_u5E8F_u7684_u7C7B_u52A0_u8F7D_u673A_u5236"><a href="#u666E_u901Ajava_u7A0B_u5E8F_u7684_u7C7B_u52A0_u8F7D_u673A_u5236" class="headerlink" title="普通java程序的类加载机制"></a>普通java程序的类加载机制</h1><p>我们都知道java代码需要先编译成class文件才能被jvm加载运行。那jvm又是如何加载class文件的呢?</p>
+<p>其实class文件是通过ClassLoader加载到jvm的。java自带了三个ClassLoader,分别是:</p>
+<ul>
+<li>BootstrapClassLoader 用于加载核心类库</li>
+<li>ExtClassLoader 用于加载拓展库</li>
+<li>AppClassLoader 用于加载当前应用的类</li>
+</ul>
+<p>然后需要说明的是java类不是一次性全部加载的,而是只有在用到的时候才会去加载。</p>
+<p>因为全部加载的话会加载一些没有用到的类,造成资源的浪费。所以当程序需要用到某个类时,才会通过ClassLoader在系统的特定路径搜索这个类的class文件并将它加载到jvm去执行。</p>
+<p>ExtClassLoader和AppClassLoader都是URLClassLoader的子类,他们内部保存了URL列表用于指定搜索路径。我们可以通过URLClassLoader.getURLs()方法获取到这个URL列表。</p>
+<p>BootstrapClassLoader虽然不是URLClassLoader的子类,但我们也可以从sun.misc.Launcher.getBootstrapClassPath().getURLs()方法获取到BootstrapClassLoader的搜索路径。</p>
+<p>下面的代码打印了各个ClassLoader的搜索路径:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.net.URL;</span><br><span class="line"><span class="keyword">import</span> java.net.URLClassLoader;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassLoaderURLs</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> void main(<span class="type">String</span>[] args) &#123;</span><br><span class="line">        <span class="type">System</span>.out.<span class="built_in">println</span>(<span class="string">"BootstrapClassLoader urls :"</span>);</span><br><span class="line">        <span class="type">URL</span>[] urls = sun.misc.<span class="type">Launcher</span>.getBootstrapClassPath().getURLs();</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">URL</span> url : urls) &#123;</span><br><span class="line">            <span class="type">System</span>.out.<span class="built_in">println</span>(url);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">URLClassLoader</span> extClassLoader = (<span class="type">URLClassLoader</span>) <span class="type">ClassLoader</span>.getSystemClassLoader().getParent();</span><br><span class="line">        <span class="type">System</span>.out.<span class="built_in">println</span>(<span class="string">"\n"</span> + extClassLoader + <span class="string">" urls :"</span>);</span><br><span class="line">        urls = extClassLoader.getURLs();</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">URL</span> url : urls) &#123;</span><br><span class="line">            <span class="type">System</span>.out.<span class="built_in">println</span>(url);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">URLClassLoader</span> appClassLoader = (<span class="type">URLClassLoader</span>) <span class="type">ClassLoader</span>.getSystemClassLoader();</span><br><span class="line">        <span class="type">System</span>.out.<span class="built_in">println</span>(<span class="string">"\n"</span> + appClassLoader + <span class="string">" urls :"</span>);</span><br><span class="line">        urls = appClassLoader.getURLs();</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">URL</span> url : urls) &#123;</span><br><span class="line">            <span class="type">System</span>.out.<span class="built_in">println</span>(url);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>打印如下:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="constant">BootstrapClassLoader</span> urls :</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">resources</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">rt</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">sunrsasign</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">jsse</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">jce</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">charsets</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">jfr</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/classes</span><br><span class="line"></span><br><span class="line">sun.misc.<span class="constant">Launcher</span><span class="variable">$ExtClassLoader</span><span class="variable">@74a14482</span> urls :</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">cldrdata</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">dnsns</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">jfxrt</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">localedata</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">nashorn</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">sunec</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">sunjce_provider</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">sunpkcs11</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">JavaVirtualMachines</span>/jdk1.<span class="number">8.0_40</span>.jdk/<span class="constant">Contents</span>/<span class="constant">Home</span>/jre/<span class="class"><span class="keyword">lib</span>/<span class="title">ext</span>/<span class="title">zipfs</span>.<span class="title">jar</span></span></span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/<span class="constant">AppleScriptEngine</span>.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/dns_sd.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/j3daudio.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/j3dcore.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/j3dutils.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/jai_codec.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/jai_core.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/libAppleScriptEngine.jnilib</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/libJ3D.jnilib</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/libJ3DAudio.jnilib</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/libJ3DUtils.jnilib</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/libmlib_jai.jnilib</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/mlibwrapper_jai.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/<span class="constant">MRJToolkit</span>.jar</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">System</span>/<span class="constant">Library</span>/<span class="constant">Java</span>/<span class="constant">Extensions</span>/vecmath.jar</span><br><span class="line"><span class="symbol">file:</span>/usr/<span class="class"><span class="keyword">lib</span>/<span class="title">java</span>/<span class="title">libjdns_sd</span>.<span class="title">jnilib</span></span></span><br><span class="line"></span><br><span class="line">sun.misc.<span class="constant">Launcher</span><span class="variable">$AppClassLoader</span><span class="variable">@28d93b30</span> urls :</span><br><span class="line"><span class="symbol">file:</span>/<span class="constant">Users</span>/linjw/workspace/class_loader_demo/</span><br></pre></td></tr></table></figure>
+<p>我们可以看到这些url有指向jar包的,也有指向一个目录的(还有指向.jnilib文件的,这个我们可以不用管)。</p>
+<p>ClassLoader从指定的路径下搜索class文件。而jar包其实是一个压缩包,将class文件打包在一起,所以ClassLoader也可以从jar包中搜索需要用到的class。</p>
+<h2 id="Java_u7C7B_u7684_u52A0_u8F7D_u6D41_u7A0B"><a href="#Java_u7C7B_u7684_u52A0_u8F7D_u6D41_u7A0B" class="headerlink" title="Java类的加载流程"></a>Java类的加载流程</h2><h3 id="ClassLoader_u7684_u521B_u5EFA"><a href="#ClassLoader_u7684_u521B_u5EFA" class="headerlink" title="ClassLoader的创建"></a>ClassLoader的创建</h3><p>我们先从ClassLoader的创建开始说起。我们可以直接看<a href="http://www.grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/8u40-b25/sun/misc/Launcher.java" target="_blank" rel="external">sun.misc.Launcher</a>的源码,它在构造函数中创建了ExtClassLoader和AppClassLoader:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Launcher() &#123;</span><br><span class="line">    <span class="comment">// Create the extension class loader</span></span><br><span class="line">    ClassLoader extcl;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        extcl = ExtClassLoader.getExtClassLoader();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">InternalError</span>(</span><br><span class="line">            <span class="string">"Could not create extension class loader"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Now create the class loader to use to launch the application</span></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        loader = AppClassLoader.getAppClassLoader(extcl);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">InternalError</span>(</span><br><span class="line">            <span class="string">"Could not create application class loader"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Also set the context class loader for the primordial thread.</span></span><br><span class="line">    Thread.currentThread().setContextClassLoader(loader);</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ExtClassLoader.getExtClassLoader()是一个工厂方法:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="function">ExtClassLoader <span class="title">getExtClassLoader</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">final</span> File[] dirs = getExtDirs();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// Prior implementations of this doPrivileged() block supplied</span></span><br><span class="line">        <span class="comment">// aa synthesized ACC via a call to the private method</span></span><br><span class="line">        <span class="comment">// ExtClassLoader.getContext().</span></span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">return</span> AccessController.<span class="title">doPrivileged</span><span class="params">(</span><br><span class="line">            <span class="keyword">new</span> PrivilegedExceptionAction&lt;ExtClassLoader&gt;()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">public</span> <span class="function">ExtClassLoader <span class="title">run</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">                    <span class="keyword">int</span> len = dirs.length;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">                        MetaIndex.registerDirectory(dirs[i]);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">new</span> ExtClassLoader(dirs);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (java.security.PrivilegedActionException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> (IOException) e.getException();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>AppClassLoader.getAppClassLoader(final ClassLoader extcl)也是一个工厂方法,它需要传入一个ClassLoader作为AppClassLoader的父ClassLoader。而我们将ExtClassLoader传了进去,也就是说ExtClassLoader是AppClassLoader的父ClassLoader:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="function">ClassLoader <span class="title">getAppClassLoader</span><span class="params">(<span class="keyword">final</span> ClassLoader extcl)</span></span><br><span class="line">    <span class="keyword">throws</span> IOException</span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">final</span> String s = System.getProperty(<span class="string">"java.class.path"</span>);</span><br><span class="line">    <span class="keyword">final</span> File[] path = (s == <span class="keyword">null</span>) ? <span class="keyword">new</span> File[<span class="number">0</span>] : getClassPath(s);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Note: on bugid 4256530</span></span><br><span class="line">    <span class="comment">// Prior implementations of this doPrivileged() block supplied</span></span><br><span class="line">    <span class="comment">// a rather restrictive ACC via a call to the private method</span></span><br><span class="line">    <span class="comment">// AppClassLoader.getContext(). This proved overly restrictive</span></span><br><span class="line">    <span class="comment">// when loading  classes. Specifically it prevent</span></span><br><span class="line">    <span class="comment">// accessClassInPackage.sun.* grants from being honored.</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="function"><span class="keyword">return</span> AccessController.<span class="title">doPrivileged</span><span class="params">(</span><br><span class="line">        <span class="keyword">new</span> PrivilegedAction&lt;AppClassLoader&gt;()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">public</span> <span class="function">AppClassLoader <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            URL[] urls =</span><br><span class="line">                (s == <span class="keyword">null</span>) ? <span class="keyword">new</span> URL[<span class="number">0</span>] : pathToURLs(path);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> AppClassLoader(urls, extcl);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每一个ClassLoader都有一个父ClassLoader,我们可以通过ClassLoader.getParent()方法获取。同时我们也能使用Class.getClassLoader()获取加载这个类的ClassLoader。所以让我们来看看下面的代码:</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">GetClassLoader</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>&#123;</span><br><span class="line">        ClassLoader loader = GetClassLoader.class.getClassLoader();</span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            System.<span class="keyword">out</span>.println(loader);</span><br><span class="line">        &#125; <span class="keyword">while</span> ((loader = loader.getParent()) != <span class="keyword">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>查看打印我们可以知道, GetClassLoader是AppClassLoader加载的,而AppClassLoader的父ClassLoader是ExtClassLoader:</p>
+<figure class="highlight xquery"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sun.misc.Launcher<span class="variable">$AppClassLoader</span>@<span class="number">28</span>d93b3<span class="number">0</span></span><br><span class="line">sun.misc.Launcher<span class="variable">$ExtClassLoader</span>@<span class="number">74</span>a14482</span><br></pre></td></tr></table></figure>
+<p>但是如果我们查看String的ClassLoader又会发现它是null的:</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">GetClassLoader</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(<span class="params">String[] args</span>) </span>&#123;</span><br><span class="line">        ClassLoader loader = String.class.getClassLoader();</span><br><span class="line">        System.<span class="keyword">out</span>.println(<span class="string">"loader : "</span> + loader);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">loader :</span> <span class="literal">null</span></span><br></pre></td></tr></table></figure>
+<p>那是不是说String不是由ClassLoader加载的?当然不是!其实String是BootstrapClassLoader加载的。BootstrapClassLoader负责加载java的核心类。</p>
+<p>但是为什么String.class.getClassLoader()拿到的是null呢？</p>
+<p>原因是BootstrapClassLoader实际上不是一个java类,它是由C/C++编写的,它本身是虚拟机的一部分。所以在java中当然没有办法获取到它的引用。</p>
+<h3 id="u53CC_u4EB2_u59D4_u6258"><a href="#u53CC_u4EB2_u59D4_u6258" class="headerlink" title="双亲委托"></a>双亲委托</h3><p>相信大家如果知道ClassLoader的话应该有听说过双亲委托,那下面我们就来讲一下双亲委托究竟是怎么一回事。</p>
+<p>我们知道ClassLoader.loadClass()的方法可以加载一个类,所以研究一个类的加载流程,最好的方法当然还是去看源码啦:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">Class</span>&lt;?&gt; loadClass(String name, <span class="keyword">boolean</span> resolve)</span><br><span class="line">    <span class="keyword">throws</span> ClassNotFoundException</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (getClassLoadingLock(name)) &#123;</span><br><span class="line">        <span class="comment">// 首先,从缓存中查询该类是不是被加载过,如果加载过就可以直接返回</span></span><br><span class="line">        <span class="keyword">Class</span>&lt;?&gt; c = findLoadedClass(name);</span><br><span class="line">        <span class="keyword">if</span> (c == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">long</span> t0 = System.nanoTime();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (parent != <span class="keyword">null</span>) &#123;</span><br><span class="line">            		<span class="comment">//判断它的父ClassLoader是否为空,如果不为空就调用父ClassLoader的loadClass方法去加载该类</span></span><br><span class="line">                    c = parent.loadClass(name, <span class="keyword">false</span>);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                	<span class="comment">//如果它的父ClassLoader为空,则调用BootstrapClassLoader去加载该类,所以此时从逻辑上来讲BootstrapClassLoader是父ClassLoader</span></span><br><span class="line">                    c = findBootstrapClassOrNull(name);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">                </span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (c == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">long</span> t1 = System.nanoTime();</span><br><span class="line">                </span><br><span class="line">                <span class="comment">//如果父ClassLoader不能加载该类才由自己去加载,这个方法从本ClassLoader的搜索路径中查找该类</span></span><br><span class="line">                c = findClass(name);</span><br><span class="line">                </span><br><span class="line">                sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);</span><br><span class="line">                sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);</span><br><span class="line">                sun.misc.PerfCounter.getFindClasses().increment();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (resolve) &#123;</span><br><span class="line">            resolveClass(c);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> c;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从代码中我们可以看到,加载一个类的时候,ClassLoader先会让父类去加载,如果父类加载失败,才会由它自己去加载,这就是我们说的双亲委托。</p>
+<p>为什么类加载需要设计成双亲委托的方式呢？原因就在于双亲委托可以防止类被重复加载。如果父ClassLoader已经加载过一个类了,子ClassLoader就不会再次加载,可以防止同一个类被两个ClassLoader重复加载的问题。</p>
+<p>这里还需要说的是,当我们自定义一个ClassLoader的时候,最好将AppClassLoader设为父ClassLoader。这样的话可以保证我们自定义的ClassLoader找加载类失败的时候还能从父ClassLoader中加载这个类。</p>
+<p>双亲委托模式的流程如下图所示:</p>
+<img src="/Android温故而知新-ClassLoader/1.png">
+<h2 id="u81EA_u5B9A_u4E49ClassLoader"><a href="#u81EA_u5B9A_u4E49ClassLoader" class="headerlink" title="自定义ClassLoader"></a>自定义ClassLoader</h2><p>有时候我们可以继承ClassLoader实现自己的类加载器。自定义ClassLoader有两种方式:</p>
+<ol>
+<li>重写loadClass方法 </li>
+<li>重写findClass方法</li>
+</ol>
+<p>他们有什么区别呢,还记得上一级ClassLoader.loadClass()的源码吗？loadClass方法内会先调用父ClassLoader的loadClass方法,如果父ClassLoader没有加载过该类才会调用本ClassLoader的findClass方法去加载类。</p>
+<p>所以如果想要打破双亲委托机制的话就可以loadClass(),而如果还想继续沿用双亲委托机制的话就只需要重写findClass就好了。</p>
+<p>我们写个小例子:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> MyClassLoader <span class="keyword">extends</span> ClassLoader &#123;</span><br><span class="line">    <span class="keyword">public</span> String mClassDir;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> MyClassLoader(String classDir) &#123;</span><br><span class="line">        <span class="keyword">this</span>.mClassDir = classDir;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">Class</span>&lt;?&gt; findClass(String name) <span class="keyword">throws</span> ClassNotFoundException &#123;</span><br><span class="line">        <span class="keyword">File</span> <span class="keyword">file</span> = <span class="keyword">new</span> <span class="keyword">File</span>(mClassDir, getClassFileName(name));</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">file</span>.exists()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                FileInputStream is = <span class="keyword">new</span> FileInputStream(<span class="keyword">file</span>);</span><br><span class="line"></span><br><span class="line">                ByteArrayOutputStream buf = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">                <span class="keyword">int</span> len;</span><br><span class="line">                <span class="keyword">while</span> ((len = is.<span class="keyword">read</span>()) != -<span class="number">1</span>) &#123;</span><br><span class="line">                    buf.<span class="keyword">write</span>(len);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">byte</span>[] data = buf.toByteArray();</span><br><span class="line">                is.close();</span><br><span class="line">                buf.close();</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> defineClass(name, data, <span class="number">0</span>, data.length);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (FileNotFoundException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.findClass(name);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String getClassFileName(String fullName) &#123;</span><br><span class="line">        <span class="keyword">int</span> index = fullName.lastIndexOf(<span class="string">"."</span>);</span><br><span class="line">        <span class="keyword">if</span> (index == -<span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> fullName + <span class="string">".class"</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> fullName.substring(index + <span class="number">1</span>) + <span class="string">".class"</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为我们不需要打破双亲委托机制所以只需要重写findClass方法就可以了。我们自定义的ClassLoader会从指定的路径中搜索class文件,将它读入内存,然后通过调用ClassLoader.defineClass()方法去加载这个类。</p>
+<p>我们在/Users/linjw/workspace/class_loader_demo目录下创建了一个Test.java:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> linjw.demo.classloader;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getData</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Hello World"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后通过javac命令编译出Test.class文件,同样放在/Users/linjw/workspace/class_loader_demo目录下。</p>
+<p>然后用我们的MyClassLoader去加载它:</p>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">MyClassLoader</span> loader = new <span class="type">MyClassLoader</span>(<span class="string">"/Users/linjw/workspace/class_loader_demo"</span>);</span><br><span class="line"><span class="type">Class</span> clazz = loader.loadClass(<span class="string">"linjw.demo.classloader.Test"</span>);</span><br><span class="line"><span class="keyword">if</span> (clazz != null) &#123;</span><br><span class="line">    <span class="type">Object</span> obj = clazz.newInstance();</span><br><span class="line">    <span class="type">Method</span> <span class="keyword">method</span> = clazz.getDeclaredMethod(<span class="string">"getData"</span>);</span><br><span class="line">    <span class="type">String</span> <span class="literal">result</span> = (<span class="type">String</span>) <span class="keyword">method</span>.invoke(obj);</span><br><span class="line">    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>);</span><br><span class="line">    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"ClassLoader : "</span> + clazz.getClassLoader());</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"can't load class"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到下面的打印,说明我们已经成功用MyClassLoader加载了Test这个类:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">Hello</span> <span class="tag">World</span></span><br><span class="line"><span class="tag">ClassLoader</span> : <span class="tag">linjw</span><span class="class">.demo</span><span class="class">.classloader</span><span class="class">.MyClassLoader</span><span class="at_rule">@<span class="keyword">66cd51c3</span></span></span><br></pre></td></tr></table></figure>
+<p>这里还有一个小的知识点,如果一个类是由某个ClassLoader加载的,那么它import的类也会由这个ClassLoader去加载。这里我们可以做一个实验:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> linjw.demo.classloader;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> linjw.demo.classloader.Test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test2</span> &#123;</span></span><br><span class="line">    <span class="keyword">public</span> String getData()&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Test ClassLoader : "</span> + Test.<span class="keyword">class</span>.getClassLoader();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们写一个Test2类,它会import Test并返回Test的ClassLoader。让我们写个demo看看这个Test的ClassLoader:</p>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">MyClassLoader</span> loader = new <span class="type">MyClassLoader</span>(<span class="string">"/Users/linjw/workspace/class_loader_demo"</span>);</span><br><span class="line"><span class="type">Class</span> clazz = loader.loadClass(<span class="string">"linjw.demo.classloader.Test2"</span>);</span><br><span class="line"><span class="keyword">if</span> (clazz != null) &#123;</span><br><span class="line">    <span class="type">Object</span> obj = clazz.newInstance();</span><br><span class="line">    <span class="type">Method</span> <span class="keyword">method</span> = clazz.getDeclaredMethod(<span class="string">"getData"</span>);</span><br><span class="line">    <span class="type">String</span> <span class="literal">result</span> = (<span class="type">String</span>) <span class="keyword">method</span>.invoke(obj);</span><br><span class="line">    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="literal">result</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="type">System</span>.<span class="keyword">out</span>.println(<span class="string">"can't load class"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过打印可以知道Test也是由MyClassLoader加载的:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">linjw</span><span class="class">.demo</span><span class="class">.classloader</span><span class="class">.MyClassLoader</span><span class="at_rule">@<span class="keyword">66cd51c3</span></span></span><br></pre></td></tr></table></figure>
+<h2 id="Context_ClassLoader"><a href="#Context_ClassLoader" class="headerlink" title="Context ClassLoader"></a>Context ClassLoader</h2><p>Context ClassLoader并不是一个实际的类,它只是Thread的一个成员变量:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Thread</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> ClassLoader contextClassLoader;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">init2</span><span class="params">(Thread parent)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.contextClassLoader = parent.getContextClassLoader();</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ClassLoader <span class="title">getContextClassLoader</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> contextClassLoader;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setContextClassLoader</span><span class="params">(ClassLoader cl)</span> </span>&#123;</span><br><span class="line">        contextClassLoader = cl;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每个Thread都有一个相关联的ClassLoader,子线程默认使用父线程的ClassLoader。</p>
+<p>而线程的默认ClassLoader是AppClassLoader:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Launcher</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        loader = AppClassLoader.getAppClassLoader(extcl);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InternalError(</span><br><span class="line">            <span class="string">"Could not create application class loader"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//设置AppClassLoader为当前线程的Context ClassLoader</span></span><br><span class="line">    Thread.currentThread().setContextClassLoader(loader);</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Context ClassLoader的存在是为了解决使用双亲委托机制下父ClassLoader无法找到子ClassLoader的问题。假如有下面的委托链:</p>
+<p>ClassLoaderA -&gt; AppClassLoader -&gt; ExtClassLoader -&gt; BootstrapClassLoader</p>
+<p>那么委派链左边的ClassLoader就可以很自然的使用右边的ClassLoader所加载的类。 </p>
+<p>但如果是右边的ClassLoader想要反过来使用左边的ClassLoader所加载的类就无能为力了。</p>
+<p>这个时候如果使用Context ClassLoader就能从线程中获得左边的ClassLoader了。</p>
+<p>那什么时候会出现右边的ClassLoader想要反过来使用左边的ClassLoader所加载的类的情况呢？</p>
+<p>我们上一节刚刚说过:“如果一个类是由某个ClassLoader加载的,那么它import的类也会由这个ClassLoader去加载”。</p>
+<p>举个例子,Java 提供了很多服务提供者接口（Service Provider Interface，SPI）,允许第三方为这些接口提供实现。如JAXP(XML处理的Java API)的SPI<strong>接口</strong>定义包含在 javax.xml.parsers包中，它是由BootstrapClassLoader加载的。</p>
+<p>但是它的实现代码很可能是作为Java应用所依赖的jar包被包含进来,如实现了JAXP SPI的Apache Xerces所包含的jar包,它由AppClassLoader加载。</p>
+<p>我们用javax.xml.parsers.DocumentBuilderFactory类中的newInstance()方法用来生成一个新的DocumentBuilderFactory的实例, DocumentBuilderFactory是一个抽象类,它定是java核心库的一部分,由BootstrapClassLoader去加载。因此,DocumentBuilderFactory里面import的类都由BootstrapClassLoader去加载。</p>
+<p>但是DocumentBuilderFactory的实现类却是在org.apache.xerces.jaxp.DocumentBuilderFactoryImpl中定义的, BootstrapClassLoader无法加载它。这个时候就需要在DocumentBuilderFactory. newInstance()的代码中使用Context ClassLoader，找到AppClassLoader去加载DocumentBuilderFactoryImpl这个实现类。</p>
+<h1 id="u5B89_u5353_u4E2D_u7684ClassLoader"><a href="#u5B89_u5353_u4E2D_u7684ClassLoader" class="headerlink" title="安卓中的ClassLoader"></a>安卓中的ClassLoader</h1><p>安卓的的类也是通过ClassLoader加载的,但是并不是java中的BootstrapClassLoader、 ExtClassLoader或者AppClassLoader。写个小demo看看安卓中加载类的是哪些ClassLoader:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Log</span>.<span class="literal">d</span>(<span class="string">"DxClassLoader"</span>, <span class="string">"BootClassLoader :"</span> + String.<span class="keyword">class</span>.getClassLoader());</span><br><span class="line"></span><br><span class="line">ClassLoader loader = MainActivity.<span class="keyword">class</span>.getClassLoader();</span><br><span class="line"><span class="keyword">do</span> &#123;</span><br><span class="line">	<span class="keyword">Log</span>.<span class="literal">d</span>(<span class="string">"DxClassLoader"</span>, <span class="string">"loader :"</span> + loader);</span><br><span class="line">&#125; <span class="keyword">while</span> ((loader = loader.getParent()) != null);</span><br></pre></td></tr></table></figure>
+<p>打印如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">09</span>-<span class="number">27</span> <span class="number">23</span>:<span class="number">11</span>:<span class="number">03.432</span> <span class="number">21151</span>-<span class="number">21151</span>/? D/DxClassLoader: BootClassLoader :java.lang.BootClassLoader@ad96016</span><br><span class="line"><span class="number">09</span>-<span class="number">27</span> <span class="number">23</span>:<span class="number">11</span>:<span class="number">03.432</span> <span class="number">21151</span>-<span class="number">21151</span>/? D/DxClassLoader: loader :dalvik.system.PathClassLoader[DexPathList[[zip file <span class="string">"/data/app/linjw.demo.classloader-2/base.apk"</span>],nativeLibraryDirectories=[/data/app/linjw.demo.classloader-<span class="number">2</span>/lib/arm64, /vendor/lib64, /system/lib64]]]</span><br><span class="line"><span class="number">09</span>-<span class="number">27</span> <span class="number">23</span>:<span class="number">11</span>:<span class="number">03.433</span> <span class="number">21151</span>-<span class="number">21151</span>/? D/DxClassLoader: loader :java.lang.BootClassLoader@ad96016</span><br></pre></td></tr></table></figure>
+<p>我们可以看到安卓中用的了PathClassLoader和BootClassLoader两个ClassLoader,其中BootClassLoader是PathClassLoader的parent。</p>
+<p>而和在java程序不同的是String是由BootClassLoader加载的。安卓的BootClassLoader其实就相当于java的BootstrapClassLoader,只不过它是由java实现的而不是由c/c++实现的。</p>
+<h2 id="PathClassLoader"><a href="#PathClassLoader" class="headerlink" title="PathClassLoader"></a>PathClassLoader</h2><p>我们在上一节中将PathClassLoader打印出来的时候可以看到一个apk路径:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[zip file <span class="string">"/data/app/linjw.demo.classloader-2/base.apk"</span>]</span><br></pre></td></tr></table></figure>
+<p>apk其实是一个也是一个zip压缩包,我们可以将一个apk文件后缀改成.zip然后就可以直接解压了。PathClassLoader的作用其实就是在这个zip包中加载dex文件,我们通过它甚至可以加载其他应用的代码,但它只能加载已安装的应用。</p>
+<p>例如我们可以新建一个ext工程,它的包名为linjw.demo.classloader.ext,然后在里面创建Test类:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> linjw.demo.classloader.ext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getData</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Hello World"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后编译出apk来,并且安装。之后就能从这个apk中加载出Test类了:</p>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> path = null;</span><br><span class="line"><span class="type">PackageManager</span> pm = getPackageManager();</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    path = pm.getApplicationInfo(<span class="string">"linjw.demo.classloader.ext"</span>, <span class="number">0</span>).sourceDir;</span><br><span class="line">&#125; catch (<span class="type">PackageManager</span>.<span class="type">NameNotFoundException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">PathClassLoader</span> loader = new <span class="type">PathClassLoader</span>(path, <span class="type">ClassLoader</span>.getSystemClassLoader());</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">Class</span> clazz = loader.loadClass(<span class="string">"linjw.demo.classloader.ext.Test"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (clazz != null) &#123;</span><br><span class="line">        <span class="type">Object</span> obj = clazz.newInstance();</span><br><span class="line">        <span class="type">Method</span> <span class="keyword">method</span> = clazz.getDeclaredMethod(<span class="string">"getData"</span>);</span><br><span class="line">        <span class="type">String</span> <span class="literal">result</span> = (<span class="type">String</span>) <span class="keyword">method</span>.invoke(obj);</span><br><span class="line">        <span class="type">Log</span>.d(<span class="string">"DxClassLoader"</span>, <span class="literal">result</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">Log</span>.d(<span class="string">"DxClassLoader"</span>, <span class="string">"can't load class"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; catch (<span class="type">ClassNotFoundException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">NoSuchMethodException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">InstantiationException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">IllegalAccessException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">InvocationTargetException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以得到打印:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">09</span>-<span class="number">27</span> <span class="number">23</span>:<span class="number">39</span>:<span class="number">16.571</span> <span class="number">24077</span>-<span class="number">24077</span>/? D/DxClassLoader: Hello World</span><br></pre></td></tr></table></figure>
+<h2 id="DexClassLoader"><a href="#DexClassLoader" class="headerlink" title="DexClassLoader"></a>DexClassLoader</h2><p>PathClassLoader只能加载已经安装的应用里面的类,但是DexClassLoader却能加载未安装的应用里面的类。例如我们将apk放到存储卡目录下而不去安装它:</p>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> dir = <span class="type">Environment</span>.getExternalStorageDirectory().getAbsolutePath();</span><br><span class="line"><span class="type">File</span> apk = new <span class="type">File</span>(dir, <span class="string">"Ext.apk"</span>);</span><br><span class="line"><span class="type">File</span> dexOutputDir = this.getDir(<span class="string">"dex"</span>, <span class="number">0</span>);</span><br><span class="line"><span class="type">DexClassLoader</span> loader = new <span class="type">DexClassLoader</span>(</span><br><span class="line">        apk.getAbsolutePath(),</span><br><span class="line">        dexOutputDir.getAbsolutePath(),</span><br><span class="line">        null, getClassLoader());</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">Class</span> clazz = loader.loadClass(<span class="string">"linjw.demo.classloader.ext.Test"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (clazz != null) &#123;</span><br><span class="line">        <span class="type">Object</span> obj = clazz.newInstance();</span><br><span class="line">        <span class="type">Method</span> <span class="keyword">method</span> = clazz.getDeclaredMethod(<span class="string">"getData"</span>);</span><br><span class="line">        <span class="type">String</span> <span class="literal">result</span> = (<span class="type">String</span>) <span class="keyword">method</span>.invoke(obj);</span><br><span class="line">        <span class="type">Log</span>.d(<span class="string">"DxClassLoader"</span>, <span class="literal">result</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">Log</span>.d(<span class="string">"DxClassLoader"</span>, <span class="string">"can't load class"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; catch (<span class="type">ClassNotFoundException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">NoSuchMethodException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">InstantiationException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">IllegalAccessException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">InvocationTargetException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同样可以得到打印:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">09</span>-<span class="number">27</span> <span class="number">23</span>:<span class="number">54</span>:<span class="number">29.206</span> <span class="number">25472</span>-<span class="number">25472</span>/? D/DxClassLoader: Hello World</span><br></pre></td></tr></table></figure>
+<p>我们可以看到, DexClassLoader的构造函数的参数比PathClassLoader的要多出一个optimizedDirectory:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">DexClassLoader</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">BaseDexClassLoader</span> &#123;</span></span><br><span class="line">    public <span class="type">DexClassLoader</span>(<span class="type">String</span> dexPath, <span class="type">String</span> optimizedDirectory, <span class="type">String</span> librarySearchPath, <span class="type">ClassLoader</span> parent) &#123;</span><br><span class="line">        <span class="keyword">super</span>((<span class="type">String</span>)<span class="literal">null</span>, (<span class="type">File</span>)<span class="literal">null</span>, (<span class="type">String</span>)<span class="literal">null</span>, (<span class="type">ClassLoader</span>)<span class="literal">null</span>);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">RuntimeException</span>(<span class="string">"Stub!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">PathClassLoader</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">BaseDexClassLoader</span> &#123;</span></span><br><span class="line">    public <span class="type">PathClassLoader</span>(<span class="type">String</span> dexPath, <span class="type">ClassLoader</span> parent) &#123;</span><br><span class="line">        <span class="keyword">super</span>((<span class="type">String</span>)<span class="literal">null</span>, (<span class="type">File</span>)<span class="literal">null</span>, (<span class="type">String</span>)<span class="literal">null</span>, (<span class="type">ClassLoader</span>)<span class="literal">null</span>);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">RuntimeException</span>(<span class="string">"Stub!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public <span class="type">PathClassLoader</span>(<span class="type">String</span> dexPath, <span class="type">String</span> librarySearchPath, <span class="type">ClassLoader</span> parent) &#123;</span><br><span class="line">        <span class="keyword">super</span>((<span class="type">String</span>)<span class="literal">null</span>, (<span class="type">File</span>)<span class="literal">null</span>, (<span class="type">String</span>)<span class="literal">null</span>, (<span class="type">ClassLoader</span>)<span class="literal">null</span>);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">RuntimeException</span>(<span class="string">"Stub!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那这个optimizedDirectory到底有什么作用呢?其实optimizedDirectory是用来存放从apk中解压出来的dex文件的。</p>
+<p>DexClassLoader和PathClassLoader其实归根结底都是通过DexFile这个类去加载的dex文件,并不是直接读取的apk。因为如果每次都需要解压才能加载代码的话效率实在太低了。</p>
+<p>DexClassLoader可以主动解压apk,所以可以加载未安装的应用中的代码。但PathClassLoader不会主动解压apk,它是读取的已经安装的apk在cache中存在缓存的dex文件,所以它只能加载已安装应用中的代码。</p>
+<h2 id="u751F_u6210dex_u6587_u4EF6"><a href="#u751F_u6210dex_u6587_u4EF6" class="headerlink" title="生成dex文件"></a>生成dex文件</h2><p>DexClassLoader和PathClassLoader最后都是加载的dex文件。所以我们可以直接将dex文件的路径传给他们去加载。但dex文件又是个什么东西呢？</p>
+<p>普通的java程序中,JVM虚拟机可以通过ClassLoader去加载jar到的加载类的目的。但是android使用的Dalvik/ART虚拟机不能直接加载jar包,需要把.jar文件优化成.dex文件才能加载。所以实际上dex文件是优化过的jar包。</p>
+<p>我们可以用Android SDK提供的DX工具把.jar文件优化成.dex文件。我们用之前的Test.java做例子,具体步骤如下:</p>
+<p>1.使用javac命令编译Test.java得到Test.class文件(我这边的java环境是1.8的,如果不指定用1.7的话生成dex也会失败,报<strong>com.android.dx.cf.iface.ParseException: bad class file magic (cafebabe) or version (0034.0000)</strong>)</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">javac</span> <span class="tag">-source</span> 1<span class="class">.7</span> <span class="tag">-target</span> 1<span class="class">.7</span> <span class="tag">Test</span><span class="class">.java</span></span><br></pre></td></tr></table></figure>
+<p>2.将创建目录子目录linjw/demo/classloader/ext并将Test.class移动到子目录中(因为Test的package是linjw.demo.classloader.ext,所以要根据它生成同样的目录,要不然生成dex会失败)</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir -<span class="tag">p</span> linjw/demo/classloader/ext</span><br><span class="line">mv Test<span class="class">.class</span> linjw/demo/classloader/ext</span><br></pre></td></tr></table></figure>
+<p>3.使用jar命令将linjw目录打包成jar包</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jar -<span class="keyword">cf</span> <span class="keyword">Test</span>.jar linjw</span><br></pre></td></tr></table></figure>
+<p>4.用dx工具将jar包优化成dex包</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="regexp">/Users/</span>linjw<span class="regexp">/androidsdk/</span>android-sdk-macosx<span class="regexp">/build-tools/</span><span class="number">19.1</span>.<span class="number">0</span><span class="regexp">/dx --dex --output=Test.dex Test.jar</span></span><br></pre></td></tr></table></figure>
+<h2 id="u52A8_u6001_u52A0_u8F7Ddex_u6587_u4EF6"><a href="#u52A8_u6001_u52A0_u8F7Ddex_u6587_u4EF6" class="headerlink" title="动态加载dex文件"></a>动态加载dex文件</h2><p>然后我们就能将它放到存储卡中用DexClassLoader或者PathClassLoader去加载了。</p>
+<h3 id="u4F7F_u7528_u53CD_u5C04_u7684_u53CD_u5C04_u52A0_u8F7D"><a href="#u4F7F_u7528_u53CD_u5C04_u7684_u53CD_u5C04_u52A0_u8F7D" class="headerlink" title="使用反射的反射加载"></a>使用反射的反射加载</h3><figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="type">String</span> dir = <span class="type">Environment</span>.getExternalStorageDirectory().getAbsolutePath();</span><br><span class="line"><span class="type">File</span> dex = new <span class="type">File</span>(dir, <span class="string">"Test.dex"</span>);</span><br><span class="line"><span class="type">File</span> dexOutputDir = this.getDir(<span class="string">"dex"</span>, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">//使用<span class="type">PathClassLoader</span>加载dex</span><br><span class="line">//<span class="type">PathClassLoader</span> loader = new <span class="type">PathClassLoader</span>(dex.getAbsolutePath(), getClassLoader());</span><br><span class="line"></span><br><span class="line">//使用<span class="type">DexClassLoader</span>加载dex</span><br><span class="line"><span class="type">DexClassLoader</span> loader = new <span class="type">DexClassLoader</span>(</span><br><span class="line">        dex.getAbsolutePath(),</span><br><span class="line">        dexOutputDir.getAbsolutePath(),</span><br><span class="line">        null,</span><br><span class="line">        getClassLoader());</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">Class</span> clazz = loader.loadClass(<span class="string">"linjw.demo.classloader.ext.Test"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (clazz != null) &#123;</span><br><span class="line">        <span class="type">Object</span> obj = clazz.newInstance();</span><br><span class="line">        <span class="type">Method</span> <span class="keyword">method</span> = clazz.getDeclaredMethod(<span class="string">"getData"</span>);</span><br><span class="line">        <span class="type">String</span> <span class="literal">result</span> = (<span class="type">String</span>) <span class="keyword">method</span>.invoke(obj);</span><br><span class="line">        <span class="type">Log</span>.d(<span class="string">"DxClassLoader"</span>, <span class="literal">result</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">Log</span>.d(<span class="string">"DxClassLoader"</span>, <span class="string">"can't load class"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; catch (<span class="type">ClassNotFoundException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">NoSuchMethodException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">InstantiationException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">IllegalAccessException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; catch (<span class="type">InvocationTargetException</span> e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="u4F7F_u7528_u63A5_u53E3_u7684_u65B9_u5F0F_u52A0_u8F7D"><a href="#u4F7F_u7528_u63A5_u53E3_u7684_u65B9_u5F0F_u52A0_u8F7D" class="headerlink" title="使用接口的方式加载"></a>使用接口的方式加载</h3><p>或者我们也可以使用接口的方式:</p>
+<p>1.添加ITest接口:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> linjw.demo.classloader.ext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ITest</span> </span>&#123;</span><br><span class="line">    <span class="function">String <span class="title">getData</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>2.Test类实现ITest接口:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> linjw.demo.classloader.ext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> <span class="keyword">implements</span> <span class="title">ITest</span> </span>&#123;</span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getData</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Hello World"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>3.将它们一起打包到Test.dex</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">javac -source <span class="number">1.7</span> -target <span class="number">1.7</span> Test<span class="class">.java</span> ITest<span class="class">.java</span></span><br><span class="line"></span><br><span class="line">mkdir -<span class="tag">p</span> linjw/demo/classloader/ext</span><br><span class="line"></span><br><span class="line">mv Test<span class="class">.class</span> linjw/demo/classloader/ext</span><br><span class="line"></span><br><span class="line">mv Test<span class="class">.class</span> linjw/demo/classloader</span><br><span class="line"></span><br><span class="line">jar -cf Test<span class="class">.jar</span> linjw</span><br><span class="line"></span><br><span class="line">/Users/linjw/androidsdk/android-sdk-macosx/build-tools/<span class="number">19.1</span>.<span class="number">0</span>/dx --dex --output=Test<span class="class">.dex</span> Test.jar</span><br></pre></td></tr></table></figure>
+<p>4.在安卓项目中导入ITest接口并调整代码:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">String <span class="keyword">dir</span> = Environment.getExternalStorageDirectory().getAbsolutePath();</span><br><span class="line"><span class="keyword">File</span> dex = new <span class="keyword">File</span>(<span class="keyword">dir</span>, <span class="string">"Test.dex"</span>);</span><br><span class="line"><span class="keyword">File</span> dexOutputDir = this.getDir(<span class="string">"dex"</span>, 0);</span><br><span class="line"></span><br><span class="line"><span class="comment">//使用PathClassLoader加载dex</span></span><br><span class="line"><span class="comment">//PathClassLoader loader = new PathClassLoader(dex.getAbsolutePath(), getClassLoader());</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//使用DexClassLoader加载dex</span></span><br><span class="line">DexClassLoader loader = new DexClassLoader(</span><br><span class="line">    dex.getAbsolutePath(),</span><br><span class="line">    dexOutputDir.getAbsolutePath(),</span><br><span class="line">    null,</span><br><span class="line">    getClassLoader());</span><br><span class="line"></span><br><span class="line">try &#123;</span><br><span class="line"><span class="keyword">Class</span> clazz = loader.loadClass(<span class="string">"linjw.demo.classloader.ext.Test"</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (clazz != null) &#123;</span><br><span class="line">    <span class="comment">//注意这里,使用的是ITest</span></span><br><span class="line">    ITest obj = (ITest) clazz.newInstance();</span><br><span class="line">    String result = obj.getData();</span><br><span class="line">    <span class="keyword">Log</span>.<span class="literal">d</span>(<span class="string">"DxClassLoader"</span>, result);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">Log</span>.<span class="literal">d</span>(<span class="string">"DxClassLoader"</span>, <span class="string">"can't load class"</span>);</span><br><span class="line">&#125;</span><br><span class="line">&#125; catch (ClassNotFoundException <span class="keyword">e</span>) &#123;</span><br><span class="line"><span class="keyword">e</span>.printStackTrace();</span><br><span class="line">&#125; catch (InstantiationException <span class="keyword">e</span>) &#123;</span><br><span class="line"><span class="keyword">e</span>.printStackTrace();</span><br><span class="line">&#125; catch (IllegalAccessException <span class="keyword">e</span>) &#123;</span><br><span class="line"><span class="keyword">e</span>.printStackTrace();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其实我比较推荐使用在程序主体中定义接口,加载外部实现代码的这种方法。一方面它比反射的效率高,另一方面也比较容易阅读。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/09/26/Android温故而知新-AIDL/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/11/10/我也来谈一谈Java-GC/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2017/09/28/Android温故而知新-ClassLoader/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

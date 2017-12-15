@@ -69,5 +69,5 @@ theme: fexo
 ## Docs: http://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repository: ubuntu@193.199.4.241:/var/repo/hexo_static
+  repository: ubuntu@139.199.4.241:/var/repo/hexo_static.git
   branch: master
