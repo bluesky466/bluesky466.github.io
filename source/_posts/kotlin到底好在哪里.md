@@ -7,11 +7,11 @@ tags:
 
 最近在学kotlin,虽然还没有像其他博主一样立马就爱上它.但是不得不说,kotlin对比起java还是有不少优势的.
 
-# 语法简洁
+# 1、语法简洁
 
 首先是语法比较简洁,能不简单处理的就不啰嗦.
 
-## 变量与常量
+## 1.1、变量与常量
 
 变量通过var关键字定义,常量通过val关键字定义.既支持类型推倒也支持显示声明类型.这样的话定义变量和常量写起来会比java简洁一些:
 
@@ -21,7 +21,7 @@ var stringVar: String = "abc" // 也可以显式声明变量类型
 val INT_VALUE = 1 // 使用val关键字定义常量
 ```
 
-## 类
+## 1.2、类
 
 在kotlin中,类可以通过class关键字定义.支持在主构造方法中用var或者val关键字直接定义成员变量,例如下面的name和author,当然也支持在类结构体中定义成员变量,如price.
 
@@ -85,7 +85,7 @@ public class Book {
 }
 ```
 
-## 数据类
+## 1.3、数据类
 
 在kotlin中,我们还有可以用data class去定义单纯只是保存数据的数据类:
 
@@ -115,7 +115,7 @@ println(classA == classB) // false
 
 假设用java去实现的话就不知道这一行的kotlin代码需要多少行才能实现了.
 
-## object 对象
+## 1.4、object 对象
 
 我们能使用object关键字直接实现单例模式:
 
@@ -141,7 +141,41 @@ public class DataBaseHelper {
 }
 ```
 
-# 空指针安全
+
+# 2、命名参数
+
+kotlin支持命名参数。当一个方法的参数数目特别多的时候,命名参数就很有用了。例如String.regionMatches方法有五个参数:
+
+```
+public boolean regionMatches(boolean ignoreCase, int toffset,
+            String other, int ooffset, int len) {
+	...
+}
+```
+
+在调用的时候一眼很难看出哪个实参有什么作用:
+
+```
+String str = new String("hello world!");
+String sub = new String("WORLD");
+System.out.println(str.regionMatches(true, 6, sub, 0, 5));
+```
+
+而在kotlin中可以用命名参数将每个实参对应的形参注明出来,简直一目了然:
+
+```
+val str = "hello world!"
+val sub = "WORLD"
+println(str.regionMatches(thisOffset = 6, other = sub, otherOffset = 0, length = 5, ignoreCase = true))
+
+//命名参数可以用不同于函数声明的参数顺序传参
+println(str.regionMatches(ignoreCase = true, thisOffset = 6, other = sub, otherOffset = 0, length = 5))
+```
+
+而且使用命名参数的话可以不遵循方法声明的时候的参数顺序传参,因为我们已经将哪个实参传给哪个形参都标明了.
+
+
+# 3、空指针安全
 
 在kotlin中,每个类型都有其对应的可空类型,只有可空类型才能被赋值为null:
 
@@ -208,7 +242,7 @@ fun front(str: String?): Char? {
 
 对于非空类型,它永远不可能为空,我们不需要考虑它的空指针问题.而对于可空类型,我们需要明确指定在它为空的时候的调用抛出异常亦或进行执行.这样其实缩小了空指针异常的范围,同时也减小了空指针对程序稳定安全的破坏性.
 
-# 字符串模板
+# 4、字符串模板
 
 在kotlin字符串中可以用"$"符号标识一个表达式,该表达式的值会被计算出来放到字符串中:
 
@@ -219,7 +253,7 @@ println("$str.length is ${str.length}") // 结果为 "abc.length is 3"
 
 比起java用字符串拼接或者String.format的方式去处理都要优雅得多.
 
-# 高阶函数和Lambda表达式的支持
+# 5、高阶函数和Lambda表达式的支持
 
 
 在java中实现观察者模式,我们往往需要额外定义一个监听者的接口,这种监听者接口往往也只有一个方法,其实实际上属于比较冗余的代码,没有很大的实际价值:
@@ -254,7 +288,7 @@ btn.listener = { print("on click") }
 btn.click()
 ```
 
-# 泛型
+# 6、泛型
 
 在java泛型中存在类型通配符,用"? extends T"指定类参数的上限,用"? super T"指定类型参数的下限.
 
@@ -286,7 +320,7 @@ fun <T> copy(dest: Array<in T>, src: Array<out T>) {
 
 泛型这部分参考了《Kotlin极简教程》,这本书真的不错,强烈推荐.而大家如果对java泛型有兴趣的话可以去可空《Effect java》的相关章节或者也可以去看看我之前写的两篇文章 [《java泛型那些事》](http://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/)、[《再谈Java泛型》](http://blog.islinjw.cn/2018/02/04/%E5%86%8D%E8%B0%88Java%E6%B3%9B%E5%9E%8B/)
 
-# 无缝调用java
+# 7、无缝调用java
 
 当然,一个语言就算做的再好,但是没有一个健全的生态的话是很难被大众接受的.kotlin能够火起来,甚至被谷歌爸爸钦定为安卓的官方推荐语言.一个很重要的原因就是它可以无缝与java相互调用.以前写的java代码不用任何处理就能直接在kotlin中使用,而java也能无缝调用kotlin代码.
 
