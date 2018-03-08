@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>从源码看安卓应用的启动过程 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Android,技术相关," />
+  
+
+  <meta name="description" content="一般来讲安卓中的每个应用都是在一个单独的进程中运行的(当然也能使用android:process指定不同组件运行在不同进程中)。
+
+我们在上图中可以看到，每一个进程都有一个java虚拟机(Dalvik虚拟机/ART虚拟机)实例。如果每次启动一个应用都需要启动一个新的虚拟机，然后初始化一堆的东西，那应用的启动时间将会变得无比漫长。
+那有什么办法优化呢？
+假设我们有一个模板进程，每次不需要重新启动，只">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从源码看安卓应用的启动过程">
+<meta property="og:url" content="http://139.199.4.241/2018/03/08/从源码看安卓应用的启动过程/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="一般来讲安卓中的每个应用都是在一个单独的进程中运行的(当然也能使用android:process指定不同组件运行在不同进程中)。
+
+我们在上图中可以看到，每一个进程都有一个java虚拟机(Dalvik虚拟机/ART虚拟机)实例。如果每次启动一个应用都需要启动一个新的虚拟机，然后初始化一堆的东西，那应用的启动时间将会变得无比漫长。
+那有什么办法优化呢？
+假设我们有一个模板进程，每次不需要重新启动，只">
+<meta property="og:image" content="http://139.199.4.241/从源码看安卓应用的启动过程/1.png">
+<meta property="og:image" content="http://139.199.4.241/从源码看安卓应用的启动过程/2.png">
+<meta property="og:updated_time" content="2018-03-08T14:45:27.351Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从源码看安卓应用的启动过程">
+<meta name="twitter:description" content="一般来讲安卓中的每个应用都是在一个单独的进程中运行的(当然也能使用android:process指定不同组件运行在不同进程中)。
+
+我们在上图中可以看到，每一个进程都有一个java虚拟机(Dalvik虚拟机/ART虚拟机)实例。如果每次启动一个应用都需要启动一个新的虚拟机，然后初始化一堆的东西，那应用的启动时间将会变得无比漫长。
+那有什么办法优化呢？
+假设我们有一个模板进程，每次不需要重新启动，只">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-从源码看安卓应用的启动过程" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">从源码看安卓应用的启动过程</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.03.08</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2018/03/08/从源码看安卓应用的启动过程/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>一般来讲安卓中的每个应用都是在一个单独的进程中运行的(当然也能使用android:process指定不同组件运行在不同进程中)。</p>
+<img src="/从源码看安卓应用的启动过程/1.png">
+<p>我们在上图中可以看到，每一个进程都有一个java虚拟机(Dalvik虚拟机/ART虚拟机)实例。如果每次启动一个应用都需要启动一个新的虚拟机，然后初始化一堆的东西，那应用的启动时间将会变得无比漫长。</p>
+<p>那有什么办法优化呢？</p>
+<p>假设我们有一个模板进程，每次不需要重新启动，只需要重这个模板进程中拷贝一份出来，是不是就能节省一部分初始化的时间了？Zygote 进程就是这个模板进程。</p>
+<p>Zygote是受精卵的意思，十分形象的一个比喻。app的进程就是通过fork的方式从Zygote进程克隆出来的，而且使用了写时拷贝的方法，尽可能的复用Zygote进程的资源。fork是UNIX关于进程管理的一个术语,本质是新开一个进程,但是不从磁盘加载代码,而是从内存现有进程复制一份。而写时拷贝是一直只有在修改的时候才会拷贝的策略，这里我就不详细展开他们了，有兴趣的同学可以在网上搜索一下。</p>
+<p>说回Zygote进程，他是系统在启动的时候创建的，在启动之后会打开/dev/socket/zygote使用socket去监听启动应用进程的请求。当接收到启动请求的时候就会fork一个子进程出来：</p>
+<img src="/从源码看安卓应用的启动过程/2.png">
+<p>应用进程是在 ActivityManagerService.startProcessLocked方法里面启动的:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> final <span class="literal">void</span> startProcessLocked(ProcessRecord app,  <span class="built_in">String</span> hostingType, <span class="built_in">String</span> hostingNameStr) &#123;</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    Process<span class="built_in">.</span>ProcessStartResult startResult = Process<span class="built_in">.</span>start(<span class="string">"android.app.ActivityThread"</span>,</span><br><span class="line">                                                          app<span class="built_in">.</span>processName, uid, uid, gids, debugFlags, mountExternal,</span><br><span class="line">                                                          app<span class="built_in">.</span>info<span class="built_in">.</span>targetSdkVersion, app<span class="built_in">.</span>info<span class="built_in">.</span>seinfo, <span class="built_in">null</span>);</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以在Process里面看到，它的确是通过socket与Zygote进行交互的:</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> class Process &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">String</span> ZYGOTE_SOCKET = <span class="string">"zygote"</span>;</span><br><span class="line">    ...     </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> ProcessStartResult start(<span class="keyword">final</span> <span class="keyword">String</span> processClass,</span><br><span class="line">                                                <span class="keyword">final</span> <span class="keyword">String</span> niceName,</span><br><span class="line">                                                <span class="built_in">int</span> uid, <span class="built_in">int</span> gid, <span class="built_in">int</span>[] gids,</span><br><span class="line">                                                <span class="built_in">int</span> debugFlags, <span class="built_in">int</span> mountExternal,</span><br><span class="line">                                                <span class="built_in">int</span> targetSdkVersion,</span><br><span class="line">                                                <span class="keyword">String</span> seInfo,</span><br><span class="line">                                                <span class="keyword">String</span>[] zygoteArgs) &#123;</span><br><span class="line">        ...                                          </span><br><span class="line">        <span class="keyword">return</span> startViaZygote(processClass, niceName, uid, gid, gids, debugFlags, mountExternal, targetSdkVersion, seInfo, zygoteArgs);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ProcessStartResult startViaZygote(<span class="keyword">final</span> <span class="keyword">String</span> processClass,</span><br><span class="line">                                                    <span class="keyword">final</span> <span class="keyword">String</span> niceName,</span><br><span class="line">                                                    <span class="keyword">final</span> <span class="built_in">int</span> uid, <span class="keyword">final</span> <span class="built_in">int</span> gid,</span><br><span class="line">                                                    <span class="keyword">final</span> <span class="built_in">int</span>[] gids,</span><br><span class="line">                                                    <span class="built_in">int</span> debugFlags, <span class="built_in">int</span> mountExternal,</span><br><span class="line">                                                    <span class="built_in">int</span> targetSdkVersion,</span><br><span class="line">                                                    <span class="keyword">String</span> seInfo,</span><br><span class="line">                                                    <span class="keyword">String</span>[] extraArgs)</span><br><span class="line">                                                    <span class="keyword">throws</span> ZygoteStartFailedEx &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">return</span> zygoteSendArgsAndGetResult(argsForZygote);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ProcessStartResult zygoteSendArgsAndGetResult(ArrayList&lt;<span class="keyword">String</span>&gt; args) <span class="keyword">throws</span> ZygoteStartFailedEx &#123;</span><br><span class="line">        openZygoteSocketIfNeeded();</span><br><span class="line">        ...</span><br><span class="line">        sZygoteWriter.write(Integer.toString(args.<span class="built_in">size</span>())); 、</span><br><span class="line">        sZygoteWriter.newLine();</span><br><span class="line">        <span class="built_in">int</span> sz = args.<span class="built_in">size</span>();</span><br><span class="line">        <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; sz; i++) &#123;</span><br><span class="line">            <span class="keyword">String</span> arg = args.<span class="built_in">get</span>(i);</span><br><span class="line">            <span class="keyword">if</span> (arg.indexOf(<span class="string">'\n'</span>) &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> ZygoteStartFailedEx(<span class="string">"embedded newlines not allowed"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            sZygoteWriter.write(arg);</span><br><span class="line">            sZygoteWriter.newLine();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        sZygoteWriter.flush();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Should there be a timeout on this?</span></span><br><span class="line">        ProcessStartResult result = <span class="keyword">new</span> ProcessStartResult();</span><br><span class="line">        result.pid = sZygoteInputStream.readInt();</span><br><span class="line">        <span class="keyword">if</span> (result.pid &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ZygoteStartFailedEx(<span class="string">"fork() failed"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        result.usingWrapper = sZygoteInputStream.readBoolean();</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> openZygoteSocketIfNeeded() <span class="keyword">throws</span> ZygoteStartFailedEx &#123;</span><br><span class="line">        ...</span><br><span class="line">        sZygoteSocket = <span class="keyword">new</span> LocalSocket();</span><br><span class="line">        sZygoteSocket.connect(<span class="keyword">new</span> LocalSocketAddress(ZYGOTE_SOCKET,</span><br><span class="line">        LocalSocketAddress.Namespace.RESERVED));</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那zygote进程通过socket监听到请求之后又做了什么呢？ZygoteInit.runSelectLoop就是用来监听socket请求我们看看源码，其实它是在一个while死循环里不断select socket消息:</p>
+<figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> runSelectLoop() throws MethodAndArgsCaller &#123;</span><br><span class="line">    ArrayList&lt;FileDescriptor&gt; fds = <span class="keyword">new</span> ArrayList&lt;FileDescriptor&gt;();</span><br><span class="line">    ArrayList&lt;ZygoteConnection&gt; peers = <span class="keyword">new</span> ArrayList&lt;ZygoteConnection&gt;();</span><br><span class="line">    FileDescriptor[] fdArray = <span class="keyword">new</span> FileDescriptor[<span class="number">4</span>];</span><br><span class="line"></span><br><span class="line">    fds.add(sServerSocket.getFileDescriptor());</span><br><span class="line">    peers.add(<span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> loopCount = GC_LOOP_COUNT;</span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> <span class="keyword">index</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span><br><span class="line">        * Call gc() before we block in select().</span><br><span class="line">        * It's work that has to be done anyway, and it's better</span><br><span class="line">        * to avoid making every child do it. It will also</span><br><span class="line">        * madvise() any free memory as a side-effect.</span><br><span class="line">        *</span><br><span class="line">        * Don't call it every time, because walking the entire</span><br><span class="line">        * heap is a lot of overhead to free a few hundred bytes.</span><br><span class="line">        */</span></span><br><span class="line">        <span class="keyword">if</span> (loopCount &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">            gc();</span><br><span class="line">            loopCount = GC_LOOP_COUNT;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            loopCount--;   </span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            fdArray = fds.toArray(fdArray);</span><br><span class="line">            <span class="keyword">index</span> = selectReadable(fdArray);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Error in select()"</span>, ex);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">index</span> &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Error in select()"</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">index</span> == <span class="number">0</span>) &#123;</span><br><span class="line">            ZygoteConnection newPeer = acceptCommandPeer();</span><br><span class="line">            peers.add(newPeer);</span><br><span class="line">            fds.add(newPeer.getFileDesciptor());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">boolean</span> done;</span><br><span class="line">            done = peers.get(<span class="keyword">index</span>).runOnce();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (done) &#123;</span><br><span class="line">                peers.remove(<span class="keyword">index</span>);</span><br><span class="line">                fds.remove(<span class="keyword">index</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接收到消息之后会调ZygoteConnection.runOnce，在这个方法里面调用了Zygote.forkAndSpecialize方法去fork一个进程，这里我们就不再深入了。我们继续跟踪下去发现他又调了ZygoteInit.invokeStaticMain:</p>
+<figure class="highlight roboconf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="component">boolean runOnce() throws ZygoteInit.MethodAndArgsCaller &#123;</span><br><span class="line">    ...</span><br><span class="line">    pid = Zygote<span class="string">.forkAndSpecialize(parsedArgs.uid</span>, parsedArgs<span class="string">.gid</span>, parsedArgs<span class="string">.gids</span>,</span><br><span class="line">    parsedArgs<span class="string">.debugFlags</span>, rlimits, parsedArgs<span class="string">.mountExternal</span>, parsedArgs<span class="string">.seInfo</span>,</span><br><span class="line">    parsedArgs<span class="string">.niceName)</span>;</span><br><span class="line">    ...</span><br><span class="line">    handleChildProc(parsedArgs, descriptors, childPipeFd, newStderr);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line">private void handleChildProc(Arguments parsedArgs,</span><br><span class="line">                            FileDescriptor[] descriptors, FileDescriptor pipeFd, PrintStream newStderr)</span><br><span class="line">                            throws ZygoteInit.MethodAndArgsCaller &#123;</span><br><span class="line">    ...</span><br><span class="line">    ZygoteInit.invokeStaticMain(cloader, className, mainArgs);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ZygoteInit.invokeStaticMain的方法比较短，我就全部复制上来了，可以看到，这里用反射的方式调用了main方法，也就是ActivityThread.main:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="literal">static</span> <span class="keyword">void</span> invokeStaticMain(ClassLoader loader,</span><br><span class="line">                            <span class="built_in">String</span> className, <span class="built_in">String</span>[] argv)</span><br><span class="line">                            throws ZygoteInit.MethodAndArgsCaller &#123;</span><br><span class="line">    Class&lt;?&gt; cl;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        cl = loader.loadClass(className);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                          <span class="string">"Missing class when invoking static main "</span> + className,</span><br><span class="line">                          ex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Method m;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        m = cl.getMethod(<span class="string">"main"</span>, <span class="keyword">new</span> Class[] &#123; <span class="built_in">String</span>[].<span class="keyword">class</span> &#125;);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoSuchMethodException ex) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                          <span class="string">"Missing static main on "</span> + className, ex);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (SecurityException ex) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                          <span class="string">"Problem getting static main on "</span> + className, ex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">int</span> modifiers = m.getModifiers();</span><br><span class="line">    <span class="keyword">if</span> (! (Modifier.isStatic(modifiers) &amp;&amp; Modifier.isPublic(modifiers))) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                          <span class="string">"Main method is not public and static on "</span> + className);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span><br><span class="line">    * This throw gets caught in ZygoteInit.main(), which responds</span><br><span class="line">    * by invoking the exception's run() method. This arrangement</span><br><span class="line">    * clears up all the stack frames that were required in setting</span><br><span class="line">    * up the process.</span><br><span class="line">    */</span></span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> ZygoteInit.MethodAndArgsCaller(m, argv);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后就到了ActivityThread.main方法，可以看到在这个方法里面初始化了sMainThreadHandler和Looper。这个就是主线程Handler对应的Looper了:</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="keyword">String</span>[] args) &#123;</span><br><span class="line">    SamplingProfilerIntegration.start();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// CloseGuard defaults to true and can be quite spammy. We</span></span><br><span class="line">    <span class="comment">// disable it here, but selectively enable it later (via</span></span><br><span class="line">    <span class="comment">// StrictMode) on debug builds, but using DropBox, not logs.</span></span><br><span class="line">    CloseGuard.setEnabled(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">    Environment.initForCurrentUser();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Set the reporter for event logging in libcore</span></span><br><span class="line">    EventLogger.setReporter(<span class="keyword">new</span> EventLoggingReporter());</span><br><span class="line"></span><br><span class="line">    Security.addProvider(<span class="keyword">new</span> AndroidKeyStoreProvider());</span><br><span class="line"></span><br><span class="line">    Process.setArgV0(<span class="string">"&lt;pre-initialized&gt;"</span>);</span><br><span class="line"></span><br><span class="line">    Looper.prepareMainLooper();</span><br><span class="line"></span><br><span class="line">    ActivityThread thread = <span class="keyword">new</span> ActivityThread();</span><br><span class="line">    thread.attach(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (sMainThreadHandler == <span class="keyword">null</span>) &#123;</span><br><span class="line">        sMainThreadHandler = thread.getHandler();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    AsyncTask.init();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">false</span>) &#123;</span><br><span class="line">        Looper.myLooper().setMessageLogging(<span class="keyword">new</span></span><br><span class="line">        LogPrinter(Log.DEBUG, <span class="string">"ActivityThread"</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Looper.<span class="built_in">loop</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Main thread loop unexpectedly exited"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>于是乎一个应用的主线程就这样启动了，接下来就是ActivityManagerService通过Binder机制去让ActivityThread用Hander同步创建主Activity，并且调用Activity生命周期了。这部分最近有写过一篇博客<a href="http://blog.islinjw.cn/2018/03/07/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8BActivity%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" target="_blank" rel="external">《从源码看Activity生命周期》</a>感兴趣的同学可以去看看。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/03/07/从源码看Activity生命周期/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2018/03/08/从源码看安卓应用的启动过程/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
