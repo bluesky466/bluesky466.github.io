@@ -1,4 +1,4 @@
-title: OpenSLES学习笔记
+title: OpenSL ES 学习笔记
 date: 2018-09-01 20:24:42
 tags:
     - 技术相关
