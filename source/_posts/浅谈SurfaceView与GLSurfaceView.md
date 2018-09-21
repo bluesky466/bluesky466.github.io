@@ -1,12 +1,9 @@
-title: 浅谈Surface
+title: 浅谈SurfaceView与GLSurfaceView
 date: 2018-09-21 00:10:51
 tags:
 	- 技术相关
   - Android
 ---
-
-Surface是安卓中一个比较重要但是又比较偏门的东西,其实我们每个应用基本基本上都会在不知不觉中用到它．这段时间刚好查了相关的一些资料，这里把它记录下来．
-
 
 #　什么是Surface
 
@@ -23,10 +20,6 @@ Canvas canvas = mSurface.lockCanvas(null);
 //使用Canvas进行绘制
 mSurface.unlockCanvasAndPost(canvas);
 ```
-
-Surface其实是安卓中专门用来画图的地方,所有我们看到的图像最终都通过Surface去绘制.例如我们的Activity它其实也是绘制在一块Surface上的．
-
-如果深入去挖,会讲到SurfaceControl,讲到ISurface,讲到SurfaceFlinger.但是这些东西都太过底层了.这里我想给大家讲讲比较偏应用层的东西.
 
 # SurfaceView
 
@@ -111,7 +104,7 @@ public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
 运行效果如下:
 
-{% img /浅谈Surface/1.jpg %}
+{% img /浅谈SurfaceView与GLSurfaceView/1.jpg %}
 
 这个Demo有几个关键代码,第一个是在构造函数里面使用getHolder()获取到SurfaceHolder,然后使用addCallback注册了个监听．这样就能监听SurfaceView内部Surface的生命周期．
 
@@ -235,51 +228,5 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
 可以看到,我们实现了Renderer去画一个红色矩形,然后使用setRenderer设置给GLSurfaceView就可以了,运行效果如下:
 
-{% img /浅谈Surface/2.jpg %}
+{% img /浅谈SurfaceView与GLSurfaceView/2.jpg %}
 
-# ViewRootImpl与Surface
-
-ViewRootImpl相信大家都知道它是啥,但是可能很多人都不知道,其实它内部也是用Surface进行实际的绘制工作的:
-
-```
-public final class ViewRootImpl implements ViewParent, View.AttachInfo.Callbacks, HardwareRenderer.HardwareDrawCallbacks {
-  ...
-  private void performTraversals() {
-    ...
-    performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
-    ...
-    performLayout(lp, desiredWindowWidth, desiredWindowHeight);
-    ...
-    performDraw();
-  }
-  ...
-  private void performDraw() {
-    ...
-    draw(fullRedrawNeeded);
-    ...
-  }
-  ...
-  private void draw(boolean fullRedrawNeeded) {
-    ...
-    if (!drawSoftware(surface, attachInfo, yoff, scalingRequired, dirty)) {
-        return;
-    }
-    ...
-  }
-  ...
-  private boolean drawSoftware(Surface surface, AttachInfo attachInfo, int yoff, boolean scalingRequired, Rect dirty) {
-    ...
-    canvas = mSurface.lockCanvas(dirty);
-    ...
-    mView.draw(canvas);
-    ...
-    surface.unlockCanvasAndPost(canvas);
-    ...
-  }
-  ...
-}
-```
-
-可以看到，它也是调用的mSurface.lockCanvas获取的Canvas.这个Canvas就是我们在View.onDraw里面传进来的Canvas.
-
-所以我们Activity上的View也是画在Surface上的.
