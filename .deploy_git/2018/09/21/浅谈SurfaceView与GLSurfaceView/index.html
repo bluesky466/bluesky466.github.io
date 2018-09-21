@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>浅谈SurfaceView与GLSurfaceView | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Android,技术相关," />
+  
+
+  <meta name="description" content="#　什么是Surface
+让我们看看Surface的官方介绍:
+
+Handle onto a raw buffer that is being managed by the screen compositor.
+
+Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行绘制．
+对应到代码其实就是可以通过Surface获得一个Canvas:
+123Canvas ca">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅谈SurfaceView与GLSurfaceView">
+<meta property="og:url" content="http://139.199.4.241/2018/09/21/浅谈SurfaceView与GLSurfaceView/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="#　什么是Surface
+让我们看看Surface的官方介绍:
+
+Handle onto a raw buffer that is being managed by the screen compositor.
+
+Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行绘制．
+对应到代码其实就是可以通过Surface获得一个Canvas:
+123Canvas ca">
+<meta property="og:image" content="http://139.199.4.241/浅谈SurfaceView与GLSurfaceView/1.jpg">
+<meta property="og:image" content="http://139.199.4.241/浅谈SurfaceView与GLSurfaceView/2.jpg">
+<meta property="og:updated_time" content="2018-09-21T11:23:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅谈SurfaceView与GLSurfaceView">
+<meta name="twitter:description" content="#　什么是Surface
+让我们看看Surface的官方介绍:
+
+Handle onto a raw buffer that is being managed by the screen compositor.
+
+Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行绘制．
+对应到代码其实就是可以通过Surface获得一个Canvas:
+123Canvas ca">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SurfaceView"><span class="toc-text">SurfaceView</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#GLSurfaceView"><span class="toc-text">GLSurfaceView</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-浅谈SurfaceView与GLSurfaceView" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">浅谈SurfaceView与GLSurfaceView</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.09.21</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2018/09/21/浅谈SurfaceView与GLSurfaceView/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>#　什么是Surface</p>
+<p>让我们看看Surface的官方介绍:</p>
+<blockquote>
+<p>Handle onto a raw buffer that is being managed by the screen compositor.</p>
+</blockquote>
+<p>Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行绘制．</p>
+<p>对应到代码其实就是可以通过Surface获得一个Canvas:</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Canvas <span class="keyword">canvas</span> = mSurface.lockCanvas(null);</span><br><span class="line"><span class="comment">//使用Canvas进行绘制</span></span><br><span class="line">mSurface.unlockCanvasAndPost(<span class="keyword">canvas</span>);</span><br></pre></td></tr></table></figure>
+<p>Surface其实是安卓中专门用来画图的地方.</p>
+<h1 id="SurfaceView"><a href="#SurfaceView" class="headerlink" title="SurfaceView"></a>SurfaceView</h1><p>Surface可能大家比较陌生,但是SurfaceView和GLSurfaceView相信大家或多或少都会听说过．</p>
+<p>SurfaceView其实就是对Surface进行了一次封装,它内部帮我们管理了一个Surface．我们使用SurfaceView其实最终都是获取到这个Surface去绘制．</p>
+<p>这里开门见山,直接抛出一个简单的SurfaceView的用法,下面的Demo用SurfaceView画了一个１００*１００的红色矩形</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MySurfaceView</span> <span class="keyword">extends</span> <span class="title">SurfaceView</span> <span class="keyword">implements</span> <span class="title">SurfaceHolder</span>.<span class="title">Callback</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> DrawThread mDrawThread;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MySurfaceView</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(context, <span class="keyword">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MySurfaceView</span><span class="params">(Context context, AttributeSet attrs)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(context, attrs, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MySurfaceView</span><span class="params">(Context context, AttributeSet attrs, <span class="keyword">int</span> defStyleAttr)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(context, attrs, defStyleAttr);</span><br><span class="line">        getHolder().addCallback(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">surfaceCreated</span><span class="params">(SurfaceHolder holder)</span> </span>&#123;</span><br><span class="line">        mDrawThread = <span class="keyword">new</span> DrawThread(holder.getSurface());</span><br><span class="line">        mDrawThread.start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">surfaceChanged</span><span class="params">(SurfaceHolder holder, <span class="keyword">int</span> format, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">surfaceDestroyed</span><span class="params">(SurfaceHolder holder)</span> </span>&#123;</span><br><span class="line">        mDrawThread.stopDraw();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            mDrawThread.join();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">DrawThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Surface mSurface;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">boolean</span> mRunning = <span class="keyword">true</span>;</span><br><span class="line">        <span class="keyword">private</span> Paint mPaint = <span class="keyword">new</span> Paint();</span><br><span class="line"></span><br><span class="line">        DrawThread(Surface surface) &#123;</span><br><span class="line">            mSurface = surface;</span><br><span class="line">            mPaint.setColor(Color.RED);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">stopDraw</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            mRunning = <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="annotation">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">super</span>.run();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> (mRunning) &#123;</span><br><span class="line">                Canvas canvas = mSurface.lockCanvas(<span class="keyword">null</span>);</span><br><span class="line">                canvas.drawColor(Color.WHITE);</span><br><span class="line">                canvas.drawRect(<span class="number">0</span>, <span class="number">0</span>, <span class="number">100</span>, <span class="number">100</span>, mPaint);</span><br><span class="line">                mSurface.unlockCanvasAndPost(canvas);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">50</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行效果如下:</p>
+<img src="/浅谈SurfaceView与GLSurfaceView/1.jpg">
+<p>这个Demo有几个关键代码,第一个是在构造函数里面使用getHolder()获取到SurfaceHolder,然后使用addCallback注册了个监听．这样就能监听SurfaceView内部Surface的生命周期．</p>
+<p>接着我们在surfaceCreated回调里面开启了一个DrawThread线程．它的主要工作就是在一个while循环里面不停的绘制．</p>
+<p>通过代码我们可以看到这个绘制的过程:</p>
+<ol>
+<li>通过SurfaceHolder．getSurface可以获取到Surface</li>
+<li>通过Surface.lockCanvas可以获取到Surface的Canvas</li>
+<li>使用Canvas去绘制图像</li>
+<li>使用Surface.unlockCanvasAndPost可以释放Canvas</li>
+</ol>
+<p>相信这个Demo代码不用再多说,大家都可以很快理解．从中我们可以看到,SurfaceView最大的特点就是可以在子线程中绘制图像．</p>
+<p>在子线程中绘制图像有什么好处呢？</p>
+<p>我们都知道一般情况下View都是在主线程中绘制的,而且需要通过measure、layout、draw三个步骤．当布局越复杂,绘制的效率就越低,而且主线程中的一些耗时操作也会进一步降低效率．</p>
+<p>如果使用SurfaceView的话我们就能越过measure、layout操作,而且不会被主线程的运算减低绘制性能．这样的特性十分适合于一些频繁更新且对刷新率有一定要求的程序,如相机的预览、画笔书写等．</p>
+<h1 id="GLSurfaceView"><a href="#GLSurfaceView" class="headerlink" title="GLSurfaceView"></a>GLSurfaceView</h1><p>而GLSurfaceView继承自SurfaceView,其实是对SurfaceView再做了一次封装,方便我们在安卓中使用OpenGL.</p>
+<p>我们都知道OpenGL是一个跨平台的图形库.它提供了一些全平台统一的图形接口.但是各个平台其实都有一些很难统一的差异,所以为了跨平台的兼容性,OpenGL不负责窗口管理及上下文管理.这部分由各个平台自己实现．EGL就是安卓平台上的实现它是 OpenGL ES 和底层 Native 平台视窗系统之间的接口．</p>
+<p>所以在安卓上使用OpenGL,都需要先用EGL进行一些初始化操作,结束的时候再用EGL做一些清理工作．</p>
+<p>GLSurfaceView已经帮我们用SurfaceHolder做了EGL的初始化和清理操作,所以我们不需要再去关心EGL．</p>
+<p>和我们上面写的SurfaceView的Demo一样,GLSurface的绘制也是在子线程中进行的,它为我们开启了一个GLThread，对一些处理事件进行了处理.我们只需要实现Renderer接口进行绘制即可,GLSurfaceView就会在GLThread中调用我们的Renderer进行绘制:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">GLSurfaceView</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">SurfaceView</span> <span class="title">implements</span> <span class="title">SurfaceHolder</span>.<span class="title">Callback2</span> &#123;</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">private</span> <span class="type">Renderer</span> mRenderer</span><br><span class="line">  ...</span><br><span class="line">  static <span class="class"><span class="keyword">class</span> <span class="title">GLThread</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Thread</span> &#123;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    public void run() &#123;</span><br><span class="line">      ...</span><br><span class="line">      guardedRun();</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">private</span> void guardedRun() <span class="keyword">throws</span> <span class="type">InterruptedException</span> &#123;</span><br><span class="line">      ...</span><br><span class="line">      <span class="keyword">while</span>(<span class="literal">true</span>)&#123;</span><br><span class="line">        ...</span><br><span class="line">        view.mRenderer.onSurfaceCreated(gl, mEglHelper.mEglConfig);</span><br><span class="line">        ...</span><br><span class="line">        view.mRenderer.onSurfaceChanged(gl, w, h);</span><br><span class="line">        ...</span><br><span class="line">        view.mRenderer.onDrawFrame(gl);</span><br><span class="line">        ...</span><br><span class="line">      &#125;</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一个简单的Demo如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> MyGLSurfaceView extends GLSurfaceView &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyGLSurfaceView</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(context, null);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyGLSurfaceView</span><span class="params">(Context context, AttributeSet attrs)</span> </span>&#123;</span><br><span class="line">        super(context, attrs);</span><br><span class="line"></span><br><span class="line">        setRenderer(<span class="keyword">new</span> MyRender());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> MyRender implements Renderer &#123;</span><br><span class="line">        <span class="keyword">private</span> FloatBuffer mVB;</span><br><span class="line"></span><br><span class="line">        MyRender() &#123;</span><br><span class="line">            <span class="keyword">float</span> coords[] = &#123;</span><br><span class="line">                    -<span class="number">0.5f</span>, <span class="number">0.5f</span>, <span class="number">0.0f</span>,</span><br><span class="line">                    -<span class="number">0.5f</span>, -<span class="number">0.5f</span>, <span class="number">0.0f</span>,</span><br><span class="line">                    <span class="number">0.5f</span>, -<span class="number">0.5f</span>, <span class="number">0.0f</span>,</span><br><span class="line">                    <span class="number">0.5f</span>, -<span class="number">0.5f</span>, <span class="number">0.0f</span>,</span><br><span class="line">                    <span class="number">0.5f</span>, <span class="number">0.5f</span>, <span class="number">0.0f</span>,</span><br><span class="line">                    -<span class="number">0.5f</span>, <span class="number">0.5f</span>, <span class="number">0.0f</span></span><br><span class="line">            &#125;;</span><br><span class="line"></span><br><span class="line">            ByteBuffer vbb = ByteBuffer.allocateDirect(coords.length * <span class="number">4</span>);</span><br><span class="line">            vbb.order(ByteOrder.nativeOrder());</span><br><span class="line">            mVB = vbb.asFloatBuffer();</span><br><span class="line">            mVB.put(coords);</span><br><span class="line">            mVB.position(<span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @<span class="function">Override</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceCreated</span><span class="params">(GL10 gl, EGLConfig config)</span> </span>&#123;</span><br><span class="line">            gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @<span class="function">Override</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSurfaceChanged</span><span class="params">(GL10 gl, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</span><br><span class="line">            gl.glViewport(<span class="number">0</span>, <span class="number">0</span>, width, height);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @<span class="function">Override</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onDrawFrame</span><span class="params">(GL10 gl)</span> </span>&#123;</span><br><span class="line">            gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);</span><br><span class="line">            gl.glClearColor(<span class="number">1.0f</span>, <span class="number">1.0f</span>, <span class="number">1.0f</span>, <span class="number">1.0f</span>);</span><br><span class="line">            gl.glColor4f(<span class="number">1.0f</span>, <span class="number">0.0f</span>, <span class="number">0.0f</span>, <span class="number">1.0f</span>);</span><br><span class="line">            gl.glVertexPointer(<span class="number">3</span>, GL10.GL_FLOAT, <span class="number">0</span>, mVB);</span><br><span class="line">            gl.glDrawArrays(GL10.GL_TRIANGLES, <span class="number">0</span>, <span class="number">6</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到,我们实现了Renderer去画一个红色矩形,然后使用setRenderer设置给GLSurfaceView就可以了,运行效果如下:</p>
+<img src="/浅谈SurfaceView与GLSurfaceView/2.jpg">
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/09/01/OpenSLES学习笔记/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2018/09/21/浅谈SurfaceView与GLSurfaceView/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
