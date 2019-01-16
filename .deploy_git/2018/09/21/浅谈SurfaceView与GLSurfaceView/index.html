@@ -15,39 +15,36 @@
     <meta name="keywords" content="Android,技术相关," />
   
 
-  <meta name="description" content="#　什么是Surface
-让我们看看Surface的官方介绍:
+  <meta name="description" content="什么是Surface让我们看看Surface的官方介绍:
 
 Handle onto a raw buffer that is being managed by the screen compositor.
 
 Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行绘制．
 对应到代码其实就是可以通过Surface获得一个Canvas:
-123Canvas ca">
+123Canvas canva">
 <meta property="og:type" content="article">
 <meta property="og:title" content="浅谈SurfaceView与GLSurfaceView">
 <meta property="og:url" content="http://139.199.4.241/2018/09/21/浅谈SurfaceView与GLSurfaceView/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="#　什么是Surface
-让我们看看Surface的官方介绍:
+<meta property="og:description" content="什么是Surface让我们看看Surface的官方介绍:
 
 Handle onto a raw buffer that is being managed by the screen compositor.
 
 Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行绘制．
 对应到代码其实就是可以通过Surface获得一个Canvas:
-123Canvas ca">
+123Canvas canva">
 <meta property="og:image" content="http://139.199.4.241/浅谈SurfaceView与GLSurfaceView/1.jpg">
 <meta property="og:image" content="http://139.199.4.241/浅谈SurfaceView与GLSurfaceView/2.jpg">
-<meta property="og:updated_time" content="2018-09-21T11:23:13.000Z">
+<meta property="og:updated_time" content="2018-10-25T15:53:36.085Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="浅谈SurfaceView与GLSurfaceView">
-<meta name="twitter:description" content="#　什么是Surface
-让我们看看Surface的官方介绍:
+<meta name="twitter:description" content="什么是Surface让我们看看Surface的官方介绍:
 
 Handle onto a raw buffer that is being managed by the screen compositor.
 
 Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行绘制．
 对应到代码其实就是可以通过Surface获得一个Canvas:
-123Canvas ca">
+123Canvas canva">
 
   
 
@@ -173,7 +170,7 @@ Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行�
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SurfaceView"><span class="toc-text">SurfaceView</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#GLSurfaceView"><span class="toc-text">GLSurfaceView</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#u4EC0_u4E48_u662FSurface"><span class="toc-text">什么是Surface</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#SurfaceView"><span class="toc-text">SurfaceView</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#GLSurfaceView"><span class="toc-text">GLSurfaceView</span></a></li></ol>
   </div>
 
 
@@ -221,15 +218,13 @@ Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行�
 
   <div class="article-content">
     
-      <p>#　什么是Surface</p>
-<p>让我们看看Surface的官方介绍:</p>
+      <h1 id="u4EC0_u4E48_u662FSurface"><a href="#u4EC0_u4E48_u662FSurface" class="headerlink" title="什么是Surface"></a>什么是Surface</h1><p>让我们看看Surface的官方介绍:</p>
 <blockquote>
 <p>Handle onto a raw buffer that is being managed by the screen compositor.</p>
 </blockquote>
 <p>Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行绘制．</p>
 <p>对应到代码其实就是可以通过Surface获得一个Canvas:</p>
 <figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Canvas <span class="keyword">canvas</span> = mSurface.lockCanvas(null);</span><br><span class="line"><span class="comment">//使用Canvas进行绘制</span></span><br><span class="line">mSurface.unlockCanvasAndPost(<span class="keyword">canvas</span>);</span><br></pre></td></tr></table></figure>
-<p>Surface其实是安卓中专门用来画图的地方.</p>
 <h1 id="SurfaceView"><a href="#SurfaceView" class="headerlink" title="SurfaceView"></a>SurfaceView</h1><p>Surface可能大家比较陌生,但是SurfaceView和GLSurfaceView相信大家或多或少都会听说过．</p>
 <p>SurfaceView其实就是对Surface进行了一次封装,它内部帮我们管理了一个Surface．我们使用SurfaceView其实最终都是获取到这个Surface去绘制．</p>
 <p>这里开门见山,直接抛出一个简单的SurfaceView的用法,下面的Demo用SurfaceView画了一个１００*１００的红色矩形</p>
@@ -272,7 +267,7 @@ Surface是一个raw buffer的句柄,我们可以通过它在raw buffer上进行�
     <a class="show pull-left" href="/2018/09/01/OpenSLES学习笔记/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2018/10/25/插件化之启动没有注册的Activity/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>

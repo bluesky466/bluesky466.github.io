@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>安卓音视频播放架构(一) | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Android,技术相关," />
+  
+
+  <meta name="description" content="安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
+MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:
+123456789101112131415161718192021">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓音视频播放架构(一)">
+<meta property="og:url" content="http://139.199.4.241/2019/01/17/安卓音视频播放架构-一/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
+MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:
+123456789101112131415161718192021">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/1.jpeg">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/2.png">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/3.png">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/4.png">
+<meta property="og:updated_time" content="2019-01-16T16:58:08.841Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓音视频播放架构(一)">
+<meta name="twitter:description" content="安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
+MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:
+123456789101112131415161718192021">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#MediaPlayer"><span class="toc-text">MediaPlayer</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u5B89_u5353Media_u6846_u67B6"><span class="toc-text">安卓Media框架</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#u4EE3_u7801_u7EC6_u8282"><span class="toc-text">代码细节</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MediaPlayerService_u7684_u5DE5_u4F5C_u539F_u7406"><span class="toc-text">MediaPlayerService的工作原理</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenMax_28OMX_29_u6846_u67B6"><span class="toc-text">OpenMax(OMX)框架</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#u5F00_u53D1_u5C42_uFF08Development_Layer_uFF0CDL_uFF09"><span class="toc-text">开发层（Development Layer，DL）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u6574_u5408_u5C42_uFF08Integration_Layer_uFF0CIL_uFF09"><span class="toc-text">整合层（Integration Layer，IL）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u5E94_u7528_u5C42_uFF08Application_Layer_uFF0CAL_uFF09"><span class="toc-text">应用层（Application Layer，AL）</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u5B8C_u6574_u6846_u67B6_u56FE"><span class="toc-text">完整框架图</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓音视频播放架构-一" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓音视频播放架构(一)</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.01.17</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2019/01/17/安卓音视频播放架构-一/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。</p>
+<h1 id="MediaPlayer"><a href="#MediaPlayer" class="headerlink" title="MediaPlayer"></a>MediaPlayer</h1><p>MediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">SurfaceView surfaceView = (SurfaceView) findViewById(R.id.surface);</span><br><span class="line">surfaceView.getHolder().addCallback(<span class="keyword">new</span> SurfaceHolder.Callback() &#123;</span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">surfaceCreated</span><span class="params">(SurfaceHolder holder)</span> </span>&#123;</span><br><span class="line">        MediaPlayer player = <span class="keyword">new</span> MediaPlayer();</span><br><span class="line">        player.setDisplay(holder); <span class="comment">//设置画面显示在哪</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            player.setDataSource(getAssets().openFd(<span class="string">"video.mp4"</span>));  <span class="comment">//设置视频源</span></span><br><span class="line">            player.prepare(); <span class="comment">//准备视频数据</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        player.start(); <span class="comment">//开始播放</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">surfaceChanged</span><span class="params">(SurfaceHolder holder, <span class="keyword">int</span> format, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">surfaceDestroyed</span><span class="params">(SurfaceHolder holder)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>MediaPlayer的API和用法很简单,基本上只需要看熟谷歌官方给的这幅状态图,就能很方便的使用了。其实大部分情况下无非也就是setDataSource、prepare、start、pause、stop、reset、release这几个方法的调用:</p>
+<img src="/安卓音视频播放架构一/1.jpeg">
+<p>具体的使用细节我这边就不去赘述了,感兴趣的可以参考下<a href="https://developer.android.com/reference/android/media/MediaPlayer" target="_blank" rel="external">官方文档</a>。</p>
+<h1 id="u5B89_u5353Media_u6846_u67B6"><a href="#u5B89_u5353Media_u6846_u67B6" class="headerlink" title="安卓Media框架"></a>安卓Media框架</h1><p>我们在应用里面调了MediaPlayer的方法,其实底层都会通过IPC机制调到MediaPlayerService。其实不仅是MediaPlayer,android.media包下的媒体播放接口像AudioTrack、SoundPool、MediaCodec都是会调到MediaPlayerService去做具体的编解码操作的,安卓的媒体播放是个典型的C/S架构,可以参考下<a href="https://source.android.com/devices/media" target="_blank" rel="external">官方文档</a>的架构图:</p>
+<img src="/安卓音视频播放架构一/2.png">
+<p>使用C/S架构的好处就是可以比较方便的统一管理软硬件编解码资源.</p>
+<p>整个框架除了java层的MediaPlayer之外还涉及三个关键so库:</p>
+<ul>
+<li>libmedia_jni.so 负责使用jni连接java层和native层,然后调用MediaPlayer类提供的接口</li>
+<li>libmedia.so 对上层提供了MediaPlayer类负责客户端与MediaPlayerService的IPC通讯</li>
+<li>libmediaplayerservice.so 负责统筹调度具体的编码器和解码器,它内部也实现了libmedia.so的IMediaPlayer类用于接收客户端通过IPC机制发送的指令</li>
+</ul>
+<p>他们的依赖关系如下</p>
+<img src="/安卓音视频播放架构一/3.png">
+<h2 id="u4EE3_u7801_u7EC6_u8282"><a href="#u4EE3_u7801_u7EC6_u8282" class="headerlink" title="代码细节"></a>代码细节</h2><p>然后我们来追踪下具体的代码实现.</p>
+<p>其实android.media.MediaPlayer这个java类只是native层的一个代理,具体的实现都是通过jni调用到libmedia_jni.so里面的c/c++代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MediaPlayer</span> <span class="keyword">extends</span> <span class="title">PlayerBase</span> <span class="keyword">implements</span> <span class="title">SubtitleController</span>.<span class="title">Listener</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">static</span> &#123;</span><br><span class="line">    System.loadLibrary(<span class="string">"media_jni"</span>);</span><br><span class="line">    native_init();</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">native_init</span><span class="params">()</span></span>;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">_setVideoSurface</span><span class="params">(Surface surface)</span></span>;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">_prepare</span><span class="params">()</span> <span class="keyword">throws</span> IOException, IllegalStateException</span>;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">_start</span><span class="params">()</span> <span class="keyword">throws</span> IllegalStateException</span>;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setDataSource</span><span class="params">(FileDescriptor fd, <span class="keyword">long</span> offset, <span class="keyword">long</span> length)</span> <span class="keyword">throws</span> IOException, IllegalArgumentException, IllegalStateException </span>&#123;</span><br><span class="line">    _setDataSource(fd, offset, length);</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setDisplay</span><span class="params">(SurfaceHolder sh)</span> </span>&#123;</span><br><span class="line">    mSurfaceHolder = sh;</span><br><span class="line">    Surface surface;</span><br><span class="line">    <span class="keyword">if</span> (sh != <span class="keyword">null</span>) &#123;</span><br><span class="line">      surface = sh.getSurface();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      surface = <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    _setVideoSurface(surface);</span><br><span class="line">    updateSurfaceScreenOn();</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">prepare</span><span class="params">()</span> <span class="keyword">throws</span> IOException, IllegalStateException </span>&#123;</span><br><span class="line">    _prepare();</span><br><span class="line">    scanInternalSubtitleTracks();</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> IllegalStateException </span>&#123;</span><br><span class="line">    baseStart();</span><br><span class="line">    stayAwake(<span class="keyword">true</span>);</span><br><span class="line">    _start();</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>libmedia_jni.so的实现可以在/frameworks/base/media/jni/android_media_MediaPlayer.cpp里面找到:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">static <span class="literal">void</span></span><br><span class="line">android_media_MediaPlayer_native_setup(JNIEnv *env, jobject thiz, jobject weak_this)</span><br><span class="line">&#123;</span><br><span class="line">    sp&lt;MediaPlayer&gt; mp = <span class="literal">new</span> MediaPlayer();</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    setMediaPlayer(env, thiz, mp);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static <span class="literal">void</span></span><br><span class="line">android_media_MediaPlayer_prepare(JNIEnv *env, jobject thiz)</span><br><span class="line">&#123;</span><br><span class="line">    sp&lt;MediaPlayer&gt; mp = getMediaPlayer(env, thiz);</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    sp&lt;IGraphicBufferProducer&gt; st = getVideoSurfaceTexture(env, thiz);</span><br><span class="line">    mp<span class="subst">-&gt;</span>setVideoSurfaceTexture(st);</span><br><span class="line"></span><br><span class="line">    process_media_player_call( env, thiz, mp<span class="subst">-&gt;</span>prepare(), <span class="string">"java/io/IOException"</span>, <span class="string">"Prepare failed."</span> );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static <span class="literal">void</span></span><br><span class="line">android_media_MediaPlayer_start(JNIEnv *env, jobject thiz)</span><br><span class="line">&#123;</span><br><span class="line">    sp&lt;MediaPlayer&gt; mp = getMediaPlayer(env, thiz);</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    process_media_player_call( env, thiz, mp<span class="subst">-&gt;</span>start(), <span class="built_in">NULL</span>, <span class="built_in">NULL</span> );</span><br><span class="line">&#125;</span><br><span class="line"><span class="attribute">...</span></span><br></pre></td></tr></table></figure>
+<p>而libmedia_jni.so内部也是依赖了MediaPlayer这个类去干活,它的代码可以在/frameworks/av/include/media/mediaplayer.h和/frameworks/av/media/libmedia/mediaplayer.cpp找到,而它编译之后打包在libmedia.so中</p>
+<p>上面我们看到libmedia_jni.so里面调用了MediaPlayer的方法去干活,那MediaPlayer又是怎么干活的呢,看看具体代码:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//mediaplayer.h</span></span><br><span class="line">sp&lt;IMediaPlayer&gt; mPlayer;</span><br><span class="line"></span><br><span class="line"><span class="comment">//mediaplayer.cpp</span></span><br><span class="line">status_t MediaPlayer<span class="tag">::prepare</span>()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    status_t ret = prepareAsync_l();</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">status_t MediaPlayer<span class="tag">::prepareAsync_l</span>()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    <span class="keyword">return</span> mPlayer<span class="subst">-&gt;</span>prepareAsync();</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里又依赖了一个IMediaPlayer,让我们继续挖一挖这个IMediaPlayer又是什么来的:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">status_t</span> MediaPlayer::attachNewPlayer(<span class="keyword">const</span> sp&lt;IMediaPlayer&gt;&amp; player)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    mPlayer = player;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">status_t</span> MediaPlayer::setDataSource(</span><br><span class="line">        <span class="keyword">const</span> sp&lt;IMediaHTTPService&gt; &amp;httpService,</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">char</span> *url, <span class="keyword">const</span> KeyedVector&lt;String8, String8&gt; *headers)</span><br><span class="line">&#123;</span><br><span class="line">    ALOGV(<span class="string">"setDataSource(%s)"</span>, url);</span><br><span class="line">    <span class="keyword">status_t</span> err = BAD_VALUE;</span><br><span class="line">    <span class="keyword">if</span> (url != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">const</span> sp&lt;IMediaPlayerService&gt; service(getMediaPlayerService());</span><br><span class="line">        <span class="keyword">if</span> (service != <span class="number">0</span>) &#123;</span><br><span class="line">            sp&lt;IMediaPlayer&gt; player(service-&gt;create(<span class="keyword">this</span>, mAudioSessionId));</span><br><span class="line">            <span class="keyword">if</span> ((NO_ERROR != doSetRetransmitEndpoint(player)) ||</span><br><span class="line">                (NO_ERROR != player-&gt;setDataSource(httpService, url, headers))) &#123;</span><br><span class="line">                player.clear();</span><br><span class="line">            &#125;</span><br><span class="line">            err = attachNewPlayer(player);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> err;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// MediaPlayer继承IMediaDeathNotifier</span></span><br><span class="line">IMediaDeathNotifier::getMediaPlayerService() &#123;</span><br><span class="line">    Mutex::Autolock _l(sServiceLock);</span><br><span class="line">    <span class="keyword">if</span> (sMediaPlayerService == <span class="number">0</span>) &#123;</span><br><span class="line">        sp&lt;IServiceManager&gt; sm = defaultServiceManager();</span><br><span class="line">        sp&lt;IBinder&gt; binder;</span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            binder = sm-&gt;getService(String16(<span class="string">"media.player"</span>));</span><br><span class="line">            <span class="keyword">if</span> (binder != <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            usleep(<span class="number">500000</span>); <span class="comment">// 0.5 s</span></span><br><span class="line">        &#125; <span class="keyword">while</span> (<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (sDeathNotifier == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            sDeathNotifier = <span class="keyword">new</span> DeathNotifier();</span><br><span class="line">        &#125;</span><br><span class="line">        binder-&gt;linkToDeath(sDeathNotifier);</span><br><span class="line">        sMediaPlayerService = interface_cast&lt;IMediaPlayerService&gt;(binder);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sMediaPlayerService;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到getMediaPlayerService方法实际是从ServiceManager里面获取了”media.player”这个服务,然后拿到了IMediaPlayerService的Binder代理,又去到了MediaPlayerService::create方法:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">sp&lt;IMediaPlayer&gt; MediaPlayerService::create(<span class="keyword">const</span> sp&lt;IMediaPlayerClient&gt;&amp; client,</span><br><span class="line">        <span class="keyword">audio_session_t</span> audioSessionId)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">pid_t</span> pid = IPCThreadState::self()-&gt;getCallingPid();</span><br><span class="line">    <span class="keyword">int32_t</span> connId = android_atomic_inc(&amp;mNextConnId);</span><br><span class="line"></span><br><span class="line">    sp&lt;Client&gt; c = <span class="keyword">new</span> Client(</span><br><span class="line">            <span class="keyword">this</span>, pid, connId, client, audioSessionId,</span><br><span class="line">            IPCThreadState::self()-&gt;getCallingUid());</span><br><span class="line"></span><br><span class="line">    ALOGV(<span class="string">"Create new client(%d) from pid %d, uid %d, "</span>, connId, pid,</span><br><span class="line">         IPCThreadState::self()-&gt;getCallingUid());</span><br><span class="line"></span><br><span class="line">    wp&lt;Client&gt; w = c;</span><br><span class="line">    &#123;</span><br><span class="line">        Mutex::<span class="function">Autolock <span class="title">lock</span><span class="params">(mLock)</span></span>;</span><br><span class="line">        mClients.add(w);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>MediaPlayerService会创建一个Client返回给客户端,客户端这个Client调用到MediaPlayerService的功能了。顺嘴说一句,Client是MediaPlayerService的一个内部类,它继承了BnMediaPlayerService,而BnMediaPlayer又继承了BnInterface\<imediaplayer\></imediaplayer\></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//MediaPlayerService.h</span></span><br><span class="line"><span class="keyword">class</span> MediaPlayerService : <span class="keyword">public</span> BnMediaPlayerService &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">class</span> Client : <span class="keyword">public</span> BnMediaPlayer &#123;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//IMediaPlayer.h</span></span><br><span class="line"><span class="keyword">class</span> BnMediaPlayer: <span class="keyword">public</span> BnInterface&lt;IMediaPlayer&gt;</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> status_t    <span class="title">onTransact</span><span class="params">( uint32_t code,</span><br><span class="line">                                    <span class="keyword">const</span> Parcel&amp; data,</span><br><span class="line">                                    Parcel* reply,</span><br><span class="line">                                    uint32_t flags = <span class="number">0</span>)</span></span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="MediaPlayerService_u7684_u5DE5_u4F5C_u539F_u7406"><a href="#MediaPlayerService_u7684_u5DE5_u4F5C_u539F_u7406" class="headerlink" title="MediaPlayerService的工作原理"></a>MediaPlayerService的工作原理</h2><p>查看MediaPlayerService的源码,可以知道在setDataSource的时候查找支持该源的播放器,然后创建出来使用:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">status_t MediaPlayerService<span class="tag">::Client</span><span class="tag">::setDataSource</span>(const sp&lt;IMediaHTTPService&gt; <span class="subst">&amp;</span>httpService, const char *url, const KeyedVect<span class="subst">or</span>&lt;String8, String8&gt; *headers)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    player_type playerType = MediaPlayerFactory<span class="tag">::getPlayerType</span>(this, url);</span><br><span class="line">    sp&lt;MediaPlayerBase&gt; p = setDataSource_pre(playerType);</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    setDataSource_post(p, p<span class="subst">-&gt;</span>setDataSource(httpService, url, headers));</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">sp&lt;MediaPlayerBase&gt; MediaPlayerService<span class="tag">::Client</span><span class="tag">::setDataSource_pre</span>(player_type playerType) &#123;</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    sp&lt;MediaPlayerBase&gt; p = createPlayer(playerType);</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">sp&lt;MediaPlayerBase&gt; MediaPlayerService<span class="tag">::Client</span><span class="tag">::createPlayer</span>(player_type playerType)</span><br><span class="line">&#123;</span><br><span class="line">    sp&lt;MediaPlayerBase&gt; p = mPlayer;</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    p = MediaPlayerFactory<span class="tag">::createPlayer</span>(playerType, this, notify, mPid);</span><br><span class="line">    <span class="attribute">...</span></span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到内部都是通过MediaPlayerFactory这个工厂去实现的,MediaPlayerFactory::registerBuiltinFactories方法注册了一些播放器,根据音视频源选择合适的播放器去播放。值得强调的是在sdk 23及以前的系统中会有StagefrightPlayer、NuPlayer两个播放器,sdk 24之后,真正工作的播放器就只有一个NuPlayer了。当然,各个厂家自己的提供的播放器也可以在这里注册,像小米盒子的ROM就导入过VLC框架的播放器。由于我司还有大量的安卓4.4的机器,所以我这里会把两个播放器都讲一下。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// android sdk 23</span></span><br><span class="line"><span class="keyword">void</span> MediaPlayerFactory::registerBuiltinFactories() &#123;</span><br><span class="line">    Mutex::<span class="function">Autolock <span class="title">lock_</span><span class="params">(&amp;sLock)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (sInitComplete)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    registerFactory_l(<span class="keyword">new</span> StagefrightPlayerFactory(), STAGEFRIGHT_PLAYER);</span><br><span class="line">    registerFactory_l(<span class="keyword">new</span> NuPlayerFactory(), NU_PLAYER);</span><br><span class="line">    registerFactory_l(<span class="keyword">new</span> TestPlayerFactory(), TEST_PLAYER);</span><br><span class="line"></span><br><span class="line">    sInitComplete = <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// android sdk 24</span></span><br><span class="line"><span class="keyword">void</span> MediaPlayerFactory::registerBuiltinFactories() &#123;</span><br><span class="line">    Mutex::<span class="function">Autolock <span class="title">lock_</span><span class="params">(&amp;sLock)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (sInitComplete)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    registerFactory_l(<span class="keyword">new</span> NuPlayerFactory(), NU_PLAYER);</span><br><span class="line">    registerFactory_l(<span class="keyword">new</span> TestPlayerFactory(), TEST_PLAYER);</span><br><span class="line"></span><br><span class="line">    sInitComplete = <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>StagefrightPlayer实际上指的是AwesomePlayer,在早期的安卓系统使用AwesomePlayer去播放本地视频,用NuPlayer去播放流媒体。后来因为某些原因(具体原因我没有找到,只是说AwesomePlayer有问题)所以逐渐用弃用了AwesomePlayer,统一使用NuPlayer去播放。在某些过度版本的安卓系统开发者选项里面还可以选择NuPlayer代替AwesomePlayer,到后期都不用选了,只有一个NuPlayer可以用。</p>
+<p>关于AwesomePlayer和NuPlayer的具体代码实现,我会在下篇文章继续解析．让我们继续讲这两个播放器都依赖的OpenMax框架．</p>
+<h1 id="OpenMax_28OMX_29_u6846_u67B6"><a href="#OpenMax_28OMX_29_u6846_u67B6" class="headerlink" title="OpenMax(OMX)框架"></a>OpenMax(OMX)框架</h1><p>开放多媒体加速层（英语：Open Media Acceleration，缩写为OpenMAX），一个不需要授权、跨平台的软件抽象层，以C语言实现的软件界面，用来处理多媒体。它是由Khronos Group提出的标准，也由他们来维持，目标在于创造一个统一的界面，加速大量多媒体资料的处理。</p>
+<p>也就是说OpenMax提供了具体的软硬件编解码能力,AwesomePlayer和NuPlayer依赖它,就能实现编解码功能.</p>
+<p>OpenMax分成三层：</p>
+<h2 id="u5F00_u53D1_u5C42_uFF08Development_Layer_uFF0CDL_uFF09"><a href="#u5F00_u53D1_u5C42_uFF08Development_Layer_uFF0CDL_uFF09" class="headerlink" title="开发层（Development Layer，DL）"></a>开发层（Development Layer，DL）</h2><p>这一层定义了一些基础的音频、视频以及图像算法,比如音频信号处理的快速傅立叶变换、滤波器,图像处理的色域转换(RGB、YUV等)、视频处理的MPEG-4, H.264, MP3, AAC 和 JPEG编解码等.</p>
+<p>DL层分为五个应用领域：</p>
+<p>AC - 音频编解码器<br>IC - 图像编解码器<br>IP - 图像处理（通用图像处理功能）<br>SP - 信号处理（通用音频处理功能）<br>VC - 视频编解码器（H264和MP4组件）</p>
+<p>它们都是一些比较算法层面的接口,由芯片原厂实现</p>
+<h2 id="u6574_u5408_u5C42_uFF08Integration_Layer_uFF0CIL_uFF09"><a href="#u6574_u5408_u5C42_uFF08Integration_Layer_uFF0CIL_uFF09" class="headerlink" title="整合层（Integration Layer，IL）"></a>整合层（Integration Layer，IL）</h2><p>这一层整合了DL层的算法和功能,作为一个比较低层级的编解码器接口,也就是说实现了这一层的接口就实现了一个编解码器.它可以是软件的也可以是硬件的</p>
+<h2 id="u5E94_u7528_u5C42_uFF08Application_Layer_uFF0CAL_uFF09"><a href="#u5E94_u7528_u5C42_uFF08Application_Layer_uFF0CAL_uFF09" class="headerlink" title="应用层（Application Layer，AL）"></a>应用层（Application Layer，AL）</h2><p>AL层为多媒体中间件与应用层之间提供一个标准化的API接口,不同的系统都应有对应的实现,应用程序依赖这一层的接口进行编程,就能获得很好的跨平台特性.</p>
+<h1 id="u5B8C_u6574_u6846_u67B6_u56FE"><a href="#u5B8C_u6574_u6846_u67B6_u56FE" class="headerlink" title="完整框架图"></a>完整框架图</h1><p>到这里,整个音视频播放架构就很清晰了</p>
+<img src="/安卓音视频播放架构一/4.png">
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/11/10/Android跨进程抛异常的原理/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2019/01/17/安卓音视频播放架构-一/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
