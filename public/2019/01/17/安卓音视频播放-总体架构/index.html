@@ -15,26 +15,41 @@
     <meta name="keywords" content="Android,技术相关," />
   
 
-  <meta name="description" content="安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
-MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:
-123456789101112131415161718192021">
+  <meta name="description" content="系列文章:
+
+安卓音视频播放 - 总体架构
+安卓音视频播放 - AwesomePlayer
+安卓音视频播放 - NuPlayer
+
+安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
+MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的vide">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓音视频播放 - 总体架构">
 <meta property="og:url" content="http://139.199.4.241/2019/01/17/安卓音视频播放-总体架构/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
-MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:
-123456789101112131415161718192021">
+<meta property="og:description" content="系列文章:
+
+安卓音视频播放 - 总体架构
+安卓音视频播放 - AwesomePlayer
+安卓音视频播放 - NuPlayer
+
+安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
+MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的vide">
 <meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/1.jpeg">
 <meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/2.png">
 <meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/3.png">
 <meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/4.png">
-<meta property="og:updated_time" content="2019-01-17T15:31:00.000Z">
+<meta property="og:updated_time" content="2019-01-19T07:58:20.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓音视频播放 - 总体架构">
-<meta name="twitter:description" content="安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
-MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:
-123456789101112131415161718192021">
+<meta name="twitter:description" content="系列文章:
+
+安卓音视频播放 - 总体架构
+安卓音视频播放 - AwesomePlayer
+安卓音视频播放 - NuPlayer
+
+安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。
+MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的vide">
 
   
 
@@ -208,7 +223,13 @@ MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上�
 
   <div class="article-content">
     
-      <p>安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。</p>
+      <p>系列文章:</p>
+<ul>
+<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/" target="_blank" rel="external">安卓音视频播放 - 总体架构</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-AwesomePlayer/" target="_blank" rel="external">安卓音视频播放 - AwesomePlayer</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/19/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-NuPlayer/" target="_blank" rel="external">安卓音视频播放 - NuPlayer</a></li>
+</ul>
+<p>安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。</p>
 <h1 id="MediaPlayer"><a href="#MediaPlayer" class="headerlink" title="MediaPlayer"></a>MediaPlayer</h1><p>MediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:</p>
 <figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">SurfaceView surfaceView = (SurfaceView) findViewById(R.id.surface);</span><br><span class="line">surfaceView.getHolder().addCallback(<span class="keyword">new</span> SurfaceHolder.Callback() &#123;</span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">surfaceCreated</span><span class="params">(SurfaceHolder holder)</span> </span>&#123;</span><br><span class="line">        MediaPlayer player = <span class="keyword">new</span> MediaPlayer();</span><br><span class="line">        player.setDisplay(holder); <span class="comment">//设置画面显示在哪</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            player.setDataSource(getAssets().openFd(<span class="string">"video.mp4"</span>));  <span class="comment">//设置视频源</span></span><br><span class="line">            player.prepare(); <span class="comment">//准备视频数据</span></span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        player.start(); <span class="comment">//开始播放</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">surfaceChanged</span><span class="params">(SurfaceHolder holder, <span class="keyword">int</span> format, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">surfaceDestroyed</span><span class="params">(SurfaceHolder holder)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
 <p>MediaPlayer的API和用法很简单,基本上只需要看熟谷歌官方给的这幅状态图,就能很方便的使用了。其实大部分情况下无非也就是setDataSource、prepare、start、pause、stop、reset、release这几个方法的调用:</p>

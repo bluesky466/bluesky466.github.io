@@ -4,6 +4,13 @@ tags:
   - 技术相关
   - Android
 ---
+
+系列文章:
+
+- [安卓音视频播放 - 总体架构](http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/)
+- [安卓音视频播放 - AwesomePlayer](http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-AwesomePlayer/)
+- [安卓音视频播放 - NuPlayer](http://blog.islinjw.cn/2019/01/19/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-NuPlayer/)
+
 # 音视频播放基础流程
 
 在讲具体的实现之前我们看一下音视频播放的基础流程:
@@ -14,7 +21,7 @@ tags:
 
 # StagefrightPlayer
 
-[上一篇文章](http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE%E6%9E%B6%E6%9E%84-%E4%B8%80/)有讲到MediaPlayerService会通过MediaPlayerFactory创建Player,其中一个创建的就是StagefrightPlayer.但它实际上是一个空壳,只是简单的调用AwesomePlayer的实现而已:
+[上一篇文章](http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/)有讲到MediaPlayerService会通过MediaPlayerFactory创建Player,其中一个创建的就是StagefrightPlayer.但它实际上是一个空壳,只是简单的调用AwesomePlayer的实现而已:
 
 
 ```
