@@ -25,7 +25,7 @@
 <meta property="og:description" content="前不久买了台15.6寸的小米pro,顺利安装win10、ubuntu 16.04双系统之后发现ubuntu的wifi一直不能启动。
 在小米社区上搜索找到的解决方法基本都是在/etc/modprobe.d/blacklist.conf文件后面加上acer-wmi或者在/etc/modprobe.d/ 下创建文件 xiaomi.conf并写入blacklist acer_wmi。
 据说在小米13.3上">
-<meta property="og:updated_time" content="2018-09-21T11:19:50.000Z">
+<meta property="og:updated_time" content="2019-01-21T15:16:03.694Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="小米笔记本pro 15.6寸安装ubuntu16.04无法使用wifi的解决方法">
 <meta name="twitter:description" content="前不久买了台15.6寸的小米pro,顺利安装win10、ubuntu 16.04双系统之后发现ubuntu的wifi一直不能启动。
@@ -211,8 +211,12 @@
 <p>社区上具体的回答可以在<a href="https://askubuntu.com/questions/910934/intel-wifi-card-not-recognised-in-ubuntu-16-04" target="_blank" rel="external">这里</a>查看。</p>
 <h1 id="u89E3_u51B3_u65B9_u6CD5"><a href="#u89E3_u51B3_u65B9_u6CD5" class="headerlink" title="解决方法"></a>解决方法</h1><p>chili555大神给出的解释是Ubuntu 16.04没有覆盖8086:24fd这个wifi设备的驱动,需要自己安装。或者直接安装Ubuntu 17.04,这个版本的ubuntu已经覆盖了这个驱动。</p>
 <p>自己安装wifi驱动的方法也很简单,首先下载下面链接的软件:</p>
-<figure class="highlight dns"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.10.14/linux-headers-<span class="number">4.10.14-04</span><span class="number">1014_4.10</span>.<span class="number">14-041014</span>.<span class="number">201705031501</span>_all.deb</span><br><span class="line"></span><br><span class="line">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.10.14/linux-headers-<span class="number">4.10.14-04</span>1014-generic_<span class="number">4.10.14-04</span><span class="number">1014.201705</span>031501_amd64.deb</span><br><span class="line"></span><br><span class="line">http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.10.14/linux-image-<span class="number">4.10.14-04</span>1014-generic_<span class="number">4.10.14-04</span><span class="number">1014.201705</span>031501_amd64.deb</span><br><span class="line"></span><br><span class="line">http://mirrors.kernel.org/ubuntu/pool/main/l/linux-firmware/linux-firmware_1.164_all.deb</span><br></pre></td></tr></table></figure>
-<p>多谢<a href="https://www.jianshu.com/u/68a7ecdf1bb1" target="_blank" rel="external">@oO小智星Oo_d182</a>的提醒，上面的最后一个包已经不存在了,会报404。请用<a href="http://mirrors.kernel.org/ubuntu/pool/main/l/linux-firmware/linux-firmware_1.169.1_all.deb" target="_blank" rel="external">http://mirrors.kernel.org/ubuntu/pool/main/l/linux-firmware/linux-firmware_1.169.1_all.deb</a>这个版本。</p>
+<ul>
+<li><a href="https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/wifi/linux-firmware_1.169_all.deb" target="_blank" rel="external">linux-firmware_1.169_all.deb</a></li>
+<li><a href="https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/wifi/linux-headers-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb" target="_blank" rel="external">linux-headers-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb</a></li>
+<li><a href="https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/wifi/linux-headers-4.10.14-041014_4.10.14-041014.201705031501_all.deb" target="_blank" rel="external">linux-headers-4.10.14-041014_4.10.14-041014.201705031501_all.deb</a></li>
+<li><a href="https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/wifi/linux-image-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb" target="_blank" rel="external">linux-image-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb</a></li>
+</ul>
 <p>然后执行命令将它们全部安装,接着重启电脑就可以了:</p>
 <figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">sudo</span> dpkg -i <span class="regexp">*.deb</span></span><br></pre></td></tr></table></figure>
 <h2 id="u5173_u95EDsecure_boot"><a href="#u5173_u95EDsecure_boot" class="headerlink" title="关闭secure boot"></a>关闭secure boot</h2><p>这个步骤可能不需要。因为我之前在搜索其他解决方式的时候就已经将它关闭了</p>
