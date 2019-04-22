@@ -25,10 +25,10 @@ chili555大神给出的解释是Ubuntu 16.04没有覆盖8086:24fd这个wifi设�
 
 自己安装wifi驱动的方法也很简单,首先下载下面链接的软件:
 
-- [linux-firmware_1.169_all.deb](https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/wifi/linux-firmware_1.169_all.deb)
-- [linux-headers-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb](https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/wifi/linux-headers-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb)
-- [linux-headers-4.10.14-041014_4.10.14-041014.201705031501_all.deb](https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/wifi/linux-headers-4.10.14-041014_4.10.14-041014.201705031501_all.deb)
-- [linux-image-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb](https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/wifi/linux-image-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb)
+- [linux-firmware_1.169_all.deb](https://github.com/bluesky466/filesave/blob/master/miwifi/linux-firmware_1.169_all.deb)
+- [linux-headers-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb](https://github.com/bluesky466/filesave/blob/master/miwifi/linux-headers-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb)
+- [linux-headers-4.10.14-041014_4.10.14-041014.201705031501_all.deb](https://github.com/bluesky466/filesave/blob/master/miwifi/linux-headers-4.10.14-041014_4.10.14-041014.201705031501_all.deb)
+- [linux-image-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb](https://github.com/bluesky466/filesave/blob/master/miwifi/linux-image-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb)
 
 
 然后执行命令将它们全部安装,接着重启电脑就可以了:
