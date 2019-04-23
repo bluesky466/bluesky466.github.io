@@ -43,7 +43,7 @@
 <meta property="og:image" content="http://139.199.4.241/浅谈安卓应用的破解/13.png">
 <meta property="og:image" content="http://139.199.4.241/浅谈安卓应用的破解/14.png">
 <meta property="og:image" content="http://139.199.4.241/浅谈安卓应用的破解/16.png">
-<meta property="og:updated_time" content="2019-04-23T14:50:47.000Z">
+<meta property="og:updated_time" content="2019-04-23T14:57:56.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="来谈一谈安卓应用的破解">
 <meta name="twitter:description" content="之前有写过一篇博客介绍了下java字节码的查看和分析
@@ -307,7 +307,7 @@
 <h2 id="6-__u91CD_u65B0_u6253_u5305apk"><a href="#6-__u91CD_u65B0_u6253_u5305apk" class="headerlink" title="6. 重新打包apk"></a>6. 重新打包apk</h2><p>接下来同样的压缩文件生成zip压缩包,<strong>注意目录结构</strong>:</p>
 <img src="/浅谈安卓应用的破解/14.png">
 <p>最后将zip后缀改成apk,我们的apk就打包好了</p>
-<h1 id="u91CD_u7B7E_u540D"><a href="#u91CD_u7B7E_u540D" class="headerlink" title="重签名"></a>重签名</h1><p>由于我们重新打包的apk和原来不一致了,如果直接安装是会失败的,需要我们重新给它签名.</p>
+<h1 id="u91CD_u7B7E_u540D"><a href="#u91CD_u7B7E_u540D" class="headerlink" title="重签名"></a>重签名</h1><p>由于我们重新打包的apk删除了签名信息,如果直接安装是会失败的,需要我们重新给它签名.</p>
 <h2 id="u521B_u5EFA_u7B7E_u540D"><a href="#u521B_u5EFA_u7B7E_u540D" class="headerlink" title="创建签名"></a>创建签名</h2><p>可以用下面命令创建alias为android.keystore,文件名也是android.keystore的签名文件</p>
 <blockquote>
 <p>keytool -genkeypair -alias android.keystore -keyalg RSA -validity 400 -keystore android.keystore</p>
