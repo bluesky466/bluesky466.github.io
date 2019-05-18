@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>可能是全网讲最细的安卓resources.arsc解析教程(一) | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Android,技术相关," />
+  
+
+  <meta name="description" content="aapt工具在编译资源会将一些资源或者资源索引打包成resources.arsc。这个文件以二进制数据的形式记录数据，c/c++加载起来特别方便。
+了解resources.arsc的结构对理解安卓的资源加载原理有很重要的帮助。
+这篇笔记记录下这几天写resources.arsc解析工具时候学到的知识，这个工具已经在github上开源(使用C++11,已经在mac和ubuntu上报make编译通过正">
+<meta property="og:type" content="article">
+<meta property="og:title" content="可能是全网讲最细的安卓resources.arsc解析教程(一)">
+<meta property="og:url" content="http://139.199.4.241/2019/05/18/可能是全网讲最细的安卓resources-arsc解析教程-一/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="aapt工具在编译资源会将一些资源或者资源索引打包成resources.arsc。这个文件以二进制数据的形式记录数据，c/c++加载起来特别方便。
+了解resources.arsc的结构对理解安卓的资源加载原理有很重要的帮助。
+这篇笔记记录下这几天写resources.arsc解析工具时候学到的知识，这个工具已经在github上开源(使用C++11,已经在mac和ubuntu上报make编译通过正">
+<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/1.png">
+<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/3.png">
+<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/2.png">
+<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/4.png">
+<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/5.png">
+<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/6.png">
+<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/7.png">
+<meta property="og:updated_time" content="2019-05-18T04:06:47.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="可能是全网讲最细的安卓resources.arsc解析教程(一)">
+<meta name="twitter:description" content="aapt工具在编译资源会将一些资源或者资源索引打包成resources.arsc。这个文件以二进制数据的形式记录数据，c/c++加载起来特别方便。
+了解resources.arsc的结构对理解安卓的资源加载原理有很重要的帮助。
+这篇笔记记录下这几天写resources.arsc解析工具时候学到的知识，这个工具已经在github上开源(使用C++11,已经在mac和ubuntu上报make编译通过正">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#u603B_u4F53_u7ED3_u6784"><span class="toc-text">总体结构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u5934_u90E8_u6570_u636E_u89E3_u6790"><span class="toc-text">头部数据解析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#u5934_u90E8_u7C7B_u578B"><span class="toc-text">头部类型</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u5168_u5C40_u5B57_u7B26_u4E32_u6C60"><span class="toc-text">全局字符串池</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Package_u8D44_u6E90"><span class="toc-text">Package资源</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#u8D44_u6E90_u7C7B_u578B_u5B57_u7B26_u4E32_u6C60"><span class="toc-text">资源类型字符串池</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u8D44_u6E90_u9879_u540D_u79F0_u5B57_u7B26_u4E32_u6C60"><span class="toc-text">资源项名称字符串池</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u8D44_u6E90"><span class="toc-text">资源</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-可能是全网讲最细的安卓resources-arsc解析教程-一" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">可能是全网讲最细的安卓resources.arsc解析教程(一)</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.05.18</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2019/05/18/可能是全网讲最细的安卓resources-arsc解析教程-一/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>aapt工具在编译资源会将一些资源或者资源索引打包成resources.arsc。这个文件以二进制数据的形式记录数据，c/c++加载起来特别方便。</p>
+<p>了解resources.arsc的结构对理解安卓的资源加载原理有很重要的帮助。</p>
+<p>这篇笔记记录下这几天写resources.arsc解析工具时候学到的知识，这个<a href="https://github.com/bluesky466/ResourcesParser" target="_blank" rel="external">工具</a>已经在github上开源(使用C++11,已经在mac和ubuntu上报make编译通过正常运行,Windows的同学就只好说声抱歉了)，感兴趣的同学也可以直接下载下来玩玩。</p>
+<h1 id="u603B_u4F53_u7ED3_u6784"><a href="#u603B_u4F53_u7ED3_u6784" class="headerlink" title="总体结构"></a>总体结构</h1><p>resources.arsc是以一个个Chunk块的形式组织的,Chunk的头部信息记录了这个Chunk的类型、长度等数据。</p>
+<p>从整体上来看，其结构为：资源索引表头部+字符串资源池+N个Package数据块:</p>
+<img src="/可能是全网讲最细的安卓resources_arsc解析教程一/1.png">
+<h1 id="u5934_u90E8_u6570_u636E_u89E3_u6790"><a href="#u5934_u90E8_u6570_u636E_u89E3_u6790" class="headerlink" title="头部数据解析"></a>头部数据解析</h1><p>整个resources.arsc就是一个Chunk块，所以文件的开头就是这个Chunk的头部信息.不过需要注意的是resources.arsc文件采用<em>小端编码</em>方式.所以数据应该按字节从后往前读。</p>
+<p>头部的结构如下:</p>
+<p>头部类型(两个字节)，头部大小(两个字节)，Chunk块大小(四个字节)</p>
+<p>我们找一个apk文件，将它后缀改成.zip直接解压，就可以得到resources.arsc，这里实际举个例子，用编辑工具查看到resources.arsc的前8个字节的数据，这里以16进制显示:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0200</span> <span class="number">0</span>c00 acb6 <span class="number">0300</span></span><br></pre></td></tr></table></figure>
+<p>首先头部类型的两个字节是0200(每两个16进制数字代表了一个字节)，但是这里是小端序，所以要从后往前读，得到实际的值0x0002。</p>
+<blockquote>
+<p>02 00 -&gt; 00 02</p>
+</blockquote>
+<p>resources.arsc内部记录的数据类型在ResourceTypes.h里面定义，我们找到头部类型的枚举，可以查到0x0002对应的类型是RES_TABLE_TYPE。返回去看上面的图，可以看到类型的确是RES_TABLE_TYPE。</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> &#123;</span>                                                                                                          </span><br><span class="line"><span class="constant">    RES_NULL_TYPE</span>               = <span class="number">0</span>x0000,                                                                       </span><br><span class="line"><span class="constant">    RES_STRING_POOL_TYPE</span>        = <span class="number">0</span>x0001,                                                                       </span><br><span class="line"><span class="constant">    RES_TABLE_TYPE</span>              = <span class="number">0</span>x0002,                                                                       </span><br><span class="line"><span class="constant">    RES_XML_TYPE</span>                = <span class="number">0</span>x0003,                                                                       </span><br><span class="line"></span><br><span class="line">    <span class="comment">// Chunk types in RES_XML_TYPE                                                                              </span></span><br><span class="line"><span class="constant">    RES_XML_FIRST_CHUNK_TYPE</span>    = <span class="number">0</span>x0100,                                                                       </span><br><span class="line"><span class="constant">    RES_XML_START_NAMESPACE_TYPE</span>= <span class="number">0</span>x0100,                                                                       </span><br><span class="line"><span class="constant">    RES_XML_END_NAMESPACE_TYPE</span>  = <span class="number">0</span>x0101,                                                                       </span><br><span class="line"><span class="constant">    RES_XML_START_ELEMENT_TYPE</span>  = <span class="number">0</span>x0102,                                                                       </span><br><span class="line"><span class="constant">    RES_XML_END_ELEMENT_TYPE</span>    = <span class="number">0</span>x0103,                                                                       </span><br><span class="line"><span class="constant">    RES_XML_CDATA_TYPE</span>          = <span class="number">0</span>x0104,                                                                       </span><br><span class="line"><span class="constant">    RES_XML_LAST_CHUNK_TYPE</span>     = <span class="number">0</span>x017f,                                                                       </span><br><span class="line">    <span class="comment">// This contains a uint32_t array mapping strings in the string              </span></span><br><span class="line">    <span class="comment">// pool back to resource identifiers.  It is optional.                       </span></span><br><span class="line"><span class="constant">    RES_XML_RESOURCE_MAP_TYPE</span>   = <span class="number">0</span>x0180,                                                                       </span><br><span class="line"></span><br><span class="line">    <span class="comment">// Chunk types in RES_TABLE_TYPE                                                                            </span></span><br><span class="line"><span class="constant">    RES_TABLE_PACKAGE_TYPE</span>      = <span class="number">0</span>x0200,                                                                       </span><br><span class="line"><span class="constant">    RES_TABLE_TYPE_TYPE</span>         = <span class="number">0</span>x0201,                                                                       </span><br><span class="line"><span class="constant">    RES_TABLE_TYPE_SPEC_TYPE</span>    = <span class="number">0</span>x0202,                                                                       </span><br><span class="line"><span class="constant">    RES_TABLE_LIBRARY_TYPE</span>      = <span class="number">0</span>x0203                                                                        </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>接着是头部大小的两个字节0c00(每两个16进制数字代表了一个字节)，从后往前读得到实际值0x000c，也就是说这个头部大小有12个字节</p>
+<blockquote>
+<p>0c 00 -&gt; 00 0c</p>
+</blockquote>
+<p>再接着的是Chunk块大小的四个字节acb6 0300(每两个16进制数字代表了一个字节),从后往前读得到实际值0x0003b6ac，转换回十进制是243372，也就是说resources.arsc文件的大小是243372字节。</p>
+<blockquote>
+<p>ac b6 03 00 -&gt; 00 03 b6 ac</p>
+</blockquote>
+<p>我们可以用wc命令查看这个文件的大小:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wc resources.arsc</span><br><span class="line"><span class="number">277</span>   <span class="number">2932</span> <span class="number">243372</span> resources.arsc</span><br></pre></td></tr></table></figure>
+<p>resources.arsc文件这样组织的原因是可以很方便的使用c/c++去加载。</p>
+<p>我们在源码里面找到Chunk头部信息的ResChunk_header结构体:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**                                                                                                             </span><br><span class="line">* Header that appears at the front of every data chunk in a resource.            </span><br><span class="line">*/</span>                                                                                                              </span><br><span class="line"><span class="keyword">struct</span> ResChunk_header                                                                                          </span><br><span class="line">&#123;                                                                                                               </span><br><span class="line">   <span class="comment">// Type identifier for this chunk.  The meaning of this value depends         </span></span><br><span class="line">   <span class="comment">// on the containing chunk.                                                                                  </span></span><br><span class="line">   <span class="keyword">uint16_t</span> type;                                                                                               </span><br><span class="line"></span><br><span class="line">   <span class="comment">// Size of the chunk header (in bytes).  Adding this value to                 </span></span><br><span class="line">   <span class="comment">// the address of the chunk allows you to find its associated data            </span></span><br><span class="line">   <span class="comment">// (if any).                                                                                                 </span></span><br><span class="line">   <span class="keyword">uint16_t</span> headerSize;                                                                                         </span><br><span class="line"></span><br><span class="line">   <span class="comment">// Total size of this chunk (in bytes).  This is the chunkSize plus           </span></span><br><span class="line">   <span class="comment">// the size of any data associated with the chunk.  Adding this value         </span></span><br><span class="line">   <span class="comment">// to the chunk allows you to completely skip its contents (including         </span></span><br><span class="line">   <span class="comment">// any child chunks).  If this value is the same as chunkSize, there is       </span></span><br><span class="line">   <span class="comment">// no data associated with the chunk.                                                                        </span></span><br><span class="line">   <span class="keyword">uint32_t</span> size;                                                                                               </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>下面就是show time了，由于普通机器设备上使用的都是小端序号,所以用c语言解析resources.arsc文件的头部信息只要直接填充ResChunk_header结构体就好了:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span>                                                               </span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span>                                                              </span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;stdint.h&gt;</span>                                                              </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> ResChunk_header &#123;                                                         </span><br><span class="line">    <span class="keyword">uint16_t</span> type;                                                               </span><br><span class="line">    <span class="keyword">int16_t</span> headerSize;                                                          </span><br><span class="line">    <span class="keyword">uint32_t</span> size;                                                               </span><br><span class="line">&#125;;                                                                               </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span> </span>&#123;                                               </span><br><span class="line">    <span class="keyword">struct</span> ResChunk_header header;                                               </span><br><span class="line"></span><br><span class="line">    FILE* pFile = fopen(argv[<span class="number">1</span>], <span class="string">"rb"</span>);                                          </span><br><span class="line">    fread((<span class="keyword">void</span>*)&amp;header, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> ResChunk_header), <span class="number">1</span>, pFile);             </span><br><span class="line">    fclose(pFile);                                                               </span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"type:%ld, headSize:%ld, size:%ld\n"</span>, header.type, header.headerSize, header.size);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;                                                                    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译后运行,查看打印:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./<span class="tag">a</span><span class="class">.out</span> resources<span class="class">.arsc</span></span><br><span class="line">type:<span class="number">2</span>, headSize:<span class="number">12</span>, size:<span class="number">243372</span></span><br></pre></td></tr></table></figure>
+<h2 id="u5934_u90E8_u7C7B_u578B"><a href="#u5934_u90E8_u7C7B_u578B" class="headerlink" title="头部类型"></a>头部类型</h2><p>每个头部类型都会有一个具体的结构体和它对应,例如我们的RES_TABLE_TYPE类型对应的就是ResTable_header:</p>
+<figure class="highlight capnproto"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ResTable_header</span>                                                           </span><br><span class="line"></span>&#123;                                                                                </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ResChunk_header</span> header;                                               </span><br><span class="line"></span><br><span class="line">    uint32_t packageCount;                                                       </span><br><span class="line">&#125;;</span></span><br></pre></td></tr></table></figure>
+<p>这些结构体的第一个成员都是是ResChunk_header，然后后面才是这个类型的特有数据。所以我们改下代码去读取完整的头部信息:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span>                                                               </span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span>                                                              </span></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;stdint.h&gt;</span>                                                              </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> ResChunk_header &#123;                                                         </span><br><span class="line">    <span class="keyword">uint16_t</span> type;                                                               </span><br><span class="line">    <span class="keyword">int16_t</span> headerSize;                                                          </span><br><span class="line">    <span class="keyword">uint32_t</span> size;                                                               </span><br><span class="line">&#125;;                                                                               </span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> ResTable_header&#123;                                                          </span><br><span class="line">    <span class="keyword">struct</span> ResChunk_header header;                                               </span><br><span class="line">    <span class="keyword">uint32_t</span> packageCount;                                                       </span><br><span class="line">&#125;;                                                                               </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span> </span>&#123;                                               </span><br><span class="line">    <span class="keyword">uint16_t</span> type;                                                               </span><br><span class="line"></span><br><span class="line">    FILE* pFile = fopen(argv[<span class="number">1</span>], <span class="string">"rb"</span>);                                          </span><br><span class="line">    fread((<span class="keyword">void</span>*)&amp;type, <span class="keyword">sizeof</span>(type), <span class="number">1</span>, pFile);                                 </span><br><span class="line">    <span class="keyword">if</span>(type == RES_TABLE_TYPE) &#123;                                                          </span><br><span class="line">        <span class="keyword">struct</span> ResTable_header header = &#123;<span class="number">0x002</span>&#125;;                                 </span><br><span class="line">        fread((<span class="keyword">void</span>*)(((<span class="keyword">char</span>*)&amp;header)+<span class="number">2</span>), <span class="keyword">sizeof</span>(<span class="keyword">struct</span> ResTable_header)-<span class="number">2</span>, <span class="number">1</span>, pFile);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"type:%ld, headSize:%ld, size:%ld, packageCount:%ld\n"</span>,           </span><br><span class="line">                header.header.type,                                              </span><br><span class="line">                header.header.headerSize,                                        </span><br><span class="line">                header.header.size,                                              </span><br><span class="line">                header.packageCount);                                            </span><br><span class="line">    &#125;                                                                            </span><br><span class="line">    fclose(pFile);                                                               </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;                                                                    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行得到:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./<span class="tag">a</span><span class="class">.out</span> resources<span class="class">.arsc</span></span><br><span class="line">type:<span class="number">2</span>, headSize:<span class="number">12</span>, size:<span class="number">243372</span>, packageCount:<span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>这里的packageCount指的是resources.arsc里面包含了多少个package的资源,一般只有一个。</p>
+<p>到这里，RES_TABLE_TYPE的头部信息我们就解析完成了。</p>
+<h1 id="u5168_u5C40_u5B57_u7B26_u4E32_u6C60"><a href="#u5168_u5C40_u5B57_u7B26_u4E32_u6C60" class="headerlink" title="全局字符串池"></a>全局字符串池</h1><img src="/可能是全网讲最细的安卓resources_arsc解析教程一/3.png">
+<p>我们看回上面的图，头部之后紧接着的是Global String Pool。它其实也是一个Chunk，所以也有头部。我们可以用同样的方法去解析:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">struct ResStringPool_header readResStringPoolHeader(FILE* pFile) &#123;               </span><br><span class="line">    struct ResStringPool_header <span class="keyword">header</span>;                                          </span><br><span class="line">    uint16_t <span class="keyword">type</span>;                                                               </span><br><span class="line">    fread((<span class="literal">void</span>*)<span class="subst">&amp;</span><span class="keyword">header</span>, sizeof(struct ResStringPool_header), <span class="number">1</span>, pFile);        </span><br><span class="line">    printf(<span class="string">"type:%ld, headSize:%ld, size:%ld, stringCount:%ld, stringStart:%ld, styleCount:%ld, styleStart:%ld\n"</span>,</span><br><span class="line">                <span class="keyword">header</span><span class="built_in">.</span><span class="keyword">header</span><span class="built_in">.</span><span class="keyword">type</span>,                                              </span><br><span class="line">                <span class="keyword">header</span><span class="built_in">.</span><span class="keyword">header</span><span class="built_in">.</span>headerSize,                                        </span><br><span class="line">                <span class="keyword">header</span><span class="built_in">.</span><span class="keyword">header</span><span class="built_in">.</span>size,                                              </span><br><span class="line">                <span class="keyword">header</span><span class="built_in">.</span>stringCount,                                              </span><br><span class="line">                <span class="keyword">header</span><span class="built_in">.</span>stringsStart,                                             </span><br><span class="line">                <span class="keyword">header</span><span class="built_in">.</span>styleCount,                                               </span><br><span class="line">                <span class="keyword">header</span><span class="built_in">.</span>stylesStart);                                             </span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">header</span>;                                                               </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>打印如下，这个字符串池里面有1971个字符串:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./a.out resources.arsc</span><br><span class="line">type:<span class="number">2</span>, headSize:<span class="number">12</span>, size:<span class="number">243372</span>, packageCount:<span class="number">1</span></span><br><span class="line">type:<span class="number">1</span>, headSize:<span class="number">28</span>, size:<span class="number">72732</span>, stringCount:<span class="number">1971</span>, stringStart:<span class="number">7912</span>, styleCount:<span class="number">0</span>, styleStart:<span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>接着看图，ResStringPool_header后面跟着的是</p>
+<p>字符串偏移数组+style偏移数组+字符串+style</p>
+<p>resources.arsc会把所有的应用里面出现的字符串都放到这个全局字符串池里面，不过style的话我现在还没有理解它的作用，遇到的值都是0，所以这里先忽略。我们只讲字符串。</p>
+<p>这个字符串偏移数组其实是一个uint32_t的数组,记录了每个字符串距离stringStart的偏移，而stringStart就是具体存放字符串的内存的位置距离ResStringPool_header起始地址的字节数。</p>
+<p>需要注意的是，字符串的前两个字节记录了字符串的长度，而且字符串的编码格式由ResStringPool_header::flags指定(utf-8或者utf-16)</p>
+<p>可能这么讲有些抽象，可以结合下面的示意图还有代码理解一下:</p>
+<img src="/可能是全网讲最细的安卓resources_arsc解析教程一/2.png">
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="keyword">char</span>* <span class="title">readStringsFromStringPool</span><span class="params">(FILE* pFile,  <span class="keyword">struct</span> ResStringPool_header header)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> size = header.header.size - <span class="keyword">sizeof</span>(<span class="keyword">struct</span> ResStringPool_header);    </span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span>* pData = (<span class="keyword">unsigned</span> <span class="keyword">char</span>*)<span class="built_in">malloc</span>(size);                         </span><br><span class="line">    fread((<span class="keyword">void</span>*)pData, size, <span class="number">1</span>, pFile);                                         </span><br><span class="line">    <span class="keyword">uint32_t</span>* pOffsets = (<span class="keyword">uint32_t</span>*)pData;                                       </span><br><span class="line"></span><br><span class="line">    <span class="comment">//stringsStart指的是header的起始地址到字符串起始地址的距离                   </span></span><br><span class="line">    <span class="comment">//pData已经是header末尾的地址了，所以要减去header的大小                      </span></span><br><span class="line">    <span class="keyword">char</span>* pStringsStart = pData + header.stringsStart - <span class="keyword">sizeof</span>(<span class="keyword">struct</span> ResStringPool_header);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span> ; i &lt; header.stringCount ; i++) &#123;                              </span><br><span class="line">        <span class="comment">//前面两个字节是长度,要跳过                                              </span></span><br><span class="line">        <span class="keyword">char</span>* str = pStringsStart + *(pOffsets + i) + <span class="number">2</span>;                         </span><br><span class="line">        <span class="keyword">if</span>(header.flags &amp; UTF8_FLAG) &#123;                                           </span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, str);                                                 </span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;                                                                 </span><br><span class="line">            printUtf16String(str);                                               </span><br><span class="line">        &#125;                                                                        </span><br><span class="line">    &#125;                                                                            </span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> pData;                                                                </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的会把应用里面用到的字符串资源都打印出来，值得注意的是这里的字符串资源指的不仅是我们定义的string标签里的值:</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="variable">Delete</span> 鍵</span><br><span class="line">查看全部</span><br><span class="line">瀏覽首頁</span><br><span class="line">空格鍵</span><br><span class="line">與「<span class="comment">%s」分享</span></span><br><span class="line">選擇分享對象</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>还包括了资源的路径等其他字符串资源:</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">res/anim/abc_fade_in.<span class="keyword">xml</span>                                                         </span><br><span class="line"><span class="title">res</span>/anim/abc_fade_out.<span class="keyword">xml</span>                                                        </span><br><span class="line"><span class="title">res</span>/anim/abc_grow_fade_in_from_bottom.<span class="keyword">xml</span>                                        </span><br><span class="line"><span class="title">res</span>/anim/abc_popup_enter.<span class="keyword">xml</span>                                                     </span><br><span class="line"><span class="title">res</span>/anim/abc_popup_exit.<span class="keyword">xml</span>                                                      </span><br><span class="line"><span class="title">res</span>/anim/abc_shrink_fade_out_from_bottom.<span class="keyword">xml</span>                                     </span><br><span class="line"><span class="title">res</span>/anim/abc_slide_in_bottom.<span class="keyword">xml</span>                                                 </span><br><span class="line"><span class="title">res</span>/anim/abc_slide_in_top.<span class="keyword">xml</span>                                                    </span><br><span class="line"><span class="title">res</span>/anim/abc_slide_out_bottom.<span class="keyword">xml</span>                                                </span><br><span class="line"><span class="title">res</span>/anim/abc_slide_out_top.<span class="keyword">xml</span>                                                   </span><br><span class="line"><span class="title">res</span>/anim/abc_tooltip_enter.<span class="keyword">xml</span>                                                   </span><br><span class="line"><span class="title">res</span>/anim/abc_tooltip_exit.<span class="keyword">xml</span>                                                    </span><br><span class="line"><span class="title">res</span>/color-v23/abc_btn_colored_borderless_text_material.<span class="keyword">xml</span>                       </span><br><span class="line"><span class="title">res</span>/color-v23/abc_btn_colored_text_material.<span class="keyword">xml</span>                                  </span><br><span class="line"><span class="title">res</span>/color-v23/abc_color_highlight_material.<span class="keyword">xml</span>                                   </span><br><span class="line"><span class="title">res</span>/color-v23/abc_tint_btn_checkable.<span class="keyword">xml</span>          </span><br><span class="line"><span class="title">...</span></span><br></pre></td></tr></table></figure>
+<h1 id="Package_u8D44_u6E90"><a href="#Package_u8D44_u6E90" class="headerlink" title="Package资源"></a>Package资源</h1><img src="/可能是全网讲最细的安卓resources_arsc解析教程一/4.png">
+<p>让我们继续往下读,接下来的就是包内的资源了。resources.arsc可以支持打入多个package的资源,但是一般只会有一个package。</p>
+<p>每个package的资源同样打包成一个Chunk,它的头部信息由ResTable_package结构体表示:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">readResTablePackageHeader</span><span class="params">(FILE* pFile, <span class="keyword">struct</span> ResTable_package* pHeader)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(fread((<span class="keyword">void</span>*)pHeader, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> ResTable_package), <span class="number">1</span>, pFile) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"type:%ld, headSize:%ld, size:%ld, id:%x, packageName:"</span>,</span><br><span class="line">                pHeader-&gt;header.type,</span><br><span class="line">                pHeader-&gt;header.headerSize,</span><br><span class="line">                pHeader-&gt;header.size,</span><br><span class="line">                pHeader-&gt;id);</span><br><span class="line">    printUtf16String((<span class="keyword">char16_t</span>*)pHeader-&gt;name);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>头部信息记录了package的id和名字:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">type</span><span class="pseudo">:512</span>, <span class="tag">headSize</span><span class="pseudo">:288</span>, <span class="tag">size</span><span class="pseudo">:188068</span>, <span class="tag">id</span><span class="pseudo">:7f</span>, <span class="tag">packageName</span><span class="pseudo">:com</span><span class="class">.cvte</span><span class="class">.tv</span><span class="class">.myapplication</span></span><br></pre></td></tr></table></figure>
+<h2 id="u8D44_u6E90_u7C7B_u578B_u5B57_u7B26_u4E32_u6C60"><a href="#u8D44_u6E90_u7C7B_u578B_u5B57_u7B26_u4E32_u6C60" class="headerlink" title="资源类型字符串池"></a>资源类型字符串池</h2><img src="/可能是全网讲最细的安卓resources_arsc解析教程一/5.png">
+<p>紧接着头部之后的又是一个字符串池,它和之前介绍的全局字符串资源池的结构是一样的,我们可以用同样的方法去读取:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct ResTable_package packageHeader;</span><br><span class="line"><span class="keyword">while</span>(<span class="built_in">read</span>ResTablePackageHeader(pFile, &amp;packageHeader)) &#123;</span><br><span class="line">    struct ResStringPool_header <span class="built_in">type</span>StringPoolHeader = <span class="built_in">read</span>ResStringPoolHeader(pFile);</span><br><span class="line">    unsigned char* pTypeStrings = <span class="built_in">read</span>StringsFromStringPool(pFile, <span class="built_in">type</span>StringPoolHeader);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里记录的是这个package里面存储的资源的类型:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">type:<span class="number">1</span>, headSize:<span class="number">28</span>, size:<span class="number">248</span>, stringCount:<span class="number">12</span>, stringStart:<span class="number">76</span>, styleCount:<span class="number">0</span>, styleStart:<span class="number">0</span></span><br><span class="line">anim</span><br><span class="line">attr</span><br><span class="line"><span class="keyword">bool</span></span><br><span class="line">color</span><br><span class="line">dimen</span><br><span class="line">drawable</span><br><span class="line">id</span><br><span class="line">integer</span><br><span class="line">layout</span><br><span class="line">mipmap</span><br><span class="line"><span class="built_in">string</span></span><br><span class="line">style</span><br></pre></td></tr></table></figure>
+<p>可以看到这个package里面有anim、attr、bool、color、dimen、drawable、id、integer、layout、mipmap、string、style这么多中类型的资源。</p>
+<h2 id="u8D44_u6E90_u9879_u540D_u79F0_u5B57_u7B26_u4E32_u6C60"><a href="#u8D44_u6E90_u9879_u540D_u79F0_u5B57_u7B26_u4E32_u6C60" class="headerlink" title="资源项名称字符串池"></a>资源项名称字符串池</h2><img src="/可能是全网讲最细的安卓resources_arsc解析教程一/6.png">
+<p>接下来又是一个字符串资源池,再读一次:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">struct ResTable_package packageHeader;</span><br><span class="line"><span class="keyword">while</span>(<span class="built_in">read</span>ResTablePackageHeader(pFile, &amp;packageHeader)) &#123;</span><br><span class="line">    struct ResStringPool_header <span class="built_in">type</span>StringPoolHeader = <span class="built_in">read</span>ResStringPoolHeader(pFile);</span><br><span class="line">    unsigned char* pTypeStrings = <span class="built_in">read</span>StringsFromStringPool(pFile, <span class="built_in">type</span>StringPoolHeader);</span><br><span class="line"></span><br><span class="line">    struct ResStringPool_header keyStringPoolHeader = <span class="built_in">read</span>ResStringPoolHeader(pFile);</span><br><span class="line">    unsigned char* pKeyStrings = <span class="built_in">read</span>StringsFromStringPool(pFile, keyStringPoolHeader);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里读出来的就是我们的资源的key:</p>
+<figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">type:<span class="number">1</span>, headSize:<span class="number">28</span>, size:<span class="number">41208</span>, stringCount:<span class="number">1221</span>, stringStart:<span class="number">4912</span>, styleCount:<span class="number">0</span>, styleStart:<span class="number">0</span></span><br><span class="line">abc<span class="number">_f</span>ade<span class="number">_</span><span class="keyword">in</span></span><br><span class="line">abc<span class="number">_f</span>ade<span class="number">_</span><span class="keyword">out</span></span><br><span class="line">abc<span class="number">_</span>grow<span class="number">_f</span>ade<span class="number">_</span><span class="keyword">in</span><span class="number">_f</span>rom<span class="number">_</span>bottom</span><br><span class="line">abc<span class="number">_p</span>opup<span class="number">_</span>enter</span><br><span class="line">abc<span class="number">_p</span>opup<span class="number">_</span>exit</span><br><span class="line">abc<span class="number">_</span>shrink<span class="number">_f</span>ade<span class="number">_</span><span class="keyword">out</span><span class="number">_f</span>rom<span class="number">_</span>bottom</span><br><span class="line">abc<span class="number">_</span>slide<span class="number">_</span><span class="keyword">in</span><span class="number">_</span>bottom</span><br><span class="line">abc<span class="number">_</span>slide<span class="number">_</span><span class="keyword">in</span><span class="number">_</span>top</span><br><span class="line">abc<span class="number">_</span>slide<span class="number">_</span><span class="keyword">out</span><span class="number">_</span>bottom</span><br><span class="line">abc<span class="number">_</span>slide<span class="number">_</span><span class="keyword">out</span><span class="number">_</span>top</span><br><span class="line">abc<span class="number">_</span>tooltip<span class="number">_</span>enter</span><br><span class="line">abc<span class="number">_</span>tooltip<span class="number">_</span>exit</span><br><span class="line">actionBarDivider</span><br><span class="line">actionBarItemBackground</span><br><span class="line">actionBarPopupTheme</span><br><span class="line">actionBarSize</span><br><span class="line">actionBarSplitStyle</span><br><span class="line">actionBarStyle</span><br><span class="line">actionBarTabBarStyle</span><br><span class="line">...</span><br><span class="line">activity<span class="number">_m</span>ain       &lt;- activity<span class="number">_m</span>ain在这里</span><br><span class="line">...</span><br><span class="line">app<span class="number">_n</span>ame            &lt;- app<span class="number">_n</span>ame在这里</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>比如我们的app_name字符串,就会生成R.string.app_name,而这个”app_name”就会出现在资源项名称字符串池里面:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="type">string</span> <span class="property">name</span>=<span class="string">"app_name"</span>&gt;My Application&lt;/<span class="type">string</span>&gt;</span><br></pre></td></tr></table></figure>
+<p>又或者我们定义了activity_main.xml,就会生成R.layout.activity_main,而这个”activity_main”也会出现在资源项名称字符串池里面。</p>
+<h2 id="u8D44_u6E90"><a href="#u8D44_u6E90" class="headerlink" title="资源"></a>资源</h2><p>接下来的就是一系列的RES_TABLE_TYPE_SPEC_TYPE和RES_TABLE_TYPE_TYPE,不过上面的图画的不是很清晰。</p>
+<p>Package资源剩下的部分是按资源类型分组的。一个RES_TABLE_TYPE_SPEC_TYPE跟着多个RES_TABLE_TYPE_TYPE为一组,记录一个类型在不同配置下的资源。</p>
+<p>比如我们在前面的资源类型字符串池里面看到有anim、attr、bool、color、dimen、drawable、id、integer、layout、mipmap、string、style,十二种类型的资源,于是就有十二组的RES_TABLE_TYPE_SPEC_TYPE和RES_TABLE_TYPE_TYPE,而且顺序也是按资源类型字符串池里面的顺序排的:</p>
+<img src="/可能是全网讲最细的安卓resources_arsc解析教程一/7.png">
+<p>可以看到每一组都是以一个RES_TABLE_TYPE_SPEC_TYPE开头记录该类型的资源的信息,然后跟着多个RES_TABLE_TYPE_TYPE记录该类型在不同Config下的数据(如color、color-v21、color-v23或者我们更熟悉的string、string-en-US、string-zh-CN、string-zh-TW等)</p>
+<p>我们可以实际看看打印:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> ResChunk_header chunkHeader;</span><br><span class="line"><span class="keyword">uint8_t</span> id;</span><br><span class="line"><span class="keyword">while</span>(fread((<span class="keyword">void</span>*)&amp;chunkHeader, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> ResChunk_header), <span class="number">1</span>, pFile)</span><br><span class="line">        &amp;&amp; chunkHeader.type != RES_TABLE_PACKAGE_TYPE) &#123;</span><br><span class="line">    fread((<span class="keyword">void</span>*)&amp;id, <span class="keyword">sizeof</span>(<span class="keyword">uint8_t</span>), <span class="number">1</span>, pFile);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"0x%x, %d\n"</span>, chunkHeader.type, id);</span><br><span class="line">    fseek(pFile, chunkHeader.size - <span class="keyword">sizeof</span>(<span class="keyword">struct</span> ResChunk_header) - <span class="keyword">sizeof</span>(<span class="keyword">uint8_t</span>), SEEK_CUR);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0x202</span>, <span class="number">1</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">1</span></span><br><span class="line"><span class="number">0x202</span>, <span class="number">2</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">2</span></span><br><span class="line"><span class="number">0x202</span>, <span class="number">3</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">3</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">3</span></span><br><span class="line"><span class="number">0x202</span>, <span class="number">4</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">4</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">4</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">4</span></span><br><span class="line"><span class="number">0x202</span>, <span class="number">5</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">5</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">5</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">5</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">5</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">5</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">5</span></span><br><span class="line"><span class="number">0x201</span>, <span class="number">5</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>这里打印了type和id,type 0x202代表了RES_TABLE_TYPE_SPEC_TYPE，0x201代表了RES_TABLE_TYPE_TYPE。</p>
+<p>而id则代表了资源类型字符串池里面的顺序,例如1是anim，2是attr，3是bool…</p>
+<p>翻译过来就是:</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="label">RES_TABLE_TYPE_SPEC_TYPE</span>,  anim</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       anim</span><br><span class="line"><span class="label">RES_TABLE_TYPE_SPEC_TYPE</span>,  <span class="preprocessor">attr</span></span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       <span class="preprocessor">attr</span></span><br><span class="line"><span class="label">RES_TABLE_TYPE_SPEC_TYPE</span>,  <span class="keyword">bool</span><br><span class="line"></span><span class="label">RES_TABLE_TYPE_TYPE</span>,       <span class="keyword">bool</span><br><span class="line"></span><span class="label">RES_TABLE_TYPE_TYPE</span>,       <span class="keyword">bool</span><br><span class="line"></span><span class="label">RES_TABLE_TYPE_SPEC_TYPE</span>,  color</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       color</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       color</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       color</span><br><span class="line"><span class="label">RES_TABLE_TYPE_SPEC_TYPE</span>,  dimen</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       dimen</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       dimen</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       dimen</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       dimen</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       dimen</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       dimen</span><br><span class="line"><span class="label">RES_TABLE_TYPE_TYPE</span>,       dimen</span><br><span class="line"><span class="label">...</span></span><br></pre></td></tr></table></figure>
+<p>好的,因为信息量已经有点大了,本节先到这里。接下来是整个resources.arsc中最重要的资源的具体定义会在下一篇笔记中介绍,完整的demo代码也会在下一篇文章给出。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/04/26/一起入门gradle自定义插件编写-二-深入理解build-gradle/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2019/05/18/可能是全网讲最细的安卓resources-arsc解析教程-一/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
