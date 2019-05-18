@@ -9,7 +9,9 @@ aapt工具在编译资源会将一些资源或者资源索引打包成resources.
 
 了解resources.arsc的结构对理解安卓的资源加载原理有很重要的帮助。
 
-这篇笔记记录下这几天写resources.arsc解析工具时候学到的知识，这个[工具](https://github.com/bluesky466/ResourcesParser)已经在github上开源(使用C++11,已经在mac和ubuntu上报make编译通过正常运行,Windows的同学就只好说声抱歉了)，感兴趣的同学也可以直接下载下来玩玩。
+这几天写resources.arsc解析工具时候在网上搜到了不少的资料、博客，但是它们写的都不是特别的详细，都会漏掉一些东西没有提。导致在实现的时候遇到了很多的坑。这里我希望尽量把自己总结出来的东西一步步都列出来，尽量做到只需要看这篇博客就能自己实现一个resources.arsc的解析器。
+
+这个[工具](https://github.com/bluesky466/ResourcesParser)已经在github上开源(使用C++11,已经在mac和ubuntu上报make编译通过正常运行,Windows的同学就只好说声抱歉了)，感兴趣的同学也可以直接下载下来玩玩。
 
 # 总体结构
 
@@ -131,7 +133,7 @@ int main(int argc, char *argv[]) {
     fread((void*)&header, sizeof(struct ResChunk_header), 1, pFile);             
     fclose(pFile);                                                               
 
-    printf("type:%ld, headSize:%ld, size:%ld\n", header.type, header.headerSize, header.size);
+    printf("type:%u, headSize:%u, size:%u\n", header.type, header.headerSize, header.size);
     return 0;                                                                    
 }
 ```
@@ -182,7 +184,7 @@ int main(int argc, char *argv[]) {
     if(type == RES_TABLE_TYPE) {                                                          
         struct ResTable_header header = {0x002};                                 
         fread((void*)(((char*)&header)+2), sizeof(struct ResTable_header)-2, 1, pFile);
-        printf("type:%ld, headSize:%ld, size:%ld, packageCount:%ld\n",           
+        printf("type:%u, headSize:%u, size:%u, packageCount:%u\n",           
                 header.header.type,                                              
                 header.header.headerSize,                                        
                 header.header.size,                                              
@@ -215,7 +217,7 @@ struct ResStringPool_header readResStringPoolHeader(FILE* pFile) {
     struct ResStringPool_header header;                                          
     uint16_t type;                                                               
     fread((void*)&header, sizeof(struct ResStringPool_header), 1, pFile);        
-    printf("type:%ld, headSize:%ld, size:%ld, stringCount:%ld, stringStart:%ld, styleCount:%ld, styleStart:%ld\n",
+    printf("type:%u, headSize:%u, size:%u, stringCount:%u, stringStart:%u, styleCount:%u, styleStart:%u\n",
                 header.header.type,                                              
                 header.header.headerSize,                                        
                 header.header.size,                                              
@@ -324,7 +326,7 @@ int readResTablePackageHeader(FILE* pFile, struct ResTable_package* pHeader) {
     if(fread((void*)pHeader, sizeof(struct ResTable_package), 1, pFile) == 0) {
         return 0;
     }
-    printf("type:%ld, headSize:%ld, size:%ld, id:%x, packageName:",
+    printf("type:%u, headSize:%u, size:%u, id:%x, packageName:",
                 pHeader->header.type,
                 pHeader->header.headerSize,
                 pHeader->header.size,
