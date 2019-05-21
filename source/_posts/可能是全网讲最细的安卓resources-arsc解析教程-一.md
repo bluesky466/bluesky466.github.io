@@ -512,4 +512,4 @@ RES_TABLE_TYPE_TYPE,       dimen
 ...
 ```
 
-好的,因为信息量已经有点大了,本节先到这里。接下来是整个resources.arsc中最重要的资源的具体定义会在下一篇笔记中介绍,完整的demo代码也会在下一篇文章给出。
+好的,因为信息量已经有点大了,本节先到这里。接下来是整个resources.arsc中最重要的资源的具体定义会在下一篇笔记中介绍,完整的demo代码也会在[下一篇博客](http://blog.islinjw.cn/2019/05/21/%E5%8F%AF%E8%83%BD%E6%98%AF%E5%85%A8%E7%BD%91%E8%AE%B2%E6%9C%80%E7%BB%86%E7%9A%84%E5%AE%89%E5%8D%93resources-arsc%E8%A7%A3%E6%9E%90%E6%95%99%E7%A8%8B-%E4%BA%8C/)的末尾给出。
