@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>binder深入探究 | LinJW</title>
+  <title>binder机制深入探究 | LinJW</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -20,8 +20,8 @@
 
 客户端用一个id指定想要调用的方法,并将参数序列化传给binder驱动。binder驱动将数据传到服务端,服">
 <meta property="og:type" content="article">
-<meta property="og:title" content="binder深入探究">
-<meta property="og:url" content="http://139.199.4.241/2019/06/22/binder深入探究/index.html">
+<meta property="og:title" content="binder机制深入探究">
+<meta property="og:url" content="http://139.199.4.241/2019/06/22/binder机制深入探究/index.html">
 <meta property="og:site_name" content="LinJW">
 <meta property="og:description" content="之前有写过一篇笔记《Android温故而知新 - AIDL》从应用层分析了aidl的数据是怎么传递的,还有一篇《Android跨进程抛异常的原理》分析了异常是怎样做到跨进程的。最近准备一个培训的时候又去看了下binder底层的实现原理，这里也记录下来做个笔记。
 回顾下应用层的这张示意图:
@@ -34,9 +34,9 @@
 <meta property="og:image" content="http://139.199.4.241/binder深入探究/5.gif">
 <meta property="og:image" content="http://139.199.4.241/binder深入探究/6.gif">
 <meta property="og:image" content="http://139.199.4.241/binder深入探究/7.png">
-<meta property="og:updated_time" content="2019-06-22T14:42:11.000Z">
+<meta property="og:updated_time" content="2019-06-24T09:51:31.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="binder深入探究">
+<meta name="twitter:title" content="binder机制深入探究">
 <meta name="twitter:description" content="之前有写过一篇笔记《Android温故而知新 - AIDL》从应用层分析了aidl的数据是怎么传递的,还有一篇《Android跨进程抛异常的原理》分析了异常是怎样做到跨进程的。最近准备一个培训的时候又去看了下binder底层的实现原理，这里也记录下来做个笔记。
 回顾下应用层的这张示意图:
 
@@ -172,9 +172,9 @@
 
 
 <div class="content content-post CENTER">
-   <article id="post-binder深入探究" class="article article-type-post" itemprop="blogPost">
+   <article id="post-binder机制深入探究" class="article article-type-post" itemprop="blogPost">
   <header class="article-header">
-    <h1 class="post-title">binder深入探究</h1>
+    <h1 class="post-title">binder机制深入探究</h1>
 
     <div class="article-meta">
       <span>
@@ -195,7 +195,7 @@
       
         <span>
           <i class="icon-comment"></i>
-          <a href="http://blog.islinjw.cn/2019/06/22/binder深入探究/#disqus_thread"></a>
+          <a href="http://blog.islinjw.cn/2019/06/22/binder机制深入探究/#disqus_thread"></a>
         </span>
       
 
@@ -376,7 +376,7 @@
   <script>
     var disqus_shortname = 'forsigner';
     
-    var disqus_url = 'http://139.199.4.241/2019/06/22/binder深入探究/';
+    var disqus_url = 'http://139.199.4.241/2019/06/22/binder机制深入探究/';
     
     (function(){
       var dsq = document.createElement('script');

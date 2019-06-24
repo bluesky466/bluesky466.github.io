@@ -1,4 +1,4 @@
-title: binder深入探究
+title: binder机制深入探究
 date: 2019-06-22 22:40:05
 tags:
   - 技术相关
