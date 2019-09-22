@@ -15,24 +15,30 @@
     <meta name="keywords" content="Android,技术相关," />
   
 
-  <meta name="description" content="上一篇文章已经和大家讲解了下Camera2的使用,能够将相机捕捉到的画面显示到TextureView上,接下来就是要对这个画面进行特效处理了。这里我们选用OpenGL ES去实现特效。
+  <meta name="description" content="系列文章:
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+上一篇文章已经和大家讲解了下Camera2的使用,能够将相机捕捉到的画面显示到TextureView上,接下来就是要对这个画面进行特效处理了。这里我们选用OpenGL ES去实现特效。
 但是在讲如何使用OpenGL ES去实现特效之前我们要先讲下EGL
-EGLOpenGL作为一个被广泛使用的跨平台图形库,相信大家或多或少都有听说。安卓上使用的是它针对手机、PDA和游戏主机等嵌入式设备而设计的子集O">
+EGLOpen">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓特效相机(二) EGL基础">
 <meta property="og:url" content="http://139.199.4.241/2019/09/13/安卓特效相机-二-EGL基础/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="上一篇文章已经和大家讲解了下Camera2的使用,能够将相机捕捉到的画面显示到TextureView上,接下来就是要对这个画面进行特效处理了。这里我们选用OpenGL ES去实现特效。
+<meta property="og:description" content="系列文章:
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+上一篇文章已经和大家讲解了下Camera2的使用,能够将相机捕捉到的画面显示到TextureView上,接下来就是要对这个画面进行特效处理了。这里我们选用OpenGL ES去实现特效。
 但是在讲如何使用OpenGL ES去实现特效之前我们要先讲下EGL
-EGLOpenGL作为一个被广泛使用的跨平台图形库,相信大家或多或少都有听说。安卓上使用的是它针对手机、PDA和游戏主机等嵌入式设备而设计的子集O">
+EGLOpen">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机二/1.png">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机二/2.png">
-<meta property="og:updated_time" content="2019-09-13T03:53:33.000Z">
+<meta property="og:updated_time" content="2019-09-22T04:06:03.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓特效相机(二) EGL基础">
-<meta name="twitter:description" content="上一篇文章已经和大家讲解了下Camera2的使用,能够将相机捕捉到的画面显示到TextureView上,接下来就是要对这个画面进行特效处理了。这里我们选用OpenGL ES去实现特效。
+<meta name="twitter:description" content="系列文章:
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+上一篇文章已经和大家讲解了下Camera2的使用,能够将相机捕捉到的画面显示到TextureView上,接下来就是要对这个画面进行特效处理了。这里我们选用OpenGL ES去实现特效。
 但是在讲如何使用OpenGL ES去实现特效之前我们要先讲下EGL
-EGLOpenGL作为一个被广泛使用的跨平台图形库,相信大家或多或少都有听说。安卓上使用的是它针对手机、PDA和游戏主机等嵌入式设备而设计的子集O">
+EGLOpen">
 
   
 
@@ -206,7 +212,9 @@ EGLOpenGL作为一个被广泛使用的跨平台图形库,相信大家或多或�
 
   <div class="article-content">
     
-      <p>上一篇<a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="external">文章</a>已经和大家讲解了下Camera2的使用,能够将相机捕捉到的画面显示到TextureView上,接下来就是要对这个画面进行特效处理了。这里我们选用OpenGL ES去实现特效。</p>
+      <p>系列文章:</p>
+<p><a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="external">安卓特效相机(一) Camera2的使用</a><br><a href="http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="external">安卓特效相机(二) EGL基础</a><br><a href="http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="external">安卓特效相机(三) OpenGL ES 特效渲染</a></p>
+<p>上一篇<a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="external">文章</a>已经和大家讲解了下Camera2的使用,能够将相机捕捉到的画面显示到TextureView上,接下来就是要对这个画面进行特效处理了。这里我们选用OpenGL ES去实现特效。</p>
 <p>但是在讲如何使用OpenGL ES去实现特效之前我们要先讲下EGL</p>
 <h1 id="EGL"><a href="#EGL" class="headerlink" title="EGL"></a>EGL</h1><p>OpenGL作为一个被广泛使用的跨平台图形库,相信大家或多或少都有听说。安卓上使用的是它针对手机、PDA和游戏主机等嵌入式设备而设计的子集OpenGL ES</p>
 <p>为了实现跨平台,OpenGL本体只包含了图形运算方面的接口,也可以大致理解为只包含操作GPU的API。而作为和平台强相关的本地窗口系统交互部分由于每个平台都不一样,而且没有办法抽离出统一的接口,所以不能包含进OpenGL本体里面。例如Android上我们可以指定OpenGL绘制在哪个Surface上,但是IOS上并没有这个东西,所以不能在OpenGL里面开一个接口接收Surface这个参数。</p>
@@ -250,7 +258,7 @@ EGLOpenGL作为一个被广泛使用的跨平台图形库,相信大家或多或�
     <a class="show pull-left" href="/2019/08/27/安卓特效相机-一-Camera2的使用/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2019/09/22/安卓特效相机-三-OpenGL-ES-特效渲染/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>

@@ -5,6 +5,13 @@ tags:
   - Android
 ---
 
+系列文章:
+
+[安卓特效相机(一) Camera2的使用](http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/)
+[安卓特效相机(二) EGL基础](http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/)
+[安卓特效相机(三) OpenGL ES 特效渲染](http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/)
+
+
 谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。
 
 为了熟悉这个Camera2架构的使用,我写了个简单的[特效相机应用](https://github.com/bluesky466/ShaderCamera),它支持三种简单的特效:
