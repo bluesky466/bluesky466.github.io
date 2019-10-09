@@ -16,38 +16,35 @@
   
 
   <meta name="description" content="系列文章:
-安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
 谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。
 为了熟悉这个Camera2架构的使用,我写了个简单的特效相机应用,它支持三种简单的特效:
 
-接下来的几篇文章我会一步步讲下整个程序是如何实现的。
-整">
+接下来的几篇文章我会一步步讲">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓特效相机(一) Camera2的使用">
 <meta property="og:url" content="http://139.199.4.241/2019/08/27/安卓特效相机-一-Camera2的使用/index.html">
 <meta property="og:site_name" content="LinJW">
 <meta property="og:description" content="系列文章:
-安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
 谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。
 为了熟悉这个Camera2架构的使用,我写了个简单的特效相机应用,它支持三种简单的特效:
 
-接下来的几篇文章我会一步步讲下整个程序是如何实现的。
-整">
+接下来的几篇文章我会一步步讲">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机一/5.jpg">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机一/1.png">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机一/4.png">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机一/2.png">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机一/3.png">
-<meta property="og:updated_time" content="2019-09-22T04:05:59.000Z">
+<meta property="og:updated_time" content="2019-10-09T14:48:45.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓特效相机(一) Camera2的使用">
 <meta name="twitter:description" content="系列文章:
-安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
 谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。
 为了熟悉这个Camera2架构的使用,我写了个简单的特效相机应用,它支持三种简单的特效:
 
-接下来的几篇文章我会一步步讲下整个程序是如何实现的。
-整">
+接下来的几篇文章我会一步步讲">
 
   
 
@@ -222,7 +219,7 @@
   <div class="article-content">
     
       <p>系列文章:</p>
-<p><a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="external">安卓特效相机(一) Camera2的使用</a><br><a href="http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="external">安卓特效相机(二) EGL基础</a><br><a href="http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="external">安卓特效相机(三) OpenGL ES 特效渲染</a></p>
+<p><a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="external">安卓特效相机(一) Camera2的使用</a><br><a href="http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="external">安卓特效相机(二) EGL基础</a><br><a href="http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="external">安卓特效相机(三) OpenGL ES 特效渲染</a><br><a href="http://blog.islinjw.cn/2019/10/09/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E5%9B%9B-%E8%A7%86%E9%A2%91%E5%BD%95%E5%88%B6/" target="_blank" rel="external">安卓特效相机(四) 视频录制</a></p>
 <p>谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。</p>
 <p>为了熟悉这个Camera2架构的使用,我写了个简单的<a href="https://github.com/bluesky466/ShaderCamera" target="_blank" rel="external">特效相机应用</a>,它支持三种简单的特效:</p>
 <img src="/安卓特效相机一/5.jpg">

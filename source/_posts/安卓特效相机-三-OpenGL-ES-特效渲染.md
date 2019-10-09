@@ -10,6 +10,7 @@ tags:
 [安卓特效相机(一) Camera2的使用](http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/)
 [安卓特效相机(二) EGL基础](http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/)
 [安卓特效相机(三) OpenGL ES 特效渲染](http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/)
+[安卓特效相机(四) 视频录制](http://blog.islinjw.cn/2019/10/09/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E5%9B%9B-%E8%A7%86%E9%A2%91%E5%BD%95%E5%88%B6/)
 
 # 特效的实现原理
 

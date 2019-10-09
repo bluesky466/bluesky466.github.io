@@ -16,19 +16,19 @@
   
 
   <meta name="description" content="系列文章:
-安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
 特效的实现原理接下来这篇文章我们讲下特效的具体实现原理。
 由于预览画面的渲染是将Surface传给CameraDevice由它去绘制的,而且我没有找到什么可以接管或者添加渲染效果的接口,所以并不能直接去处理摄像头的画面。
-于是这里我们只能用一种游戏中常用的手段去处理,">
+于是这里我们只能用">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓特效相机(三) OpenGL ES 特效渲染">
 <meta property="og:url" content="http://139.199.4.241/2019/09/22/安卓特效相机-三-OpenGL-ES-特效渲染/index.html">
 <meta property="og:site_name" content="LinJW">
 <meta property="og:description" content="系列文章:
-安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
 特效的实现原理接下来这篇文章我们讲下特效的具体实现原理。
 由于预览画面的渲染是将Surface传给CameraDevice由它去绘制的,而且我没有找到什么可以接管或者添加渲染效果的接口,所以并不能直接去处理摄像头的画面。
-于是这里我们只能用一种游戏中常用的手段去处理,">
+于是这里我们只能用">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机三/5.png">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机三/4.jpeg">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机三/6.png">
@@ -41,14 +41,14 @@
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机三/10.png">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机三/11.png">
 <meta property="og:image" content="http://139.199.4.241/安卓特效相机三/12.png">
-<meta property="og:updated_time" content="2019-09-22T04:06:08.000Z">
+<meta property="og:updated_time" content="2019-10-09T14:49:14.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓特效相机(三) OpenGL ES 特效渲染">
 <meta name="twitter:description" content="系列文章:
-安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
 特效的实现原理接下来这篇文章我们讲下特效的具体实现原理。
 由于预览画面的渲染是将Surface传给CameraDevice由它去绘制的,而且我没有找到什么可以接管或者添加渲染效果的接口,所以并不能直接去处理摄像头的画面。
-于是这里我们只能用一种游戏中常用的手段去处理,">
+于是这里我们只能用">
 
   
 
@@ -223,7 +223,7 @@
   <div class="article-content">
     
       <p>系列文章:</p>
-<p><a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="external">安卓特效相机(一) Camera2的使用</a><br><a href="http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="external">安卓特效相机(二) EGL基础</a><br><a href="http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="external">安卓特效相机(三) OpenGL ES 特效渲染</a></p>
+<p><a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="external">安卓特效相机(一) Camera2的使用</a><br><a href="http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="external">安卓特效相机(二) EGL基础</a><br><a href="http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="external">安卓特效相机(三) OpenGL ES 特效渲染</a><br><a href="http://blog.islinjw.cn/2019/10/09/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E5%9B%9B-%E8%A7%86%E9%A2%91%E5%BD%95%E5%88%B6/" target="_blank" rel="external">安卓特效相机(四) 视频录制</a></p>
 <h1 id="u7279_u6548_u7684_u5B9E_u73B0_u539F_u7406"><a href="#u7279_u6548_u7684_u5B9E_u73B0_u539F_u7406" class="headerlink" title="特效的实现原理"></a>特效的实现原理</h1><p>接下来这篇文章我们讲下特效的具体实现原理。</p>
 <p>由于预览画面的渲染是将Surface传给CameraDevice由它去绘制的,而且我没有找到什么可以接管或者添加渲染效果的接口,所以并不能直接去处理摄像头的画面。</p>
 <p>于是这里我们只能用一种游戏中常用的手段去处理,这种手段的名字叫做RTT(render to texture),中文名叫做渲染到纹理。</p>
@@ -356,7 +356,7 @@
     <a class="show pull-left" href="/2019/09/13/安卓特效相机-二-EGL基础/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2019/10/09/安卓特效相机-四-视频录制/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>

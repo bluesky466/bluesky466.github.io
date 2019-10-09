@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>安卓特效相机(四) 视频录制 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="Android,技术相关," />
+  
+
+  <meta name="description" content="系列文章:
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
+前几篇文章已经讲完了摄像头画面的捕捉和特效渲染,这篇文章我们来讲一讲最后的视频录制部分。
+我们这里将使用MediaRecorder去录制视频。MediaRecorder可以同时录制视频和音频。我们将音频源直接设置成摄像头,让它从摄像头里面读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓特效相机(四) 视频录制">
+<meta property="og:url" content="http://139.199.4.241/2019/10/09/安卓特效相机-四-视频录制/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="系列文章:
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
+前几篇文章已经讲完了摄像头画面的捕捉和特效渲染,这篇文章我们来讲一讲最后的视频录制部分。
+我们这里将使用MediaRecorder去录制视频。MediaRecorder可以同时录制视频和音频。我们将音频源直接设置成摄像头,让它从摄像头里面读">
+<meta property="og:image" content="http://139.199.4.241/安卓特效相机四/1.png">
+<meta property="og:image" content="http://139.199.4.241/安卓特效相机四/1.png">
+<meta property="og:image" content="http://139.199.4.241/安卓特效相机四/2.png">
+<meta property="og:updated_time" content="2019-10-09T14:49:03.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓特效相机(四) 视频录制">
+<meta name="twitter:description" content="系列文章:
+安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制
+前几篇文章已经讲完了摄像头画面的捕捉和特效渲染,这篇文章我们来讲一讲最后的视频录制部分。
+我们这里将使用MediaRecorder去录制视频。MediaRecorder可以同时录制视频和音频。我们将音频源直接设置成摄像头,让它从摄像头里面读">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓特效相机-四-视频录制" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓特效相机(四) 视频录制</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.10.09</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2019/10/09/安卓特效相机-四-视频录制/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<p><a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="external">安卓特效相机(一) Camera2的使用</a><br><a href="http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="external">安卓特效相机(二) EGL基础</a><br><a href="http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="external">安卓特效相机(三) OpenGL ES 特效渲染</a><br><a href="http://blog.islinjw.cn/2019/10/09/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E5%9B%9B-%E8%A7%86%E9%A2%91%E5%BD%95%E5%88%B6/" target="_blank" rel="external">安卓特效相机(四) 视频录制</a></p>
+<p>前几篇文章已经讲完了摄像头画面的捕捉和特效渲染,这篇文章我们来讲一讲最后的视频录制部分。</p>
+<p>我们这里将使用MediaRecorder去录制视频。MediaRecorder可以同时录制视频和音频。我们将音频源直接设置成摄像头,让它从摄像头里面读取音频数据:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setAudioSource</span>(<span class="tag">MediaRecorder</span><span class="class">.AudioSource</span><span class="class">.CAMCORDER</span>);</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setAudioEncoder</span>(<span class="tag">MediaRecorder</span><span class="class">.AudioEncoder</span><span class="class">.AAC</span>);</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setAudioEncodingBitRate</span>(<span class="tag">AUDIO_BIT_RATE</span>);</span><br></pre></td></tr></table></figure>
+<p>但是视频源并不能直接设置成摄像头,因为摄像头捕捉到的画面是原始的视频画面,我们上上一篇文章中讲到了如何将这个原始画面绘制到纹理,然后通过特效处理现实到TextureView上:</p>
+<img src="/安卓特效相机四/1.png">
+<p>所以如果我们直接将MediaRecorder的视频源设置成摄像头的话录制下来的视频并没有带上特效。</p>
+<p>那要怎么做呢? MediaRecorder有一种视频源叫做MediaRecorder.VideoSource.SURFACE,意思是从Surface里面读取画面去录制。那我们是不是直接吧TextureView的SurfaceTexture创建的Surface传给MediaRecorder让它捕捉TextureView的内容就行了呢?</p>
+<p>可惜的是如果直接用MediaRecorder.setInputSurface将Surface设置进去,会抛出异常:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">09</span>-<span class="number">22</span> <span class="number">14</span>:<span class="number">53</span>:<span class="number">47.473</span>   <span class="number">897</span>   <span class="number">943</span> E AndroidRuntime: java.lang.IllegalArgumentException: not a PersistentSurface</span><br><span class="line"><span class="number">09</span>-<span class="number">22</span> <span class="number">14</span>:<span class="number">53</span>:<span class="number">47.473</span>   <span class="number">897</span>   <span class="number">943</span> E AndroidRuntime:        at android.media.MediaRecorder.setInputSurface(MediaRecorder.java:<span class="number">165</span>)</span><br></pre></td></tr></table></figure>
+<p>原因是只能设置MediaCodec.PersistentSurface类型的Surface:</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">/<span class="keyword">*</span><span class="keyword">*</span></span><br><span class="line"> <span class="keyword">*</span> Configures the recorder to use a persistent surface when using SURFACE video source.</span><br><span class="line"> <span class="keyword">*</span> <span class="variable">&lt;p&gt;</span> May only be called before &#123;<span class="comment">@link #prepare&#125;. If called, &#123;@link #getSurface&#125; should</span></span><br><span class="line"> <span class="keyword">*</span> not be used and will throw IllegalStateException. Frames rendered to the Surface</span><br><span class="line"> <span class="keyword">*</span> before &#123;<span class="comment">@link #start&#125; will be discarded.&lt;/p&gt;</span></span><br><span class="line"></span><br><span class="line"> <span class="keyword">*</span> <span class="comment">@param surface a persistent input surface created by</span></span><br><span class="line"> <span class="keyword">*</span>           &#123;<span class="comment">@link MediaCodec#createPersistentInputSurface&#125;</span></span><br><span class="line"> <span class="keyword">*</span> <span class="comment">@throws IllegalStateException if it is called after &#123;@link #prepare&#125; and before</span></span><br><span class="line"> <span class="keyword">*</span> &#123;<span class="comment">@link #stop&#125;.</span></span><br><span class="line"> <span class="keyword">*</span> <span class="comment">@throws IllegalArgumentException if the surface was not created by</span></span><br><span class="line"> <span class="keyword">*</span>           &#123;<span class="comment">@link MediaCodec#createPersistentInputSurface&#125;.</span></span><br><span class="line"> <span class="keyword">*</span> <span class="comment">@see MediaCodec#createPersistentInputSurface</span></span><br><span class="line"> <span class="keyword">*</span> <span class="comment">@see MediaRecorder.VideoSource</span></span><br><span class="line"> <span class="keyword">*</span>/</span><br><span class="line">public void setInputSurface(<span class="comment">@NonNull Surface surface) &#123;</span></span><br><span class="line">    if (!(surface instanceof MediaCodec.PersistentSurface)) &#123;</span><br><span class="line">        throw new IllegalArgumentException(<span class="string">"not a PersistentSurface"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    native_setInputSurface(surface);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>好吧直接滴干活不行那我们就悄悄滴干活。</p>
+<p>首先还是需要视频源设置成MediaRecorder.VideoSource.SURFACE,然后配置一堆的视频信息。这些设置项具体是什么意思讲起来比较费劲,我就不展开了,大家感兴趣的可以自行搜索:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setVideoSource</span>(<span class="tag">MediaRecorder</span><span class="class">.VideoSource</span><span class="class">.SURFACE</span>);</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setOutputFormat</span>(<span class="tag">MediaRecorder</span><span class="class">.OutputFormat</span><span class="class">.MPEG_4</span>);</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setOutputFile</span>(<span class="tag">mLastVideo</span><span class="class">.getPath</span>());</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setVideoEncoder</span>(<span class="tag">MediaRecorder</span><span class="class">.VideoEncoder</span><span class="class">.H264</span>);</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setVideoEncodingBitRate</span>(<span class="tag">VIDEO_BIT_RATE</span>);</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setVideoSize</span>(<span class="tag">mPreview</span><span class="class">.getWidth</span>(), <span class="tag">mPreview</span><span class="class">.getHeight</span>());</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setVideoFrameRate</span>(<span class="tag">VIDEO_FRAME_RATE</span>);</span><br><span class="line"><span class="tag">mMediaRecorder</span><span class="class">.setOrientationHint</span>(0);</span><br></pre></td></tr></table></figure>
+<p>配置完之后开启录制:</p>
+<figure class="highlight xquery"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    mMediaRecorder.prepare();</span><br><span class="line">&#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">    Toast.makeText(this, <span class="string">"failed to prepare MediaRecorder"</span>, Toast.LENGTH_LONG)</span><br><span class="line">        .show();</span><br><span class="line">&#125;</span><br><span class="line">mMediaRecorder.<span class="keyword">start</span>();</span><br></pre></td></tr></table></figure>
+<p>上面的都是一些常规操作,大部分使用MediaRecorder的代码都是这样用的,下面我们来看正片:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">return</span> <span class="tag">mGLRender</span><span class="class">.createEGLSurface</span>(<span class="tag">mMediaRecorder</span><span class="class">.getSurface</span>());</span><br></pre></td></tr></table></figure>
+<p>这里拿到MediaRecorder的那个视频源Surface,给它创建了一个EGLSurface。我们在之前那篇<a href="http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="external">EGL基础</a>里面介绍过它。</p>
+<p>我们可以用EGL14.eglMakeCurrent方法指定OpenGL往哪个Surface里面绘制,所以我们直接修改代码将OpenGL的目标Suface设置成这个视频源Surface就可以了吗?</p>
+<p>恭喜你,得到了一个BUG。</p>
+<p>现在视频是可以录制了,但是预览画面黑了。为什么,回顾下这幅图:</p>
+<img src="/安卓特效相机四/1.png">
+<p>我们需要要将OpenGL的画面绘制到TextureView上才能在屏幕上看到特效渲染后的预览画面。</p>
+<p>那怎么办?TextureView和MediaRecorder只能二选一了吗?不,小孩子才做选择题，成年人当然是全都要。</p>
+<p>我们让OpengGL辛苦点,画两次…</p>
+<img src="/安卓特效相机四/2.png">
+<p>首先修改下GLRender.render方法, EGLSurface由外面传进来,这样我们就能在外面控制它往TextureView和MediaRecord绘制了:</p>
+<figure class="highlight roboconf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="component">public void render(float[] matrix, EGLSurface eglSurface) &#123;</span><br><span class="line">    makeCurrent(eglSurface);</span><br><span class="line">    GLES20<span class="string">.glUniformMatrix4fv(mTransformMatrixId</span>, 1, false, matrix, 0);</span><br><span class="line"></span><br><span class="line">    GLES20<span class="string">.glActiveTexture(GLES20.GL_TEXTURE0)</span>;</span><br><span class="line">    GLES20<span class="string">.glBindTexture(GLES11Ext.GL_SAMPLER_EXTERNAL_OES</span>, mGLTextureId);</span><br><span class="line">    GLES20<span class="string">.glUniform1i(mTexPreviewId</span>, 0);</span><br><span class="line"></span><br><span class="line">    GLES20<span class="string">.glClear(GLES20.GL_DEPTH_BUFFER_BIT</span> | GLES20<span class="string">.GL_COLOR_BUFFER_BIT)</span>;</span><br><span class="line">    GLES20<span class="string">.glDrawElements(GLES20.GL_TRIANGLES</span>, ORDERS<span class="string">.length</span>, GLES20<span class="string">.GL_UNSIGNED_SHORT</span>, mOrder);</span><br><span class="line">    EGL14<span class="string">.eglSwapBuffers(mEGLDisplay</span>, eglSurface);</span><br><span class="line">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>然后在绘制的时候绘制两次:</p>
+<figure class="highlight dns"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mCameraTexture.updateTexImage()<span class="comment">;</span></span><br><span class="line">mCameraTexture.getTransformMatrix(mTransformMatrix)<span class="comment">;</span></span><br><span class="line"></span><br><span class="line">mGLRender.render(mTransformMatrix, mGLRender.getDefaultEGLSurface())<span class="comment">;</span></span><br><span class="line">if (mRecordSurface != null) &#123;</span><br><span class="line">    mGLRender.render(mTransformMatrix, mRecordSurface)<span class="comment">;</span></span><br><span class="line">    mGLRender.setPresentationTime(mRecordSurface, mCameraTexture.getTimestamp())<span class="comment">;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里需要注意的是我们需要给这一帧设置下时间戳,用于录制视频的时间同步:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">setPresentationTime</span><span class="params">(EGLSurface eglSurface, <span class="keyword">long</span> nsecs)</span> </span>&#123;</span><br><span class="line">    EGLExt.eglPresentationTimeANDROID(mEGLDisplay, eglSurface, nsecs);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>好了,这个录像的实现方法比较简单。到此整个特效相机的教程就结束了,希望对大家有用。</p>
+<p>这篇文章的demo依然在<a href="https://github.com/bluesky466/CameraDemo/tree/feature_record" target="_blank" rel="external">github</a>(注意是feature_record分支)</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/09/22/安卓特效相机-三-OpenGL-ES-特效渲染/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2019/10/09/安卓特效相机-四-视频录制/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
