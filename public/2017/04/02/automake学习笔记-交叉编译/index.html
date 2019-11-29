@@ -4,7 +4,7 @@
   <html class="light page-post">
 
 
-<head>
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
   <title>automake学习笔记 - 交叉编译 | LinJW</title>
@@ -12,31 +12,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   
-    <meta name="keywords" content="技术相关,编译相关," />
+    <meta name="keywords" content="技术相关,编译相关,">
   
 
-  <meta name="description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。
-这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。
-使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:
-
-2.2.8 Cr">
+  <meta name="description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。 这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。 使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:  2.2.8 Cr">
+<meta name="keywords" content="技术相关,编译相关">
 <meta property="og:type" content="article">
 <meta property="og:title" content="automake学习笔记 - 交叉编译">
 <meta property="og:url" content="http://139.199.4.241/2017/04/02/automake学习笔记-交叉编译/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。
-这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。
-使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:
-
-2.2.8 Cr">
-<meta property="og:updated_time" content="2017-12-14T15:22:08.640Z">
+<meta property="og:description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。 这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。 使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:  2.2.8 Cr">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.266Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="automake学习笔记 - 交叉编译">
-<meta name="twitter:description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。
-这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。
-使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:
-
-2.2.8 Cr">
+<meta name="twitter:description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。 这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。 使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:  2.2.8 Cr">
 
   
 
@@ -48,7 +38,7 @@
 
 
   
-    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+    <link rel="stylesheet" href="/css/personal-style.css">
   
 
   
@@ -91,7 +81,7 @@
     <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
   
 </head>
-
+</html>
 <body>
 
 
@@ -162,7 +152,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#u4EC0_u4E48_u662F_u4EA4_u53C9_u7F16_u8BD1"><span class="toc-text">什么是交叉编译</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4F7F_u7528automake_u8FDB_u884C_u4EA4_u53C9_u7F16_u8BD1"><span class="toc-text">使用automake进行交叉编译</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u5728linux_u4E0A_u7F16_u8BD1windows_u4E0A_u7684_u7A0B_u5E8F"><span class="toc-text">在linux上编译windows上的程序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u5728linux_u4E0A_u7F16_u8BD1_u5B89_u5353_u4E0A_u7684_u7A0B_u5E8F"><span class="toc-text">在linux上编译安卓上的程序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo_u9879_u76EE"><span class="toc-text">Demo项目</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#什么是交叉编译"><span class="toc-text">什么是交叉编译</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用automake进行交叉编译"><span class="toc-text">使用automake进行交叉编译</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#在linux上编译windows上的程序"><span class="toc-text">在linux上编译windows上的程序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#在linux上编译安卓上的程序"><span class="toc-text">在linux上编译安卓上的程序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo项目"><span class="toc-text">Demo项目</span></a></li></ol>
   </div>
 
 
@@ -210,9 +200,9 @@
 
   <div class="article-content">
     
-      <h2 id="u4EC0_u4E48_u662F_u4EA4_u53C9_u7F16_u8BD1"><a href="#u4EC0_u4E48_u662F_u4EA4_u53C9_u7F16_u8BD1" class="headerlink" title="什么是交叉编译"></a>什么是交叉编译</h2><p>很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。</p>
+      <h2 id="什么是交叉编译"><a href="#什么是交叉编译" class="headerlink" title="什么是交叉编译"></a>什么是交叉编译</h2><p>很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。</p>
 <p>这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。</p>
-<h2 id="u4F7F_u7528automake_u8FDB_u884C_u4EA4_u53C9_u7F16_u8BD1"><a href="#u4F7F_u7528automake_u8FDB_u884C_u4EA4_u53C9_u7F16_u8BD1" class="headerlink" title="使用automake进行交叉编译"></a>使用automake进行交叉编译</h2><p>automake就提供了交叉编译的功能，但是它的<a href="https://www.gnu.org/software/automake/manual/html_node/Cross_002dCompilation.html" target="_blank" rel="external">官方文档</a>十分的简单:</p>
+<h2 id="使用automake进行交叉编译"><a href="#使用automake进行交叉编译" class="headerlink" title="使用automake进行交叉编译"></a>使用automake进行交叉编译</h2><p>automake就提供了交叉编译的功能，但是它的<a href="https://www.gnu.org/software/automake/manual/html_node/Cross_002dCompilation.html" target="_blank" rel="noopener">官方文档</a>十分的简单:</p>
 <blockquote>
 <p>2.2.8 Cross-Compilation</p>
 <p>To cross-compile is to build on one platform a binary that will run on another platform. When speaking of cross-compilation, it is important to distinguish between the build platform on which the compilation is performed, and the host platform on which the resulting executable is expected to run. The following configure options are used to specify each of them:</p>
@@ -244,26 +234,29 @@
 </blockquote>
 <p>这里的 i686-pc-linux-gnu和 i586-mingw32msvc-gcc其实指的是一系列的编译工具。交叉编译工具的命名其实是有一定的格式的。 例如，用来编译windows程序的MinGW32的交叉编译器的二进制文件叫做i586-mingw32msvc-gcc，i586-mingw32msvc-ld，i586-mingw32msvc-as等。</p>
 <blockquote>
-<p>MinGW是Minimalist GNU for Windows的意思，又称mingw32，是将GCC编译器和GNU Binutils移植到Win32平台下的产物，包括一系列头文件（Win32API）、库和可执行文件。– <a href="https://zh.wikipedia.org/wiki/MinGW" target="_blank" rel="external">维基百科</a></p>
+<p>MinGW是Minimalist GNU for Windows的意思，又称mingw32，是将GCC编译器和GNU Binutils移植到Win32平台下的产物，包括一系列头文件（Win32API）、库和可执行文件。– <a href="https://zh.wikipedia.org/wiki/MinGW" target="_blank" rel="noopener">维基百科</a></p>
 </blockquote>
 <p>其实就是我们指定了编译工具的前缀，然后automake就会更加这个前缀，找到对应的编译器去编译我们的程序。</p>
-<h2 id="u5728linux_u4E0A_u7F16_u8BD1windows_u4E0A_u7684_u7A0B_u5E8F"><a href="#u5728linux_u4E0A_u7F16_u8BD1windows_u4E0A_u7684_u7A0B_u5E8F" class="headerlink" title="在linux上编译windows上的程序"></a>在linux上编译windows上的程序</h2><p>有人可能会问，为什么需要在linux上编译这么蛋疼而不直接在windows上编译呢？</p>
+<h2 id="在linux上编译windows上的程序"><a href="#在linux上编译windows上的程序" class="headerlink" title="在linux上编译windows上的程序"></a>在linux上编译windows上的程序</h2><p>有人可能会问，为什么需要在linux上编译这么蛋疼而不直接在windows上编译呢？</p>
 <p>就按我遇到的情况来说吧。我们部门的自动构建服务器就是liunx的，我们的项目都需要通过它来编译、检查和发布，我们也习惯于在linux上编程，最重要的是我们的项目就是跨平台的，不管是windows、linux还是android上都需要可以运行，所以没有必要为每个平台搭建一套编译环境。直接在linux上编译所有平台的软件是最好的选择。</p>
 <p>为了在linux上交叉编译windows的程序，我们先要搭建一下交叉编译的环境:</p>
 <ol>
 <li>安装交叉编译工具</li>
 </ol>
-<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-<span class="keyword">get</span> install mingw-w64</span><br></pre></td></tr></table></figure>
-<ol>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-<span class="builtin-name">get</span> install mingw-w64</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
 <li>更新配置，使用 posix thread</li>
 </ol>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo <span class="operator"><span class="keyword">update</span>-alternatives <span class="comment">--config i686-w64-mingw32-g++</span></span><br><span class="line">sudo <span class="keyword">update</span>-alternatives <span class="comment">--config i686-w64-mingw32-gcc</span></span><br><span class="line">sudo <span class="keyword">update</span>-alternatives <span class="comment">--config x86_64-w64-mingw32-g++</span></span><br><span class="line">sudo <span class="keyword">update</span>-alternatives <span class="comment">--config x86_64-w64-mingw32-gcc</span></span></span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo <span class="keyword">update</span>-alternatives <span class="comment">--config i686-w64-mingw32-g++</span></span><br><span class="line">sudo <span class="keyword">update</span>-alternatives <span class="comment">--config i686-w64-mingw32-gcc</span></span><br><span class="line">sudo <span class="keyword">update</span>-alternatives <span class="comment">--config x86_64-w64-mingw32-g++</span></span><br><span class="line">sudo <span class="keyword">update</span>-alternatives <span class="comment">--config x86_64-w64-mingw32-gcc</span></span><br></pre></td></tr></table></figure>
+
 <p>上面的选项中，选择 posix 版本。</p>
 <blockquote>
-<p>可移植操作系统接口（英语：Portable Operating System Interface of UNIX，缩写为POSIX），是IEEE为要在各种UNIX操作系统上运行软件，而定义API的一系列互相关联的标准的总称，其正式称呼为IEEE Std 1003，而国际标准名称为ISO/IEC 9945。此标准源于一个大约开始于1985年的项目。POSIX这个名称是由理查德·斯托曼应IEEE的要求而提议的一个易于记忆的名称。它基本上是Portable Operating System Interface（可移植操作系统接口）的缩写，而X则表明其对Unix API的传承。<br>Linux基本上逐步实现了POSIX兼容，但并没有参加正式的POSIX认证。[1]<br>微软的Windows NT声称部分实现了POSIX标准。[2]<br>当前的POSIX主要分为四个部分[3]：Base Definitions、System Interfaces、Shell and Utilities和Rationale。 – <a href="https://zh.wikipedia.org/wiki/POSIX" target="_blank" rel="external">维基百科</a></p>
+<p>可移植操作系统接口（英语：Portable Operating System Interface of UNIX，缩写为POSIX），是IEEE为要在各种UNIX操作系统上运行软件，而定义API的一系列互相关联的标准的总称，其正式称呼为IEEE Std 1003，而国际标准名称为ISO/IEC 9945。此标准源于一个大约开始于1985年的项目。POSIX这个名称是由理查德·斯托曼应IEEE的要求而提议的一个易于记忆的名称。它基本上是Portable Operating System Interface（可移植操作系统接口）的缩写，而X则表明其对Unix API的传承。<br>Linux基本上逐步实现了POSIX兼容，但并没有参加正式的POSIX认证。[1]<br>微软的Windows NT声称部分实现了POSIX标准。[2]<br>当前的POSIX主要分为四个部分[3]：Base Definitions、System Interfaces、Shell and Utilities和Rationale。 – <a href="https://zh.wikipedia.org/wiki/POSIX" target="_blank" rel="noopener">维基百科</a></p>
 </blockquote>
 <p>按道理这个时候就可以在build目录执行下面的命令去编译了</p>
-<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">../configure --prefix=<span class="escape">`p</span>wd<span class="escape">` </span>--host i686-w64-mingw32</span><br></pre></td></tr></table></figure>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">../configure</span> <span class="params">--prefix=</span>`<span class="keyword">pwd</span>` <span class="params">--host</span> i686-w64-mingw32</span><br></pre></td></tr></table></figure>
+
 <p>但是执行了configure之后却会报下面的错误:</p>
 <blockquote>
 <p>libtool: warning: undefined symbols not allowed in i686-w64-mingw32 shared libraries; building static only</p>
@@ -291,17 +284,22 @@
 <p>[test] testlog</p>
 </blockquote>
 <p>看已经成功运行了。</p>
-<h2 id="u5728linux_u4E0A_u7F16_u8BD1_u5B89_u5353_u4E0A_u7684_u7A0B_u5E8F"><a href="#u5728linux_u4E0A_u7F16_u8BD1_u5B89_u5353_u4E0A_u7684_u7A0B_u5E8F" class="headerlink" title="在linux上编译安卓上的程序"></a>在linux上编译安卓上的程序</h2><p>搭建安卓的交叉编译环境就是生成 standalone toochain</p>
+<h2 id="在linux上编译安卓上的程序"><a href="#在linux上编译安卓上的程序" class="headerlink" title="在linux上编译安卓上的程序"></a>在linux上编译安卓上的程序</h2><p>搭建安卓的交叉编译环境就是生成 standalone toochain</p>
 <p>首先下载NDK，解压，假设NDK的根目录为NDK_ROOT，然后执行</p>
-<figure class="highlight xquery"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sudo <span class="variable">$NDK</span>_ROOT/build/tools/make-standalone-toolchain.sh \</span><br><span class="line">     --platform=android-<span class="number">19</span> \</span><br><span class="line">     --install-dir=<span class="variable">$HOME</span>/Android/standalone-toolchains/android-toolchain-arm \</span><br><span class="line">     --toolchain=arm-linux-androideabi-<span class="number">4.9</span> \</span><br><span class="line">     --stl=gnustl</span><br></pre></td></tr></table></figure>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sudo <span class="variable">$NDK_ROOT</span>/build/tools/make-standalone-toolchain.sh \</span><br><span class="line">     <span class="attribute">--platform</span>=android-19 \</span><br><span class="line">     <span class="attribute">--install-dir</span>=<span class="variable">$HOME</span>/Android/standalone-toolchains/android-toolchain-arm \</span><br><span class="line">     <span class="attribute">--toolchain</span>=arm-linux-androideabi-4.9 \</span><br><span class="line">     <span class="attribute">--stl</span>=gnustl</span><br></pre></td></tr></table></figure>
+
 <p>最后配置环境变量</p>
-<figure class="highlight xquery"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">export NDK_ROOT=<span class="variable">$HOME</span>/Android/android-ndk-r13b</span><br><span class="line">export TOOLCHAIN_HOME=<span class="variable">$HOME</span>/Android/standalone-toolchains/android-toolchain-arm</span><br><span class="line">export TOOLCHAIN_SYSROOT=<span class="variable">$TOOLCHAIN</span>_HOME/sysroot</span><br><span class="line">export PATH=<span class="variable">$PATH</span>:<span class="variable">$TOOLCHAIN</span>_HOME/bin</span><br></pre></td></tr></table></figure>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="builtin-name">export</span> <span class="attribute">NDK_ROOT</span>=<span class="variable">$HOME</span>/Android/android-ndk-r13b</span><br><span class="line"><span class="builtin-name">export</span> <span class="attribute">TOOLCHAIN_HOME</span>=<span class="variable">$HOME</span>/Android/standalone-toolchains/android-toolchain-arm</span><br><span class="line"><span class="builtin-name">export</span> <span class="attribute">TOOLCHAIN_SYSROOT</span>=<span class="variable">$TOOLCHAIN_HOME</span>/sysroot</span><br><span class="line"><span class="builtin-name">export</span> <span class="attribute">PATH</span>=<span class="variable">$PATH</span>:$TOOLCHAIN_HOME/bin</span><br></pre></td></tr></table></figure>
+
 <p>环境搭建好之后在build目录中执行</p>
-<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">../configure --prefix=<span class="escape">`p</span>wd<span class="escape">` </span>--host arm-linux-androideabi</span><br></pre></td></tr></table></figure>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">../configure</span> <span class="params">--prefix=</span>`<span class="keyword">pwd</span>` <span class="params">--host</span> arm-linux-androideabi</span><br></pre></td></tr></table></figure>
+
 <p>之后就能使用make install命令编译并安装了。</p>
 <p>在某些机器上编译时会报找不到shared_ptr的错误,解决方法是在src/Makefile.am和examples/Makefile.am的CPPFLAGS宏加上-std=c++11:</p>
-<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#src/Makefile<span class="class">.am</span></span><br><span class="line">lib_LTLIBRARIES = libeasylog<span class="class">.la</span></span><br><span class="line"></span><br><span class="line">libeasylog_la_SOURCES = cout_log_interface<span class="class">.cpp</span> \</span><br><span class="line">						easy_log<span class="class">.cpp</span></span><br><span class="line"></span><br><span class="line">libeasylog_la_CPPFLAGS = -std=c++<span class="number">11</span></span><br><span class="line"></span><br><span class="line">libeasylog_la_LDFLAGS = -no-undefined</span><br></pre></td></tr></table></figure>
-<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#examples/Makefile.am</span></span><br><span class="line"><span class="constant">AM_CPPFLAGS</span> = -I<span class="variable">$(top_srcdir)</span>/src \</span><br><span class="line">              -std=c++11</span><br><span class="line"></span><br><span class="line"><span class="constant">bin_PROGRAMS</span> = example</span><br><span class="line"><span class="constant">example_SOURCES</span> = example.cpp</span><br><span class="line"></span><br><span class="line"><span class="constant">example_LDADD</span> = -L<span class="variable">$(top_builddir)</span>/src \</span><br><span class="line">				-leasylog</span><br></pre></td></tr></table></figure>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#src/Makefile.am</span></span><br><span class="line">lib_LTLIBRARIES = libeasylog.la</span><br><span class="line"></span><br><span class="line">libeasylog_la_SOURCES = cout_log_interface.cpp \</span><br><span class="line">						easy_log.cpp</span><br><span class="line"></span><br><span class="line">libeasylog_la_CPPFLAGS = -std=c++11</span><br><span class="line"></span><br><span class="line">libeasylog_la_LDFLAGS = -no-undefined</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#examples/Makefile.am</span></span><br><span class="line">AM_CPPFLAGS = -I<span class="variable">$(top_srcdir)</span>/src \</span><br><span class="line">              -std=c++11</span><br><span class="line"></span><br><span class="line">bin_PROGRAMS = example</span><br><span class="line">example_SOURCES = example.cpp</span><br><span class="line"></span><br><span class="line">example_LDADD = -L<span class="variable">$(top_builddir)</span>/src \</span><br><span class="line">				-leasylog</span><br></pre></td></tr></table></figure>
+
 <p>编译安装完成后再bin目录可以见到 <strong>example</strong> ,在lib目录可以看到 <strong>libeasylog.so</strong>。</p>
 <p>虽然看起来和linux程序一样，但是直接运行example的话会报错:</p>
 <blockquote>
@@ -313,7 +311,7 @@
 <p>[test] testlog</p>
 </blockquote>
 <p>当然，做应用的一般都不会直接编译出可执行程序来给安卓使用。更多的是编译出so来给apk通过jni调用c/c++的方法。但是编译的过程和这里是一样的，关于jni的使用我之后会另写一篇文章来讨论。</p>
-<h2 id="Demo_u9879_u76EE"><a href="#Demo_u9879_u76EE" class="headerlink" title="Demo项目"></a>Demo项目</h2><p>可以在<a href="https://github.com/bluesky466/automake-demo/tree/v0.0.4" target="_blank" rel="external">这里</a>查看完整的项目代码</p>
+<h2 id="Demo项目"><a href="#Demo项目" class="headerlink" title="Demo项目"></a>Demo项目</h2><p>可以在<a href="https://github.com/bluesky466/automake-demo/tree/v0.0.4" target="_blank" rel="noopener">这里</a>查看完整的项目代码</p>
 
     
   </div>
@@ -475,5 +473,5 @@
   }
 </script>
 
-</body>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"left","width":300,"height":300},"mobile":{"show":true},"log":false});</script></body>
 </html>

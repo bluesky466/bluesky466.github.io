@@ -4,7 +4,7 @@
   <html class="light page-post">
 
 
-<head>
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
   <title>Android温故而知新 - launchMode | LinJW</title>
@@ -12,51 +12,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   
-    <meta name="keywords" content="Android,技术相关," />
+    <meta name="keywords" content="技术相关,Android,">
   
 
-  <meta name="description" content="Activity有四种launchMode,android官方文档的介绍如下:
-
-
-
-启动模式
-多个实例?
-注释
-
-
-
-
-“standard”
-是
-默认值。系统始终会在目标任务中创建新的 Activity 实例并向其传送 Intent。
-
-
-“singleTop”
-有条件
-如果目标任务的顶部已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 In">
+  <meta name="description" content="Activity有四种launchMode,android官方文档的介绍如下:    启动模式 多个实例? 注释    “standard” 是 默认值。系统始终会在目标任务中创建新的 Activity 实例并向其传送 Intent。   “singleTop” 有条件 如果目标任务的顶部已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 Int">
+<meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android温故而知新 - launchMode">
 <meta property="og:url" content="http://139.199.4.241/2017/06/30/Android温故而知新-launchMode/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="Activity有四种launchMode,android官方文档的介绍如下:
-
-
-
-启动模式
-多个实例?
-注释
-
-
-
-
-“standard”
-是
-默认值。系统始终会在目标任务中创建新的 Activity 实例并向其传送 Intent。
-
-
-“singleTop”
-有条件
-如果目标任务的顶部已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 In">
+<meta property="og:description" content="Activity有四种launchMode,android官方文档的介绍如下:    启动模式 多个实例? 注释    “standard” 是 默认值。系统始终会在目标任务中创建新的 Activity 实例并向其传送 Intent。   “singleTop” 有条件 如果目标任务的顶部已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 Int">
+<meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://139.199.4.241/Android温故而知新-launchMode/standard1.png">
 <meta property="og:image" content="http://139.199.4.241/Android温故而知新-launchMode/standard2.png">
 <meta property="og:image" content="http://139.199.4.241/Android温故而知新-launchMode/standard3.png">
@@ -70,28 +36,11 @@
 <meta property="og:image" content="http://139.199.4.241/Android温故而知新-launchMode/singleInstance1.png">
 <meta property="og:image" content="http://139.199.4.241/Android温故而知新-launchMode/singleInstance2.png">
 <meta property="og:image" content="http://139.199.4.241/Android温故而知新-launchMode/singleInstance3.png">
-<meta property="og:updated_time" content="2017-12-14T15:22:08.640Z">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.260Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android温故而知新 - launchMode">
-<meta name="twitter:description" content="Activity有四种launchMode,android官方文档的介绍如下:
-
-
-
-启动模式
-多个实例?
-注释
-
-
-
-
-“standard”
-是
-默认值。系统始终会在目标任务中创建新的 Activity 实例并向其传送 Intent。
-
-
-“singleTop”
-有条件
-如果目标任务的顶部已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 In">
+<meta name="twitter:description" content="Activity有四种launchMode,android官方文档的介绍如下:    启动模式 多个实例? 注释    “standard” 是 默认值。系统始终会在目标任务中创建新的 Activity 实例并向其传送 Intent。   “singleTop” 有条件 如果目标任务的顶部已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 Int">
+<meta name="twitter:image" content="http://139.199.4.241/Android温故而知新-launchMode/standard1.png">
 
   
 
@@ -103,7 +52,7 @@
 
 
   
-    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+    <link rel="stylesheet" href="/css/personal-style.css">
   
 
   
@@ -146,7 +95,7 @@
     <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
   
 </head>
-
+</html>
 <body>
 
 
@@ -217,7 +166,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#u6D4B_u8BD5demo"><span class="toc-text">测试demo</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u67E5_u770B_u4EFB_u52A1_u6808"><span class="toc-text">查看任务栈</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#standard"><span class="toc-text">standard</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#singleTop"><span class="toc-text">singleTop</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#singleTask"><span class="toc-text">singleTask</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#singleInstance"><span class="toc-text">singleInstance</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#测试demo"><span class="toc-text">测试demo</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#查看任务栈"><span class="toc-text">查看任务栈</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#standard"><span class="toc-text">standard</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#singleTop"><span class="toc-text">singleTop</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#singleTask"><span class="toc-text">singleTask</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#singleInstance"><span class="toc-text">singleInstance</span></a></li></ol>
   </div>
 
 
@@ -265,75 +214,92 @@
 
   <div class="article-content">
     
-      <p>Activity有四种launchMode,<a href="https://developer.android.com/guide/topics/manifest/activity-element.html?hl=zh-cn" target="_blank" rel="external">android官方文档</a>的介绍如下:</p>
+      <p>Activity有四种launchMode,<a href="https://developer.android.com/guide/topics/manifest/activity-element.html?hl=zh-cn" target="_blank" rel="noopener">android官方文档</a>的介绍如下:</p>
 <table>
 <thead>
 <tr>
-<th style="text-align:center">启动模式</th>
-<th style="text-align:center">多个实例?</th>
-<th style="text-align:center">注释</th>
+<th align="center">启动模式</th>
+<th align="center">多个实例?</th>
+<th align="center">注释</th>
 </tr>
 </thead>
-<tbody>
-<tr>
-<td style="text-align:center">“standard”</td>
-<td style="text-align:center">是</td>
-<td style="text-align:center">默认值。系统始终会在目标任务中创建新的 Activity 实例并向其传送 Intent。</td>
+<tbody><tr>
+<td align="center">“standard”</td>
+<td align="center">是</td>
+<td align="center">默认值。系统始终会在目标任务中创建新的 Activity 实例并向其传送 Intent。</td>
 </tr>
 <tr>
-<td style="text-align:center">“singleTop”</td>
-<td style="text-align:center">有条件</td>
-<td style="text-align:center">如果目标任务的顶部已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 Intent，而不是创建新的 Activity 实例。</td>
+<td align="center">“singleTop”</td>
+<td align="center">有条件</td>
+<td align="center">如果目标任务的顶部已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 Intent，而不是创建新的 Activity 实例。</td>
 </tr>
 <tr>
-<td style="text-align:center">“singleTask”</td>
-<td style="text-align:center">否</td>
-<td style="text-align:center">系统在新任务的根位置创建 Activity 并向其传送 Intent。 不过，如果已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 Intent，而不是创建新的 Activity 实例。</td>
+<td align="center">“singleTask”</td>
+<td align="center">否</td>
+<td align="center">系统在新任务的根位置创建 Activity 并向其传送 Intent。 不过，如果已存在一个 Activity 实例，则系统会通过调用该实例的 onNewIntent() 方法向其传送 Intent，而不是创建新的 Activity 实例。</td>
 </tr>
 <tr>
-<td style="text-align:center">“singleInstance”</td>
-<td style="text-align:center">否</td>
-<td style="text-align:center">与“singleTask””相同，只是系统不会将任何其他 Activity 启动到包含实例的任务中。 该 Activity 始终是其任务唯一仅有的成员。</td>
+<td align="center">“singleInstance”</td>
+<td align="center">否</td>
+<td align="center">与“singleTask””相同，只是系统不会将任何其他 Activity 启动到包含实例的任务中。 该 Activity 始终是其任务唯一仅有的成员。</td>
 </tr>
-</tbody>
-</table>
-<h1 id="u6D4B_u8BD5demo"><a href="#u6D4B_u8BD5demo" class="headerlink" title="测试demo"></a>测试demo</h1><p>我们通过两个Activity之间的跳转和任务栈打印来理解launchMode的作用。</p>
+</tbody></table>
+<h1 id="测试demo"><a href="#测试demo" class="headerlink" title="测试demo"></a>测试demo</h1><p>我们通过两个Activity之间的跳转和任务栈打印来理解launchMode的作用。</p>
 <p>这两个Activity使用同一个布局, TextView用来打印任务栈的id和activity实例，然后是两个按钮，分别用来启动两个activity:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="pi">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">LinearLayout</span> <span class="attribute">xmlns:android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span></span><br><span class="line">    <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span></span><br><span class="line">    <span class="attribute">android:layout_height</span>=<span class="value">"match_parent"</span></span><br><span class="line">    <span class="attribute">android:orientation</span>=<span class="value">"vertical"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="title">TextView</span></span><br><span class="line">        <span class="attribute">android:id</span>=<span class="value">"@+id/label"</span></span><br><span class="line">        <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span></span><br><span class="line">        <span class="attribute">android:layout_height</span>=<span class="value">"wrap_content"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="title">Button</span></span><br><span class="line">        <span class="attribute">android:id</span>=<span class="value">"@+id/gotoFirstActivity"</span></span><br><span class="line">        <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span></span><br><span class="line">        <span class="attribute">android:layout_height</span>=<span class="value">"wrap_content"</span></span><br><span class="line">        <span class="attribute">android:onClick</span>=<span class="value">"onClick"</span></span><br><span class="line">        <span class="attribute">android:text</span>=<span class="value">"goto first activity"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="title">Button</span></span><br><span class="line">        <span class="attribute">android:id</span>=<span class="value">"@+id/gotoSecondActivity"</span></span><br><span class="line">        <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span></span><br><span class="line">        <span class="attribute">android:layout_height</span>=<span class="value">"wrap_content"</span></span><br><span class="line">        <span class="attribute">android:onClick</span>=<span class="value">"onClick"</span></span><br><span class="line">        <span class="attribute">android:text</span>=<span class="value">"goto second activity"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="title">LinearLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">LinearLayout</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:orientation</span>=<span class="string">"vertical"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">TextView</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:id</span>=<span class="string">"@+id/label"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">Button</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:id</span>=<span class="string">"@+id/gotoFirstActivity"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:onClick</span>=<span class="string">"onClick"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:text</span>=<span class="string">"goto first activity"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">Button</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:id</span>=<span class="string">"@+id/gotoSecondActivity"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:onClick</span>=<span class="string">"onClick"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:text</span>=<span class="string">"goto second activity"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">LinearLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
 <p>Activty代码如下:</p>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">FirstActivity</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">AppCompatActivity</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_layout);</span><br><span class="line"></span><br><span class="line">        <span class="type">Utils</span>.initActivity(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void onClick(<span class="type">View</span> view) &#123;</span><br><span class="line">        <span class="type">Utils</span>.onClick(<span class="keyword">this</span>, view.getId());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">SecondActivity</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Activity</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_layout);</span><br><span class="line"></span><br><span class="line">        <span class="type">Utils</span>.initActivity(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void onClick(<span class="type">View</span> view) &#123;</span><br><span class="line">        <span class="type">Utils</span>.onClick(<span class="keyword">this</span>, view.getId());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">FirstActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_layout);</span><br><span class="line"></span><br><span class="line">        <span class="type">Utils</span>.initActivity(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void onClick(<span class="type">View</span> view) &#123;</span><br><span class="line">        <span class="type">Utils</span>.onClick(<span class="keyword">this</span>, view.getId());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">SecondActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_layout);</span><br><span class="line"></span><br><span class="line">        <span class="type">Utils</span>.initActivity(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void onClick(<span class="type">View</span> view) &#123;</span><br><span class="line">        <span class="type">Utils</span>.onClick(<span class="keyword">this</span>, view.getId());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
 <p>因为两个activity的代码很相似，所以我把它们放到了静态类Utils中:</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> Utils &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">initActivity</span><span class="params">(Activity activity)</span> </span>&#123;</span><br><span class="line">        TextView label = (TextView) activity.findViewById(R.id.label);</span><br><span class="line">        label.setText(<span class="string">"task : "</span> + activity.getTaskId() + <span class="string">" activity : "</span> + activity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(Context context, <span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">        Intent intent;</span><br><span class="line">        <span class="keyword">if</span> (id == R.id.gotoFirstActivity) &#123;</span><br><span class="line">            intent = <span class="keyword">new</span> Intent(context, FirstActivity.<span class="keyword">class</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            intent = <span class="keyword">new</span> Intent(context, SecondActivity.<span class="keyword">class</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        context.startActivity(intent);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="u67E5_u770B_u4EFB_u52A1_u6808"><a href="#u67E5_u770B_u4EFB_u52A1_u6808" class="headerlink" title="查看任务栈"></a>查看任务栈</h1><p>我们可以在adb shell中使用dumpsys activity可以看到任务栈。这个命令的打印会比较多,但是有两个部分是比较重要的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Utils</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">initActivity</span><span class="params">(Activity activity)</span> </span>&#123;</span><br><span class="line">        TextView label = (TextView) activity.findViewById(R.id.label);</span><br><span class="line">        label.setText(<span class="string">"task : "</span> + activity.getTaskId() + <span class="string">" activity : "</span> + activity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(Context context, <span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">        Intent intent;</span><br><span class="line">        <span class="keyword">if</span> (id == R.id.gotoFirstActivity) &#123;</span><br><span class="line">            intent = <span class="keyword">new</span> Intent(context, FirstActivity<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            intent = <span class="keyword">new</span> Intent(context, SecondActivity<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        context.startActivity(intent);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="查看任务栈"><a href="#查看任务栈" class="headerlink" title="查看任务栈"></a>查看任务栈</h1><p>我们可以在adb shell中使用dumpsys activity可以看到任务栈。这个命令的打印会比较多,但是有两个部分是比较重要的。</p>
 <p>一个是Recent tasks,这里可以看到各个任务栈的总体信息,如我们的demo在第0个任务栈,它的Task id 是483,包名是linjw.demo.launchmodedemo,栈里面有6个Activity</p>
-<figure class="highlight cal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ACTIVITY MANAGER RECENT TASKS (dumpsys activity recents)</span><br><span class="line">  Recent tasks:</span><br><span class="line">  * Recent <span class="string">#0</span>: TaskRecord&#123;f69123d <span class="string">#483</span> A=linjw.demo.launchmodedemo U=<span class="number">0</span> sz=<span class="number">6</span>&#125;</span><br><span class="line">  * Recent <span class="string">#1</span>: TaskRecord&#123;b798a32 <span class="string">#487</span> A=com.android.systemui U=<span class="number">0</span> sz=<span class="number">0</span>&#125;</span><br><span class="line">  * Recent <span class="string">#2</span>: TaskRecord&#123;f874383 <span class="string">#486</span> A=com.tencent.mm U=<span class="number">0</span> sz=<span class="number">1</span>&#125;</span><br><span class="line">  * Recent <span class="string">#3</span>: TaskRecord&#123;d7bd900 <span class="string">#479</span> A=com.meizu.flyme.launcher U=<span class="number">0</span> sz=<span class="number">1</span>&#125;</span><br><span class="line">  * Recent <span class="string">#4</span>: TaskRecord&#123;<span class="number">8</span>f5d797 <span class="string">#482</span> A=com.tencent.mobileqq U=<span class="number">0</span> sz=<span class="number">0</span>&#125;</span><br><span class="line">  * Recent <span class="string">#5</span>: TaskRecord&#123;fd99539 <span class="string">#481</span> A=android.task.stk.task U=<span class="number">0</span> sz=<span class="number">0</span>&#125;</span><br><span class="line">  * Recent <span class="string">#6</span>: TaskRecord&#123;<span class="number">7</span>c9951e <span class="string">#480</span> A=com.android.incallui U=<span class="number">0</span> sz=<span class="number">1</span>&#125;</span><br><span class="line">  * Recent <span class="string">#7</span>: TaskRecord&#123;e32177e <span class="string">#478</span> A=com.zhihu.android U=<span class="number">0</span> sz=<span class="number">0</span>&#125;</span><br><span class="line">  * Recent <span class="string">#8</span>: TaskRecord&#123;<span class="number">7</span>f094df <span class="string">#472</span> A=com.meizu.media.reader U=<span class="number">0</span> sz=<span class="number">0</span>&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ACTIVITY MANAGER RECENT TASKS (dumpsys activity recents)</span><br><span class="line">  Recent tasks:</span><br><span class="line">  * Recent #0: TaskRecord&#123;f69123d #483 <span class="attribute">A</span>=linjw.demo.launchmodedemo <span class="attribute">U</span>=0 <span class="attribute">sz</span>=6&#125;</span><br><span class="line">  * Recent #1: TaskRecord&#123;b798a32 #487 <span class="attribute">A</span>=com.android.systemui <span class="attribute">U</span>=0 <span class="attribute">sz</span>=0&#125;</span><br><span class="line">  * Recent #2: TaskRecord&#123;f874383 #486 <span class="attribute">A</span>=com.tencent.mm <span class="attribute">U</span>=0 <span class="attribute">sz</span>=1&#125;</span><br><span class="line">  * Recent #3: TaskRecord&#123;d7bd900 #479 <span class="attribute">A</span>=com.meizu.flyme.launcher <span class="attribute">U</span>=0 <span class="attribute">sz</span>=1&#125;</span><br><span class="line">  * Recent #4: TaskRecord&#123;8f5d797 #482 <span class="attribute">A</span>=com.tencent.mobileqq <span class="attribute">U</span>=0 <span class="attribute">sz</span>=0&#125;</span><br><span class="line">  * Recent #5: TaskRecord&#123;fd99539 #481 <span class="attribute">A</span>=android.task.stk.task <span class="attribute">U</span>=0 <span class="attribute">sz</span>=0&#125;</span><br><span class="line">  * Recent #6: TaskRecord&#123;7c9951e #480 <span class="attribute">A</span>=com.android.incallui <span class="attribute">U</span>=0 <span class="attribute">sz</span>=1&#125;</span><br><span class="line">  * Recent #7: TaskRecord&#123;e32177e #478 <span class="attribute">A</span>=com.zhihu.android <span class="attribute">U</span>=0 <span class="attribute">sz</span>=0&#125;</span><br><span class="line">  * Recent #8: TaskRecord&#123;7f094df #472 <span class="attribute">A</span>=com.meizu.media.reader <span class="attribute">U</span>=0 <span class="attribute">sz</span>=0&#125;</span><br></pre></td></tr></table></figure>
+
 <p>在它的下面可以看到里面的具体的activity,并且可以看到叫起它的Intent:</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ACTIVITY MANAGER <span class="title">ACTIVITIES</span> <span class="params">(dumpsys activity activities)</span></span><br><span class="line">Display <span class="preprocessor">#<span class="number">0</span> (activities from top to bottom):</span></span><br><span class="line">  Stack <span class="preprocessor">#<span class="number">1</span>:</span></span><br><span class="line">    Task id <span class="preprocessor">#<span class="number">483</span></span></span><br><span class="line">      TaskRecord</span>&#123;f69123d <span class="preprocessor">#<span class="number">483</span> A=linjw.demo.launchmodedemo U=<span class="number">0</span> sz=<span class="number">6</span>&#125;</span></span><br><span class="line">      Intent &#123; act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=<span class="number">0x10100000</span> cmp=linjw.demo.launchmodedemo/.FirstActivity &#125;</span><br><span class="line">        Hist <span class="preprocessor">#<span class="number">5</span>: ActivityRecord&#123;<span class="number">786</span>c71e u0 linjw.demo.launchmodedemo/.FirstActivity t483&#125;</span></span><br><span class="line">          Intent &#123; cmp=linjw.demo.launchmodedemo/.FirstActivity &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw.demo.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist <span class="preprocessor">#<span class="number">4</span>: ActivityRecord&#123;<span class="number">6</span>d5da5d u0 linjw.demo.launchmodedemo/.SecondActivity t483&#125;</span></span><br><span class="line">          Intent &#123; cmp=linjw.demo.launchmodedemo/.SecondActivity &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw.demo.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist <span class="preprocessor">#<span class="number">3</span>: ActivityRecord&#123;<span class="number">90</span>b9f88 u0 linjw.demo.launchmodedemo/.FirstActivity t483&#125;</span></span><br><span class="line">          Intent &#123; cmp=linjw.demo.launchmodedemo/.FirstActivity &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw.demo.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist <span class="preprocessor">#<span class="number">2</span>: ActivityRecord&#123;<span class="number">1</span>de66e u0 linjw.demo.launchmodedemo/.SecondActivity t483&#125;</span></span><br><span class="line">          Intent &#123; cmp=linjw.demo.launchmodedemo/.SecondActivity &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw.demo.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist <span class="preprocessor">#<span class="number">1</span>: ActivityRecord&#123;<span class="number">17</span>dd5b1 u0 linjw.demo.launchmodedemo/.FirstActivity t483&#125;</span></span><br><span class="line">          Intent &#123; cmp=linjw.demo.launchmodedemo/.FirstActivity &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw.demo.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist <span class="preprocessor">#<span class="number">0</span>: ActivityRecord&#123;<span class="number">9f</span>195f8 u0 linjw.demo.launchmodedemo/.FirstActivity t483&#125;</span></span><br><span class="line">          Intent &#123; act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=<span class="number">0x10100000</span> cmp=linjw.demo.launchmodedemo/.FirstActivity &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw.demo.launchmodedemo/u0a61&#125;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">ACTIVITY MANAGER ACTIVITIES (dumpsys activity activities)</span><br><span class="line">Display #<span class="number">0</span> (activities from <span class="attribute">top</span> to bottom):</span><br><span class="line">  Stack #<span class="number">1</span>:</span><br><span class="line">    Task id <span class="number">#483</span></span><br><span class="line">      TaskRecord&#123;f69123d <span class="number">#483</span> A=linjw<span class="selector-class">.demo</span><span class="selector-class">.launchmodedemo</span> U=<span class="number">0</span> sz=<span class="number">6</span>&#125;</span><br><span class="line">      Intent &#123; act=android<span class="selector-class">.intent</span><span class="selector-class">.action</span><span class="selector-class">.MAIN</span> cat=[android<span class="selector-class">.intent</span><span class="selector-class">.category</span>.LAUNCHER] flg=<span class="number">0</span>x10100000 cmp=linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> &#125;</span><br><span class="line">        Hist #<span class="number">5</span>: ActivityRecord&#123;<span class="number">786</span>c71e u0 linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> t483&#125;</span><br><span class="line">          Intent &#123; cmp=linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw<span class="selector-class">.demo</span>.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist #<span class="number">4</span>: ActivityRecord&#123;<span class="number">6</span>d5da5d u0 linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.SecondActivity</span> t483&#125;</span><br><span class="line">          Intent &#123; cmp=linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.SecondActivity</span> &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw<span class="selector-class">.demo</span>.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist #<span class="number">3</span>: ActivityRecord&#123;<span class="number">90</span>b9f88 u0 linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> t483&#125;</span><br><span class="line">          Intent &#123; cmp=linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw<span class="selector-class">.demo</span>.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist #<span class="number">2</span>: ActivityRecord&#123;<span class="number">1</span>de66e u0 linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.SecondActivity</span> t483&#125;</span><br><span class="line">          Intent &#123; cmp=linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.SecondActivity</span> &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw<span class="selector-class">.demo</span>.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist #<span class="number">1</span>: ActivityRecord&#123;<span class="number">17</span>dd5b1 u0 linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> t483&#125;</span><br><span class="line">          Intent &#123; cmp=linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw<span class="selector-class">.demo</span>.launchmodedemo/u0a61&#125;</span><br><span class="line">        Hist #<span class="number">0</span>: ActivityRecord&#123;<span class="number">9</span>f195f8 u0 linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> t483&#125;</span><br><span class="line">          Intent &#123; act=android<span class="selector-class">.intent</span><span class="selector-class">.action</span><span class="selector-class">.MAIN</span> cat=[android<span class="selector-class">.intent</span><span class="selector-class">.category</span>.LAUNCHER] flg=<span class="number">0</span>x10100000 cmp=linjw<span class="selector-class">.demo</span>.launchmodedemo/<span class="selector-class">.FirstActivity</span> &#125;</span><br><span class="line">          ProcessRecord&#123;<span class="number">245852</span>c <span class="number">7994</span>:linjw<span class="selector-class">.demo</span>.launchmodedemo/u0a61&#125;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
 <p>例如Hist #0这个Activity是从桌面点击应用图标进入的,所以它的Intent带android.intent.category.LAUNCHER这个category和FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY(0x00100000)、 FLAG_RECEIVER_FOREGROUND(0x10000000)这两个Flag,而其他的Activity都是我们通过点击按钮叫起的,我们的Intent里面没有带任何的category和Flag,所以只有cmp标识是哪个Activity。</p>
 <p>我们可以通过Intent#setFlags(int) 设置Flag、Intent#addCategory(String) 添加category</p>
 <p>有时候可以通过这个命令查看Activity的启动模式结合各种launchMode的作用来定位一些bug</p>
 <h1 id="standard"><a href="#standard" class="headerlink" title="standard"></a>standard</h1><p>standard是默认的启动模式,在没有配置android:launchMode的时候就会默认用这种启动模式,当然也可以显示指定为standard。</p>
 <p>它的特点是每次都会启动一个新的Activity实例,我们连续点击第一个按钮两次然后再连续点击两次返回键,截图如下:</p>
 <img src="/Android温故而知新-launchMode/standard1.png">
+
 <img src="/Android温故而知新-launchMode/standard2.png">
+
 <p>任务栈状态图如下:</p>
 <img src="/Android温故而知新-launchMode/standard3.png">
+
+
+
 <h1 id="singleTop"><a href="#singleTop" class="headerlink" title="singleTop"></a>singleTop</h1><p>当launchMode是singleTop的时候，如果task栈的栈顶Activity和将要启动的Activity是同一个Activity的话,就不会再启动第二个Activity。我们将FirstActivity设为singleTop,在启动demo之后无论按第一个按钮多少次,任务栈里面都只会有一个FirstActivity。</p>
 <img src="/Android温故而知新-launchMode/singleTop1.png">
+
 <p>任务栈状态图如下:</p>
 <img src="/Android温故而知新-launchMode/singleTop2.png">
+
+
 <p>但是当任务栈的栈顶Activity和将要启动的Activity不是同一个Activity的时候,就会启动新的Activity,并将它压入栈顶而不管栈里面还有没有这个Activity:</p>
 <img src="/Android温故而知新-launchMode/singleTop3.png">
+
 <img src="/Android温故而知新-launchMode/singleTop4.png">
+
 <p>任务栈状态图如下:</p>
 <img src="/Android温故而知新-launchMode/singleTop5.png">
+
 <h1 id="singleTask"><a href="#singleTask" class="headerlink" title="singleTask"></a>singleTask</h1><p>我们将FirstActivity和SecondActivity的launchMode都设置为singleTask,启动demo之后先按“GOTO SECOND ACTIVITY”再按“GOTO FIRST ACTIVITY”,截图如下:</p>
 <img src="/Android温故而知新-launchMode/singleTask1.png">
+
 <p>我们可以看到在SecondActivity中启动FirstActivity,结果就返回了第一个Activity。如果这个时候再按返回键就会推出应用。</p>
 <p>singleTask的作用就是在任务栈中寻找将要启动的Activity,如果找到的话就将它上面的Activity都弹出栈,直到它成为栈顶。</p>
 <p>任务栈状态图如下:</p>
 <img src="/Android温故而知新-launchMode/singleTask2.png">
+
 <h1 id="singleInstance"><a href="#singleInstance" class="headerlink" title="singleInstance"></a>singleInstance</h1><p>官方文档的介绍是:</p>
 <blockquote>
 <p>与“singleTask””相同，只是系统不会将任何其他 Activity 启动到包含实例的任务中。 该 Activity 始终是其任务唯一仅有的成员。</p>
@@ -341,9 +307,13 @@
 <p>就是说系统会为singleInstance Activity单独创建一个任务栈,这个任务栈里是这个Activity独占的,不会再压入其他的Activity。而且它是系统唯一的,当singleInstance Activity已经存在于系统的某一任务栈中,就会直接跳到那个任务栈的Activity中,而不会新启动一个Activity。</p>
 <p>我们将FirstActivity设为standard, SecondActivity设为singleInstance。启动demo之后先按“GOTO SECOND ACTIVITY”再按“GOTO FIRST ACTIVITY”。然后再一直按返回键到退出应用。截图如下:</p>
 <img src="/Android温故而知新-launchMode/singleInstance1.png">
+
 <img src="/Android温故而知新-launchMode/singleInstance2.png">
+
 <p>任务栈状态图如下:</p>
 <img src="/Android温故而知新-launchMode/singleInstance3.png">
+
+
 <p>启动应用之后先点击“GOTO SECOND ACTIVITY”,这个时候系统会新建一个任务栈(Task 20)来放SecondActivity</p>
 <p>在SecondActivity中再启动FirstActivity,因为Task 20这个任务栈是SecondActivity独占的。所以不会在这个任务栈压入其他Activity,而会回到原来的任务栈上(Task 19)。又因为FirstActivity的launchMode是standard,所以不管原来的栈里面有没有FirstActivity,都会压入一个新的FirstActivity。</p>
 <p>这个时候再按返回键就不是回到SecondActivity了,因为它在其他的任务栈里面,要先将当前任务栈清空。</p>
@@ -510,5 +480,5 @@
   }
 </script>
 
-</body>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"left","width":300,"height":300},"mobile":{"show":true},"log":false});</script></body>
 </html>

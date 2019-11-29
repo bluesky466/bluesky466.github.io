@@ -4,7 +4,7 @@
   <html class="light page-post">
 
 
-<head>
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
   <title>我也来谈一谈Java GC | LinJW</title>
@@ -12,27 +12,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   
-    <meta name="keywords" content="java,技术相关," />
+    <meta name="keywords" content="技术相关,java,">
   
 
-  <meta name="description" content="以前写c/c++的时候虽然也有shared_ptr这样的自动内存管理机制,但是它内部其实是通过引用计数的原理进行内存管理的,容易产生循环应用的问题,也没有什么实际意义上的内存收集器。和java的内存收集机制差别很大,所以一直对java的内存收集机制抱有很强的好奇心。
-最近在看《深入理解 Java 虚拟机-Jvm 高级特性与最佳实践》,里面对java垃圾收集讲的挺不错的。然后再将书中没有讲透的知识在">
+  <meta name="description" content="以前写c/c++的时候虽然也有shared_ptr这样的自动内存管理机制,但是它内部其实是通过引用计数的原理进行内存管理的,容易产生循环应用的问题,也没有什么实际意义上的内存收集器。和java的内存收集机制差别很大,所以一直对java的内存收集机制抱有很强的好奇心。 最近在看《深入理解 Java 虚拟机-Jvm 高级特性与最佳实践》,里面对java垃圾收集讲的挺不错的。然后再将书中没有讲透的知识在">
+<meta name="keywords" content="技术相关,java">
 <meta property="og:type" content="article">
 <meta property="og:title" content="我也来谈一谈Java GC">
 <meta property="og:url" content="http://139.199.4.241/2017/11/10/我也来谈一谈Java-GC/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="以前写c/c++的时候虽然也有shared_ptr这样的自动内存管理机制,但是它内部其实是通过引用计数的原理进行内存管理的,容易产生循环应用的问题,也没有什么实际意义上的内存收集器。和java的内存收集机制差别很大,所以一直对java的内存收集机制抱有很强的好奇心。
-最近在看《深入理解 Java 虚拟机-Jvm 高级特性与最佳实践》,里面对java垃圾收集讲的挺不错的。然后再将书中没有讲透的知识在">
+<meta property="og:description" content="以前写c/c++的时候虽然也有shared_ptr这样的自动内存管理机制,但是它内部其实是通过引用计数的原理进行内存管理的,容易产生循环应用的问题,也没有什么实际意义上的内存收集器。和java的内存收集机制差别很大,所以一直对java的内存收集机制抱有很强的好奇心。 最近在看《深入理解 Java 虚拟机-Jvm 高级特性与最佳实践》,里面对java垃圾收集讲的挺不错的。然后再将书中没有讲透的知识在">
+<meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://139.199.4.241/我也来谈一谈Java-GC/1.png">
 <meta property="og:image" content="http://139.199.4.241/我也来谈一谈Java-GC/2.png">
 <meta property="og:image" content="http://139.199.4.241/我也来谈一谈Java-GC/3.png">
 <meta property="og:image" content="http://139.199.4.241/我也来谈一谈Java-GC/4.png">
 <meta property="og:image" content="http://139.199.4.241/我也来谈一谈Java-GC/5.png">
-<meta property="og:updated_time" content="2017-12-14T15:22:08.640Z">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.284Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="我也来谈一谈Java GC">
-<meta name="twitter:description" content="以前写c/c++的时候虽然也有shared_ptr这样的自动内存管理机制,但是它内部其实是通过引用计数的原理进行内存管理的,容易产生循环应用的问题,也没有什么实际意义上的内存收集器。和java的内存收集机制差别很大,所以一直对java的内存收集机制抱有很强的好奇心。
-最近在看《深入理解 Java 虚拟机-Jvm 高级特性与最佳实践》,里面对java垃圾收集讲的挺不错的。然后再将书中没有讲透的知识在">
+<meta name="twitter:description" content="以前写c/c++的时候虽然也有shared_ptr这样的自动内存管理机制,但是它内部其实是通过引用计数的原理进行内存管理的,容易产生循环应用的问题,也没有什么实际意义上的内存收集器。和java的内存收集机制差别很大,所以一直对java的内存收集机制抱有很强的好奇心。 最近在看《深入理解 Java 虚拟机-Jvm 高级特性与最佳实践》,里面对java垃圾收集讲的挺不错的。然后再将书中没有讲透的知识在">
+<meta name="twitter:image" content="http://139.199.4.241/我也来谈一谈Java-GC/1.png">
 
   
 
@@ -44,7 +44,7 @@
 
 
   
-    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+    <link rel="stylesheet" href="/css/personal-style.css">
   
 
   
@@ -87,7 +87,7 @@
     <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
   
 </head>
-
+</html>
 <body>
 
 
@@ -158,7 +158,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#GC_Roots"><span class="toc-text">GC Roots</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Java__u5806_u4E2D_u7684_u5185_u5B58_u5206_u914D_u4E0E_u56DE_u6536"><span class="toc-text">Java 堆中的内存分配与回收</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#u65B0_u751F_u4EE3_u4E2D_u7684Minor_GC"><span class="toc-text">新生代中的Minor GC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#u590D_u5236_u7B97_u6CD5"><span class="toc-text">复制算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u4E3A_u4EC0_u4E48_u9700_u8981_u4E24_u4E2ASurvivor_u533A"><span class="toc-text">为什么需要两个Survivor区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u5BF9_u8C61_u8FDB_u5165_u8001_u5E74_u4EE3"><span class="toc-text">对象进入老年代</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u8001_u5E74_u4EE3"><span class="toc-text">老年代</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#u6807_u8BB0-_u6E05_u7406_u7B97_u6CD5"><span class="toc-text">标记-清理算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#u6807_u8BB0-_u6574_u7406_u7B97_u6CD5"><span class="toc-text">标记-整理算法</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#u5783_u573E_u641C_u96C6_u5668"><span class="toc-text">垃圾搜集器</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#finalize_u65B9_u6CD5"><span class="toc-text">finalize方法</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#GC-Roots"><span class="toc-text">GC Roots</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Java-堆中的内存分配与回收"><span class="toc-text">Java 堆中的内存分配与回收</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#新生代中的Minor-GC"><span class="toc-text">新生代中的Minor GC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#复制算法"><span class="toc-text">复制算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么需要两个Survivor区"><span class="toc-text">为什么需要两个Survivor区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#对象进入老年代"><span class="toc-text">对象进入老年代</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#老年代"><span class="toc-text">老年代</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#标记-清理算法"><span class="toc-text">标记-清理算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#标记-整理算法"><span class="toc-text">标记-整理算法</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#垃圾搜集器"><span class="toc-text">垃圾搜集器</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#finalize方法"><span class="toc-text">finalize方法</span></a></li></ol>
   </div>
 
 
@@ -208,11 +208,12 @@
     
       <p>以前写c/c++的时候虽然也有shared_ptr这样的自动内存管理机制,但是它内部其实是通过引用计数的原理进行内存管理的,容易产生循环应用的问题,也没有什么实际意义上的内存收集器。和java的内存收集机制差别很大,所以一直对java的内存收集机制抱有很强的好奇心。</p>
 <p>最近在看《深入理解 Java 虚拟机-Jvm 高级特性与最佳实践》,里面对java垃圾收集讲的挺不错的。然后再将书中没有讲透的知识在网上搜索了下,整理成了这篇博客,哪天一时半会记不起来的时候还能回来瞧一瞧。</p>
-<h1 id="GC_Roots"><a href="#GC_Roots" class="headerlink" title="GC Roots"></a>GC Roots</h1><p>在Java虚拟机中，存在自动内存管理和垃圾回收机制,能自动回收没有用的对象的内存。</p>
+<h1 id="GC-Roots"><a href="#GC-Roots" class="headerlink" title="GC Roots"></a>GC Roots</h1><p>在Java虚拟机中，存在自动内存管理和垃圾回收机制,能自动回收没有用的对象的内存。</p>
 <p>那怎么去判定一个对象是否还有用呢？java中是通过可达性分析来判定的。</p>
 <p>具体的做法就是从<strong>一系列</strong>被称作”GC Roots”的对象作为起始点,从这些对象开始通过引用关系进行搜索。当GC Roots到某个对象没有任何引用链相连,则证明此对象是不可用的,是不需要存活,可以被清理的。</p>
 <p>例如下图的object1、object2、object3、object4就是从GC Roots可达的,不能被回收。而object5、object6、object7虽然相互引用,但从GC Roots不可达,证明程序中无法访问到它们,所以它们是无用的,可以被回收。</p>
 <img src="/我也来谈一谈Java-GC/1.png">
+
 <p>在Java中,可以作为GC Roots的对象包括下面几种:</p>
 <ul>
 <li>虚拟机栈(栈帧中的本地变量表)中引用的对象</li>
@@ -220,16 +221,17 @@
 <li>方法去中常量引用的对象</li>
 <li>本地方法栈中JNI引用的对象</li>
 </ul>
-<h1 id="Java__u5806_u4E2D_u7684_u5185_u5B58_u5206_u914D_u4E0E_u56DE_u6536"><a href="#Java__u5806_u4E2D_u7684_u5185_u5B58_u5206_u914D_u4E0E_u56DE_u6536" class="headerlink" title="Java 堆中的内存分配与回收"></a>Java 堆中的内存分配与回收</h1><p>对于大多数应用来说,Java堆（Java Heap）是Java虚拟机所管理的内存中最大的一块。Java堆是被所有线程共享的一块内存区域,在虚拟机启动时创建。此内存区域的唯一目的就是存放对象实例,几乎所有的对象实例都在这里分配内存。这一点在Java虚拟机规范中的描述是:所有的对象实例以及数组都要在堆上分配。</p>
+<h1 id="Java-堆中的内存分配与回收"><a href="#Java-堆中的内存分配与回收" class="headerlink" title="Java 堆中的内存分配与回收"></a>Java 堆中的内存分配与回收</h1><p>对于大多数应用来说,Java堆（Java Heap）是Java虚拟机所管理的内存中最大的一块。Java堆是被所有线程共享的一块内存区域,在虚拟机启动时创建。此内存区域的唯一目的就是存放对象实例,几乎所有的对象实例都在这里分配内存。这一点在Java虚拟机规范中的描述是:所有的对象实例以及数组都要在堆上分配。</p>
 <p>由于现在收集器基本都是采用的分代收集算法,所以Java堆中还可以细分为新生代和老年代。</p>
-<h2 id="u65B0_u751F_u4EE3_u4E2D_u7684Minor_GC"><a href="#u65B0_u751F_u4EE3_u4E2D_u7684Minor_GC" class="headerlink" title="新生代中的Minor GC"></a>新生代中的Minor GC</h2><p>大部分对象被创建时,内存的分配首先发生在年轻代(占用内存比较大的对象如数组,会被直接分配到老年带)。大部分的对象在创建之后很快就不再使用了,因此很快变成不可达的状态,于是被新生代的GC机制清理掉。这个GC机制被称为Minor GC或叫Young GC。</p>
+<h2 id="新生代中的Minor-GC"><a href="#新生代中的Minor-GC" class="headerlink" title="新生代中的Minor GC"></a>新生代中的Minor GC</h2><p>大部分对象被创建时,内存的分配首先发生在年轻代(占用内存比较大的对象如数组,会被直接分配到老年带)。大部分的对象在创建之后很快就不再使用了,因此很快变成不可达的状态,于是被新生代的GC机制清理掉。这个GC机制被称为Minor GC或叫Young GC。</p>
 <p>新生代可以分为3个区域:一个Eden区和两个Survivor区。两个Survivor中总有一个是空的,我们叫他Survivor To区,还有一个非空的,我们叫他Survivor From区。Eden区和两个Survivor区的大小为8:1:1。</p>
 <p>对象被创建的时候,绝大部分都是被分配在Eden区。Eden区是连续的内存空间，因此在其上分配内存极快。<strong>当Eden区满的时候,就会执行Minor GC</strong>。</p>
-<h3 id="u590D_u5236_u7B97_u6CD5"><a href="#u590D_u5236_u7B97_u6CD5" class="headerlink" title="复制算法"></a>复制算法</h3><p>Minor GC时Eden区和Survivor From区还存活着的对象会一次性被复制到Survivor To区。然后Eden区和Survivor From区的内存会被清空。</p>
+<h3 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h3><p>Minor GC时Eden区和Survivor From区还存活着的对象会一次性被复制到Survivor To区。然后Eden区和Survivor From区的内存会被清空。</p>
 <p>之后原来的Survivor From区就空了,而原来的Survivor To区就非空。这个时候它们的角色就调换了,空的叫做Survivor To区,非空的叫做Survivor From区。</p>
 <p>这种垃圾收集算法叫做<strong>复制算法</strong>,整个过程如下图所示:</p>
 <img src="/我也来谈一谈Java-GC/2.png">
-<h3 id="u4E3A_u4EC0_u4E48_u9700_u8981_u4E24_u4E2ASurvivor_u533A"><a href="#u4E3A_u4EC0_u4E48_u9700_u8981_u4E24_u4E2ASurvivor_u533A" class="headerlink" title="为什么需要两个Survivor区"></a>为什么需要两个Survivor区</h3><p>复制算法的优点在于,gc完成之后占用的内存会被整理到一个连续的空间中。而空闲的内存也是连续的区域,不会造成内存碎片。</p>
+
+<h3 id="为什么需要两个Survivor区"><a href="#为什么需要两个Survivor区" class="headerlink" title="为什么需要两个Survivor区"></a>为什么需要两个Survivor区</h3><p>复制算法的优点在于,gc完成之后占用的内存会被整理到一个连续的空间中。而空闲的内存也是连续的区域,不会造成内存碎片。</p>
 <p>如果只有一个Eden区和一个Survivor区,在Minor GC的时候,Eden区的存活对象可以被复制到Survivor区,这样Eden区可以被清空出一个完整的空闲内存区域。</p>
 <p>而Survivor区存活的对象要怎么办呢:</p>
 <ul>
@@ -242,7 +244,7 @@
 </ul>
 <p>所以最简单的做法就是拿多一个Survivor To区出来,Eden区和Survivor From区存活的对象会被连续的复制到Survivor To区的一个连续区域中。然后将Eden区和Survivor From区清空就好。</p>
 <p>由于新生代大部分的对象生命周期都很短,所以需要复制的对象的数目也不会很多,所以这是比较高效的做法。</p>
-<h3 id="u5BF9_u8C61_u8FDB_u5165_u8001_u5E74_u4EE3"><a href="#u5BF9_u8C61_u8FDB_u5165_u8001_u5E74_u4EE3" class="headerlink" title="对象进入老年代"></a>对象进入老年代</h3><p>对象在下面三种情况下,对象进入到老年代:</p>
+<h3 id="对象进入老年代"><a href="#对象进入老年代" class="headerlink" title="对象进入老年代"></a>对象进入老年代</h3><p>对象在下面三种情况下,对象进入到老年代:</p>
 <ul>
 <li><p>占用内存比较大的对象如数组,在创建的时候不会分配到Eden区,而会被直接分配到老年代</p>
 </li>
@@ -251,9 +253,9 @@
 <li><p>每经历一次Minor GC,对象的年龄会大一岁。当对象的年龄到达某一个值,Minor GC的时候就不会去到Survivor To区,而会进入老年代。</p>
 </li>
 </ul>
-<h2 id="u8001_u5E74_u4EE3"><a href="#u8001_u5E74_u4EE3" class="headerlink" title="老年代"></a>老年代</h2><p>在新生代中经历了N次垃圾回收后仍然存活的对象,就会被放到年老代中。因此,可以认为年老代中存放的都是一些生命周期较长的对象。</p>
+<h2 id="老年代"><a href="#老年代" class="headerlink" title="老年代"></a>老年代</h2><p>在新生代中经历了N次垃圾回收后仍然存活的对象,就会被放到年老代中。因此,可以认为年老代中存放的都是一些生命周期较长的对象。</p>
 <p>在新生代中,每次垃圾收集时都发现有大批对象死去,只有少量存活,所以选用复制算法,只需要付出少量对象的复制成本就能完成收集。而老年代中因为对象存活率高、没有额外空间对它进行分配担保,就需要使用”标记-清理”或者”标记-整理”算法来进行回收。</p>
-<h3 id="u6807_u8BB0-_u6E05_u7406_u7B97_u6CD5"><a href="#u6807_u8BB0-_u6E05_u7406_u7B97_u6CD5" class="headerlink" title="标记-清理算法"></a>标记-清理算法</h3><p>标记-清除算法顾名思义,主要就是两个动作,一个是标记,另一个就是清除。首先标记出所有需要回收的对象,在标记完成后统一回收所有被标记的对象。</p>
+<h3 id="标记-清理算法"><a href="#标记-清理算法" class="headerlink" title="标记-清理算法"></a>标记-清理算法</h3><p>标记-清除算法顾名思义,主要就是两个动作,一个是标记,另一个就是清除。首先标记出所有需要回收的对象,在标记完成后统一回收所有被标记的对象。</p>
 <p>它的缺点有两个</p>
 <ol>
 <li>标记与清除的效率都比较低</li>
@@ -261,6 +263,7 @@
 </ol>
 <p>它的执行过程如下图所示:</p>
 <img src="/我也来谈一谈Java-GC/3.png">
+
 <p>发生在老年代的GC叫做Major GC,通常当Minor GC晋升到老年代的大小大于老年代的剩余空间时,Major GC就会被触发。</p>
 <p>出现了Major GC,通常会伴随着至少一次的Minor GC(不是绝对的,有些收集器有直接进行Major GC的策略)。Major GC的速度一般会比Minor GC慢10倍以上。</p>
 <p>除了Minor GC和Major GC之外,还有一个Full GC的概念,它们的区别如下:</p>
@@ -269,13 +272,15 @@
 <li>Major GC : 回收老年代的垃圾</li>
 <li>Full GC : 回收整个堆的垃圾,包括新生代、老年代、持久代等</li>
 </ol>
-<h3 id="u6807_u8BB0-_u6574_u7406_u7B97_u6CD5"><a href="#u6807_u8BB0-_u6574_u7406_u7B97_u6CD5" class="headerlink" title="标记-整理算法"></a>标记-整理算法</h3><p>标记过程仍和标记-清理算法一样,但是后续的步骤不是直接对可回收的对象进行清理,而是让所有存活的对象往一端移动,然后再清理掉边界以外的内存。它的过程如下图所示:</p>
+<h3 id="标记-整理算法"><a href="#标记-整理算法" class="headerlink" title="标记-整理算法"></a>标记-整理算法</h3><p>标记过程仍和标记-清理算法一样,但是后续的步骤不是直接对可回收的对象进行清理,而是让所有存活的对象往一端移动,然后再清理掉边界以外的内存。它的过程如下图所示:</p>
 <img src="/我也来谈一谈Java-GC/4.png">
-<h1 id="u5783_u573E_u641C_u96C6_u5668"><a href="#u5783_u573E_u641C_u96C6_u5668" class="headerlink" title="垃圾搜集器"></a>垃圾搜集器</h1><p>如果说收集算法是内存回收的方法论,那么垃圾收集器就是内存回收的具体实现。Java虚拟机规范中对垃圾收集器应该如何实现并没有任何规定,所以不同的厂商、不同版本的虚拟机提供的垃圾收集器都可能有很大差别。</p>
+
+<h1 id="垃圾搜集器"><a href="#垃圾搜集器" class="headerlink" title="垃圾搜集器"></a>垃圾搜集器</h1><p>如果说收集算法是内存回收的方法论,那么垃圾收集器就是内存回收的具体实现。Java虚拟机规范中对垃圾收集器应该如何实现并没有任何规定,所以不同的厂商、不同版本的虚拟机提供的垃圾收集器都可能有很大差别。</p>
 <p>下面这张图列出了JDK1.7 Update 14之后HotSpot虚拟机所包含的垃圾收集器:</p>
 <img src="/我也来谈一谈Java-GC/5.png">
+
 <p>每种收集器具体的实现方法这里我就不罗列了,感兴趣的同学可以自行搜索。</p>
-<h1 id="finalize_u65B9_u6CD5"><a href="#finalize_u65B9_u6CD5" class="headerlink" title="finalize方法"></a>finalize方法</h1><p>即使在可达性分析中不可达的对象,也并非是”非死不可”的。这时它们只是处于”缓刑”阶段,要宣布一个对象死亡,至少要经历两次标记过程:</p>
+<h1 id="finalize方法"><a href="#finalize方法" class="headerlink" title="finalize方法"></a>finalize方法</h1><p>即使在可达性分析中不可达的对象,也并非是”非死不可”的。这时它们只是处于”缓刑”阶段,要宣布一个对象死亡,至少要经历两次标记过程:</p>
 <ol>
 <li><p>第一次可达性分析之后,不可达的对象会被标记出来放到一个”即将回收”的集合中。</p>
 </li>
@@ -454,5 +459,5 @@
   }
 </script>
 
-</body>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"left","width":300,"height":300},"mobile":{"show":true},"log":false});</script></body>
 </html>

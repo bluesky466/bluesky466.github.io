@@ -4,7 +4,7 @@
   <html class="light page-post">
 
 
-<head>
+<head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
   <title>使用hexo搭建个人博客 | LinJW</title>
@@ -12,16 +12,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   
-    <meta name="keywords" content="hexo,技术相关," />
+    <meta name="keywords" content="技术相关,hexo,">
   
 
   <meta name="description" content="一、安装hexo1.安装Node.jshexo是一款基于Node.js的静态博客框架，所以要使用它必须先安装Node.js。网上很多教程讲的都是如何编译源码安装Node.js。但我认为应该用最简单的方式取获取和使用软件或者框架，不是每个初学者都需要从一个软件的源代码编译开始学习。当然，在日后想要更深入理解它的时候，挖出它的源代码进行分析也是一种十分有效的途径。下面是ubuntu下使用apt-get">
+<meta name="keywords" content="技术相关,hexo">
 <meta property="og:type" content="article">
 <meta property="og:title" content="使用hexo搭建个人博客">
 <meta property="og:url" content="http://139.199.4.241/2016/01/19/使用hexo搭建个人博客/index.html">
 <meta property="og:site_name" content="LinJW">
 <meta property="og:description" content="一、安装hexo1.安装Node.jshexo是一款基于Node.js的静态博客框架，所以要使用它必须先安装Node.js。网上很多教程讲的都是如何编译源码安装Node.js。但我认为应该用最简单的方式取获取和使用软件或者框架，不是每个初学者都需要从一个软件的源代码编译开始学习。当然，在日后想要更深入理解它的时候，挖出它的源代码进行分析也是一种十分有效的途径。下面是ubuntu下使用apt-get">
-<meta property="og:updated_time" content="2017-12-14T15:22:08.640Z">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.272Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="使用hexo搭建个人博客">
 <meta name="twitter:description" content="一、安装hexo1.安装Node.jshexo是一款基于Node.js的静态博客框架，所以要使用它必须先安装Node.js。网上很多教程讲的都是如何编译源码安装Node.js。但我认为应该用最简单的方式取获取和使用软件或者框架，不是每个初学者都需要从一个软件的源代码编译开始学习。当然，在日后想要更深入理解它的时候，挖出它的源代码进行分析也是一种十分有效的途径。下面是ubuntu下使用apt-get">
@@ -36,7 +38,7 @@
 
 
   
-    <link rel="stylesheet" href="/css/personal-style.css" type="text/css">
+    <link rel="stylesheet" href="/css/personal-style.css">
   
 
   
@@ -79,7 +81,7 @@
     <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
   
 </head>
-
+</html>
 <body>
 
 
@@ -150,7 +152,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#u4E00_u3001_u5B89_u88C5hexo"><span class="toc-text">一、安装hexo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4E8C_u3001_u521B_u5EFA_u548C_u914D_u7F6Ehexo_u9879_u76EE"><span class="toc-text">二、创建和配置hexo项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4E09_u3001_u914D_u7F6E_u535A_u5BA2_u4FE1_u606F"><span class="toc-text">三、配置博客信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u56DB_u3001_u90E8_u7F72_u5230Github"><span class="toc-text">四、部署到Github</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#u4E94_u3001_u7ED1_u5B9A_u57DF_u540D"><span class="toc-text">五、绑定域名</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#一、安装hexo"><span class="toc-text">一、安装hexo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二、创建和配置hexo项目"><span class="toc-text">二、创建和配置hexo项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三、配置博客信息"><span class="toc-text">三、配置博客信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四、部署到Github"><span class="toc-text">四、部署到Github</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#五、绑定域名"><span class="toc-text">五、绑定域名</span></a></li></ol>
   </div>
 
 
@@ -198,7 +200,7 @@
 
   <div class="article-content">
     
-      <h2 id="u4E00_u3001_u5B89_u88C5hexo"><a href="#u4E00_u3001_u5B89_u88C5hexo" class="headerlink" title="一、安装hexo"></a>一、安装hexo</h2><p><strong>1.安装Node.js</strong><br>hexo是一款基于Node.js的静态博客框架，所以要使用它必须先安装Node.js。网上很多教程讲的都是如何编译源码安装Node.js。但我认为应该用最简单的方式取获取和使用软件或者框架，不是每个初学者都需要从一个软件的源代码编译开始学习。当然，在日后想要更深入理解它的时候，挖出它的源代码进行分析也是一种十分有效的途径。<br>下面是ubuntu下使用apt-get安装Node.js的方法（源自博客<a href="http://blog.csdn.net/chszs/article/details/37521463" target="_blank" rel="external">如何在Ubuntu上安装最新版本的Node.js </a>）</p>
+      <h2 id="一、安装hexo"><a href="#一、安装hexo" class="headerlink" title="一、安装hexo"></a>一、安装hexo</h2><p><strong>1.安装Node.js</strong><br>hexo是一款基于Node.js的静态博客框架，所以要使用它必须先安装Node.js。网上很多教程讲的都是如何编译源码安装Node.js。但我认为应该用最简单的方式取获取和使用软件或者框架，不是每个初学者都需要从一个软件的源代码编译开始学习。当然，在日后想要更深入理解它的时候，挖出它的源代码进行分析也是一种十分有效的途径。<br>下面是ubuntu下使用apt-get安装Node.js的方法（源自博客<a href="http://blog.csdn.net/chszs/article/details/37521463" target="_blank" rel="noopener">如何在Ubuntu上安装最新版本的Node.js </a>）</p>
 <ol>
 <li>apt-get update</li>
 <li>apt-get install -y python-software-properties software-properties-common</li>
@@ -207,55 +209,49 @@
 <li>apt-get install nodejs</li>
 </ol>
 <p><strong>2.安装hexo</strong><br>之后安装hexo就更简单了，只需要这一行代码</p>
-<pre><code>npm install hexo -g
-</code></pre><p><strong>3.更新hexo</strong></p>
-<pre><code>npm update hexo -g 
-</code></pre><p><br></p>
-<h2 id="u4E8C_u3001_u521B_u5EFA_u548C_u914D_u7F6Ehexo_u9879_u76EE"><a href="#u4E8C_u3001_u521B_u5EFA_u548C_u914D_u7F6Ehexo_u9879_u76EE" class="headerlink" title="二、创建和配置hexo项目"></a>二、创建和配置hexo项目</h2><p><strong>1.初始化hexo项目</strong></p>
-<pre><code>hexo init [folder]
-</code></pre><p>如果指定 <em>folder</em>，便会在目前的资料夹建立一个名为 <em>folder</em> 的新资料夹，否则会在当前文件夹初始化。<br>执行完这条命令，会出现如下提示:</p>
+<pre><code>npm install hexo -g</code></pre><p><strong>3.更新hexo</strong></p>
+<pre><code>npm update hexo -g </code></pre><br>
+
+<h2 id="二、创建和配置hexo项目"><a href="#二、创建和配置hexo项目" class="headerlink" title="二、创建和配置hexo项目"></a>二、创建和配置hexo项目</h2><p><strong>1.初始化hexo项目</strong></p>
+<pre><code>hexo init [folder]</code></pre><p>如果指定 <em>folder_，便会在目前的资料夹建立一个名为 _folder</em> 的新资料夹，否则会在当前文件夹初始化。<br>执行完这条命令，会出现如下提示:</p>
 <blockquote>
 <p>INFO  You are almost done! Don’t forget to run ‘npm install’ before you start blogging with Hexo!</p>
 </blockquote>
 <p>所以记得执行npm install</p>
 <p><strong>2.创建新的文章</strong></p>
-<pre><code>hexo new &quot;文章标题&quot;
-</code></pre><p>执行完创建命令后会生成以下文件:</p>
+<pre><code>hexo new &quot;文章标题&quot;</code></pre><p>执行完创建命令后会生成以下文件:</p>
 <blockquote>
 <p>source/_posts/文章标题.md</p>
 </blockquote>
 <p>之后只需要在这个markdown文件里面编写自己的博客文章就可以了</p>
 <p><strong>3.添加主题</strong></p>
-<p>有很多人为hexo编写了很多漂亮的主题，可以自己去<a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="external">主题列表</a>选择<br>安装的方法也很简单，这些主题都是托管在github上的，只要把它们克隆到项目文件夹的themes目录下面就可以了。当然还需要去__config.yml修改配置，选择使用哪个主题：</p>
-<pre><code>theme: 主题名
-</code></pre><p><strong>4.启动服务器</strong></p>
-<p>编写完文章之后只需要运行下面命令就可以在浏览器地址栏输入 <a href="http://0.0.0.0:4000" target="_blank" rel="external">http://0.0.0.0:4000</a> 查看自己的博客了</p>
-<pre><code>hexo server
-</code></pre><p><br></p>
-<h2 id="u4E09_u3001_u914D_u7F6E_u535A_u5BA2_u4FE1_u606F"><a href="#u4E09_u3001_u914D_u7F6E_u535A_u5BA2_u4FE1_u606F" class="headerlink" title="三、配置博客信息"></a>三、配置博客信息</h2><p>可以在项目根目录下的_config.yml文件配置博客的标题，作者，语言等相关信息</p>
-<p><br></p>
-<h2 id="u56DB_u3001_u90E8_u7F72_u5230Github"><a href="#u56DB_u3001_u90E8_u7F72_u5230Github" class="headerlink" title="四、部署到Github"></a>四、部署到Github</h2><p>github提供了一个名叫Github Pages的服务，我们可以免费的用它来搭建自己的博客。<br>做法很简单，首先在github建立与你用户名对应的仓库，仓库名必须为 “你的github用户名.github.io” </p>
+<p>有很多人为hexo编写了很多漂亮的主题，可以自己去<a href="https://github.com/hexojs/hexo/wiki/Themes" target="_blank" rel="noopener">主题列表</a>选择<br>安装的方法也很简单，这些主题都是托管在github上的，只要把它们克隆到项目文件夹的themes目录下面就可以了。当然还需要去__config.yml修改配置，选择使用哪个主题：</p>
+<pre><code>theme: 主题名</code></pre><p><strong>4.启动服务器</strong></p>
+<p>编写完文章之后只需要运行下面命令就可以在浏览器地址栏输入 <a href="http://0.0.0.0:4000" target="_blank" rel="noopener">http://0.0.0.0:4000</a> 查看自己的博客了</p>
+<pre><code>hexo server</code></pre><br>
+
+<h2 id="三、配置博客信息"><a href="#三、配置博客信息" class="headerlink" title="三、配置博客信息"></a>三、配置博客信息</h2><p>可以在项目根目录下的_config.yml文件配置博客的标题，作者，语言等相关信息</p>
+<br>
+
+<h2 id="四、部署到Github"><a href="#四、部署到Github" class="headerlink" title="四、部署到Github"></a>四、部署到Github</h2><p>github提供了一个名叫Github Pages的服务，我们可以免费的用它来搭建自己的博客。<br>做法很简单，首先在github建立与你用户名对应的仓库，仓库名必须为 “你的github用户名.github.io” </p>
 <p>接着执行以下命令在本机安装hexo-deployer-git</p>
-<pre><code>npm install hexo-deployer-git --save
-</code></pre><p>然后在_config.yml文件，找到下面的内容</p>
+<pre><code>npm install hexo-deployer-git --save</code></pre><p>然后在_config.yml文件，找到下面的内容</p>
 <pre><code># Deployment
 ## Docs: http://hexo.io/docs/deployment.html
 deploy:
-  type:
-</code></pre><p>将它们修改为</p>
+  type:</code></pre><p>将它们修改为</p>
 <pre><code># Deployment
 ## Docs: http://hexo.io/docs/deployment.html
 deploy:
   type: git
   repository: git@github.com:你的github用户名/你的github用户名.github.io
-  branch: master
-</code></pre><p>最后执行以下三条命令即可：</p>
+  branch: master</code></pre><p>最后执行以下三条命令即可：</p>
 <pre><code>hexo clean
 hexo generate
-hexo deploy
-</code></pre><p>（当然你必须为你的电脑添加github ssh key才能正常执行hexo deploy命令上传代码）</p>
-<p><br></p>
-<h2 id="u4E94_u3001_u7ED1_u5B9A_u57DF_u540D"><a href="#u4E94_u3001_u7ED1_u5B9A_u57DF_u540D" class="headerlink" title="五、绑定域名"></a>五、绑定域名</h2><p>按照github pages的文档，是在github项目根目录下创建CNAME文件。但因为每次使用hexo更新博客再次上传，都会清除掉之前创建的CNAME文件。所以我们把CNAME放在source目录下（想上传的文件都放在该目录下）</p>
+hexo deploy</code></pre><p>（当然你必须为你的电脑添加github ssh key才能正常执行hexo deploy命令上传代码）</p>
+<br>
+
+<h2 id="五、绑定域名"><a href="#五、绑定域名" class="headerlink" title="五、绑定域名"></a>五、绑定域名</h2><p>按照github pages的文档，是在github项目根目录下创建CNAME文件。但因为每次使用hexo更新博客再次上传，都会清除掉之前创建的CNAME文件。所以我们把CNAME放在source目录下（想上传的文件都放在该目录下）</p>
 <p>完整步骤如下:</p>
 <ol>
 <li><p>在source目录下添加一个CNAM文件，没有后缀名，里面内容为你的域名(如我的是:blog.islinjw.cn)。</p>
@@ -426,5 +422,5 @@ hexo deploy
   }
 </script>
 
-</body>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"left","width":300,"height":300},"mobile":{"show":true},"log":false});</script></body>
 </html>

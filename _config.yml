@@ -65,6 +65,23 @@ pagination_dir: page
 ## Themes: http://hexo.io/themes/
 theme: fexo
 
+live2d:
+  enable: true
+  scriptFrom: local
+  pluginRootPath: live2dw/
+  pluginJsPath: lib/
+  pluginModelPath: assets/
+  tagMode: false
+  debug: false
+  model:
+    use: live2d-widget-model-wanko
+  display:
+    position: left
+    width: 300
+    height: 300
+  mobile:
+    show: true
+
 # Deployment
 ## Docs: http://hexo.io/docs/deployment.html
 deploy:
