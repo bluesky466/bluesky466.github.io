@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>JNI内存管理 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="面试的时候遇到一些候选人的简历上写着熟悉jni,但是问的时候才发现对jni的了解仅仅是停留在java和c的方法是如何相互调用上。其实这远远称不上熟悉,这篇博客就来讲讲jni面试中经常还会问到的内存管理问题。 首先我们知道java和c的对象是不能直接共用的,例如字符串我们不能直接返回char*,而需要创建一个jstring对象: 12std::string hello = &quot;hello world&quot;">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JNI内存管理">
+<meta property="og:url" content="http://139.199.4.241/2020/04/08/JNI内存管理/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="面试的时候遇到一些候选人的简历上写着熟悉jni,但是问的时候才发现对jni的了解仅仅是停留在java和c的方法是如何相互调用上。其实这远远称不上熟悉,这篇博客就来讲讲jni面试中经常还会问到的内存管理问题。 首先我们知道java和c的对象是不能直接共用的,例如字符串我们不能直接返回char*,而需要创建一个jstring对象: 12std::string hello = &quot;hello world&quot;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/JNI内存管理/1.png">
+<meta property="og:updated_time" content="2020-04-08T12:32:17.805Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JNI内存管理">
+<meta name="twitter:description" content="面试的时候遇到一些候选人的简历上写着熟悉jni,但是问的时候才发现对jni的了解仅仅是停留在java和c的方法是如何相互调用上。其实这远远称不上熟悉,这篇博客就来讲讲jni面试中经常还会问到的内存管理问题。 首先我们知道java和c的对象是不能直接共用的,例如字符串我们不能直接返回char*,而需要创建一个jstring对象: 12std::string hello = &quot;hello world&quot;">
+<meta name="twitter:image" content="http://139.199.4.241/JNI内存管理/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#局部引用"><span class="toc-text">局部引用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#局部引用栈帧"><span class="toc-text">局部引用栈帧</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#多线程下的局部引用"><span class="toc-text">多线程下的局部引用</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#全局引用"><span class="toc-text">全局引用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#弱全局引用"><span class="toc-text">弱全局引用</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-JNI内存管理" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">JNI内存管理</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2020.04.08</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2020/04/08/JNI内存管理/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>面试的时候遇到一些候选人的简历上写着熟悉jni,但是问的时候才发现对jni的了解仅仅是停留在java和c的方法是如何相互调用上。其实这远远称不上熟悉,这篇博客就来讲讲jni面试中经常还会问到的内存管理问题。</p>
+<p>首先我们知道java和c的对象是不能直接共用的,例如字符串我们不能直接返回char*,而需要创建一个jstring对象:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> hello = <span class="string">"hello world"</span>;</span><br><span class="line">jstring jstr = env-&gt;NewStringUTF(hello.c_str());</span><br></pre></td></tr></table></figure>
+
+<p>那问题就来了,这个jstr是我们用env去new出来的。那我们需要手动去delete吗,不delete会不会造成内存泄露?</p>
+<p>如果需要的话,当我们需要将这个jstr返回给java层使用的时候又要怎么办呢?不delete就内存泄露,delete就野指针:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern </span><span class="string">"C"</span> <span class="keyword">JNIEXPORT </span><span class="keyword">jstring </span><span class="keyword">JNICALL</span></span><br><span class="line"><span class="keyword">Java_me_linjw_ndkdemo_MainActivity_stringFromJNI(</span></span><br><span class="line"><span class="keyword"> </span>       <span class="keyword">JNIEnv </span>*env,</span><br><span class="line">        <span class="keyword">jobject </span>thiz<span class="comment">/* this */</span>) &#123;</span><br><span class="line"><span class="symbol">    std:</span>:string hello = <span class="string">"hello world"</span>;</span><br><span class="line">    <span class="keyword">jstring </span><span class="keyword">jstr </span>= env-&gt;NewStringUTF(hello.c_str());</span><br><span class="line">    return <span class="keyword">jstr;</span></span><br><span class="line"><span class="keyword">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>其实jni为了解决这个问题,设计了三种引用类型:</p>
+<ul>
+<li>局部引用</li>
+<li>全局引用</li>
+<li>弱全局引用</li>
+</ul>
+<h1 id="局部引用"><a href="#局部引用" class="headerlink" title="局部引用"></a>局部引用</h1><p>我们先从局部引用讲起,其实我们这里通过NewStringUTF创建的jstring就是局部引用,那它有什么特点呢?</p>
+<p>我们在c层大多数调用jni方法创建的引用都是局部引用,它会别存放在一张局部引用表里。它的内存有四种释放方式:</p>
+<ol>
+<li>程序员可以手动调用DeleteLocalRef去释放</li>
+<li>c层方法执行完成返回java层的时候,jvm会遍历局部引用表去释放</li>
+<li>使用PushLocalFrame/PopLocalFrame创建/销毁局部引用栈帧的时候,在PopLocalFrame里会释放帧内创建的引用</li>
+<li>如果使用AttachCurrentThread附加原生线程,在调用DetachCurrentThread的时候会释放该线程创建的局部引用</li>
+</ol>
+<p>所以上面的问题我们就能回答了, jstr可以不用手动delete,可以等方法结束的时候jvm自己去释放(当然如果返回之后在java层将这个引用保存了起来,那也是不会立马释放内存的)</p>
+<p>但是这样是否就意味着我们可以任性的去new对象,不用考虑任何东西呢?其实也不是,局部引用表是有大小限制的,如果new的内存太多的话可能造成局部引用表的内存溢出,例如我们在for循环里面不断创建对象:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> hello = <span class="string">"hello world"</span>;</span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span> ; i &lt; <span class="number">9999999</span> ; i ++) &#123;</span><br><span class="line">    env-&gt;NewStringUTF(hello.c_str());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这就会引起local reference table overflow:</p>
+<img src="/JNI内存管理/1.png">
+
+<p>所以在使用完之后一定记得调用DeleteLocalRef去释放它。</p>
+<p>有些同学可能会说,怎么可能会有人真的直接就在循环里不断创建对象呢。其实这种溢出大多数情况发生在被循环调用的方法里面:</p>
+<figure class="highlight autoit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">void <span class="function"><span class="keyword">func</span><span class="params">(JNIEnv *env)</span> &#123;</span></span><br><span class="line">    std::<span class="built_in">string</span> hello = <span class="string">"hello world"</span><span class="comment">;</span></span><br><span class="line">    env-&gt;NewStringUTF(hello.c_str())<span class="comment">;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(<span class="built_in">int</span> i = <span class="number">0</span> <span class="comment">; i &lt; 9999999 ; i ++) &#123;</span></span><br><span class="line">    <span class="function"><span class="keyword">func</span><span class="params">(env)</span>;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>作为一个安全的程序员,在对象不再使用的时候,立马使用DeleteLocalRef去将其释放是一个很好的习惯。</p>
+<h2 id="局部引用栈帧"><a href="#局部引用栈帧" class="headerlink" title="局部引用栈帧"></a>局部引用栈帧</h2><p>如上面所说我们可能在某个函数中创建了局部引用,然后这个函数在循环中被调用,就容易出现溢出。</p>
+<p>但是如果方法里面创建了多个局部引用,在return之前一个个去释放会显得十分繁琐:</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">void func(JNIEnv *env) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr1 = env-&gt;</span>NewStringUTF(str1.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr2 = env-&gt;</span>NewStringUTF(str2.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr3 = env-&gt;</span>NewStringUTF(str3.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr4 = env-&gt;</span>NewStringUTF(str4.c_str());</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="title">env</span>-&gt;</span>DeleteLocalRef(jstr1);</span><br><span class="line">    <span class="function"><span class="title">env</span>-&gt;</span>DeleteLocalRef(jstr2);</span><br><span class="line">    <span class="function"><span class="title">env</span>-&gt;</span>DeleteLocalRef(jstr3);</span><br><span class="line">    <span class="function"><span class="title">env</span>-&gt;</span>DeleteLocalRef(jstr4);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个时候可以考虑使用局部引用栈帧:</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">void func(JNIEnv *env) &#123;</span><br><span class="line">    <span class="function"><span class="title">env</span>-&gt;</span>PushLocalFrame(<span class="number">4</span>);</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr1 = env-&gt;</span>NewStringUTF(str1.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr2 = env-&gt;</span>NewStringUTF(str2.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr3 = env-&gt;</span>NewStringUTF(str3.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr4 = env-&gt;</span>NewStringUTF(str4.c_str());</span><br><span class="line">	...</span><br><span class="line">    <span class="function"><span class="title">env</span>-&gt;</span>PopLocalFrame(NULL);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们在方法开头PushLocalFrame,结尾PopLocalFrame,这样整个方法就在一个局部引用帧里面,而在PopLocalFrame就会将该帧里面创建的局部引用全部释放。</p>
+<p>有的同学可能会想到一种场景,如果需要将某个局部引用当初返回值返回怎么办?用局部引用帧会不会造成野指针?</p>
+<p>其实jni也考虑到了这中情况,所以PopLocalFrame有一个参数:</p>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jobject PopLocalFrame(<span class="name">jobject</span> result)</span><br></pre></td></tr></table></figure>
+
+<p>这个result参数可以传入你的返回值引用,这样的话这个局部引用就会在去到父帧里面,这样就能直接返回了:</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">jstring func(JNIEnv *env) &#123;</span><br><span class="line">    <span class="function"><span class="title">env</span>-&gt;</span>PushLocalFrame(<span class="number">4</span>);</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr1 = env-&gt;</span>NewStringUTF(str1.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr2 = env-&gt;</span>NewStringUTF(str2.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr3 = env-&gt;</span>NewStringUTF(str3.c_str());</span><br><span class="line">    <span class="function"><span class="title">jstring</span> jstr4 = env-&gt;</span>NewStringUTF(str4.c_str());</span><br><span class="line">	...</span><br><span class="line">    <span class="function"><span class="title">return</span> (jstring)env-&gt;</span>PopLocalFrame(jstr4);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>PS: 就算使用了result参数,局部引用帧里面的引用也是会失效的,所以不能直接将它返回,而是需要用PopLocalFrame为它创建的新引用,这个引用才在父帧里面。</p>
+<h2 id="多线程下的局部引用"><a href="#多线程下的局部引用" class="headerlink" title="多线程下的局部引用"></a>多线程下的局部引用</h2><p>前面三种情况我们好理解,但是第四种情况又是什么意思呢?</p>
+<blockquote>
+<p>3.如果使用AttachCurrentThread附加原生线程,在调用DetachCurrentThread的时候会释放该线程创建的局部引用</p>
+</blockquote>
+<p>我们使用JNIEnv这个数据结构去调用jni的方法创建局部引用,但是JNIEnv将用于线程本地存储,所以我们不能在线程之间共享它。</p>
+<p>如果是java层创建的线程,那调到c层会自然传入一个JNIEnv指针,但是如果是我们在c层自己新建的线程,我们要怎么拿的这个线程的JNIEnv呢?</p>
+<p>在讲解之前还有一个知识点要先交代,除了JNIEnv其实jni还有个很重要的数据结构JavaVM,理论上每个进程可以有多个JavaVM,但Android只允许有一个,所以JavaVM是可以在多线程间共享的。</p>
+<p>我们在java层使用System.loadLibrary方法加载so的时候,c层的JNI_OnLoad方法会被调用,我们可以在拿到JavaVM指针并将它保存起来:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">JavaVM* </span>g_Vm;</span><br><span class="line"></span><br><span class="line"><span class="keyword">JNIEXPORT </span><span class="keyword">jint </span><span class="keyword">JNI_OnLoad(JavaVM* </span>vm, void* reserved) &#123;</span><br><span class="line">    g_Vm = vm;</span><br><span class="line">    return <span class="keyword">JNI_VERSION_1_4;</span></span><br><span class="line"><span class="keyword">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>之后可以在线程中使用它的AttachCurrentThread方法附加原生线程,然后在线程结束的时候使用DetachCurrentThread去解除附加:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pthread_t</span> g_pthread;</span><br><span class="line">JavaVM* g_vm;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">ThreadRun</span><span class="params">(<span class="keyword">void</span> *data)</span> </span>&#123;</span><br><span class="line">    JNIEnv* env;</span><br><span class="line">    g_vm-&gt;AttachCurrentThread(&amp;env, <span class="literal">nullptr</span>);</span><br><span class="line">    ...</span><br><span class="line">    g_vm-&gt;DetachCurrentThread();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">JNIEXPORT jint <span class="title">JNI_OnLoad</span><span class="params">(JavaVM* vm, <span class="keyword">void</span>* reserved)</span> </span>&#123;</span><br><span class="line">    g_vm = vm;</span><br><span class="line">    <span class="keyword">return</span> JNI_VERSION_1_4;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">pthread_create(&amp;g_pthread, <span class="literal">NULL</span>, ThreadRun, (<span class="keyword">void</span> *) <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<p>所以在AttachCurrentThread和DetachCurrentThread之间JNIEnv都是有效的,我们可以使用它去创建局部引用,而在DetachCurrentThread之后JNIEnv就失效了,同时我们用它创建的局部引用也会被回收。</p>
+<h1 id="全局引用"><a href="#全局引用" class="headerlink" title="全局引用"></a>全局引用</h1><p>假设我们需要使用监听者模式在c层保存java对象的引用,并启动线程执行操作,在适当的时候通知java层。我们需要怎么做,一种<font color="red"><strong>错误</strong></font>的做法是直接将传入的jobject保存到全局变量:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">jobject </span>g_listener;</span><br><span class="line"></span><br><span class="line"><span class="keyword">extern </span><span class="string">"C"</span> <span class="keyword">JNIEXPORT </span>void <span class="keyword">JNICALL</span></span><br><span class="line"><span class="keyword">Java_me_linjw_ndkdemo_MainActivity_registerListener(</span></span><br><span class="line"><span class="keyword"> </span>       <span class="keyword">JNIEnv </span>*env,</span><br><span class="line">        <span class="keyword">jobject </span>thiz,</span><br><span class="line">        <span class="keyword">jobject </span>listener) &#123;</span><br><span class="line">    g_listener = listener<span class="comment">; // 错误的做法!!!</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原因是这里传进来的jobject其实也是局部引用,而局部引用是不能跨线程使用的。我们应该将它转换成全局引用去保存:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">jobject </span>g_listener;</span><br><span class="line"></span><br><span class="line"><span class="keyword">extern </span><span class="string">"C"</span> <span class="keyword">JNIEXPORT </span>void <span class="keyword">JNICALL</span></span><br><span class="line"><span class="keyword">Java_me_linjw_ndkdemo_MainActivity_registerListener(</span></span><br><span class="line"><span class="keyword"> </span>       <span class="keyword">JNIEnv </span>*env,</span><br><span class="line">        <span class="keyword">jobject </span>thiz,</span><br><span class="line">        <span class="keyword">jobject </span>listener) &#123;</span><br><span class="line">    g_listener = env-&gt;NewGlobalRef(listener);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>顾名思义,全局引用就是全局存在的引用,只有在我们调用DeleteGlobalRef之后它才会失效。</p>
+<p>然后这样又出现了个问题,按道理这个g_listener和listener应该指向的是同一个java对象,但是如果我们这样去判断的话是错误的:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">if</span><span class="params">(g_listener == listener)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它们的值是不会相等的,如果要判断两个jobject是否指向同一个java对象要需要用IsSameObject去判断:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">if</span><span class="params">(env-&gt;IsSameObject(g_listener, listener)</span></span>) &#123;</span><br><span class="line">	...   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="弱全局引用"><a href="#弱全局引用" class="headerlink" title="弱全局引用"></a>弱全局引用</h1><p>弱全局引用和全局引用类似,可以在跨线程使用,它使用NewGlobalWeakRef创建,使用DeleteGlobalWeakRef释放。</p>
+<p>但是弱全局引用是会被gc回收的,所以在使用的时候我们需要先判断它是否已经被回收:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">if</span><span class="params">(!env-&gt;IsSameObject(g_listener, NULL)</span></span>) &#123;</span><br><span class="line">	...   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>JNI中的NULL引用指向JVM中的null对象。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2020/02/06/Android-Input系统-二-事件的分发流程/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2020/04/08/JNI内存管理/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
