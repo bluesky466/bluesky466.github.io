@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android NDK Crash定位分析 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="当拿到应用的crash日志,如果是在java层出现了异常,相信大家都知道通过堆栈信息查找到奔溃的代码,但是如果是在native层出现了问题,面对下面的一堆内存地址,有些小伙伴可能就会觉得无从下手了: 123456789101112131415161718192021222324252630597 30597 F DEBUG   : *** *** *** *** *** *** *** *** *">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android NDK Crash定位分析">
+<meta property="og:url" content="http://139.199.4.241/2020/06/05/Android-NDK-Crash定位分析/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="当拿到应用的crash日志,如果是在java层出现了异常,相信大家都知道通过堆栈信息查找到奔溃的代码,但是如果是在native层出现了问题,面对下面的一堆内存地址,有些小伙伴可能就会觉得无从下手了: 123456789101112131415161718192021222324252630597 30597 F DEBUG   : *** *** *** *** *** *** *** *** *">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/AndroidNDK定位分析/0.jpg">
+<meta property="og:image" content="http://139.199.4.241/AndroidNDK定位分析/1.jpeg">
+<meta property="og:image" content="http://139.199.4.241/AndroidNDK定位分析/1.jpeg">
+<meta property="og:image" content="http://139.199.4.241/AndroidNDK定位分析/2.jpeg">
+<meta property="og:updated_time" content="2020-06-04T16:22:03.080Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android NDK Crash定位分析">
+<meta name="twitter:description" content="当拿到应用的crash日志,如果是在java层出现了异常,相信大家都知道通过堆栈信息查找到奔溃的代码,但是如果是在native层出现了问题,面对下面的一堆内存地址,有些小伙伴可能就会觉得无从下手了: 123456789101112131415161718192021222324252630597 30597 F DEBUG   : *** *** *** *** *** *** *** *** *">
+<meta name="twitter:image" content="http://139.199.4.241/AndroidNDK定位分析/0.jpg">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#信号"><span class="toc-text">信号</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#堆栈分析"><span class="toc-text">堆栈分析</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#C-编译器的函数名修饰"><span class="toc-text">C++ 编译器的函数名修饰</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#指令偏移地址"><span class="toc-text">指令偏移地址</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#addr2line"><span class="toc-text">addr2line</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#ndk-stack"><span class="toc-text">ndk-stack</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android-NDK-Crash定位分析" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android NDK Crash定位分析</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2020.06.05</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2020/06/05/Android-NDK-Crash定位分析/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>当拿到应用的crash日志,如果是在java层出现了异常,相信大家都知道通过堆栈信息查找到奔溃的代码,但是如果是在native层出现了问题,面对下面的一堆内存地址,有些小伙伴可能就会觉得无从下手了:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">30597 30597 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***</span><br><span class="line">30597 30597 F DEBUG   : Build fingerprint: 'Xiaomi/chiron/chiron:8.0.0/OPR1.170623.027/V10.3.1.0.ODECNXM:user/release-keys'                </span><br><span class="line">30597 30597 F DEBUG   : Revision: '0'</span><br><span class="line">30597 30597 F DEBUG   : ABI: 'arm64'</span><br><span class="line">30597 30597 F DEBUG   : pid: 30535, tid: 30535, name: me.linjw.ndkdemo  &gt;&gt;&gt; com.me.linjw.ndkdemo &lt;&lt;&lt;</span><br><span class="line">30597 30597 F DEBUG   : signal 6 (SIGABRT), code -6 (SI_TKILL), fault addr --------</span><br><span class="line">30597 30597 F DEBUG   : Abort message: 'Invalid address 0x7ffd3cfac0 passed to free: value not allocated'</span><br><span class="line">30597 30597 F DEBUG   :     x0   0000000000000000  x1   0000000000007747  x2   0000000000000006  x3   0000000000000008</span><br><span class="line">30597 30597 F DEBUG   :     x4   8000000000808080  x5   8000000000808080  x6   8000000000808080  x7   0000000000000008</span><br><span class="line">30597 30597 F DEBUG   :     x8   0000000000000083  x9   d6a0828f4d3c1493  x10  0000000000000000  x11  0000000000000001</span><br><span class="line">30597 30597 F DEBUG   :     x12  ffffffffffffffff  x13  0000000000000001  x14  003275d83bd3efb5  x15  0000c345d3d41566</span><br><span class="line">30597 30597 F DEBUG   :     x16  0000007b582112e8  x17  0000007b581b2d2c  x18  0000007ffd3ce5c8  x19  0000000000007747</span><br><span class="line">30597 30597 F DEBUG   :     x20  0000000000007747  x21  0000007b5520d000  x22  0000000000000000  x23  0000007b5821c878</span><br><span class="line">30597 30597 F DEBUG   :     x24  0000000000000004  x25  0000007b55214c98  x26  0000000000000000  x27  0000000000000001</span><br><span class="line">30597 30597 F DEBUG   :     x28  0000000000000001  x29  0000007ffd3cf8c0  x30  0000007b58166e54                                      </span><br><span class="line">30597 30597 F DEBUG   :     sp   0000007ffd3cf880  pc   0000007b581b2d34  pstate 0000000060000000</span><br><span class="line">30597 30597 F DEBUG   :</span><br><span class="line">30597 30597 F DEBUG   : backtrace:</span><br><span class="line">30597 30597 F DEBUG   :     #00 pc 0000000000069d34  /system/lib64/libc.so (tgkill+8)</span><br><span class="line">30597 30597 F DEBUG   :     #01 pc 000000000001de50  /system/lib64/libc.so (abort+88)</span><br><span class="line">30597 30597 F DEBUG   :     #02 pc 0000000000025644  /system/lib64/libc.so (__libc_fatal+116)</span><br><span class="line">30597 30597 F DEBUG   :     #03 pc 0000000000091204  /system/lib64/libc.so (ifree+812)</span><br><span class="line">30597 30597 F DEBUG   :     #04 pc 0000000000091484  /system/lib64/libc.so (je_free+120)</span><br><span class="line">30597 30597 F DEBUG   :     #05 pc 000000000000f60c  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (_Z9willCrashv+80)</span><br><span class="line">30597 30597 F DEBUG   :     #06 pc 000000000000f728  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (Java_com_me_linjw_ndkdemo_MainActivity_callNative+20)</span><br><span class="line">30597 30597 F DEBUG   :     #07 pc 000000000000909c  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/oat/arm64/base.odex (offset 0x9000)</span><br></pre></td></tr></table></figure>
+
+<p>莫慌,这篇博客就来讲讲怎么分析这份崩溃日志。</p>
+<img src="/AndroidNDK定位分析/0.jpg">
+
+
+<h1 id="信号"><a href="#信号" class="headerlink" title="信号"></a>信号</h1><p>首先第一个知识点就是信号(signal)机制,它其实是进程间通信的一种方式。在处理ndk crash日志的时候可以大概理解为错误码,它描述了错误的大概原因。例如上面的log,可以看到这个程序是因为SIGABRT这个信号奔溃的,它的码字是6:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">06-04 19:05:38.910 30597 30597 F DEBUG   : signal 6 (SIGABRT), code -6 (SI_TKILL), fault addr --------</span><br></pre></td></tr></table></figure>
+
+<p>我们常见的信号有下面这些:</p>
+<table>
+<thead>
+<tr>
+<th><strong>信号</strong></th>
+<th><strong>码值</strong></th>
+<th><strong>描述</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SIGILL</td>
+<td>4</td>
+<td>非法指令，例如损坏的可执行文件或代码区损坏</td>
+</tr>
+<tr>
+<td>SIGABRT</td>
+<td>6</td>
+<td>通过C函数abort()发送；为assert()使用</td>
+</tr>
+<tr>
+<td>SIGBUS</td>
+<td>7</td>
+<td>不存在的物理地址，更多为硬件或系统引起</td>
+</tr>
+<tr>
+<td>SIGFPE</td>
+<td>8</td>
+<td>浮点数运算错误，如除0操作</td>
+</tr>
+<tr>
+<td>SIGKILL</td>
+<td>9</td>
+<td>迅速完全终止进程；不能被捕获</td>
+</tr>
+<tr>
+<td>SIGSEGV</td>
+<td>11</td>
+<td>段地址错误，例如空指针、野指针、数组越界等</td>
+</tr>
+</tbody></table>
+<p>从表里面我们知道SIGABRT信号的触发原因是通过C函数abort()发送为assert()使用,也就是说它是个断言失败,从日志里面我们还能看到abort的信息:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Abort message: 'Invalid address 0x7ffd3cfac0 passed to free: value not allocated'</span><br></pre></td></tr></table></figure>
+
+<h1 id="堆栈分析"><a href="#堆栈分析" class="headerlink" title="堆栈分析"></a>堆栈分析</h1><p>但是光知道SIGABRT信号我们是很难定位到问题的。所以我们还需要分析下面的堆栈信息,找到对应的代码:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">30597 30597 F DEBUG   : backtrace:</span><br><span class="line">30597 30597 F DEBUG   :     #00 pc 0000000000069d34  /system/lib64/libc.so (tgkill+8)</span><br><span class="line">30597 30597 F DEBUG   :     #01 pc 000000000001de50  /system/lib64/libc.so (abort+88)</span><br><span class="line">30597 30597 F DEBUG   :     #02 pc 0000000000025644  /system/lib64/libc.so (__libc_fatal+116)</span><br><span class="line">30597 30597 F DEBUG   :     #03 pc 0000000000091204  /system/lib64/libc.so (ifree+812)</span><br><span class="line">30597 30597 F DEBUG   :     #04 pc 0000000000091484  /system/lib64/libc.so (je_free+120)</span><br><span class="line">30597 30597 F DEBUG   :     #05 pc 000000000000f60c  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (_Z9willCrashv+80)</span><br><span class="line">30597 30597 F DEBUG   :     #06 pc 000000000000f728  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (Java_com_me_linjw_ndkdemo_MainActivity_callNative+20)</span><br><span class="line">30597 30597 F DEBUG   :     #07 pc 000000000000909c  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/oat/arm64/base.odex (offset 0x9000)</span><br></pre></td></tr></table></figure>
+
+<p>从这里我们可以分析到libnative-lib.so里面的Java_com_me_linjw_ndkdemo_MainActivity_callNative调用了willCrash函数,然后在willCrash函数里面触发了异常:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">30597 30597 F DEBUG   :     #05 pc 000000000000f60c  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (_Z9willCrashv+80)</span><br><span class="line">30597 30597 F DEBUG   :     #06 pc 000000000000f728  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (Java_com_me_linjw_ndkdemo_MainActivity_callNative+20)</span><br></pre></td></tr></table></figure>
+
+<h1 id="C-编译器的函数名修饰"><a href="#C-编译器的函数名修饰" class="headerlink" title="C++ 编译器的函数名修饰"></a>C++ 编译器的函数名修饰</h1><p>细心的同学可能会有疑问,函数名明明是显示的_Z9willCrashv,为啥我会说是willCrash？它和下面的Java_com_me_linjw_ndkdemo_MainActivity_callNative有什么区别？</p>
+<p>我们可以先来看看源代码确认下我没有骗你:</p>
+<img src="/AndroidNDK定位分析/1.jpeg">
+
+<p>那为什么willCrash在编译之后so里面会变成_Z9willCrashv?这主要是C++编译器的函数名修饰功能在作怪。由于c++是支持重载的,也就是只要参数不一样,函数的名字可以相同。</p>
+<p>这个重载其实在编译期就能确定，所以编译器实现重载的原理是给函数加上修饰符，例如在函数后面拼接上参数类型简写，这里_Z9willCrashv最后拼接的v就代表void,说明该函数没有参数。</p>
+<p>也就是说虽然你在代码里面写的是同样的函数名，但是在编译之后，重载的函数其实就变成了不同名字的不同函数。</p>
+<p>解释完了_Z9willCrashv我们再来说说Java_com_me_linjw_ndkdemo_MainActivity_callNative，为什么它又没有被修饰呢？原因就在于函数上面的extern “C”，它告诉编译器将这个函数当做c语言的函数来处理。而c语言是没有重载这一说的，所以也就不会改变它原本的函数名。</p>
+<h1 id="指令偏移地址"><a href="#指令偏移地址" class="headerlink" title="指令偏移地址"></a>指令偏移地址</h1><p>然后方法名+号后面的数字是指的什么？方法行数吗?实际去代码里面看Java_com_me_linjw_ndkdemo_MainActivity_callNative只有一行代码,找不到20行，同样willCrash也没有80行:</p>
+<img src="/AndroidNDK定位分析/1.jpeg">
+
+<p>这里我们来解释下+号后面的值的意义。我们都知道c/c++代码都是需要编译成二进制文件之后才能运行,而实际上程序就是通过执行二进制文件中的一条条指令来运行的。上面日志中的#06 pc 000000000000f728指的就是出现问题的时候Java_com_me_linjw_ndkdemo_MainActivity_callNative执行到了0x000000000000f728这个地址的指令,而后面的+20指的是这个地址相对方法起始地址的偏移。</p>
+<p>说起来可能比较难以理解,这里我们直接通过反汇编libnative-lib.so来帮助理解。ndk提供了objdump工具用于反汇编,由于不同cpu架构的反编译工具也是不一样的,大家可以根据需要找到对应的程序进行反汇编:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> LinJW@LinJWdeMacBook-Pro  ~/Library/Android/sdk/ndk  find . -name "*objdump"</span><br><span class="line">./20.0.5594570/toolchains/x86-4.9/prebuilt/darwin-x86_64/bin/i686-linux-android-objdump</span><br><span class="line">./20.0.5594570/toolchains/x86-4.9/prebuilt/darwin-x86_64/i686-linux-android/bin/objdump</span><br><span class="line">./20.0.5594570/toolchains/llvm/prebuilt/darwin-x86_64/aarch64-linux-android/bin/objdump</span><br><span class="line">./20.0.5594570/toolchains/llvm/prebuilt/darwin-x86_64/bin/x86_64-linux-android-objdump</span><br><span class="line">./20.0.5594570/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-objdump</span><br><span class="line">./20.0.5594570/toolchains/llvm/prebuilt/darwin-x86_64/bin/i686-linux-android-objdump</span><br><span class="line">./20.0.5594570/toolchains/llvm/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-objdump</span><br><span class="line">./20.0.5594570/toolchains/llvm/prebuilt/darwin-x86_64/arm-linux-androideabi/bin/objdump</span><br><span class="line">./20.0.5594570/toolchains/llvm/prebuilt/darwin-x86_64/x86_64-linux-android/bin/objdump</span><br><span class="line">./20.0.5594570/toolchains/llvm/prebuilt/darwin-x86_64/i686-linux-android/bin/objdump</span><br><span class="line">./20.0.5594570/toolchains/x86_64-4.9/prebuilt/darwin-x86_64/bin/x86_64-linux-android-objdump</span><br><span class="line">./20.0.5594570/toolchains/x86_64-4.9/prebuilt/darwin-x86_64/x86_64-linux-android/bin/objdump</span><br><span class="line">./20.0.5594570/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-objdump</span><br><span class="line">./20.0.5594570/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/arm-linux-androideabi/bin/objdump</span><br><span class="line">./20.0.5594570/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64/aarch64-linux-android/bin/objdump</span><br><span class="line">./20.0.5594570/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64/bin/aarch64-linux-android-objdump</span><br></pre></td></tr></table></figure>
+
+<p>我这边使用的是aarch64-linux-android-objdump,命令如下:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aarch64-linux-android-objdump -S ./libnative-<span class="class"><span class="keyword">lib</span>.<span class="title">so</span></span></span><br></pre></td></tr></table></figure>
+
+<p>然后我们搜索Java_com_me_linjw_ndkdemo_MainActivity_callNative找到这个方法的定义:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">000000000000f714 &lt;Java_com_me_linjw_ndkdemo_MainActivity_callNative@@Base&gt;:</span><br><span class="line">    f714:   d10083ff    sub sp, sp, #0x20</span><br><span class="line">    f718:   a9017bfd    stp x29, x30, [sp,#16]</span><br><span class="line">    f71c:   910043fd    add x29, sp, #0x10</span><br><span class="line">    f720:   f90007e0    str x0, [sp,#8]</span><br><span class="line">    f724:   f90003e1    str x1, [sp]</span><br><span class="line">    f728:   97ffff0a    bl  f350 &lt;_Z9willCrashv@plt&gt;</span><br><span class="line">    f72c:   a9417bfd    ldp x29, x30, [sp,#16]</span><br><span class="line">    f730:   910083ff    add sp, sp, #0x20</span><br><span class="line">    f734:   d65f03c0    ret</span><br><span class="line">    f738:   d100c3ff    sub sp, sp, #0x30</span><br><span class="line">    f73c:   a9027bfd    stp x29, x30, [sp,#32]</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>然后我们上面看到的pc 000000000000f728其实指的就是f728这个地址的指令,也就是bl指令,这个指令用于调用子程序,于是我们可以容易猜出这行指令的作用是跳转到willCrash方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">f728:   97ffff0a    bl  f350 &lt;_Z9willCrashv@plt&gt;</span><br></pre></td></tr></table></figure>
+
+<p>而Java_com_me_linjw_ndkdemo_MainActivity_callNative的起始地址为000000000000f714，于是可以计算出000000000000f728相对函数起始地址的偏移为0xf728-0xf714=0x14，而0x14在十进制里面就是20。</p>
+<h1 id="addr2line"><a href="#addr2line" class="headerlink" title="addr2line"></a>addr2line</h1><p>如果对这些汇编指令比较熟悉的话当然可以分析定位问题,但是一般的安卓程序员可能对这块比较陌生。所以我们可以用addr2line工具直接定位到源代码。</p>
+<p>我们从下面log可以得到两个地址000000000000f728、000000000000f60c</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">30597 30597 F DEBUG   :     #05 pc 000000000000f60c  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (_Z9willCrashv+80)</span><br><span class="line">30597 30597 F DEBUG   :     #06 pc 000000000000f728  /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (Java_com_me_linjw_ndkdemo_MainActivity_callNative+20)</span><br></pre></td></tr></table></figure>
+
+<p>使用这个命令的前提是我们要有带符号的so库,因为一般情况下打包到apk里面的so都是不带符号的(可以大概理解成java层的混淆,去掉了符号信息),所以如果直接从apk里面解压出so,然后使用addr2line会得到下面结果，全是问号:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">??:?</span><br></pre></td></tr></table></figure>
+
+<p>带符号的so一般会在编译的过程中生成,所以可以在app/build目录里面递归搜索下,而且不同cpu架构也需要用不同的addr2line,命令如下:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aarch64-linux-android-addr2line -e ./app/build/intermediates/cmake/debug/obj/arm64-v8a/libnative-lib.so 000000000000f728 000000000000f60c</span><br></pre></td></tr></table></figure>
+
+<p>得到结果:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/Users/LinJW/workspace/NdkDemo/app/src/main/cpp/native-lib.cpp:19</span><br><span class="line">/Users/LinJW/workspace/NdkDemo/app/src/main/cpp/native-lib.cpp:13</span><br></pre></td></tr></table></figure>
+
+<p>我们来对比下源码就能找到崩溃的原因是delete了字符串常量的内存:</p>
+<img src="/AndroidNDK定位分析/2.jpeg">
+
+<h1 id="ndk-stack"><a href="#ndk-stack" class="headerlink" title="ndk-stack"></a>ndk-stack</h1><p>作为认真看到这里的同学,我必须要奖励好学的你一个福利,那就是ndk-stack,他也在ndk里面:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NDK目录/prebuilt/darwin-x86_64/bin/ndk-stack</span><br></pre></td></tr></table></figure>
+
+<p>首先我们将含有native crash的log保存到crash_log.txt用-dump参数出入,然后将所有带符号的so放到某个目录下,用-sym参数传入:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ndk-stack -sym ./app/build/intermediates/cmake/debug/obj/arm64-v8a/ -dump ~/Downloads/crash_log.txt</span><br></pre></td></tr></table></figure>
+
+<p>然后它就会对native堆栈使用addr2line和目录下的so去转换,最终输出带符号的堆栈信息:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">********* Crash dump: **********</span><br><span class="line">Build fingerprint: 'Xiaomi/chiron/chiron:8.0.0/OPR1.170623.027/V10.3.1.0.ODECNXM:user/release-keys'</span><br><span class="line">Abort message: 'Invalid address 0x7ffd3cfac0 passed to free: value not allocated'</span><br><span class="line"><span class="meta">#</span><span class="bash">00 0x0000000000069d34 /system/lib64/libc.so (tgkill+8)</span></span><br><span class="line"><span class="meta">#</span><span class="bash">01 0x000000000001de50 /system/lib64/libc.so (abort+88)</span></span><br><span class="line"><span class="meta">#</span><span class="bash">02 0x0000000000025644 /system/lib64/libc.so (__libc_fatal+116)</span></span><br><span class="line"><span class="meta">#</span><span class="bash">03 0x0000000000091204 /system/lib64/libc.so (ifree+812)</span></span><br><span class="line"><span class="meta">#</span><span class="bash">04 0x0000000000091484 /system/lib64/libc.so (je_free+120)</span></span><br><span class="line"><span class="meta">#</span><span class="bash">05 0x000000000000f60c /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (_Z9willCrashv+80)</span></span><br><span class="line">                                                                                                           willCrash()</span><br><span class="line">                                                                                                           /Users/LinJW/workspace/NdkDemo/app/src/main/cpp/native-lib.cpp:13:5</span><br><span class="line"><span class="meta">#</span><span class="bash">06 0x000000000000f728 /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/lib/arm64/libnative-lib.so (Java_com_me_linjw_ndkdemo_MainActivity_callNative+2</span></span><br><span class="line">0)</span><br><span class="line">                                                                                                           Java_com_cvte_tv_ndkdemo_MainActivity_callNative</span><br><span class="line">                                                                                                           /Users/LinJW/workspace/NdkDemo/app/src/main/cpp/native-lib.cpp:19:5</span><br><span class="line"><span class="meta">#</span><span class="bash">07 0x000000000000909c /data/app/com.me.linjw.ndkdemo-qgq0-FTl7SRsBBdmCeMAdg==/oat/arm64/base.odex (offset 0x9000)</span></span><br></pre></td></tr></table></figure>
+
+<p>ndk-stack在开始解析 logcat 输出时将查找第一行星号,所以拷贝的时候记得这行不能缺少:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***</span><br></pre></td></tr></table></figure>
+
+<p>当然通常情况下我们直接将logcat出来的所有日志传给它就好，它会自动根据星号行识别出native堆栈:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb logcat | ndk-stack路径 -sym 存放带符号so库目录的路径</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2020/04/08/JNI内存管理/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2020/06/05/Android-NDK-Crash定位分析/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
