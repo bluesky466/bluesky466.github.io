@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>一起入门gradle自定义插件编写(二) - 深入理解build.gradle | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="这篇博客我们来通过groovy的语法去深入理解build.gradle的底层实现。 通过分析build.gradle里面的实现原理,我们在写自己的自定义gradle插件的时候就能使用同样的配置方法了。 在上一篇博客里面提到,在gradle文件里面默认使用的都是project这个对象的方法或者属性,并且分析了apply方法的完整形式: 1project.apply([&apos;plugin&apos;: &apos;com.a">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一起入门gradle自定义插件编写(二) - 深入理解build.gradle">
+<meta property="og:url" content="http://139.199.4.241/2019/04/26/一起入门gradle自定义插件编写-二-深入理解build-gradle/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="这篇博客我们来通过groovy的语法去深入理解build.gradle的底层实现。 通过分析build.gradle里面的实现原理,我们在写自己的自定义gradle插件的时候就能使用同样的配置方法了。 在上一篇博客里面提到,在gradle文件里面默认使用的都是project这个对象的方法或者属性,并且分析了apply方法的完整形式: 1project.apply([&apos;plugin&apos;: &apos;com.a">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.271Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一起入门gradle自定义插件编写(二) - 深入理解build.gradle">
+<meta name="twitter:description" content="这篇博客我们来通过groovy的语法去深入理解build.gradle的底层实现。 通过分析build.gradle里面的实现原理,我们在写自己的自定义gradle插件的时候就能使用同样的配置方法了。 在上一篇博客里面提到,在gradle文件里面默认使用的都是project这个对象的方法或者属性,并且分析了apply方法的完整形式: 1project.apply([&apos;plugin&apos;: &apos;com.a">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#groovy闭包"><span class="toc-text">groovy闭包</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#delegate"><span class="toc-text">delegate</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#dependencies的原理"><span class="toc-text">dependencies的原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Extension"><span class="toc-text">Extension</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#metaClass"><span class="toc-text">metaClass</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-一起入门gradle自定义插件编写-二-深入理解build-gradle" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">一起入门gradle自定义插件编写(二) - 深入理解build.gradle</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.04.26</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2019/04/26/一起入门gradle自定义插件编写-二-深入理解build-gradle/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>这篇博客我们来通过groovy的语法去深入理解build.gradle的底层实现。</p>
+<p>通过分析build.gradle里面的实现原理,我们在写自己的自定义gradle插件的时候就能使用同样的配置方法了。</p>
+<p>在上一篇<a href="http://blog.islinjw.cn/2019/04/14/%E4%B8%80%E8%B5%B7%E5%85%A5%E9%97%A8gradle%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99%E4%B8%80/" target="_blank" rel="noopener">博客</a>里面提到,在gradle文件里面默认使用的都是project这个对象的方法或者属性,并且分析了apply方法的完整形式:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">project</span>.apply([<span class="string">'plugin'</span>: <span class="string">'com.android.application'</span>])</span><br></pre></td></tr></table></figure>
+
+<p>其实android,和dependencies代码块也是一样的,省略了project对象,添加上之后变成这样:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">project</span>.android &#123;</span><br><span class="line">    compileSdkVersion <span class="number">28</span></span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        applicationId <span class="string">"me.linjw.demo"</span></span><br><span class="line">        minSdkVersion <span class="number">24</span></span><br><span class="line">        targetSdkVersion <span class="number">28</span></span><br><span class="line">        versionCode <span class="number">1</span></span><br><span class="line">        versionName <span class="string">"1.0"</span></span><br><span class="line">        testInstrumentationRunner <span class="string">"android.support.test.runner.AndroidJUnitRunner"</span></span><br><span class="line">    &#125;</span><br><span class="line">    buildTypes &#123;</span><br><span class="line">        release &#123;</span><br><span class="line">            minifyEnabled <span class="keyword">false</span></span><br><span class="line">            proguardFiles getDefaultProguardFile(<span class="string">'proguard-android.txt'</span>), <span class="string">'proguard-rules.pro'</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">project</span>.<span class="keyword">dependencies</span> &#123;</span><br><span class="line">    implementation <span class="keyword">fileTree</span>(dir: <span class="string">'libs'</span>, <span class="keyword">include</span>: [<span class="string">'*.jar'</span>])</span><br><span class="line">    implementation <span class="string">'com.android.support:appcompat-v7:28.0.0'</span></span><br><span class="line">    testImplementation <span class="string">'junit:junit:4.12'</span></span><br><span class="line">    androidTestImplementation <span class="string">'com.android.support.test:runner:1.0.2'</span></span><br><span class="line">    androidTestImplementation <span class="string">'com.android.support.test.espresso:espresso-core:3.0.2'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们先讲dependencies,按住ctrl键用鼠标点击它可以跳转到到Project接口的void dependencies(Closure configureClosure)方法</p>
+<p>也就是说它其实是project的一个方法,传入一个Closure对象作为参数.然后这里是省略了方法的括号,它的完整形式如下:</p>
+<figure class="highlight roboconf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">project.dependencies(&#123;</span><br><span class="line">    <span class="attribute">implementation fileTree(dir</span>: 'libs', include: ['*<span class="variable">.jar</span>'])</span><br><span class="line">    implementation 'com<span class="variable">.android</span><span class="variable">.support</span>:appcompat-v7:28.0.0'</span><br><span class="line">    testImplementation 'junit:junit:4.12'</span><br><span class="line">    androidTestImplementation 'com<span class="variable">.android</span><span class="variable">.support</span><span class="variable">.test</span>:runner:1.0.2'</span><br><span class="line">    androidTestImplementation 'com<span class="variable">.android</span><span class="variable">.support</span><span class="variable">.test</span><span class="variable">.espresso</span>:espresso-core:3.0.2'</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h1 id="groovy闭包"><a href="#groovy闭包" class="headerlink" title="groovy闭包"></a>groovy闭包</h1><p>这个Closure就是闭包的意思,闭包作为脚本语言里面比较常见的东西我就不过多介绍了,感兴趣的同学可以自行搜索.</p>
+<p>groovy里的闭包就是用话括号来定义的,可以看看下面闭包的例子:</p>
+<figure class="highlight flix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//定义闭包并且把它赋值给closure变量</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closure</span> </span>= &#123;</span><br><span class="line">    println('hello world!')</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//调用闭包</span></span><br><span class="line">closure()</span><br></pre></td></tr></table></figure>
+
+<p>这里的closure()会调用闭包的方法,打印出”hello world!”</p>
+<p>这里的闭包也是一个省略的写法,它的完整写法如下:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closure</span></span> = &#123;-&gt;</span><br><span class="line">    println(<span class="string">'hello world!'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>“-&gt;”左边是闭包的输入参数,由于这里不需要输入参数,所以它左边没有东西.我们可以看看下面的例子,这个闭包接收两个参数:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closure</span></span> = &#123; str1, str2 -&gt;</span><br><span class="line">    println(str1 + <span class="string">' '</span> + str2)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">closure(<span class="string">'hello'</span>, <span class="string">'world'</span>)</span><br></pre></td></tr></table></figure>
+
+<p>特殊的,如果闭包只接收一个参数,也可以省略参数名和”-&gt;”,它会默认包含一个隐式的参数it:</p>
+<figure class="highlight flix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closure</span> </span>= &#123;</span><br><span class="line">    println(it)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">closure('hello world!') <span class="comment">// 打印hello world!</span></span><br><span class="line">closure() <span class="comment">// 打印null</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到,如果只有一个参数的话在调用闭包的时候可以不传参数,它会默认传入null.</p>
+<h1 id="delegate"><a href="#delegate" class="headerlink" title="delegate"></a>delegate</h1><p>dependencies方法传入的闭包里面的implementation其实也是调用的方法,我们补全它们的括号</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">project</span><span class="selector-class">.dependencies</span>(&#123;</span><br><span class="line">    <span class="selector-tag">implementation</span>(fileTree(<span class="attribute">dir</span>: <span class="string">'libs'</span>, <span class="attribute">include</span>: [<span class="string">'*.jar'</span>]))</span><br><span class="line">    <span class="selector-tag">implementation</span>(<span class="string">'com.android.support:appcompat-v7:28.0.0'</span>)</span><br><span class="line">    <span class="selector-tag">testImplementation</span>(<span class="string">'junit:junit:4.12'</span>)</span><br><span class="line">    <span class="selector-tag">androidTestImplementation</span>(<span class="string">'com.android.support.test:runner:1.0.2'</span>)</span><br><span class="line">    <span class="selector-tag">androidTestImplementation</span>(<span class="string">'com.android.support.test.espresso:espresso-core:3.0.2'</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>那这个implementation方法又是哪里来的呢?是groovy闭包自带的方法?还是全局的方法?</p>
+<p>其实都不是,这里我们先从闭包的delegate说起,顾名思义它是闭包的一个委托对象,闭包中没有的方法都会调到它那里去.</p>
+<p>我们来看下面的例子,在闭包中调用foo()方法,调用的时候会报错,因为找不到foo()方法:</p>
+<figure class="highlight flix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closure</span> </span>= &#123;</span><br><span class="line">    foo()</span><br><span class="line">&#125;</span><br><span class="line">closure() <span class="comment">// 报错,找不到foo()方法</span></span><br></pre></td></tr></table></figure>
+
+<p>如果我们定义一个类,里面实现foo方法,然后将这个类设置成闭包的delegate,则在闭包中找不到foo()方法的时候就会去它的代理中找:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestClass</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">foo</span></span>() &#123;</span><br><span class="line">        println(<span class="symbol">'fo</span>o')</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closure</span> </span>= &#123;</span><br><span class="line">    foo()</span><br><span class="line">    println(delegate)</span><br><span class="line">&#125;</span><br><span class="line">closure.delegate = <span class="keyword">new</span> <span class="type">TestClass</span>()</span><br><span class="line">closure() <span class="comment">// 先在TestClass.foo方法中打印'foo',然后打印闭包的delegate对象'TestClass@755e1c30'</span></span><br></pre></td></tr></table></figure>
+
+<p>这个时候让我们看看dependencies闭包的delegate:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">project</span><span class="selector-class">.dependencies</span>(&#123;</span><br><span class="line">    <span class="selector-tag">println</span>(delegate)</span><br><span class="line">    <span class="selector-tag">implementation</span>(fileTree(<span class="attribute">dir</span>: <span class="string">'libs'</span>, <span class="attribute">include</span>: [<span class="string">'*.jar'</span>]))</span><br><span class="line">    <span class="selector-tag">implementation</span>(<span class="string">'com.android.support:appcompat-v7:28.0.0'</span>)</span><br><span class="line">    <span class="selector-tag">testImplementation</span>(<span class="string">'junit:junit:4.12'</span>)</span><br><span class="line">    <span class="selector-tag">androidTestImplementation</span>(<span class="string">'com.android.support.test:runner:1.0.2'</span>)</span><br><span class="line">    <span class="selector-tag">androidTestImplementation</span>(<span class="string">'com.android.support.test.espresso:espresso-core:3.0.2'</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>输出为</p>
+<blockquote>
+<p>org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler_Decorated@ee11179</p>
+</blockquote>
+<p>这个DefaultDependencyHandler_Decorated东西我们不用细究,只要知道它是DefaultDependencyHandler的子类就行</p>
+<h1 id="dependencies的原理"><a href="#dependencies的原理" class="headerlink" title="dependencies的原理"></a>dependencies的原理</h1><p>我们都知道当我们在配置了productFlavors的时候,可以为每个product单独配置依赖库</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">	<span class="params">...</span></span><br><span class="line">	productFlavors &#123;</span><br><span class="line">	    demo &#123;</span><br><span class="line">	    &#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line">	<span class="params">...</span></span><br><span class="line">	demoImplementation <span class="string">'com.google.code.gson:gson:2.6.2'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是这个demoImplementation方法又是怎么生成的呢?</p>
+<p>其实最后它们都是调用到了DefaultDependencyHandler.add方法,也就是说我们的dependencies其实实际的形式是这样的:</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">project.dependencies(&#123;</span><br><span class="line">    <span class="keyword">add</span><span class="bash">(<span class="string">'implementation'</span>, fileTree(dir: <span class="string">'libs'</span>, include: [<span class="string">'*.jar'</span>]))</span></span><br><span class="line">    <span class="keyword">add</span><span class="bash">(<span class="string">'implementation'</span>, <span class="string">'com.android.support:appcompat-v7:28.0.0'</span>)</span></span><br><span class="line">    <span class="keyword">add</span><span class="bash">(<span class="string">'testImplementation'</span>, <span class="string">'junit:junit:4.12'</span>)</span></span><br><span class="line">    <span class="keyword">add</span><span class="bash">(<span class="string">'androidTestImplementation'</span>, <span class="string">'com.android.support.test:runner:1.0.2'</span>)</span></span><br><span class="line">    <span class="keyword">add</span><span class="bash">(<span class="string">'androidTestImplementation'</span>, <span class="string">'com.android.support.test.espresso:espresso-core:3.0.2'</span>)</span></span><br><span class="line">    <span class="keyword">add</span><span class="bash">(<span class="string">'demoImplementation'</span>, <span class="string">'com.google.code.gson:gson:2.6.2'</span>)</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>这个add方法是怎么调用到的呢?groovy里面可以有几种方法做到,这里就讲一种:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Delegate</span> &#123;</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">invokeMethod</span><span class="params">(String name, args)</span></span> &#123;</span><br><span class="line">        println(<span class="string">'method : '</span> + name)</span><br><span class="line">        println(<span class="string">'args : '</span> + args)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">closure</span> = &#123;</span></span><br><span class="line">    demoImplementation <span class="string">'com.google.code.gson:gson:2.6.2'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">closure.delegate = new Delegate()</span><br><span class="line">closure()</span><br></pre></td></tr></table></figure>
+
+<p>上面的例子,我们在闭包中调用了delegate中也没有的方法demoImplementation,这个时候会调用delegate的invokeMethod,打印如下:</p>
+<figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">method</span> :</span> demoImplementation</span><br><span class="line">args : [com.google.code.gson:gson:<span class="number">2.6</span>.<span class="number">2</span>]</span><br></pre></td></tr></table></figure>
+
+<p>所以这个时候我们就可以在这个invokeMethod方法里面给每个product配置依赖了。</p>
+<h1 id="Extension"><a href="#Extension" class="headerlink" title="Extension"></a>Extension</h1><p>与project.dependencies不同project.android,project里面并没有一个方法叫做android。</p>
+<p>那这个project.android方法是怎么调用的呢?它是通过project的一个Extension,也就是project的一个拓展。</p>
+<p>这个拓展是怎么来的呢?可以看看下面的代码:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyAndroid</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">compileSdkVersion</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">compileSdkVersion</span></span>(compileSdkVersion) &#123;</span><br><span class="line">        <span class="keyword">this</span>.compileSdkVersion = compileSdkVersion</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">project.extensions.add(<span class="symbol">'myAndroi</span>d', <span class="keyword">new</span> <span class="type">MyAndroid</span>())</span><br><span class="line"></span><br><span class="line">project.myAndroid &#123;</span><br><span class="line">    compileSdkVersion <span class="number">28</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们只需要使用project.extensions.add方法加入一个名字叫做myAndroid的Extension,gradle就会为我们在project里面添加一个名字叫做myAndroid的方法,接收一个闭包,然后在这个方法里面会将传入的闭包的delegate设置成我们new出来的MyAndroid对象。</p>
+<h2 id="metaClass"><a href="#metaClass" class="headerlink" title="metaClass"></a>metaClass</h2><p>这个Extension又是怎么实现的呢？</p>
+<p>其实脚本语言一般都支持动态添加方法和属性,groovy同样也支持。</p>
+<p>我们在groovy中可以使用metaClass进行运行是元编程,动态创建类、方法等</p>
+<p>例如,下面代码中我们给Demo类动态添加了hello属性和sayHello方法:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Demo</span> &#123;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Demo.metaClass.<span class="string">"hello"</span> = <span class="string">"hello world"</span></span><br><span class="line">Demo.metaClass.<span class="string">"sayHello"</span> = &#123; <span class="built_in">println</span>(<span class="string">"hello world"</span>) &#125;</span><br><span class="line"></span><br><span class="line">Demo demo = <span class="keyword">new</span> Demo()</span><br><span class="line">demo.sayHello()</span><br><span class="line"><span class="built_in">println</span>(demo.hello)</span><br></pre></td></tr></table></figure>
+
+<p>甚至当重名的时候它还会根据我们设置的是值还是闭包帮我们分别创建属性和方法:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Demo</span> &#123;</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Demo.metaClass.<span class="string">"hello"</span> = <span class="string">"hello world"</span></span><br><span class="line">Demo.metaClass.<span class="string">"hello"</span> = &#123; <span class="built_in">println</span>(<span class="string">"hello world"</span>) &#125;</span><br><span class="line"></span><br><span class="line">Demo demo = <span class="keyword">new</span> Demo()</span><br><span class="line">demo.hello()</span><br><span class="line"><span class="built_in">println</span>(demo.hello)</span><br></pre></td></tr></table></figure>
+
+<p>有了这个元编程的技术,要实现Extension就简单了:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> addExtensions(String name, Object handler) &#123;</span><br><span class="line">    <span class="keyword">project</span>.metaClass.<span class="string">"$name"</span> = &#123; it -&gt;</span><br><span class="line">        it.delegate = handler</span><br><span class="line">        it()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">project</span>.metaClass.<span class="string">"$name"</span> = handler</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> MyAndroid &#123;</span><br><span class="line">    <span class="keyword">def</span> compileSdkVersion;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> compileSdkVersion(compileSdkVersion) &#123;</span><br><span class="line">        <span class="keyword">this</span>.compileSdkVersion = compileSdkVersion</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">addExtensions(<span class="string">'myAndroid'</span>, <span class="keyword">new</span> MyAndroid())</span><br><span class="line"></span><br><span class="line"><span class="keyword">project</span>.myAndroid &#123;</span><br><span class="line">    compileSdkVersion <span class="number">28</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">println</span>(<span class="keyword">project</span>.myAndroid.compileSdkVersion)</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/04/22/来谈一谈安卓应用的破解/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2019/05/18/可能是全网讲最细的安卓resources-arsc解析教程-一/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2019/04/26/一起入门gradle自定义插件编写-二-深入理解build-gradle/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

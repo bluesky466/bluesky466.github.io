@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>读书笔记 -《代码整洁之道》 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="读书笔记,">
+  
+
+  <meta name="description" content="长呼一口气，终于看完了。明明就只有300多页，但这本《代码整洁之道》还真是难啃啊。 书是好书，讲的也十分细致。就连命名、方法定义的顺序、注释这些小细节都用了不少的文字去强调。虽然有些观点我不太认同（比如我觉得类成员变量就应该多一个字符m或者下划线去和临时变量做区别）但绝大部分的建议和条款我觉得都讲的十分有道理。总结了几个自认为最重要的点：  不管是变量还是函数，命名都应该有意义且名副其实 应该按照">
+<meta name="keywords" content="读书笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读书笔记 -《代码整洁之道》">
+<meta property="og:url" content="http://139.199.4.241/2016/01/30/读书笔记-《代码整洁之道》/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="长呼一口气，终于看完了。明明就只有300多页，但这本《代码整洁之道》还真是难啃啊。 书是好书，讲的也十分细致。就连命名、方法定义的顺序、注释这些小细节都用了不少的文字去强调。虽然有些观点我不太认同（比如我觉得类成员变量就应该多一个字符m或者下划线去和临时变量做区别）但绝大部分的建议和条款我觉得都讲的十分有道理。总结了几个自认为最重要的点：  不管是变量还是函数，命名都应该有意义且名副其实 应该按照">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.287Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="读书笔记 -《代码整洁之道》">
+<meta name="twitter:description" content="长呼一口气，终于看完了。明明就只有300多页，但这本《代码整洁之道》还真是难啃啊。 书是好书，讲的也十分细致。就连命名、方法定义的顺序、注释这些小细节都用了不少的文字去强调。虽然有些观点我不太认同（比如我觉得类成员变量就应该多一个字符m或者下划线去和临时变量做区别）但绝大部分的建议和条款我觉得都讲的十分有道理。总结了几个自认为最重要的点：  不管是变量还是函数，命名都应该有意义且名副其实 应该按照">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-读书笔记-《代码整洁之道》" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">读书笔记 -《代码整洁之道》</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2016.01.30</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2016/01/30/读书笔记-《代码整洁之道》/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>长呼一口气，终于看完了。明明就只有300多页，但这本《代码整洁之道》还真是难啃啊。</p>
+<p>书是好书，讲的也十分细致。就连命名、方法定义的顺序、注释这些小细节都用了不少的文字去强调。虽然有些观点我不太认同（比如我觉得类成员变量就应该多一个字符m或者下划线去和临时变量做区别）但绝大部分的建议和条款我觉得都讲的十分有道理。总结了几个自认为最重要的点：</p>
+<ol>
+<li>不管是变量还是函数，命名都应该有意义且名副其实</li>
+<li>应该按照垂直格式摆放函数定义</li>
+<li>注释应该正确且有用</li>
+<li>函数应该只做一件事，且应该尽量短小</li>
+<li>模块不应该了解它所操作的对象的内部情形</li>
+</ol>
+<p>作者对于代码的要求堪称苛刻，看他写代码的过程真的可以算是精雕细琢，最终呈现的代码可谓优雅。虽然我也不能指望自己通过读完一本书，写代码的能力就有质的飞跃。但这本书起码提醒了我一些以前没有注意到的地方，以后写代码的时候试试提醒自己，能有所提高也就不负我这几天的努力了。</p>
+<p>要说这本书难啃也是真的。中间有大量的代码实例，而且很多都是著名的开源框架的源码（如Tomcat、Spring和JUnit），在阅读这本书的过程中大部分时间我是花在理解这些代码上的。因为对java不太熟悉，这些框架更是一个都没有用过，所以读起来十分的痛苦，中间好几次都想放弃了。</p>
+<p>多亏最终坚持了下来，我还得到了一些以后的学习道路的启示：</p>
+<p>一是java还需要重新好好学一遍。毕竟现在正在学安卓，我的java基础实在弱的可以，尤其是并发编程相关的知识可以说就是一张白纸。</p>
+<p>二是需要学习一下测试驱动开发（TDD）相关的知识。我发现最近看的书，都把测试放在了很重要的位置上。以前写代码就没有做过单元测试，所以拿到测试部门的时候总会出现这样那样不应该出现的问题。java方面jUnit是一定要去学习的，而c++其实也有类似googletest这样的测试框架。为了写出高质量的代码，这部分的知识也应该去好好补一补了。</p>
+<p>所以我下一步打算找找java还有测试相关的书籍来看看。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2016/01/27/DrawerLayout-学习笔记/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2016/02/08/GTest实例解析/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2016/01/30/读书笔记-《代码整洁之道》/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

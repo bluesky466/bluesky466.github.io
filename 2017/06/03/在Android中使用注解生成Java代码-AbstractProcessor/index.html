@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>在Android中使用注解生成Java代码 AbstractProcessor | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="前段时间在学习Dagger2,对它生成代码的原理充满了好奇。google了之后发现原来java原生就是支持代码生成的。 通过Annotation Processor可以在编译的时候处理注解,生成我们自定义的代码,这些生成的代码会和其他手写的代码一样被javac编译。注意Annotation Processor只能用来生成代码,而不能对原来的代码进行修改。 实现的原理是通过继承AbstractPro">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在Android中使用注解生成Java代码 AbstractProcessor">
+<meta property="og:url" content="http://139.199.4.241/2017/06/03/在Android中使用注解生成Java代码-AbstractProcessor/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="前段时间在学习Dagger2,对它生成代码的原理充满了好奇。google了之后发现原来java原生就是支持代码生成的。 通过Annotation Processor可以在编译的时候处理注解,生成我们自定义的代码,这些生成的代码会和其他手写的代码一样被javac编译。注意Annotation Processor只能用来生成代码,而不能对原来的代码进行修改。 实现的原理是通过继承AbstractPro">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.275Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在Android中使用注解生成Java代码 AbstractProcessor">
+<meta name="twitter:description" content="前段时间在学习Dagger2,对它生成代码的原理充满了好奇。google了之后发现原来java原生就是支持代码生成的。 通过Annotation Processor可以在编译的时候处理注解,生成我们自定义的代码,这些生成的代码会和其他手写的代码一样被javac编译。注意Annotation Processor只能用来生成代码,而不能对原来的代码进行修改。 实现的原理是通过继承AbstractPro">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#AbstractProcessor"><span class="toc-text">AbstractProcessor</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#注册Processor"><span class="toc-text">注册Processor</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#在安卓中自定义Processor"><span class="toc-text">在安卓中自定义Processor</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#创建配置工程"><span class="toc-text">创建配置工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#创建注解"><span class="toc-text">创建注解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#创建InjectorProcessor"><span class="toc-text">创建InjectorProcessor</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#注册InjectorProcessor"><span class="toc-text">注册InjectorProcessor</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用InjectView注解"><span class="toc-text">使用InjectView注解</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#工具类"><span class="toc-text">工具类</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Types"><span class="toc-text">Types</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Elements"><span class="toc-text">Elements</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Filer"><span class="toc-text">Filer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Messager"><span class="toc-text">Messager</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Element的子接口"><span class="toc-text">Element的子接口</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Element的一些常用操作"><span class="toc-text">Element的一些常用操作</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Demo地址"><span class="toc-text">Demo地址</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-在Android中使用注解生成Java代码-AbstractProcessor" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">在Android中使用注解生成Java代码 AbstractProcessor</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.06.03</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2017/06/03/在Android中使用注解生成Java代码-AbstractProcessor/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>前段时间在学习Dagger2,对它生成代码的原理充满了好奇。google了之后发现原来java原生就是支持代码生成的。</p>
+<p>通过Annotation Processor可以在编译的时候处理注解,生成我们自定义的代码,这些生成的代码会和其他手写的代码一样被javac编译。注意Annotation Processor只能用来生成代码,而不能对原来的代码进行修改。</p>
+<p>实现的原理是通过继承AbstractProcessor,实现我们自己的Processor,然后把它注册给java编译器,编译器在编译之前使用我们定义的Processor去处理注解。</p>
+<h1 id="AbstractProcessor"><a href="#AbstractProcessor" class="headerlink" title="AbstractProcessor"></a>AbstractProcessor</h1><p>AbstractProcessor是一个抽象类,我们继承它需要实现一个抽象方法process,在这个方法里面去处理注解。然后它还有几个方法需要我们去重写。</p>
+<figure class="highlight nimrod"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public class <span class="type">MyProcessor</span> extends <span class="type">AbstractProcessor</span> &#123;</span><br><span class="line">    @<span class="type">Override</span></span><br><span class="line">    public synchronized <span class="built_in">void</span> init(<span class="type">ProcessingEnvironment</span> processingEnvironment) <span class="meta">&#123;...&#125;</span></span><br><span class="line">    </span><br><span class="line">    @<span class="type">Override</span></span><br><span class="line">    public <span class="type">Set</span>&lt;<span class="type">String</span>&gt; getSupportedAnnotationTypes() <span class="meta">&#123;...&#125;</span></span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    @<span class="type">Override</span></span><br><span class="line">    public <span class="type">SourceVersion</span> getSupportedSourceVersion() <span class="meta">&#123;...&#125;</span></span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    @<span class="type">Override</span></span><br><span class="line">    public boolean process(<span class="type">Set</span>&lt;? extends <span class="type">TypeElement</span>&gt; <span class="built_in">set</span>, <span class="type">RoundEnvironment</span> roundEnvironment) <span class="meta">&#123;...&#125;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>init方法是初始化的地方,我们可以通过ProcessingEnvironment获取到很多有用的工具类</p>
+</li>
+<li><p>getSupportedAnnotationTypes 这个方法指定处理的注解,需要将要处理的注解的全名放到Set中返回</p>
+</li>
+<li><p>getSupportedSourceVersion 这个方法用来指定支持的java版本</p>
+</li>
+<li><p>process 是实际处理注解的地方</p>
+</li>
+</ul>
+<p>在Java 7后多了 SupportedAnnotationTypes 和 SupportedSourceVersion 这个两个注解用来简化指定注解和java版本的操作:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@SupportedAnnotationTypes</span>(&#123;<span class="string">"linjw.demo.injector.InjectView"</span>&#125;)</span><br><span class="line"><span class="variable">@SupportedSourceVersion</span>(SourceVersion.RELEASE_7)</span><br><span class="line">public class InjectorProcessor extends AbstractProcessor &#123;</span><br><span class="line">    <span class="variable">@Override</span></span><br><span class="line">    public synchronized void init(ProcessingEnvironment processingEnvironment) &#123;...&#125;</span><br><span class="line">        </span><br><span class="line">    <span class="variable">@Override</span></span><br><span class="line">    public boolean process(Set&lt;? extends TypeElement&gt; set, RoundEnvironment roundEnvironment) &#123;...&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="注册Processor"><a href="#注册Processor" class="headerlink" title="注册Processor"></a>注册Processor</h1><p>编写完我们的Processor之后需要将它注册给java编译器</p>
+<ol>
+<li><p>在src/main目录下创建resources/META-INF/services/javax.annotation.processing.Processor文件(即创建resources目录,在resources目录下创建META-INF目录,继续在META-INF目录下创建services目录,最后在services目录下创建javax.annotation.processing.Processor文件)。</p>
+</li>
+<li><p>在javax.annotation.processing.Processor中写入自定义的Processor的全名,如果有多个Processor的话,每一行写一个。</p>
+</li>
+</ol>
+<p>完成后 javax.annotation.processing.Processor 内容如下</p>
+<blockquote>
+<p>$ cat javax.annotation.processing.Processor<br>linjw.demo.injector.InjectorProcessor</p>
+</blockquote>
+<h1 id="在安卓中自定义Processor"><a href="#在安卓中自定义Processor" class="headerlink" title="在安卓中自定义Processor"></a>在安卓中自定义Processor</h1><p>我以前在学习Java自定义注解的时候写过一个<a href="http://blog.islinjw.cn/2016/05/27/Java%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3%E5%92%8C%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/#u53E6_u5916_u7684_u4E00_u4E2A_u5B9E_u7528_u7684_u5C0F_u4F8B_u5B50" target="_blank" rel="noopener">小例子</a>,它是用运行时注解通过反射简化findViewById操作的。但是这种使用运行时注解的方法在效率上是有缺陷的,因为反射的效率很低。</p>
+<p>基本上学安卓的人都知道有个很火的开源库<a href="https://github.com/JakeWharton/butterknife" target="_blank" rel="noopener">ButterKnife</a>,它也能简化findViewById操作,但它是通过编译时注解生成代码去实现的,效率比我们使用反射实现要高很多很多。</p>
+<p>其实我对ButterKnife的原理也一直很好奇,下面就让我们也用生成代码的方式高效的简化findViewById操作。</p>
+<h2 id="创建配置工程"><a href="#创建配置工程" class="headerlink" title="创建配置工程"></a>创建配置工程</h2><p>首先在android项目中是找不到AbstractProcessor的,需要新建一个Java Library Module。</p>
+<p>Android Studio中按File -&gt; New -&gt; New Module… 然后选择新建Java Library, Module的名字改为libinjector。</p>
+<p>同时在安卓中使用AbstractProcessor需要apt的支持,所以需要配置一下gradle:</p>
+<p>1.在 project 的 build.gradle 的 dependencies 下加上 android-apt 支持</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"><span class="keyword">dependencies</span> &#123;</span><br><span class="line">        <span class="keyword">classpath</span> <span class="string">'com.android.tools.build:gradle:2.2.2'</span></span><br><span class="line">        <span class="keyword">classpath</span> <span class="string">'com.neenbedankt.gradle.plugins:android-apt:1.8'</span></span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>2.在 app 的 build.gradle 的开头加上 “apply plugin: ‘com.neenbedankt.android-apt’”</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.android.application'</span></span><br><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.neenbedankt.android-apt'</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建注解"><a href="#创建注解" class="headerlink" title="创建注解"></a>创建注解</h2><p>我们在libinjector中创建注解InjectView</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Target</span>(ElementType.FIELD)</span><br><span class="line"><span class="variable">@Retention</span>(RetentionPolicy.SOURCE)</span><br><span class="line">public <span class="variable">@interface</span> InjectView &#123;</span><br><span class="line">    <span class="selector-tag">int</span> <span class="selector-tag">value</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个是个修饰Field且作用于源码的自定义注解。关于自定义注解的知识可以看看我以前写的一篇文章<a href="http://blog.islinjw.cn/2016/05/27/Java%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3%E5%92%8C%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/" target="_blank" rel="noopener">《Java自定义注解和动态代理》</a>。我们用它来修饰View成员变量并保持View的resource id,生成的代码通过resource id使用findViewById注入成员变量。</p>
+<h2 id="创建InjectorProcessor"><a href="#创建InjectorProcessor" class="headerlink" title="创建InjectorProcessor"></a>创建InjectorProcessor</h2><p>在libinjector中创建InjectorProcessor实现代码的生成</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br></pre></td><td class="code"><pre><span class="line">@SupportedAnnotationTypes(&#123;<span class="string">"linjw.demo.injector.InjectView"</span>&#125;)</span><br><span class="line">@SupportedSourceVersion(SourceVersion.RELEASE_7)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InjectorProcessor</span> <span class="title">extends</span> <span class="title">AbstractProcessor</span> &#123;</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> final <span class="keyword">String</span> GEN_CLASS_SUFFIX = <span class="string">"Injector"</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> final <span class="keyword">String</span> INJECTOR_NAME = <span class="string">"ViewInjector"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Types mTypeUtils;</span><br><span class="line">    <span class="keyword">private</span> Elements mElementUtils;</span><br><span class="line">    <span class="keyword">private</span> Filer mFiler;</span><br><span class="line">    <span class="keyword">private</span> Messager mMessager;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    <span class="function"><span class="keyword">public</span> synchronized <span class="keyword">void</span> <span class="title">init</span><span class="params">(ProcessingEnvironment processingEnvironment)</span> </span>&#123;</span><br><span class="line">        super.init(processingEnvironment);</span><br><span class="line"></span><br><span class="line">        mTypeUtils = processingEnv.getTypeUtils();</span><br><span class="line">        mElementUtils = processingEnv.getElementUtils();</span><br><span class="line">        mFiler = processingEnv.getFiler();</span><br><span class="line">        mMessager = processingEnv.getMessager();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">process</span><span class="params">(Set&lt;? extends TypeElement&gt; <span class="built_in">set</span>, RoundEnvironment roundEnvironment)</span> </span>&#123;</span><br><span class="line">        Set&lt;? extends Element&gt; elements = roundEnvironment.getElementsAnnotatedWith(InjectView.class);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//process会被调用三次，只有一次是可以处理InjectView注解的，原因不明</span></span><br><span class="line">        <span class="keyword">if</span> (elements.<span class="built_in">size</span>() == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Map&lt;Element, List&lt;Element&gt;&gt; elementMap = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        StringBuffer <span class="built_in">buffer</span> = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">        <span class="built_in">buffer</span>.append(<span class="string">"package linjw.demo.injector;\n"</span>)</span><br><span class="line">                .append(<span class="string">"public class "</span> + INJECTOR_NAME + <span class="string">" &#123;\n"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//遍历所有被InjectView注释的元素</span></span><br><span class="line">        <span class="keyword">for</span> (Element element : elements) &#123;</span><br><span class="line">            <span class="comment">//如果标注的对象不是FIELD则报错,这个错误其实不会发生因为InjectView的Target已经声明为ElementType.FIELD了</span></span><br><span class="line">            <span class="keyword">if</span> (element.getKind()!= ElementKind.FIELD) &#123;</span><br><span class="line">                mMessager.printMessage(Diagnostic.Kind.ERROR, <span class="string">"is not a FIELD"</span>, element);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//这里可以先将element转换为VariableElement,但我们这里不需要</span></span><br><span class="line">            <span class="comment">//VariableElement variableElement = (VariableElement) element;</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">//如果不是View的子类则报错</span></span><br><span class="line">            <span class="keyword">if</span> (!isView(element.asType()))&#123;</span><br><span class="line">                mMessager.printMessage(Diagnostic.Kind.ERROR, <span class="string">"is not a View"</span>, element);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//获取所在类的信息</span></span><br><span class="line">            Element clazz = element.getEnclosingElement();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//按类存入map中</span></span><br><span class="line">            addElement(elementMap, clazz, element);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (Map.Entry&lt;Element, List&lt;Element&gt;&gt; entry : elementMap.entrySet()) &#123;</span><br><span class="line">            Element clazz = entry.<span class="built_in">getKey</span>();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//获取类名</span></span><br><span class="line">            <span class="keyword">String</span> className = clazz.getSimpleName().toString();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//获取所在的包名</span></span><br><span class="line">            <span class="keyword">String</span> packageName = mElementUtils.getPackageOf(clazz).asType().toString();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//生成注入代码</span></span><br><span class="line">            generateInjectorCode(packageName, className, entry.getValue());</span><br><span class="line"></span><br><span class="line">            <span class="comment">//完整类名</span></span><br><span class="line">            <span class="keyword">String</span> fullName = clazz.asType().toString();</span><br><span class="line"></span><br><span class="line">            <span class="built_in">buffer</span>.append(<span class="string">"\tpublic static void inject("</span> + fullName + <span class="string">" arg) &#123;\n"</span>)</span><br><span class="line">                    .append(<span class="string">"\t\t"</span> + fullName + GEN_CLASS_SUFFIX + <span class="string">".inject(arg);\n"</span>)</span><br><span class="line">                    .append(<span class="string">"\t&#125;\n"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">buffer</span>.append(<span class="string">"&#125;"</span>);</span><br><span class="line"></span><br><span class="line">        generateCode(INJECTOR_NAME, <span class="built_in">buffer</span>.toString());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//递归判断android.view.View是不是其父类</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isView</span><span class="params">(TypeMirror type)</span> </span>&#123;</span><br><span class="line">        List&lt;? extends TypeMirror&gt; supers = mTypeUtils.directSupertypes(type);</span><br><span class="line">        <span class="keyword">if</span> (supers.<span class="built_in">size</span>() == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (TypeMirror superType : supers) &#123;</span><br><span class="line">            <span class="keyword">if</span> (superType.toString().equals(<span class="string">"android.view.View"</span>) || isView(superType)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">addElement</span><span class="params">(Map&lt;Element, List&lt;Element&gt;&gt; <span class="built_in">map</span>, Element clazz, Element field)</span> </span>&#123;</span><br><span class="line">        List&lt;Element&gt; <span class="built_in">list</span> = <span class="built_in">map</span>.<span class="built_in">get</span>(clazz);</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">list</span> == null) &#123;</span><br><span class="line">            <span class="built_in">list</span> = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">            <span class="built_in">map</span>.<span class="built_in">put</span>(clazz, <span class="built_in">list</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">list</span>.add(field);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">generateCode</span><span class="params">(<span class="keyword">String</span> className, <span class="keyword">String</span> code)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            JavaFileObject file = mFiler.createSourceFile(className);</span><br><span class="line">            Writer writer = file.openWriter();</span><br><span class="line">            writer.<span class="built_in">write</span>(code);</span><br><span class="line">            writer.<span class="built_in">close</span>();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 生成注入代码</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * @param packageName 包名</span></span><br><span class="line"><span class="comment">     * @param className   类名</span></span><br><span class="line"><span class="comment">     * @param views       需要注入的成员变量</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">generateInjectorCode</span><span class="params">(<span class="keyword">String</span> packageName, <span class="keyword">String</span> className, List&lt;Element&gt; views)</span> </span>&#123;</span><br><span class="line">        StringBuilder builder = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">        builder.append(<span class="string">"package "</span> + packageName + <span class="string">";\n\n"</span>)</span><br><span class="line">                .append(<span class="string">"public class "</span> + className + GEN_CLASS_SUFFIX + <span class="string">" &#123;\n"</span>)</span><br><span class="line">                .append(<span class="string">"\tpublic static void inject("</span> + className + <span class="string">" arg) &#123;\n"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (Element element : views) &#123;</span><br><span class="line">            <span class="comment">//获取变量类型</span></span><br><span class="line">            <span class="keyword">String</span> type = element.asType().toString();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//获取变量名</span></span><br><span class="line">            <span class="keyword">String</span> name = element.getSimpleName().toString();</span><br><span class="line"></span><br><span class="line">            <span class="comment">//id</span></span><br><span class="line">            <span class="keyword">int</span> resourceId = element.getAnnotation(InjectView.class).value();</span><br><span class="line"></span><br><span class="line">            builder.append(<span class="string">"\t\targ."</span> + name + <span class="string">"=("</span> + type + <span class="string">")arg.findViewById("</span> + resourceId + <span class="string">");\n"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        builder.append(<span class="string">"\t&#125;\n"</span>)</span><br><span class="line">                .append(<span class="string">"&#125;"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//生成代码</span></span><br><span class="line">        generateCode(className + GEN_CLASS_SUFFIX, builder.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="注册InjectorProcessor"><a href="#注册InjectorProcessor" class="headerlink" title="注册InjectorProcessor"></a>注册InjectorProcessor</h2><p>在libinjector的src/main目录下创建resources/META-INF/services/javax.annotation.processing.Processor文件注册InjectorProcessor:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 注册<span class="selector-tag">InjectorProcessor</span></span><br><span class="line"><span class="selector-tag">linjw</span><span class="selector-class">.demo</span><span class="selector-class">.injector</span><span class="selector-class">.InjectorProcessor</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="使用InjectView注解"><a href="#使用InjectView注解" class="headerlink" title="使用InjectView注解"></a>使用InjectView注解</h2><p>我们在Activity中使用InjectView修饰需要赋值的View变量并且用ViewInjector.inject(this);调用生成的掉初始化修饰的成员变量。这里有两个Activity都使用了InjectView去简化findViewById操作:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    <span class="meta">@InjectView</span>(<span class="type">R</span>.id.label)</span><br><span class="line">    <span class="type">TextView</span> mLabel;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@InjectView</span>(<span class="type">R</span>.id.button)</span><br><span class="line">    <span class="type">Button</span> mButton;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//使用findViewById注入被InjectView修饰的成员变量</span></span><br><span class="line">        <span class="type">ViewInjector</span>.inject(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ViewInjector.inject(this) 已经将mLabel和mButton赋值了,可以直接使用</span></span><br><span class="line">        mLabel.setText(<span class="string">"MainActivity"</span>);</span><br><span class="line"></span><br><span class="line">        mButton.setText(<span class="string">"jump to SecondActivity"</span>);</span><br><span class="line">        mButton.setOnClickListener(<span class="keyword">new</span> <span class="type">View</span>.<span class="type">OnClickListener</span>() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            public void onClick(<span class="type">View</span> v) &#123;</span><br><span class="line">                <span class="type">Intent</span> intent  = <span class="keyword">new</span> <span class="type">Intent</span>(<span class="type">MainActivity</span>.<span class="keyword">this</span>, <span class="type">SecondActivity</span><span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">                startActivity(intent);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">SecondActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> </span>&#123;</span><br><span class="line">    <span class="meta">@InjectView</span>(<span class="type">R</span>.id.label)</span><br><span class="line">    <span class="type">TextView</span> mLabel;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_second);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//使用findViewById注入被InjectView修饰的成员变量</span></span><br><span class="line">        <span class="type">ViewInjector</span>.inject(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// ViewInjector.inject(this) 已经将mLabel赋值了,可以直接使用</span></span><br><span class="line">        mLabel.setText(<span class="string">"SecondActivity"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="工具类"><a href="#工具类" class="headerlink" title="工具类"></a>工具类</h1><p>在 AbstractProcessor.init 方法中我们可以获得几个很有用的工具类:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">mTypeUtils</span> = processingEnv.getTypeUtils()<span class="comment">;</span></span><br><span class="line"><span class="attr">mElementUtils</span> = processingEnv.getElementUtils()<span class="comment">;</span></span><br><span class="line"><span class="attr">mFiler</span> = processingEnv.getFiler()<span class="comment">;</span></span><br><span class="line"><span class="attr">mMessager</span> = processingEnv.getMessager()<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>它们的作用如下:</p>
+<h2 id="Types"><a href="#Types" class="headerlink" title="Types"></a>Types</h2><p>Types提供了和类型相关的一些操作，如获取父类、判断两个类是不是父子关系等，我们在isView中就用它去获取父类</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//递归判断android.view.View是不是其父类   </span></span><br><span class="line"><span class="keyword">private</span> <span class="built_in">boolean</span> isView(TypeMirror <span class="keyword">type</span>) &#123;</span><br><span class="line">    <span class="built_in">List</span>&lt;? extends TypeMirror&gt; supers = mTypeUtils.directSupertypes(<span class="keyword">type</span>);</span><br><span class="line">    <span class="keyword">if</span> (supers.size() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    for (TypeMirror superType : supers) &#123;</span><br><span class="line">        <span class="keyword">if</span> (superType.toString().<span class="keyword">equals</span>(<span class="string">"android.view.View"</span>) || isView(superType)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Elements"><a href="#Elements" class="headerlink" title="Elements"></a>Elements</h2><p>Elements提供了一些和元素相关的操作，如获取所在包的包名等:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">//</span>获取所在的包名</span><br><span class="line">String packageName = mElementUtils.getPackageOf<span class="params">(clazz)</span><span class="string">.asType</span><span class="params">()</span><span class="string">.toString</span><span class="params">()</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Filer"><a href="#Filer" class="headerlink" title="Filer"></a>Filer</h2><p>Filer用于文件操作,我们用它去创建生成的代码文件</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">generateCode</span><span class="params">(<span class="keyword">String</span> className, <span class="keyword">String</span> code)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">           JavaFileObject file = mFiler.createSourceFile(className);</span><br><span class="line">           Writer writer = file.openWriter();</span><br><span class="line">           writer.<span class="built_in">write</span>(code);</span><br><span class="line">           writer.<span class="built_in">close</span>();</span><br><span class="line">       &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">           e.printStackTrace();</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Messager"><a href="#Messager" class="headerlink" title="Messager"></a>Messager</h2><p>Messager 顾名思义就是用于打印的,它会打印出Element所在的源代码，它还会抛出异常。靠默认的错误打印有时很难找出错误的地方,我们可以用它去添加更直观的日志打印</p>
+<p>当用InjectView标注了非View的成员变量我们就会打印错误并抛出异常(这里我们使用Diagnostic.Kind.ERROR,这个打印会抛出异常终止Processor):</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//如果不是View的子类则报错</span></span><br><span class="line"><span class="selector-tag">if</span> (!isView(element.asType()))&#123;</span><br><span class="line">	<span class="selector-tag">mMessager</span><span class="selector-class">.printMessage</span>(Diagnostic.Kind.ERROR, <span class="string">"is not a View"</span>, element);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>例如我们如果在MainActivity中为一个String变量标注InjectView:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//在非View上使用InjectView就会报错</span></span><br><span class="line"><span class="meta">@InjectView</span>(R.id.button)</span><br><span class="line"><span class="built_in">String</span> x;</span><br></pre></td></tr></table></figure>
+
+<p>则会报错:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">  符号:   类 ViewInjector</span><br><span class="line">  位置: 程序包 linjw.demo.injector</span><br><span class="line"><span class="regexp">/Users/</span>linjw<span class="regexp">/workspace/</span>ProcessorDemo<span class="regexp">/app/</span>src<span class="regexp">/main/</span>java<span class="regexp">/linjw/</span>demo<span class="regexp">/processordemo/</span>MainActivity.<span class="string">java:</span><span class="number">22</span>: 错误: is not a View</span><br><span class="line">    String x;</span><br><span class="line">           ^</span><br></pre></td></tr></table></figure>
+
+<p>如果我们不用Messager去打印,生成的代码之后也会有打印,但是就不是那么清晰了:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="regexp">/Users/</span>linjw<span class="regexp">/workspace/</span>ProcessorDemo<span class="regexp">/app/</span>build<span class="regexp">/generated/</span>source<span class="regexp">/apt/</span>debug/MainActivityInjector.<span class="string">java:</span><span class="number">7</span>: 错误: 不兼容的类型: View无法转换为String</span><br><span class="line">                arg.x=(java.lang.String)arg.findViewById(<span class="number">2131427415</span>);</span><br></pre></td></tr></table></figure>
+
+<h1 id="Element的子接口"><a href="#Element的子接口" class="headerlink" title="Element的子接口"></a>Element的子接口</h1><p>我们在process方法中使用getElementsAnnotatedWith获取到的都是Element接口,其实我们用Element.getKind获取到类型之后可以将他们强转成对应的子接口,这些子接口提供了一些针对性的操作。</p>
+<p>这些子接口有:</p>
+<ul>
+<li>TypeElement：表示一个类或接口程序元素。</li>
+<li>PackageElement：表示一个包程序元素。</li>
+<li>VariableElement：表示一个属性、enum 常量、方法或构造方法参数、局部变量或异常参数。</li>
+<li>ExecutableElement：表示某个类或接口的方法、构造方法或初始化程序（静态或实例），包括注释类型元素。</li>
+</ul>
+<p>对应关系如下</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">package linjw.demo;  <span class="comment">// PackageElement</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span> &#123;</span>  <span class="comment">// TypeElement</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">String</span> mName;  <span class="comment">// VariableElement</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Person</span> <span class="params">()</span> </span>&#123;&#125;  <span class="comment">// ExecutableElement</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span> <span class="params">(<span class="keyword">String</span> name)</span> </span>&#123;mName=name;&#125;  <span class="comment">// ExecutableElement</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Element的一些常用操作"><a href="#Element的一些常用操作" class="headerlink" title="Element的一些常用操作"></a>Element的一些常用操作</h1><p>获取类名:</p>
+<ul>
+<li>Element.getSimpleName().toString(); // 获取类名</li>
+<li>Element.asType().toString(); //获取类的全名</li>
+</ul>
+<p>获取所在的包名:</p>
+<ul>
+<li>Elements.getPackageOf(Element).asType().toString();</li>
+</ul>
+<p>获取所在的类:</p>
+<ul>
+<li>Element.getEnclosingElement();</li>
+</ul>
+<p>获取父类:</p>
+<ul>
+<li>Types.directSupertypes(Element.asType())</li>
+</ul>
+<p>获取标注对象的类型:</p>
+<ul>
+<li>Element.getKind()</li>
+</ul>
+<h1 id="Demo地址"><a href="#Demo地址" class="headerlink" title="Demo地址"></a>Demo地址</h1><p>可以在<a href="https://github.com/bluesky466/ProcessorDemo" target="_blank" rel="noopener">这里</a>查看完整代码</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/05/17/Dagger2学习笔记-二/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/06/06/c++模板中的class和typename/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2017/06/03/在Android中使用注解生成Java代码-AbstractProcessor/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

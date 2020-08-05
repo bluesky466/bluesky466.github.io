@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>深入native层死抠Handler | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="Handler算是面试里面最大几率被问到的问题了,很多同学也能回答上来一些东西,像什么Looper、MessagerQueue啊(看这里),但是如果想知道一个人是否有专研精神的话,其实handler可以一直往下问。例如postDelayed是怎么实现的?(看这里) 问到了这里其实对于绝大多数面试其实已经够了,但是如果你面的公司比较看重基础或者面试官想看看你是否有专研精神,他可能会继续问Messag">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入native层死抠Handler">
+<meta property="og:url" content="http://139.199.4.241/2019/11/05/深入native层死抠Handler/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="Handler算是面试里面最大几率被问到的问题了,很多同学也能回答上来一些东西,像什么Looper、MessagerQueue啊(看这里),但是如果想知道一个人是否有专研精神的话,其实handler可以一直往下问。例如postDelayed是怎么实现的?(看这里) 问到了这里其实对于绝大多数面试其实已经够了,但是如果你面的公司比较看重基础或者面试官想看看你是否有专研精神,他可能会继续问Messag">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/深入native层死抠Handler/1.png">
+<meta property="og:image" content="http://139.199.4.241/深入native层死抠Handler/2.png">
+<meta property="og:updated_time" content="2019-11-22T01:50:25.963Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入native层死抠Handler">
+<meta name="twitter:description" content="Handler算是面试里面最大几率被问到的问题了,很多同学也能回答上来一些东西,像什么Looper、MessagerQueue啊(看这里),但是如果想知道一个人是否有专研精神的话,其实handler可以一直往下问。例如postDelayed是怎么实现的?(看这里) 问到了这里其实对于绝大多数面试其实已经够了,但是如果你面的公司比较看重基础或者面试官想看看你是否有专研精神,他可能会继续问Messag">
+<meta name="twitter:image" content="http://139.199.4.241/深入native层死抠Handler/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#io多路复用"><span class="toc-text">io多路复用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Handler是如何使用epoll模型的"><span class="toc-text">Handler是如何使用epoll模型的</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#epoll模型的使用简介"><span class="toc-text">epoll模型的使用简介</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#epoll-create"><span class="toc-text">epoll_create</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#epoll-ctl"><span class="toc-text">epoll_ctl</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#epoll-wait"><span class="toc-text">epoll_wait</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#select-poll"><span class="toc-text">select/poll</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-深入native层死抠Handler" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">深入native层死抠Handler</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.11.05</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2019/11/05/深入native层死抠Handler/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>Handler算是面试里面最大几率被问到的问题了,很多同学也能回答上来一些东西,像什么Looper、MessagerQueue啊(<a href="http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/" target="_blank" rel="noopener">看这里</a>),但是如果想知道一个人是否有专研精神的话,其实handler可以一直往下问。例如postDelayed是怎么实现的?(<a href="http://blog.islinjw.cn/2019/03/02/Handler-postDelayed%E7%9A%84%E5%8E%9F%E7%90%86/" target="_blank" rel="noopener">看这里</a>)</p>
+<p>问到了这里其实对于绝大多数面试其实已经够了,但是如果你面的公司比较看重基础或者面试官想看看你是否有专研精神,他可能会继续问MessageQueue.nativePollOnce</p>
+<ul>
+<li>如何做到等待一段时间?</li>
+<li>在有消息到来的时候是如何被唤醒的?</li>
+</ul>
+<p>这部分其实已经到了native层的知识了,但是作为一个高级安卓工程师,这部分的知识其实多了解一点也是好的。</p>
+<p>MessageQueue.nativePollOnce的c层实现在/frameworks/base/core/jni/android_os_MessageQueue.cpp,我们从这里开始往下挖:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  /frameworks/base/core/jni/android_os_MessageQueue.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">android_os_MessageQueue_nativePollOnce</span><span class="params">(JNIEnv* env, jobject obj,</span></span></span><br><span class="line"><span class="function"><span class="params">        jlong ptr, jint timeoutMillis)</span> </span>&#123;</span><br><span class="line">    NativeMessageQueue* nativeMessageQueue = <span class="keyword">reinterpret_cast</span>&lt;NativeMessageQueue*&gt;(ptr);</span><br><span class="line">    nativeMessageQueue-&gt;pollOnce(env, obj, timeoutMillis);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment">//  /frameworks/base/core/jni/android_os_MessageQueue.cpp</span></span><br><span class="line"><span class="keyword">void</span> NativeMessageQueue::pollOnce(JNIEnv* env, jobject pollObj, <span class="keyword">int</span> timeoutMillis) &#123;</span><br><span class="line">    mPollEnv = env;</span><br><span class="line">    mPollObj = pollObj;</span><br><span class="line">    mLooper-&gt;pollOnce(timeoutMillis);</span><br><span class="line">    mPollObj = <span class="literal">NULL</span>;</span><br><span class="line">    mPollEnv = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mExceptionObj) &#123;</span><br><span class="line">        env-&gt;Throw(mExceptionObj);</span><br><span class="line">        env-&gt;DeleteLocalRef(mExceptionObj);</span><br><span class="line">        mExceptionObj = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment">//  /system/core/libutils/Looper.cpp</span></span><br><span class="line"><span class="keyword">int</span> Looper::pollOnce(<span class="keyword">int</span> timeoutMillis, <span class="keyword">int</span>* outFd, <span class="keyword">int</span>* outEvents, <span class="keyword">void</span>** outData) &#123;</span><br><span class="line">    ...</span><br><span class="line">    result = pollInner(timeoutMillis);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  /system/core/libutils/Looper.cpp</span></span><br><span class="line"><span class="keyword">int</span> Looper::pollInner(<span class="keyword">int</span> timeoutMillis) &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">int</span> eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>中间我省略了很多代码,感兴趣的可以自行查看,这里最重要的是最后它使用了一个叫做epoll_wait的方法。如果有做过Linux下的c/c++开发的话可能会对它比较熟悉。它是epoll模型的方法,是Linux提供的一种IO多路复用的机制。一般情况下会和其他两种模型select和poll进行比较。</p>
+<h1 id="io多路复用"><a href="#io多路复用" class="headerlink" title="io多路复用"></a>io多路复用</h1><p>io多路复用可能做过服务器的同学会比较熟悉,在java里面提供的NIO模型也是干这活的。</p>
+<p>我来稍微解释一下什么叫做io多路复用。我们普通的io流都是阻塞的,当io流里面数据还没有准备好的时候就会阻塞在那。所以当需要处理多个io例如服务器与多个客户端连接的时候,如果用普通的io那就只能有多少个客户端连接就创建多少个线程:</p>
+<img src="/深入native层死抠Handler/1.png">
+
+<p>这样的架构有几个问题:</p>
+<ul>
+<li>服务器数量是有限的</li>
+<li>可能有很多的连接一直处于空闲状态</li>
+</ul>
+<p>而io多路复用则只需要一条线程去检测多个io流,如果所有io流都没有消息的时候就会阻塞,当任意一条或者多条io流有消息的时候,就会返回:</p>
+<img src="/深入native层死抠Handler/2.png">
+
+<p>例如多人聊天室就是一种非常适合io多路复用的例子,可能会同时有很多个用户登录,但是不会同时在同一个时刻发言。如果用普通io模型,则需要开很多的线程,大部分线程是空闲的,而且在处理多个客户的消息的时候需要切换线程,对系统来讲也是比较重的。而使用io多路复用则可以重复使用一条线程,减少线程空闲和切换的情况。</p>
+<p>当然大多数情况下，io多路复用和多线程也是配合起来使用的,这样也能重复发挥主机的多核性能。</p>
+<h1 id="Handler是如何使用epoll模型的"><a href="#Handler是如何使用epoll模型的" class="headerlink" title="Handler是如何使用epoll模型的"></a>Handler是如何使用epoll模型的</h1><p>前面讲到的是io多路复用的概念，但是看起来和我们的handler好像没有什么关系是吗？毕竟handler看起来并不需要使用到io流。</p>
+<p>但是io流的一些特性让它经常被用在各种消息框架中。</p>
+<p>例如,当没有io流没有数据的时候epoll_wait会阻塞,而当消息到来的时候它会返回。这个特性可以用来实现MessageQueue的阻塞等待消息。</p>
+<p>又例如epoll_wait的最后一个参数可以设置超时,等待一段确定的时间时候就算io流中没有消息也会返回。这个特性可以用来实现postDelay。</p>
+<p>那io流的意思是不是说handler底层是通过读写文件实现的呢？性能会不会很低？</p>
+<p>Linux早就对这个场景有所考量。所以这里epoll_wait监听的不是普通的文件读写,而是专门为事件通知优化过的文件描述符,它实际上并没有做文件的读写:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">mWakeEventFd</span> = eventfd(<span class="number">0</span>, EFD_NONBLOCK | EFD_CLOEXEC)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>它使用起来和一般的文件很像,有三个主要方法:</p>
+<ul>
+<li>write 往描述符中写入一个n，内部的计算器会+n</li>
+<li>read 从描述符中读取一个整数,如果内部计数器为0则会阻塞，如果不为0则分两种情况，1是创建的时候设置了EFD_SEMAPHORE,就会返回1,且计数器减一，否则返回计数器的值，且计数器归零</li>
+<li>close 关闭描述符</li>
+</ul>
+<p>所以当有消息到来的时候我们会最终调到write方法往描述符里+1:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  Handler.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">sendMessageAtTime</span><span class="params">(Message msg, <span class="keyword">long</span> uptimeMillis)</span> </span>&#123;</span><br><span class="line">    MessageQueue <span class="built_in">queue</span> = mQueue;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> enqueueMessage(<span class="built_in">queue</span>, msg, uptimeMillis);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">enqueueMessage</span><span class="params">(MessageQueue <span class="built_in">queue</span>, Message msg, <span class="keyword">long</span> uptimeMillis)</span> </span>&#123;</span><br><span class="line">    msg.target = <span class="keyword">this</span>;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">queue</span>.enqueueMessage(msg, uptimeMillis);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  MessageQueue.java</span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">enqueueMessage</span><span class="params">(Message msg, <span class="keyword">long</span> when)</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">if</span> (needWake) &#123;</span><br><span class="line">      nativeWake(mPtr);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  /frameworks/base/core/jni/android_os_MessageQueue.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">android_os_MessageQueue_nativeWake</span><span class="params">(JNIEnv* env, jclass clazz, jlong ptr)</span> </span>&#123;</span><br><span class="line">    NativeMessageQueue* nativeMessageQueue = <span class="keyword">reinterpret_cast</span>&lt;NativeMessageQueue*&gt;(ptr);</span><br><span class="line">    nativeMessageQueue-&gt;wake();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//  /frameworks/base/core/jni/android_os_MessageQueue.cpp</span></span><br><span class="line"><span class="keyword">void</span> NativeMessageQueue::wake() &#123;</span><br><span class="line">    mLooper-&gt;wake();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  /system/core/libutils/Looper.cpp</span></span><br><span class="line"><span class="keyword">void</span> Looper::wake() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">uint64_t</span> inc = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">ssize_t</span> nWrite = TEMP_FAILURE_RETRY(<span class="built_in">write</span>(mWakeEventFd, &amp;inc, <span class="keyword">sizeof</span>(<span class="keyword">uint64_t</span>)));</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>写入成功之后前面看到的epoll_wait就会被唤醒,然后读取数据将计数器归零:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//  /system/core/libutils/Looper.cpp</span></span><br><span class="line"><span class="keyword">int</span> Looper::pollInner(<span class="keyword">int</span> timeoutMillis) &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">int</span> eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; eventCount; i++) &#123;</span><br><span class="line">      <span class="keyword">int</span> fd = eventItems[i].data.fd;</span><br><span class="line">      <span class="keyword">uint32_t</span> epollEvents = eventItems[i].events;</span><br><span class="line">      <span class="keyword">if</span> (fd == mWakeEventFd) &#123;</span><br><span class="line">          <span class="keyword">if</span> (epollEvents &amp; EPOLLIN) &#123;</span><br><span class="line">              awoken();</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">              ALOGW(<span class="string">"Ignoring unexpected epoll events 0x%x on wake event fd."</span>, epollEvents);</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> Looper::awoken() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">uint64_t</span> counter;</span><br><span class="line">    TEMP_FAILURE_RETRY(<span class="built_in">read</span>(mWakeEventFd, &amp;counter, <span class="keyword">sizeof</span>(<span class="keyword">uint64_t</span>)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="epoll模型的使用简介"><a href="#epoll模型的使用简介" class="headerlink" title="epoll模型的使用简介"></a>epoll模型的使用简介</h1><p>epoll模型实际上有三个重要方法：</p>
+<h2 id="epoll-create"><a href="#epoll-create" class="headerlink" title="epoll_create"></a>epoll_create</h2><p>创建一个epoll专用的文件描述符,它就是那个多路复用的io,可以用来监听其他多个文件描述符</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  /system/core/libutils/Looper.cpp</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">int</span> EPOLL_SIZE_HINT = <span class="number">8</span>;</span><br><span class="line">...</span><br><span class="line">mEpollFd = epoll_create(EPOLL_SIZE_HINT);</span><br></pre></td></tr></table></figure>
+
+<p>它的参数是一个整数设置它最多可以监听多少个文件描述符，而且从Linux 2.6.8开始这个参数可以省略只要传大于0的值就好，数量不需要指定上限。</p>
+<p>我们看到这里安卓设置了个8，其实它不仅可以监听默认的mWakeEventFd，我们还可以添加自己定义的描述符给它去监听</p>
+<h2 id="epoll-ctl"><a href="#epoll-ctl" class="headerlink" title="epoll_ctl"></a>epoll_ctl</h2><p>那我们怎样添加文件描述符监听呢？就靠这个方法了：</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="regexp">//</span>  <span class="regexp">/system/</span>core<span class="regexp">/libutils/</span>Looper.cpp</span><br><span class="line">int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, &amp; eventItem);</span><br></pre></td></tr></table></figure>
+
+<p>这样就能将mWakeEventFd给add进去让mEpollFd监听</p>
+<h2 id="epoll-wait"><a href="#epoll-wait" class="headerlink" title="epoll_wait"></a>epoll_wait</h2><p>这个方法其实介绍了蛮多了,它的功能就是阻塞监听add进来的描述符,只要其中任意一个或多个描述符可用或者超时时间到达就会返回。</p>
+<p>而可用的描述符会被放到第二个参数传入的数组中</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  /system/core/libutils/Looper.cpp</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> <span class="title">eventItems</span>[<span class="title">EPOLL_MAX_EVENTS</span>];</span></span><br><span class="line"><span class="keyword">int</span> eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);</span><br></pre></td></tr></table></figure>
+
+<h1 id="select-poll"><a href="#select-poll" class="headerlink" title="select/poll"></a>select/poll</h1><p>其实到了这里Handler的底层已经差不多了,但是一般select/poll/epoll三者都会被摆在一起讨论,所以我这里也简单介绍一下另外两者。</p>
+<p>它们其实都是linux提供的io多路复用模型,区别在于</p>
+<p>select底层使用了一个固定大小的set保存监听的描述符,所以对监听的数量有限制，最多是1024个。为什么是1024呢？因为默认情况下单个进程的文件描述符的个数最多是1024，可以用下面命令查看:</p>
+<blockquote>
+<p>ulimit -n</p>
+</blockquote>
+<p>但是由于这个set的存放原理是开辟了1024比特位的内存，然后直接将文件描述符这个整数对应的比特位置1，所以实际上它是对文件描述符的最大值有限制，也就是说就算你使用”ulimit -HSn 2048”命令将最大的描述符个数改成2048，也不能用两个select去监听所有的描述符。</p>
+<p>poll就算为了解决这个问题存在的,它接收一个描述符数组去监听,没有限制描述符的最大个数。</p>
+<p>但是select/和poll都有一个缺点,就是它们都需要遍历整个描述符集合或者数组才能知道哪个描述符是可用的,所以它时间实际复杂度是O(n)</p>
+<p>而epoll直接将可用的描述符放在一起告诉用户所以它的时间复杂度是O(1)，当然系统底层肯定是增加了复杂度才能让用户用起来方便的，不过不用担心，底层也是使用了红黑树这种高效的数据结构,所以epoll模型的整体时间复杂度还是比较select/poll高的。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/10/23/OpenSLES读取蓝牙语音遥控器音频/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2020/01/23/Android-Input系统-一-事件的获取流程/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2019/11/05/深入native层死抠Handler/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

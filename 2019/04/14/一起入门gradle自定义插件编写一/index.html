@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>一起入门gradle自定义插件编写(一) | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="相信现在的安卓程序员对gradle脚本的配置应该都或多或少有些了解,例如applicationId、version、混淆等的基本配置应该都是比较熟悉的了,像比较高级的自定义buildTypes、productFlavors可能也多多少少了解一些. 但是对于groovy语言和如何自定义gradle插件,相信很多同学还是比较陌生的. 作为一个有理想的安卓程序员,我觉得这种高阶的技能还是需要懂的.像一些">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一起入门gradle自定义插件编写(一)">
+<meta property="og:url" content="http://139.199.4.241/2019/04/14/一起入门gradle自定义插件编写一/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="相信现在的安卓程序员对gradle脚本的配置应该都或多或少有些了解,例如applicationId、version、混淆等的基本配置应该都是比较熟悉的了,像比较高级的自定义buildTypes、productFlavors可能也多多少少了解一些. 但是对于groovy语言和如何自定义gradle插件,相信很多同学还是比较陌生的. 作为一个有理想的安卓程序员,我觉得这种高阶的技能还是需要懂的.像一些">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/一起入门gradle自定义插件编写一/1.png">
+<meta property="og:image" content="http://139.199.4.241/一起入门gradle自定义插件编写一/5.png">
+<meta property="og:image" content="http://139.199.4.241/一起入门gradle自定义插件编写一/2.png">
+<meta property="og:image" content="http://139.199.4.241/一起入门gradle自定义插件编写一/3.png">
+<meta property="og:image" content="http://139.199.4.241/一起入门gradle自定义插件编写一/4.png">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.272Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一起入门gradle自定义插件编写(一)">
+<meta name="twitter:description" content="相信现在的安卓程序员对gradle脚本的配置应该都或多或少有些了解,例如applicationId、version、混淆等的基本配置应该都是比较熟悉的了,像比较高级的自定义buildTypes、productFlavors可能也多多少少了解一些. 但是对于groovy语言和如何自定义gradle插件,相信很多同学还是比较陌生的. 作为一个有理想的安卓程序员,我觉得这种高阶的技能还是需要懂的.像一些">
+<meta name="twitter:image" content="http://139.199.4.241/一起入门gradle自定义插件编写一/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#project-apply方法"><span class="toc-text">project.apply方法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#groovy基本语法"><span class="toc-text">groovy基本语法</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#编写自定义gradle代码"><span class="toc-text">编写自定义gradle代码</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#apply-from操作"><span class="toc-text">apply from操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#自定义gradle插件"><span class="toc-text">自定义gradle插件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#创建Gradle-Module"><span class="toc-text">创建Gradle Module</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-编写build-gradle"><span class="toc-text">1.编写build.gradle</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-编写代码"><span class="toc-text">2.编写代码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-注册插件"><span class="toc-text">3.注册插件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#发布插件到本地maven"><span class="toc-text">发布插件到本地maven</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用插件"><span class="toc-text">使用插件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#修改插件的ArtifactID"><span class="toc-text">修改插件的ArtifactID</span></a></li></ol></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-一起入门gradle自定义插件编写一" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">一起入门gradle自定义插件编写(一)</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.04.14</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2019/04/14/一起入门gradle自定义插件编写一/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>相信现在的安卓程序员对gradle脚本的配置应该都或多或少有些了解,例如applicationId、version、混淆等的基本配置应该都是比较熟悉的了,像比较高级的自定义buildTypes、productFlavors可能也多多少少了解一些.</p>
+<p>但是对于groovy语言和如何自定义gradle插件,相信很多同学还是比较陌生的.</p>
+<p>作为一个有理想的安卓程序员,我觉得这种高阶的技能还是需要懂的.像一些热更新、插件化等高级技能都会涉及到groovy代码的编写甚至自定义gradle插件.</p>
+<h1 id="project-apply方法"><a href="#project-apply方法" class="headerlink" title="project.apply方法"></a>project.apply方法</h1><p>我们新建一个Android Studio项目,得到两个build.gradle文件,一个是项目根目录下的,一个是模块目录(如app目录)下的.我们只看模块目录下的:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">apply</span> plugin: <span class="string">'com.android.application'</span></span><br><span class="line"></span><br><span class="line">android &#123;</span><br><span class="line">    <span class="attribute">compileSdkVersion</span> <span class="number">28</span></span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        <span class="attribute">applicationId</span> <span class="string">"me.linjw.demo"</span></span><br><span class="line">        minSdkVersion <span class="number">24</span></span><br><span class="line">        targetSdkVersion <span class="number">28</span></span><br><span class="line">        versionCode <span class="number">1</span></span><br><span class="line">        versionName <span class="string">"1.0"</span></span><br><span class="line">        testInstrumentationRunner <span class="string">"android.support.test.runner.AndroidJUnitRunner"</span></span><br><span class="line">    &#125;</span><br><span class="line">    buildTypes &#123;</span><br><span class="line">        <span class="section">release</span> &#123;</span><br><span class="line">            <span class="attribute">minifyEnabled</span> <span class="literal">false</span></span><br><span class="line">            proguardFiles getDefaultProguardFile(<span class="string">'proguard-android.txt'</span>), <span class="string">'proguard-rules.pro'</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">dependencies &#123;</span><br><span class="line">    <span class="attribute">implementation</span> fileTree(dir: <span class="string">'libs'</span>, include: [<span class="string">'*.jar'</span>])</span><br><span class="line">    implementation <span class="string">'com.android.support:appcompat-v7:28.0.0'</span></span><br><span class="line">    testImplementation <span class="string">'junit:junit:4.12'</span></span><br><span class="line">    androidTestImplementation <span class="string">'com.android.support.test:runner:1.0.2'</span></span><br><span class="line">    androidTestImplementation <span class="string">'com.android.support.test.espresso:espresso-core:3.0.2'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的第一行代码指定了com.android.application这个插件的使用,这个插件用来构建apk项目.</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.android.application'</span></span><br></pre></td></tr></table></figure>
+
+<p>另外比较常见的插件有用于构建aar包的com.android.library插件</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.android.library'</span></span><br></pre></td></tr></table></figure>
+
+<p>和用于构建jar包的java-library插件</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="string">plugin:</span> <span class="string">'java-library'</span></span><br></pre></td></tr></table></figure>
+
+<p>我们都知道build.gradle使用的是groovy语法,那这个使用插件的代码的语法含义又是怎样的呢?让我们一起来看看.</p>
+<p>第一个知识点是我们在gradle文件里面默认使用的都是project这个对象的方法或者属性,也就是说我们的插件配置代码等价于:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">project</span>.apply plugin: <span class="string">'com.android.application'</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="groovy基本语法"><a href="#groovy基本语法" class="headerlink" title="groovy基本语法"></a>groovy基本语法</h2><p>接下来我们就要开始学一些groovy的基本语法了.</p>
+<p>我们可以像一般的强类型语言一样去定义方法,也可以选择像一些动态语言一样忽略参数和返回值类型:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int foo(int x, int y) &#123;</span><br><span class="line">    <span class="keyword">return</span> x + y</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">foo2</span></span>(<span class="function"><span class="keyword">def</span> <span class="title">x</span></span>, <span class="function"><span class="keyword">def</span> <span class="title">y</span></span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> x + y</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在调用方法的时候为了简洁,你可以选择省略括号,比如下面的两行代码是效果是一样的,而且我们可以看到,在定义变量的时候也可以选择忽略变量的类型:</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">def x = foo(<span class="number">1</span>,<span class="number">2</span>)</span><br><span class="line">int y = foo <span class="number">1</span>,<span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+<p>接下来看看groovy中list和map的定义方式:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">list</span></span> = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">map</span></span> = [<span class="string">'key1'</span>: <span class="string">'val1'</span>, <span class="symbol">key2:</span> <span class="string">'val2'</span>, <span class="number">3</span>: <span class="string">'val3'</span>, <span class="number">1.23</span>: <span class="number">312</span>]</span><br></pre></td></tr></table></figure>
+
+<p>可以看到,map很灵活,key/value都可以是任意的类型,然后在key是字符串的时候甚至可以直接省略引号.</p>
+<p>甚至,在当作方法参数的时候,我们连map的中括号也是可以省略的,让我们来看看groovy代码是怎样一步步省略到极致的:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//下面的四行方法是完全等价的</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//不做任何省略</span></span><br><span class="line"><span class="function"><span class="title">func</span><span class="params">([<span class="string">'key1'</span>: <span class="number">1</span>, <span class="string">'key2'</span>: <span class="string">'val2'</span>])</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//省略key的双引号</span></span><br><span class="line"><span class="function"><span class="title">func</span><span class="params">([key1: <span class="number">1</span>, key2: <span class="string">'val2'</span>])</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//省略map中括号</span></span><br><span class="line"><span class="function"><span class="title">func</span><span class="params">(key1: <span class="number">1</span>, key2: <span class="string">'val2'</span>)</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//省略方法调用的小括号</span></span><br><span class="line">func key1: <span class="number">1</span>, key2: <span class="string">'val2'</span></span><br></pre></td></tr></table></figure>
+
+<p>现在让我们回过头来看这行代码,是不是感觉突然好像有点理解了?</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.android.application'</span></span><br></pre></td></tr></table></figure>
+
+<p>首先它省略了调用apply的project对象,然后它省略了key的双引号,接着又省略了map里面的中括号,最后还省略了方法调用的小括号</p>
+<p>如果不做任何省略的话,它的完整形式应该是:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">project</span>.apply([<span class="string">'plugin'</span>: <span class="string">'com.android.application'</span>])</span><br></pre></td></tr></table></figure>
+
+<p>其实我们也按住ctrl键然后用鼠标点击apply,查看方法的声明:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public<span class="built_in"> interface </span>PluginAware &#123;</span><br><span class="line">  <span class="built_in">..</span>.</span><br><span class="line">  void apply(Map&lt;String, ?&gt; options);</span><br><span class="line">  <span class="built_in">..</span>.</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到它跳转到了一个java接口里面,这个apply其实是PluginAware这个接口中的一个方法,参数为Map类型.</p>
+<p>groovy其实是一种基于jvm的脚本,它可以直接使用java的代码.</p>
+<p>所以我们可以选择直接用java编写插件,也可以选择使用groovy语言编写,不过最后groovy也是会被编译器编译成java字节码的.</p>
+<h1 id="编写自定义gradle代码"><a href="#编写自定义gradle代码" class="headerlink" title="编写自定义gradle代码"></a>编写自定义gradle代码</h1><p>在gradle中编写代码有三种方式</p>
+<p>最简单的一种是直接在build.gradle文件里面添加我们的代码</p>
+<p>第二种是新建一个gradle文件,在里面编写我们的代码,然后用apply from在build.gradle里面导入我们的代码</p>
+<p>第三中就是编写我们自己的插件了</p>
+<p>第一种方法我们就不说了,直接讲第二种.</p>
+<h2 id="apply-from操作"><a href="#apply-from操作" class="headerlink" title="apply from操作"></a>apply from操作</h2><p>首先我们需要创建一个gradle文件,然后在里面写我们的方法.</p>
+<p>例如我在项目根目录下面新建了一个mycode.gradle文件,然后写好代码:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add</span></span>(<span class="function"><span class="keyword">def</span> <span class="title">x</span></span>, <span class="function"><span class="keyword">def</span> <span class="title">y</span></span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> x + y</span><br><span class="line">&#125;</span><br><span class="line">println(<span class="string">'================='</span>)</span><br><span class="line">println(add(<span class="number">1</span>, <span class="number">2</span>))</span><br><span class="line">println(<span class="string">'================='</span>)</span><br></pre></td></tr></table></figure>
+
+<p>然后在app目录下的build.gradle里面使用apply from操作导入这个文件:</p>
+<figure class="highlight sqf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">apply</span> plugin: <span class="string">'com.android.application'</span></span><br><span class="line"><span class="built_in">apply</span> <span class="keyword">from</span>: <span class="string">'../mycode.gradle'</span></span><br></pre></td></tr></table></figure>
+
+<p>然后点击build,就可以看到输出了:</p>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">Executing tasks: [<span class="keyword">build</span>]</span><br><span class="line"></span><br><span class="line">NDK <span class="keyword">is</span> <span class="literal">missing</span> a <span class="string">"platforms"</span> directory.</span><br><span class="line"><span class="keyword">If</span> you are <span class="keyword">using</span> NDK, verify the ndk.dir <span class="keyword">is</span> <span class="keyword">set</span> <span class="keyword">to</span> a valid NDK directory.  It <span class="keyword">is</span> currently <span class="keyword">set</span> <span class="keyword">to</span> /home/linjw/android/sdk/ndk-bundle.</span><br><span class="line"><span class="keyword">If</span> you are <span class="keyword">not</span> <span class="keyword">using</span> NDK, <span class="keyword">unset</span> the NDK variable <span class="keyword">from</span> ANDROID_NDK_HOME <span class="keyword">or</span> local.properties <span class="keyword">to</span> remove this warning.</span><br><span class="line"></span><br><span class="line">=================</span><br><span class="line"><span class="number">3</span></span><br><span class="line">=================</span><br><span class="line">NDK <span class="keyword">is</span> <span class="literal">missing</span> a <span class="string">"platforms"</span> directory.</span><br><span class="line"><span class="keyword">If</span> you are <span class="keyword">using</span> NDK, verify the ndk.dir <span class="keyword">is</span> <span class="keyword">set</span> <span class="keyword">to</span> a valid NDK directory.  It <span class="keyword">is</span> currently <span class="keyword">set</span> <span class="keyword">to</span> /home/linjw/android/sdk/ndk-bundle.</span><br><span class="line"><span class="keyword">If</span> you are <span class="keyword">not</span> <span class="keyword">using</span> NDK, <span class="keyword">unset</span> the NDK variable <span class="keyword">from</span> ANDROID_NDK_HOME <span class="keyword">or</span> local.properties <span class="keyword">to</span> remove this warning.</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>当然我们知道apply是一个接收Map的方法,我们不用调用两次apply方法,也可以直接这么写,直接在一次调用中com.android.application插件和mycode.gradle的导入</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.android.application'</span>, <span class="string">from:</span> <span class="string">'../mycode.gradle'</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="自定义gradle插件"><a href="#自定义gradle插件" class="headerlink" title="自定义gradle插件"></a>自定义gradle插件</h2><p>最高级的方法就是直接编写自定义插件了,编写好的插件可以发布到jcenter或者maven上给人使用.</p>
+<h3 id="创建Gradle-Module"><a href="#创建Gradle-Module" class="headerlink" title="创建Gradle Module"></a>创建Gradle Module</h3><p>首先我们需要创建一个Gradle Module用于编写gradle插件的代码.但是Android Studio是没有办法直接创建Gradle Module的.</p>
+<p>所以我们新建个普通的apk项目,或者新建个Android Library module然后再更改下配置将它改成Gradle Module就好</p>
+<p>我这里就直接用新建出来的apk项目了.</p>
+<p>第一步是进入app目录,将里面的东西全部都删掉.</p>
+<h4 id="1-编写build-gradle"><a href="#1-编写build-gradle" class="headerlink" title="1.编写build.gradle"></a>1.编写build.gradle</h4><p>然后新建一个在app目录下新建一个build.gradle文件,写入代码:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">apply plugin: <span class="string">'groovy'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">dependencies</span> &#123;</span><br><span class="line">    <span class="keyword">compile</span> gradleApi()</span><br><span class="line">    <span class="keyword">compile</span> localGroovy()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-编写代码"><a href="#2-编写代码" class="headerlink" title="2.编写代码"></a>2.编写代码</h4><p>接着在app目录下面新建src目录,然后进入src目录新建main目录,然后再进入main继续新建groovy目录</p>
+<p>最后在groovy目录中根据包名新建目录层级,并且新建MyPlugin.groovy文件用于编写我们的插件代码.</p>
+<p>我的包名是me.linjw.plugin,所以目录结构如下:</p>
+<img src="/一起入门gradle自定义插件编写一/1.png">
+
+<p>插件都需要实现Plugin<project>接口,然后编写自己代码.代码如下:</project></p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> me.linjw.plugin</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.gradle.api.Plugin</span><br><span class="line"><span class="keyword">import</span> org.gradle.api.<span class="keyword">Project</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> MyPlugin <span class="keyword">implements</span> Plugin&lt;<span class="keyword">Project</span>&gt; &#123;</span><br><span class="line">    <span class="keyword">def</span> add(<span class="keyword">def</span> x, <span class="keyword">def</span> y) &#123;</span><br><span class="line">        <span class="keyword">return</span> x + y</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> apply(<span class="keyword">Project</span> <span class="keyword">project</span>) &#123;</span><br><span class="line">        <span class="keyword">println</span>(<span class="string">"=======MyPlugin========"</span>)</span><br><span class="line">        <span class="keyword">println</span>(add(<span class="number">1</span>, <span class="number">2</span>))</span><br><span class="line">        <span class="keyword">println</span>(<span class="string">"==============="</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-注册插件"><a href="#3-注册插件" class="headerlink" title="3.注册插件"></a>3.注册插件</h4><p>上面我们已经编写好了我们的插件了,接下来的事情就是告诉gradle哪个是我们的插件类.</p>
+<p>main目录下新建resources目录,然后在resources目录里面再新建META-INF目录,再在META-INF里面新建gradle-plugins目录.最后在gradle-plugins目录里面新建properties文件.</p>
+<p>这个properties文件的名字就是你插件的名字了,例如之前看到的com.android.application、com.android.library</p>
+<p>我这边的名字为me.islinlw.plugin.demo.properties</p>
+<p>接着在properties文件里面配置我们的插件类:</p>
+<p>implementation-class=me.linjw.plugin.MyPlugin</p>
+<img src="/一起入门gradle自定义插件编写一/5.png">
+
+<h4 id="发布插件到本地maven"><a href="#发布插件到本地maven" class="headerlink" title="发布插件到本地maven"></a>发布插件到本地maven</h4><p>这个时候其实点击build已经可以在app/build/libs目录下看到我们的插件被编译成app.jar了</p>
+<p>但是需要先发布出去别人才能使用,一般可以发布到公司内部或者公网的仓库如jcenter等.我们这边由于是demo,可以先选择发布到电脑的本地仓库.</p>
+<p>我们修改下build.gradle:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">apply plugin: <span class="string">'groovy'</span></span><br><span class="line">apply plugin: <span class="string">'maven'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">dependencies</span> &#123;</span><br><span class="line">    <span class="keyword">compile</span> gradleApi()</span><br><span class="line">    <span class="keyword">compile</span> localGroovy()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">repositories</span> &#123;</span><br><span class="line">    mavenCentral()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">group</span>=<span class="string">'me.islinjw.plugin'</span></span><br><span class="line">version=<span class="string">'1.0.0'</span></span><br><span class="line"></span><br><span class="line">uploadArchives &#123;</span><br><span class="line">    <span class="keyword">repositories</span> &#123;</span><br><span class="line">        mavenDeployer &#123;</span><br><span class="line">            repository(url: uri(<span class="string">'/home/linjw/workspace/LocalMaven'</span>))</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后点击uploadArchives,就可以将插件发布到/home/linjw/workspace/LocalMaven</p>
+<img src="/一起入门gradle自定义插件编写一/2.png">
+
+<h4 id="使用插件"><a href="#使用插件" class="headerlink" title="使用插件"></a>使用插件</h4><p>让我们打开一个项目来验证下.</p>
+<p>首先在项目根目录的build.gradle的buildscript.repositories里面配置本地仓库的路径,并且在buildscript.dependencies配置插件依赖:</p>
+<img src="/一起入门gradle自定义插件编写一/3.png">
+
+<p>最后在app目录下的build.gradle里面使用我们的插件:</p>
+<img src="/一起入门gradle自定义插件编写一/4.png">
+
+<p>就可以点击build看到输出了</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">16:57:12</span>: Executing task 'build'...</span><br><span class="line"></span><br><span class="line">Executing tasks: [build]</span><br><span class="line"></span><br><span class="line">NDK is missing a "platforms" directory.</span><br><span class="line">If you are using NDK, verify the ndk.dir is set to a valid NDK directory.  It is currently set to /home/linjw/android/sdk/ndk-bundle.</span><br><span class="line">If you are not using NDK, unset the NDK variable from ANDROID_NDK_HOME or local.properties to remove this warning.</span><br><span class="line"></span><br><span class="line">=======MyPlugin========</span><br><span class="line"><span class="attribute">3</span></span><br><span class="line">===============</span><br><span class="line">NDK is missing a "platforms" directory.</span><br><span class="line">If you are using NDK, verify the ndk.dir is set to a valid NDK directory.  It is currently set to /home/linjw/android/sdk/ndk-bundle.</span><br><span class="line">If you are not using NDK, unset the NDK variable from ANDROID_NDK_HOME or local.properties to remove this warning.</span><br></pre></td></tr></table></figure>
+
+<h4 id="修改插件的ArtifactID"><a href="#修改插件的ArtifactID" class="headerlink" title="修改插件的ArtifactID"></a>修改插件的ArtifactID</h4><p>我们看到添加依赖的时候,插件的ArtifactID其实是app,这个又要怎么修改呢?</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">classpath</span> <span class="string">'me.islinjw.plugin:app:1.0.0'</span></span><br></pre></td></tr></table></figure>
+
+<p>回到我们的插件项目的根目录,修改settings.gradle,将模块名改成DemoPlugin:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//原来是<span class="built_in">include</span> <span class="string">':app'</span></span><br><span class="line"><span class="built_in">include</span> <span class="string">':DemoPlugin'</span></span><br></pre></td></tr></table></figure>
+
+<p>然后将我们的app目录改名成DemoPlugin</p>
+<p>最后再发布一次,就修改完成了</p>
+<p>于是依赖就变成了</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">classpath</span> <span class="string">'me.islinjw.plugin:DemoPlugin:1.0.0'</span></span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/03/22/大概优秀的java程序员都要会分析class文件吧/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2019/04/22/来谈一谈安卓应用的破解/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2019/04/14/一起入门gradle自定义插件编写一/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

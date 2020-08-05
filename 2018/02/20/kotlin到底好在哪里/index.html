@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>kotlin到底好在哪里 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,kotlin,">
+  
+
+  <meta name="description" content="最近在学kotlin,虽然还没有像其他博主一样立马就爱上它.但是不得不说,kotlin对比起java还是有不少优势的. 1、语法简洁首先是语法比较简洁,能不简单处理的就不啰嗦. 1.1、变量与常量变量通过var关键字定义,常量通过val关键字定义.既支持类型推倒也支持显示声明类型.这样的话定义变量和常量写起来会比java简洁一些: 123var intVar = 1 // 通过取值可以自动推倒出变">
+<meta name="keywords" content="技术相关,kotlin">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kotlin到底好在哪里">
+<meta property="og:url" content="http://139.199.4.241/2018/02/20/kotlin到底好在哪里/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="最近在学kotlin,虽然还没有像其他博主一样立马就爱上它.但是不得不说,kotlin对比起java还是有不少优势的. 1、语法简洁首先是语法比较简洁,能不简单处理的就不啰嗦. 1.1、变量与常量变量通过var关键字定义,常量通过val关键字定义.既支持类型推倒也支持显示声明类型.这样的话定义变量和常量写起来会比java简洁一些: 123var intVar = 1 // 通过取值可以自动推倒出变">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.267Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="kotlin到底好在哪里">
+<meta name="twitter:description" content="最近在学kotlin,虽然还没有像其他博主一样立马就爱上它.但是不得不说,kotlin对比起java还是有不少优势的. 1、语法简洁首先是语法比较简洁,能不简单处理的就不啰嗦. 1.1、变量与常量变量通过var关键字定义,常量通过val关键字定义.既支持类型推倒也支持显示声明类型.这样的话定义变量和常量写起来会比java简洁一些: 123var intVar = 1 // 通过取值可以自动推倒出变">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1、语法简洁"><span class="toc-text">1、语法简洁</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1、变量与常量"><span class="toc-text">1.1、变量与常量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2、类"><span class="toc-text">1.2、类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3、数据类"><span class="toc-text">1.3、数据类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-4、object-对象"><span class="toc-text">1.4、object 对象</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2、命名参数"><span class="toc-text">2、命名参数</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3、空指针安全"><span class="toc-text">3、空指针安全</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4、字符串模板"><span class="toc-text">4、字符串模板</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5、高阶函数和Lambda表达式的支持"><span class="toc-text">5、高阶函数和Lambda表达式的支持</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#6、泛型"><span class="toc-text">6、泛型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#7、无缝调用java"><span class="toc-text">7、无缝调用java</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-kotlin到底好在哪里" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">kotlin到底好在哪里</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.02.20</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2018/02/20/kotlin到底好在哪里/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近在学kotlin,虽然还没有像其他博主一样立马就爱上它.但是不得不说,kotlin对比起java还是有不少优势的.</p>
+<h1 id="1、语法简洁"><a href="#1、语法简洁" class="headerlink" title="1、语法简洁"></a>1、语法简洁</h1><p>首先是语法比较简洁,能不简单处理的就不啰嗦.</p>
+<h2 id="1-1、变量与常量"><a href="#1-1、变量与常量" class="headerlink" title="1.1、变量与常量"></a>1.1、变量与常量</h2><p>变量通过var关键字定义,常量通过val关键字定义.既支持类型推倒也支持显示声明类型.这样的话定义变量和常量写起来会比java简洁一些:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> intVar = <span class="number">1</span> <span class="comment">// 通过取值可以自动推倒出变量的类型</span></span><br><span class="line"><span class="keyword">var</span> stringVar: <span class="built_in">String</span> = <span class="string">"abc"</span> <span class="comment">// 也可以显式声明变量类型</span></span><br><span class="line">val INT_VALUE = <span class="number">1</span> <span class="comment">// 使用val关键字定义常量</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-2、类"><a href="#1-2、类" class="headerlink" title="1.2、类"></a>1.2、类</h2><p>在kotlin中,类可以通过class关键字定义.支持在主构造方法中用var或者val关键字直接定义成员变量,例如下面的name和author,当然也支持在类结构体中定义成员变量,如price.</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 类,这个类有name,author和price三个成员变量</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Book</span></span>(<span class="keyword">var</span> name: String, <span class="keyword">val</span> author: String, p: <span class="built_in">Int</span>) &#123;</span><br><span class="line">    <span class="keyword">var</span> price = p</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">set</span> <span class="comment">// 将price的set操作设置为私有,只能在类内部赋值,外部只能读取</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">isTheSameAuthor</span><span class="params">(other: <span class="type">Book</span>)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> author == other.author</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与java中不同的是,kotlin中所有的类成员变量都是通过类访问器get和set去访问成员变量的,例如下面的代码中对price的调用并不是直接操作price变量,而是通过get/set访问器去访问的.所以我们可以将price的set访问器设置为私有的,这样的话就不能在外部去设置price的值了:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">var</span> book = Book(<span class="string">"book"</span>, <span class="string">"author"</span>, <span class="number">100</span>)</span><br><span class="line"><span class="function"><span class="title">println</span><span class="params">(book.price)</span></span> <span class="comment">// 调用price的get访问器获取price的值</span></span><br><span class="line">book<span class="selector-class">.price</span> = <span class="number">123</span> <span class="comment">// error,通过price的set访问器设置price的值,但是我们已经将它声明为私有了所以外部不能调用</span></span><br></pre></td></tr></table></figure>
+
+<p>假设我们用java去实现上面的Book类,我们需要写成下面这个样子.是不是感觉java的语法会啰嗦很多?实际上下面的java代码我还去掉了空指针处理和final关键字修饰.所以实际上代码量会更大.kotlin中短短的七行代码,java中要实现完全一模一样的功能,起码需要数十行代码.</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Book</span> &#123;</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">int</span> price;</span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">String</span> name;</span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">String</span> author;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="title">Book</span><span class="params">(<span class="keyword">String</span> name, <span class="keyword">String</span> author, <span class="keyword">int</span> p)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">this</span>.name = name;</span><br><span class="line">      <span class="keyword">this</span>.author = author;</span><br><span class="line">      <span class="keyword">this</span>.price = p;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isTheSameAuthor</span><span class="params">(Book other)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> Intrinsics.areEqual(<span class="keyword">this</span>.author, other.author);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getPrice</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span>.price;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setPrice</span><span class="params">(<span class="keyword">int</span> var1)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">this</span>.price = var1;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">String</span> <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span>.name;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(<span class="keyword">String</span> var1)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">this</span>.name = var1;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">String</span> <span class="title">getAuthor</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span>.author;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-3、数据类"><a href="#1-3、数据类" class="headerlink" title="1.3、数据类"></a>1.3、数据类</h2><p>在kotlin中,我们还有可以用data class去定义单纯只是保存数据的数据类:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 数据类,除了有name和age两个成员变量之外还自动生成了equals,hashCode,toString等方法</span></span><br><span class="line"><span class="keyword">data</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="keyword">var</span> name: String, <span class="keyword">var</span> age: <span class="built_in">Int</span>)</span><br></pre></td></tr></table></figure>
+
+<p>有的同学可能会会,数据类和普通的类有什么区别呢?让我们看下下面的代码就一目了然了:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">data class PersonData(<span class="selector-tag">var</span> name: String, <span class="selector-tag">var</span> age: Int)</span><br><span class="line">class PersonClass(<span class="selector-tag">var</span> name: String, <span class="selector-tag">var</span> age: Int)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">var</span> dataA = PersonData(<span class="string">"jack"</span>, <span class="number">18</span>)</span><br><span class="line"><span class="selector-tag">var</span> dataB = PersonData(<span class="string">"jack"</span>, <span class="number">18</span>)</span><br><span class="line"><span class="function"><span class="title">println</span><span class="params">(dataA)</span></span> <span class="comment">// PersonData(name=jack, age=18)</span></span><br><span class="line"><span class="function"><span class="title">println</span><span class="params">(dataB)</span></span> <span class="comment">// PersonData(name=jack, age=18)</span></span><br><span class="line"><span class="function"><span class="title">println</span><span class="params">(dataA == dataB)</span></span> <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">var</span> classA = PersonClass(<span class="string">"peter"</span>, <span class="number">20</span>)</span><br><span class="line"><span class="selector-tag">var</span> classB = PersonClass(<span class="string">"peter"</span>, <span class="number">20</span>)</span><br><span class="line"><span class="function"><span class="title">println</span><span class="params">(classA)</span></span> <span class="comment">// me.linjw.demo.TestKotlin.PersonClass@5fcfe4b2</span></span><br><span class="line"><span class="function"><span class="title">println</span><span class="params">(classB)</span></span> <span class="comment">// me.linjw.demo.TestKotlin.PersonClass@6bf2d08e</span></span><br><span class="line"><span class="function"><span class="title">println</span><span class="params">(classA == classB)</span></span> <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<p>假设用java去实现的话就不知道这一行的kotlin代码需要多少行才能实现了.</p>
+<h2 id="1-4、object-对象"><a href="#1-4、object-对象" class="headerlink" title="1.4、object 对象"></a>1.4、object 对象</h2><p>我们能使用object关键字直接实现单例模式:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">DataBaseHelper</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它翻译成java是这样的:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class DataBaseHelper &#123;</span><br><span class="line">  public static final DataBaseHelper INSTANCE;</span><br><span class="line"></span><br><span class="line">  private DataBaseHelper() &#123;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  static &#123;</span><br><span class="line">   <span class="built_in"> INSTANCE </span>= new DataBaseHelper();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="2、命名参数"><a href="#2、命名参数" class="headerlink" title="2、命名参数"></a>2、命名参数</h1><p>kotlin支持命名参数。当一个方法的参数数目特别多的时候,命名参数就很有用了。例如String.regionMatches方法有五个参数:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">regionMatches</span><span class="params">(<span class="keyword">boolean</span> ignoreCase, <span class="keyword">int</span> toffset,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">String</span> other, <span class="keyword">int</span> ooffset, <span class="keyword">int</span> len)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在调用的时候一眼很难看出哪个实参有什么作用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String str = new String(<span class="string">"hello world!"</span>);</span><br><span class="line">String <span class="function"><span class="keyword">sub</span> = <span class="title">new</span> <span class="title">String</span></span>("WORLD");</span><br><span class="line">System.out.println(str.regionMatches(true, <span class="number">6</span>, <span class="function"><span class="keyword">sub</span>, 0, 5))</span>;</span><br></pre></td></tr></table></figure>
+
+<p>而在kotlin中可以用命名参数将每个实参对应的形参注明出来,简直一目了然:</p>
+<figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">val <span class="attr">str</span> = <span class="string">"hello world!"</span></span><br><span class="line">val <span class="attr">sub</span> = <span class="string">"WORLD"</span></span><br><span class="line">println(str.regionMatches(<span class="attr">thisOffset</span> = <span class="number">6</span>, <span class="attr">other</span> = sub, <span class="attr">otherOffset</span> = <span class="number">0</span>, <span class="attr">length</span> = <span class="number">5</span>, <span class="attr">ignoreCase</span> = <span class="literal">true</span>))</span><br><span class="line"></span><br><span class="line">//命名参数可以用不同于函数声明的参数顺序传参</span><br><span class="line">println(str.regionMatches(<span class="attr">ignoreCase</span> = <span class="literal">true</span>, <span class="attr">thisOffset</span> = <span class="number">6</span>, <span class="attr">other</span> = sub, <span class="attr">otherOffset</span> = <span class="number">0</span>, <span class="attr">length</span> = <span class="number">5</span>))</span><br></pre></td></tr></table></figure>
+
+<p>而且使用命名参数的话可以不遵循方法声明的时候的参数顺序传参,因为我们已经将哪个实参传给哪个形参都标明了.</p>
+<h1 id="3、空指针安全"><a href="#3、空指针安全" class="headerlink" title="3、空指针安全"></a>3、空指针安全</h1><p>在kotlin中,每个类型都有其对应的可空类型,只有可空类型才能被赋值为null:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a: <span class="built_in">Int</span> = <span class="number">1</span> <span class="comment">// 非空类型需要初始化为非null</span></span><br><span class="line"><span class="keyword">var</span> b: <span class="built_in">Int</span>? <span class="comment">// 可空类型可以不初始化,默认为null</span></span><br><span class="line"><span class="keyword">var</span> c: String = <span class="string">""</span> <span class="comment">// 非空类型需要初始化为非null</span></span><br><span class="line"><span class="keyword">var</span> d: String? = <span class="literal">null</span> <span class="comment">// 可空类型也可以显式赋值为null</span></span><br><span class="line"><span class="keyword">var</span> e: <span class="built_in">Float</span> = <span class="number">1.0f</span> <span class="comment">// 非空类型需要初始化为非null</span></span><br><span class="line"><span class="keyword">var</span> f: <span class="built_in">Float</span>? = <span class="number">2.0f</span> <span class="comment">// 可空类型也可以显式赋值为非null</span></span><br><span class="line"></span><br><span class="line">a = <span class="literal">null</span> <span class="comment">// error类型不能赋值为null,编译不通过</span></span><br><span class="line">b = <span class="literal">null</span> <span class="comment">// ok</span></span><br><span class="line">c = <span class="literal">null</span> <span class="comment">// error类型不能赋值为null,编译不通过</span></span><br><span class="line">d = <span class="literal">null</span> <span class="comment">// ok</span></span><br><span class="line">e = <span class="literal">null</span> <span class="comment">// error类型不能赋值为null,编译不通过</span></span><br><span class="line">f = <span class="literal">null</span> <span class="comment">// ok</span></span><br></pre></td></tr></table></figure>
+
+<p>非空类型不可能为null,所以不用考虑空指针的问题.只有可空类型有可能为null,这个时候必须指定它为null的时候的行为.</p>
+<p>可以用”?.”做判空处理,或者使用”!!.”在空指针的情况下抛出空指针异常:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">foo</span><span class="params">(str : <span class="type">String</span>?)</span></span>&#123;</span><br><span class="line">    println(str?.length) <span class="comment">// str?.length表达式结果为null,可以正常运行</span></span><br><span class="line">    println(str!!.length) <span class="comment">// 抛出空指针异常</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>foo方法翻译成java是这样的:</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> foo(@Nullable <span class="keyword">String</span> <span class="built_in">str</span>) &#123;</span><br><span class="line">  Integer var2 = <span class="built_in">str</span> != <span class="keyword">null</span>?Integer.valueOf(<span class="built_in">str</span>.length()):<span class="keyword">null</span>;</span><br><span class="line">  System.out.<span class="built_in">println</span>(var2);</span><br><span class="line">  <span class="keyword">if</span>(<span class="built_in">str</span> == <span class="keyword">null</span>) &#123;</span><br><span class="line">    Intrinsics.throwNpe(); <span class="comment">// 抛出空指针异常</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">int</span> var3 = <span class="built_in">str</span>.length();</span><br><span class="line">  System.out.<span class="built_in">println</span>(var3);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>很多文章在介绍kotlin的可空类型的时候都是以简化了判空处理的优点来介绍的.例如下面java方法中的判空处理,用kotlin只需要一行代码就可以了:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// java中需要自己判空</span></span><br><span class="line"><span class="keyword">public</span> Character front(String str) &#123;</span><br><span class="line">    <span class="keyword">if</span> (str != <span class="literal">null</span>)&#123;</span><br><span class="line">        <span class="keyword">return</span> str.charAt(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// kotlin中用可空类型只需要一行代码</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">front</span><span class="params">(str: <span class="type">String</span>?)</span></span>: <span class="built_in">Char</span>? &#123;</span><br><span class="line">   <span class="keyword">return</span> str?.<span class="keyword">get</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是在我看来,可空类型非空类型的意义并不在帮我们做简化了判空处理的代码.更重要的一点是明确指出了哪些变量是可能为空的,同时明确了为空的时候的调用应该怎么处理.</p>
+<p>对于非空类型,它永远不可能为空,我们不需要考虑它的空指针问题.而对于可空类型,我们需要明确指定在它为空的时候的调用抛出异常亦或进行执行.这样其实缩小了空指针异常的范围,同时也减小了空指针对程序稳定安全的破坏性.</p>
+<h1 id="4、字符串模板"><a href="#4、字符串模板" class="headerlink" title="4、字符串模板"></a>4、字符串模板</h1><p>在kotlin字符串中可以用”$”符号标识一个表达式,该表达式的值会被计算出来放到字符串中:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> str = <span class="string">"abc"</span></span><br><span class="line">println(<span class="string">"<span class="variable">$str</span>.length is <span class="subst">$&#123;str.length&#125;</span>"</span>) <span class="comment">// 结果为 "abc.length is 3"</span></span><br></pre></td></tr></table></figure>
+
+<p>比起java用字符串拼接或者String.format的方式去处理都要优雅得多.</p>
+<h1 id="5、高阶函数和Lambda表达式的支持"><a href="#5、高阶函数和Lambda表达式的支持" class="headerlink" title="5、高阶函数和Lambda表达式的支持"></a>5、高阶函数和Lambda表达式的支持</h1><p>在java中实现观察者模式,我们往往需要额外定义一个监听者的接口,这种监听者接口往往也只有一个方法,其实实际上属于比较冗余的代码,没有很大的实际价值:</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Button</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> OnClickListener mListener;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setOnClickListener</span>(<span class="params">OnClickListener listener</span>)</span> &#123;</span><br><span class="line">        mListener = listener;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">OnClickListener</span> &#123;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">onClick</span>(<span class="params">Button button</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而在kotlin中我们可以将函数直接作为一个对象保存起来,再也不用为监听者单独定义一个接口了:</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Button</span> &#123;</span></span><br><span class="line">  <span class="keyword">var</span> listener: <span class="function"><span class="params">((Button) -&gt; Unit)</span>? = <span class="title">null</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">  <span class="title">fun</span> <span class="title">click</span><span class="params">()</span> &#123;</span></span><br><span class="line"><span class="function">    <span class="title">listener</span>?.<span class="title">invoke</span><span class="params">(<span class="keyword">this</span>)</span></span></span><br><span class="line"><span class="function">  &#125;</span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">var</span> <span class="title">btn</span> = <span class="title">Button</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">btn</span>.<span class="title">listener</span> = &#123; <span class="title">print</span><span class="params">(<span class="string">"on click"</span>)</span> &#125;</span></span><br><span class="line"><span class="function"><span class="title">btn</span>.<span class="title">click</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+<h1 id="6、泛型"><a href="#6、泛型" class="headerlink" title="6、泛型"></a>6、泛型</h1><p>在java泛型中存在类型通配符,用”? extends T”指定类参数的上限,用”? super T”指定类型参数的下限.</p>
+<p>至于什么时候使用哪一种,在《Effect java》 中给出了PECS原则:</p>
+<blockquote>
+<p>PECS: producer-extends,consumer-super</p>
+</blockquote>
+<p>在生产者中使用”? extends T”,在消费者中使用”? super T”.</p>
+<p>java中使用类型的关系去设计了通配符,这样做的确在实现上是比较清晰的.但是我个人其实更加喜欢kotlin中直接通过功能去规定类型安全的类型上下界.</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function"><span class="keyword">void</span> <span class="title">copy</span><span class="params">(List&lt;? <span class="keyword">super</span> T&gt; dest, List&lt;? <span class="keyword">extends</span> T&gt; src)</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>List&lt;? super T&gt; dest 是消费者,数据将会放到这里.而List&lt;? extends T&gt; src是生产者,数据从这里提供.</p>
+<p>实际上看copy这个java方法,在定义的时候需要稍微思考一下才能确定哪个用super哪个用extends.但是如果你用kotlin的话想都不用想,消费者用in,生产者用out:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> <span class="title">copy</span><span class="params">(dest: <span class="type">Array</span>&lt;<span class="type">in</span> <span class="type">T</span>&gt;, src: <span class="type">Array</span>&lt;<span class="type">out</span> <span class="type">T</span>&gt;)</span></span> &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>直接用in/out这种功能描述是不是比java用super/extends这种类型描述直接了很多?</p>
+<p>泛型这部分参考了《Kotlin极简教程》,这本书真的不错,强烈推荐.而大家如果对java泛型有兴趣的话可以去可空《Effect java》的相关章节或者也可以去看看我之前写的两篇文章 <a href="http://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/" target="_blank" rel="noopener">《java泛型那些事》</a>、<a href="http://blog.islinjw.cn/2018/02/04/%E5%86%8D%E8%B0%88Java%E6%B3%9B%E5%9E%8B/" target="_blank" rel="noopener">《再谈Java泛型》</a></p>
+<h1 id="7、无缝调用java"><a href="#7、无缝调用java" class="headerlink" title="7、无缝调用java"></a>7、无缝调用java</h1><p>当然,一个语言就算做的再好,但是没有一个健全的生态的话是很难被大众接受的.kotlin能够火起来,甚至被谷歌爸爸钦定为安卓的官方推荐语言.一个很重要的原因就是它可以无缝与java相互调用.以前写的java代码不用任何处理就能直接在kotlin中使用,而java也能无缝调用kotlin代码.</p>
+<p>实际上在安卓中,编译的时候kotlin代码就会被编译成java代码,所以它们其实是等价的.</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/02/10/安卓广播的底层实现原理/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2018/02/28/Activity是如何画到屏幕上的/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2018/02/20/kotlin到底好在哪里/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

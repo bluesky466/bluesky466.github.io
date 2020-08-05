@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Java多线程 - 如何正确的终止线程 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,java,">
+  
+
+  <meta name="description" content="最近打算读一下《实战java高并发程序设计》，夯实一下java多线程的知识。接下来应该会写一系列的读书笔记,里面会有多处引用到书中的代码或者文字。本文就是第一篇。 不推荐使用的stop方法Thread.stop()是一个被废弃的方法,不被推荐使用的原因是stop方法太过于暴力，强行把执行到一半的线程终止,并且会立即释放这个线程所有的锁。会破坏了线程中引用对象的一致性。 例如在数据库中维护着一张用户">
+<meta name="keywords" content="技术相关,java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java多线程 - 如何正确的终止线程">
+<meta property="og:url" content="http://139.199.4.241/2017/08/24/Java多线程-如何正确的终止线程/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="最近打算读一下《实战java高并发程序设计》，夯实一下java多线程的知识。接下来应该会写一系列的读书笔记,里面会有多处引用到书中的代码或者文字。本文就是第一篇。 不推荐使用的stop方法Thread.stop()是一个被废弃的方法,不被推荐使用的原因是stop方法太过于暴力，强行把执行到一半的线程终止,并且会立即释放这个线程所有的锁。会破坏了线程中引用对象的一致性。 例如在数据库中维护着一张用户">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.262Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java多线程 - 如何正确的终止线程">
+<meta name="twitter:description" content="最近打算读一下《实战java高并发程序设计》，夯实一下java多线程的知识。接下来应该会写一系列的读书笔记,里面会有多处引用到书中的代码或者文字。本文就是第一篇。 不推荐使用的stop方法Thread.stop()是一个被废弃的方法,不被推荐使用的原因是stop方法太过于暴力，强行把执行到一半的线程终止,并且会立即释放这个线程所有的锁。会破坏了线程中引用对象的一致性。 例如在数据库中维护着一张用户">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#不推荐使用的stop方法"><span class="toc-text">不推荐使用的stop方法</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#使用判断标志位的方法中断线程"><span class="toc-text">使用判断标志位的方法中断线程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Thread-interrupt的优点"><span class="toc-text">Thread.interrupt的优点</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Java多线程-如何正确的终止线程" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Java多线程 - 如何正确的终止线程</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.08.24</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2017/08/24/Java多线程-如何正确的终止线程/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近打算读一下《实战java高并发程序设计》，夯实一下java多线程的知识。接下来应该会写一系列的读书笔记,里面会有多处引用到书中的代码或者文字。本文就是第一篇。</p>
+<h1 id="不推荐使用的stop方法"><a href="#不推荐使用的stop方法" class="headerlink" title="不推荐使用的stop方法"></a>不推荐使用的stop方法</h1><p>Thread.stop()是一个被废弃的方法,不被推荐使用的原因是stop方法太过于暴力，强行把执行到一半的线程终止,并且会立即释放这个线程所有的锁。会破坏了线程中引用对象的一致性。</p>
+<p>例如在数据库中维护着一张用户表，记录了用户ID和用户名，使用Thread多线程写入两条记录:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">记录1: <span class="attribute">ID</span>=1,NAME=小明  </span><br><span class="line">记录2: <span class="attribute">ID</span>=2,NAME=小王</span><br></pre></td></tr></table></figure>
+
+<p>如果在记录1写到一半的时候被stop结束了，就可能出现各种奇怪的现象：</p>
+<ol>
+<li>记录1被记录2覆盖，没有任何数据留下。</li>
+<li>记录1只有一半，即只有ID，而NAME为空。</li>
+<li>记录1和记录2混在同一条记录中，最后写入了一条一半是记录1一半是记录2的脏数据</li>
+</ol>
+<p>所以,除非你很确定你在做什么,否则不要轻易使用stop方法</p>
+<h1 id="使用判断标志位的方法中断线程"><a href="#使用判断标志位的方法中断线程" class="headerlink" title="使用判断标志位的方法中断线程"></a>使用判断标志位的方法中断线程</h1><p>那如果的确有中断线程的需求,我们需要怎么做呢？一般我们马上就会想到设置标志位的方法,即在线程中执行每一个步骤之前都判断一下是否需要退出线程:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WorkThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> boolean mExitThread = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    public void exitThread() &#123;</span><br><span class="line">        mExitThread = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    public void run() &#123;</span><br><span class="line">        <span class="keyword">if</span> (mExitThread) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mExitThread) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mExitThread) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实Thread类早就帮我们实现了这个中断标志了。与Thread中断相关的方法有下面三个:</p>
+<blockquote>
+<p>public void Thread.interrupt() //线程中断<br>public native boolean Thread.isInterrupted() //判断是否被中断<br>public static native boolean Thread.interrupted() //判断是否中断,并清除当前中断状态</p>
+</blockquote>
+<p>所以上面的代码可以改写成这样:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WorkThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    public void run() &#123;</span><br><span class="line">        <span class="keyword">if</span> (isInterrupted()) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (isInterrupted()) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (isInterrupted()) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个时候我们只需要调用Thread.interrupt()方法就能安全的中断线程了。</p>
+<p>需要提醒一下的是Thread.interrupt()方法并不会像Thread.stop()方法一样立即结束线程,它只是设置了一个中断标志,需要在代码实现中去手动判断这个标志并且退出。</p>
+<p>像下面这个代码就算调了Thread.interrupt()方法也不会中断线程:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WorkThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    public void run() &#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="literal">true</span>)&#123;</span><br><span class="line">        	<span class="comment">//do something</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Thread-interrupt的优点"><a href="#Thread-interrupt的优点" class="headerlink" title="Thread.interrupt的优点"></a>Thread.interrupt的优点</h1><p>使用Thread.interrupt去中断线程除了可以免去自己实现标志位的烦恼之外,还可以中断sleep和wait中的线程。</p>
+<p>还记得我们在调用Thread.sleep()这个方法的时候都需要catch或者在方法签名中抛出InterruptedException这个异常吗:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">try</span> &#123;</span><br><span class="line">    <span class="selector-tag">Thread</span><span class="selector-class">.sleep</span>(<span class="number">1000</span>);</span><br><span class="line">&#125; <span class="selector-tag">catch</span> (InterruptedException e) &#123;</span><br><span class="line">    <span class="selector-tag">e</span><span class="selector-class">.printStackTrace</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个InterruptedException异常就是由于我们调用了Thread.interrupt方法抛出的。所以Thread.interrupt可以打断Thread.sleep。同样Thread.wait也是可以被Thread.interrupt打断的。</p>
+<p>需要注意的是如果sleep方法由于中断而抛出异常，此时，它会<strong>清除中断标记</strong>。所以在catch到这个异常的时候<strong>需要再次设置中断标记</strong>：</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Thread t1 = <span class="keyword">new</span> Thread() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="built_in">run</span>()&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="literal">true</span>)&#123;</span><br><span class="line">            <span class="keyword">if</span>(Thread.currentThread().isInterrupted())&#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            System.out.<span class="built_in">println</span>(<span class="string">"hello world"</span>);</span><br><span class="line">            <span class="keyword">try</span>&#123;</span><br><span class="line">                Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">            &#125;<span class="keyword">catch</span>(InterruptedException e) &#123;</span><br><span class="line">                Thread.currentThread().interrupt();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/08/01/安卓皮肤包机制的原理/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/08/26/用PowerMock进行Android单元测试与BDD行为驱动开发/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2017/08/24/Java多线程-如何正确的终止线程/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

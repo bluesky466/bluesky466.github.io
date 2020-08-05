@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓特效相机(一) Camera2的使用 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="系列文章: 安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制 谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。 为了熟悉这个Camera2架构的使用,我写了个简单的特效相机应用,它支持三种简单的特效:   接下来的几篇文章我会一步步">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓特效相机(一) Camera2的使用">
+<meta property="og:url" content="http://139.199.4.241/2019/08/27/安卓特效相机-一-Camera2的使用/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="系列文章: 安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制 谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。 为了熟悉这个Camera2架构的使用,我写了个简单的特效相机应用,它支持三种简单的特效:   接下来的几篇文章我会一步步">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/安卓特效相机一/5.jpg">
+<meta property="og:image" content="http://139.199.4.241/安卓特效相机一/1.png">
+<meta property="og:image" content="http://139.199.4.241/安卓特效相机一/4.png">
+<meta property="og:image" content="http://139.199.4.241/安卓特效相机一/2.png">
+<meta property="og:image" content="http://139.199.4.241/安卓特效相机一/3.png">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.280Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓特效相机(一) Camera2的使用">
+<meta name="twitter:description" content="系列文章: 安卓特效相机(一) Camera2的使用安卓特效相机(二) EGL基础安卓特效相机(三) OpenGL ES 特效渲染安卓特效相机(四) 视频录制 谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。 为了熟悉这个Camera2架构的使用,我写了个简单的特效相机应用,它支持三种简单的特效:   接下来的几篇文章我会一步步">
+<meta name="twitter:image" content="http://139.199.4.241/安卓特效相机一/5.jpg">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#整体架构"><span class="toc-text">整体架构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#获取摄像设备信息"><span class="toc-text">获取摄像设备信息</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#镜头朝向"><span class="toc-text">镜头朝向</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#输出尺寸"><span class="toc-text">输出尺寸</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#相机方向"><span class="toc-text">相机方向</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#打开摄像头"><span class="toc-text">打开摄像头</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#连接摄像头"><span class="toc-text">连接摄像头</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#发送绘制请求"><span class="toc-text">发送绘制请求</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#实时预览"><span class="toc-text">实时预览</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#拍照"><span class="toc-text">拍照</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#图片方向"><span class="toc-text">图片方向</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#请求队列"><span class="toc-text">请求队列</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#关闭摄像头"><span class="toc-text">关闭摄像头</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓特效相机-一-Camera2的使用" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓特效相机(一) Camera2的使用</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.08.27</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="http://blog.islinjw.cn/2019/08/27/安卓特效相机-一-Camera2的使用/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<p><a href="http://blog.islinjw.cn/2019/08/27/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%80-Camera2%E7%9A%84%E4%BD%BF%E7%94%A8/" target="_blank" rel="noopener">安卓特效相机(一) Camera2的使用</a><br><a href="http://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="noopener">安卓特效相机(二) EGL基础</a><br><a href="http://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="noopener">安卓特效相机(三) OpenGL ES 特效渲染</a><br><a href="http://blog.islinjw.cn/2019/10/09/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E5%9B%9B-%E8%A7%86%E9%A2%91%E5%BD%95%E5%88%B6/" target="_blank" rel="noopener">安卓特效相机(四) 视频录制</a></p>
+<p>谷歌在安卓5.0的时候废弃了原来的Camera架构,推出了全新的Camera2架构。api相对之前的版本有很大的区别。</p>
+<p>为了熟悉这个Camera2架构的使用,我写了个简单的<a href="https://github.com/bluesky466/ShaderCamera" target="_blank" rel="noopener">特效相机应用</a>,它支持三种简单的特效:</p>
+<img src="/安卓特效相机一/5.jpg">
+
+<p>接下来的几篇文章我会一步步讲下整个程序是如何实现的。</p>
+<h1 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h1><p>这篇文章主要讲Camera2的使用,包括预览和拍照。</p>
+<p>Camera2的整体架构如下:</p>
+<img src="/安卓特效相机一/1.png">
+
+<p>一台安卓设备可能拥有多个摄像设备,比如一般手机都有前后摄像头,而每个摄像头即为一个CameraDevice。应用程序可以通过CameraManager获取到所有的摄像设备的信息,打开摄像设备然后创建一个CameraCaptureSession连接应用程序与摄像设备。之后应用程序就可以使用这个CameraCaptureSession向摄像设备发送CaptureRequest来指挥摄像头工作。</p>
+<p>所以使用Camera2的流程大致为:</p>
+<ol>
+<li>从CameraManager选择摄像设备并打开</li>
+<li>创建与CameraDevice的CameraCaptureSession</li>
+<li>使用CameraCaptureSession向CameraDevice发送CaptureRequest</li>
+</ol>
+<h1 id="获取摄像设备信息"><a href="#获取摄像设备信息" class="headerlink" title="获取摄像设备信息"></a>获取摄像设备信息</h1><h2 id="镜头朝向"><a href="#镜头朝向" class="headerlink" title="镜头朝向"></a>镜头朝向</h2><p>通常应用程序想要使用摄像头,需要先遍历设备所有的摄像头,然后选出合适的摄像头去拍摄,例如我们想使用后置摄像头:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);</span><br><span class="line"></span><br><span class="line">try &#123;</span><br><span class="line">    <span class="keyword">for</span> (String id : manager.getCameraIdList()) &#123;</span><br><span class="line">        CameraCharacteristics <span class="keyword">cc</span> = manager.getCameraCharacteristics(id);</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">cc</span>.<span class="built_in">get</span>(CameraCharacteristics.LENS_FACING) == facing) &#123;</span><br><span class="line">        	...</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; catch (Exception <span class="keyword">e</span>) &#123;</span><br><span class="line">    <span class="keyword">Log</span>.<span class="built_in">e</span>(TAG, <span class="string">"can not open camera"</span>, <span class="keyword">e</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过CameraManager.getCameraIdList()方法可以列出所有摄像头的id,然后通过CameraManager.getCameraCharacteristics可以拿到对应摄像头的CameraCharacteristics(特征集合),通过这个CameraCharacteristics我们可以拿到摄像头的一些属性,例如上面的镜头朝向。</p>
+<h2 id="输出尺寸"><a href="#输出尺寸" class="headerlink" title="输出尺寸"></a>输出尺寸</h2><p>应用展示摄像头画面的view大小千奇百怪,如果摄像头只能拍摄一种尺寸的画面,那屏幕上显示的时候就势必需要进行缩放了。如果view长宽比和拍摄的画面长宽比是一样的还好,只需要等比缩放就可以了。但是如果长宽比不一样那就势必要发生形变或者裁切像素了。</p>
+<p>于是一般摄像头都会支持多种尺寸的输出画面,开发者可以种里面选取最合适的尺寸去显示。</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Size[] previewSizes = cc.<span class="keyword">get</span>(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(SurfaceTexture.<span class="built_in">class</span>);</span><br><span class="line">Size previewSize = getMostSuitableSize(previewSizes, width, height);</span><br><span class="line">preview.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());</span><br><span class="line">...</span><br><span class="line">manager.openCamera(<span class="built_in">id</span>, mOpenCameraCallback, handler);</span><br></pre></td></tr></table></figure>
+
+<p>可以看到输出尺寸和想要用于显示的类相关,例如我们的demo使用SurfaceTexture去显示,就可以获取摄像头支持SurfaceTexture的所有尺寸。</p>
+<p>然后指定输出尺寸并不是将想要的尺寸设置给摄像机,而是设置SurfaceTexture的Buffer大小,然后摄像头在将画面绘制到SurfaceTexture上的时候就会使用最接近的尺寸去绘制了。</p>
+<p>Camera2支持将画面绘制到下面的几种目标:</p>
+<ul>
+<li>ImageReader</li>
+<li>MediaRecorder</li>
+<li>MediaCodec</li>
+<li>Allocation</li>
+<li>SurfaceHolder</li>
+<li>SurfaceTexture</li>
+</ul>
+<p>getMostSuitableSize里面我们选择长宽比最接近width*height的尺寸:</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">private</span> <span class="built_in">Size</span> getMostSuitableSize(</span><br><span class="line">        <span class="built_in">Size</span>[] sizes,</span><br><span class="line">        <span class="built_in">float</span> width,</span><br><span class="line">        <span class="built_in">float</span> height) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">float</span> targetRatio = height / width;</span><br><span class="line">    <span class="built_in">Size</span> result = null;</span><br><span class="line">    for (<span class="built_in">Size</span> <span class="built_in">size</span> : sizes) &#123;</span><br><span class="line">        <span class="keyword">if</span> (result == null || isMoreSuitable(result, <span class="built_in">size</span>, targetRatio)) &#123;</span><br><span class="line">            result = <span class="built_in">size</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> boolean isMoreSuitable(<span class="built_in">Size</span> current, <span class="built_in">Size</span> <span class="keyword">target</span>, <span class="built_in">float</span> targetRatio) &#123;</span><br><span class="line">    <span class="keyword">if</span> (current == null) &#123;</span><br><span class="line">        <span class="keyword">return</span> true;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">float</span> dRatioTarget = Math.<span class="built_in">abs</span>(targetRatio - getRatio(<span class="keyword">target</span>));</span><br><span class="line">    <span class="built_in">float</span> dRatioCurrent = Math.<span class="built_in">abs</span>(targetRatio - getRatio(current));</span><br><span class="line">    <span class="keyword">return</span> dRatioTarget &lt; dRatioCurrent</span><br><span class="line">            || (dRatioTarget == dRatioCurrent &amp;&amp; getArea(<span class="keyword">target</span>) &gt; getArea(current));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="相机方向"><a href="#相机方向" class="headerlink" title="相机方向"></a>相机方向</h2><p>细心的同学可能会看到这里的长宽比我用的是height/width,这是由于摄像机的方向和屏幕方向相差了90度,所以相机的长宽比应该是屏幕的宽长比。</p>
+<p>这个摄像头方向的介绍可以看<a href="https://developer.android.com/reference/android/hardware/Camera.CameraInfo#orientation" target="_blank" rel="noopener">官方文档</a>:</p>
+<blockquote>
+<p>The orientation of the camera image. The value is the angle that the camera image needs to be rotated clockwise so it shows correctly on the display in its natural orientation. It should be 0, 90, 180, or 270.</p>
+<p>For example, suppose a device has a naturally tall screen. The back-facing camera sensor is mounted in landscape. You are looking at the screen. If the top side of the camera sensor is aligned with the right edge of the screen in natural orientation, the value should be 90. If the top side of a front-facing camera sensor is aligned with the right of the screen, the value should be 270.</p>
+</blockquote>
+<p>比方说后置摄像头的正方向就是竖着拿屏幕的时候的屏幕的右方:</p>
+<img src="/安卓特效相机一/4.png">
+
+<p>所以竖着拿手机的时候拍的照片其实是横的。于是我们在计算长宽比查找最时候的尺寸的时候就需要旋转90度,也就是用height/width。</p>
+<h1 id="打开摄像头"><a href="#打开摄像头" class="headerlink" title="打开摄像头"></a>打开摄像头</h1><p>我们可以使用CameraManager.openCamera方法打开指定的摄像头:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> CameraDevice.StateCallback mOpenCameraCallback =</span><br><span class="line">            <span class="keyword">new</span> CameraDevice.StateCallback() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onOpened</span><span class="params">(CameraDevice camera)</span> </span>&#123;</span><br><span class="line">                    openCameraSession(camera);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onDisconnected</span><span class="params">(CameraDevice camera)</span> </span>&#123;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onError</span><span class="params">(CameraDevice camera, <span class="keyword">int</span> <span class="keyword">error</span>)</span> </span>&#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">manager.openCamera(id, mOpenCameraCallback, <span class="keyword">handler</span>);</span><br></pre></td></tr></table></figure>
+
+<p>mOpenCameraCallback是打开结果的回调,而handler则决定了这个回调在哪个线程调用</p>
+<h1 id="连接摄像头"><a href="#连接摄像头" class="headerlink" title="连接摄像头"></a>连接摄像头</h1><p>在打开摄像头的回调里我们可以拿到CameraDevice,然后但是我们并不能直接指挥摄像设备去干活,而是要通过CameraCaptureSession。</p>
+<p>那怎么创建与CameraDevice的CameraCaptureSession呢？</p>
+<p>可以通过CameraDevice.createCaptureSession</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> CameraCaptureSession.StateCallback mCreateSessionCallback =</span><br><span class="line">        <span class="keyword">new</span> CameraCaptureSession.StateCallback() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onConfigured</span><span class="params">(CameraCaptureSession session)</span> </span>&#123;</span><br><span class="line">                mCameraCaptureSession = session;</span><br><span class="line">                requestPreview(session);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onConfigureFailed</span><span class="params">(CameraCaptureSession session)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">void</span> <span class="title">openCameraSession</span><span class="params">(CameraDevice camera)</span> </span>&#123;</span><br><span class="line">        mCameraDevice = camera;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            List&lt;Surface&gt; outputs = Arrays.asList(mPreviewSurface);</span><br><span class="line">            camera.createCaptureSession(outputs, mCreateSessionCallback, mHandler);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">            Log.e(TAG, <span class="string">"createCaptureSession failed"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了同样需要传入回调和指定回调执行线程的handler之外。</p>
+<p>然后还需要传入一个列表告诉摄像设备它需要绘制到什么地方,Camera2支持同时往多个目标绘制画面。</p>
+<p>但是并不是说我们这里指定mPreviewSurface,摄像头就会直接开始往里面绘制画面了,还需要发送request去请求绘制。</p>
+<h1 id="发送绘制请求"><a href="#发送绘制请求" class="headerlink" title="发送绘制请求"></a>发送绘制请求</h1><p>CaptureRequest的配置比较多,如果一个个去配的话比较繁琐,所以谷歌已经给我们创建好了几个常用的模板,我们可以根据自己的需求去选择一个来做修改</p>
+<h2 id="实时预览"><a href="#实时预览" class="headerlink" title="实时预览"></a>实时预览</h2><p>我们用TextureView来实时预览摄像机画面:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">mPreview.setSurfaceTextureListener(<span class="keyword">new</span> TextureView.SurfaceTextureListener() &#123;</span><br><span class="line">    <span class="meta">@SuppressLint</span>(<span class="string">"NewApi"</span>)</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onSurfaceTextureAvailable</span><span class="params">(SurfaceTexture surface, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</span><br><span class="line">        mSurfaceTexture = surface;</span><br><span class="line">        mPreviewSurface = <span class="keyword">new</span> Surface(surface);</span><br><span class="line">        ...</span><br><span class="line">        openCamera(mSurfaceTexture,</span><br><span class="line">                CameraCharacteristics.LENS_FACING_BACK,</span><br><span class="line">                mPreview.getWidth(),</span><br><span class="line">                mPreview.getHeight());</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onSurfaceTextureSizeChanged</span><span class="params">(SurfaceTexture surface, <span class="keyword">int</span> width, <span class="keyword">int</span> height)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">onSurfaceTextureDestroyed</span><span class="params">(SurfaceTexture surface)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onSurfaceTextureUpdated</span><span class="params">(SurfaceTexture surface)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>CaptureRequest这里依然需要指定将画面绘制到我们的预览Surface上:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">CaptureRequest.<span class="keyword">Builder </span><span class="keyword">builder </span>= mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);</span><br><span class="line"><span class="keyword">builder.addTarget(mPreviewSurface);</span></span><br><span class="line"><span class="keyword">session.setRepeatingRequest(builder.build(), </span>null, null);</span><br></pre></td></tr></table></figure>
+
+<p>值得注意的是每一次请求只会绘制一次,如果是预览界面的话需要不停绘制,我们可以使用CameraCaptureSession.setRepeatingRequest让他不断发送Request去不断的绘制,达到实时预览的功能。</p>
+<p>这个方法的第一个参数是CaptureRequest,第二和第三个参数仍然是回调和handler,这里我们不需要监听回调,都设成null就好。</p>
+<h2 id="拍照"><a href="#拍照" class="headerlink" title="拍照"></a>拍照</h2><p>我们可以创建ImageReader来接收画面:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">Size[] photoSizes = cc.<span class="built_in">get</span>(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)</span><br><span class="line">                           .getOutputSizes(ImageReader.class);</span><br><span class="line">mImageReader = getImageReader(getMostSuitableSize(photoSizes, <span class="built_in">width</span>, <span class="built_in">height</span>));</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> ImageReader.OnImageAvailableListener mOnImageAvailableListener</span><br><span class="line">            = <span class="keyword">new</span> ImageReader.OnImageAvailableListener() &#123;</span><br><span class="line">        @Override</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> onImageAvailable(ImageReader reader) &#123;</span><br><span class="line">            savePhoto(reader);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> ImageReader <span class="title">getImageReader</span><span class="params">(Size <span class="built_in">size</span>)</span> </span>&#123;</span><br><span class="line">    ImageReader imageReader = ImageReader.newInstance(</span><br><span class="line">            <span class="built_in">size</span>.getWidth(),</span><br><span class="line">            <span class="built_in">size</span>.getHeight(),</span><br><span class="line">            ImageFormat.JPEG,</span><br><span class="line">            <span class="number">5</span>);</span><br><span class="line">    imageReader.setOnImageAvailableListener(mOnImageAvailableListener, mHandler);</span><br><span class="line">    <span class="keyword">return</span> imageReader;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在触摸屏幕的时候发送请求绘制画面到ImageReader上:</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">takePhoto</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        CaptureRequest.Builder builder = mCameraDevice.createCaptureRequest(</span><br><span class="line">                CameraDevice.TEMPLATE_STILL_CAPTURE);</span><br><span class="line">        builder.addTarget(mPreviewSurface);</span><br><span class="line">        builder.addTarget(mImageReader.getSurface());</span><br><span class="line">        <span class="keyword">int</span> rotation = getWindowManager().getDefaultDisplay().getRotation();</span><br><span class="line">        builder.<span class="keyword">set</span>(CaptureRequest.JPEG_ORIENTATION, mSensorOrientation);</span><br><span class="line">        mCameraCaptureSession.capture(builder.build(), <span class="literal">null</span>, <span class="literal">null</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">"takePhoto failed"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="图片方向"><a href="#图片方向" class="headerlink" title="图片方向"></a>图片方向</h2><p>我们这里设置了下CaptureRequest.JPEG_ORIENTATION,原因和上面说的摄像头设备的方向有关,如果不设置的话,预览的窗口里面是竖着拍的照片实际保存下来会变成横的。</p>
+<p>这个mSensorOrientation也是从CameraCharacteristics里面获取的:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">CameraCharacteristics cc = manager.getCameraCharacteristics(id)<span class="comment">;</span></span><br><span class="line">...</span><br><span class="line"><span class="attribute">mSensorOrientation</span> = cc.get(CameraCharacteristics.SENSOR_ORIENTATION)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="请求队列"><a href="#请求队列" class="headerlink" title="请求队列"></a>请求队列</h2><p>细心的同学可能还会注意到,这个请求不仅将mImageReader.getSurface()添加到Target，同时也将mPreviewSurface添加到Target了,这是为什么呢?</p>
+<p>不知道大家还记不记得之前我们说过,每一个CaptureRequest会执行一次绘制,实时预览靠的就是setRepeatingRequest不断重复的发送CaptureRequest。</p>
+<p>其实CameraDevice对CaptureRequest的执行是串行的,当没有拍照的请求的时候,请求队列是这样的:</p>
+<img src="/安卓特效相机一/2.png">
+
+<p>而当有拍照的请求进去的时候，请求队列是这样的:</p>
+<img src="/安卓特效相机一/3.png">
+
+<p>预览请求中间插入了一个拍照请求,如果这个拍照请求里面没有将画面绘制到预览的View上面,预览画面就会少了一帧,相当于卡了一下。所以拍照的时候也要将mPreviewSurface放到Target中。</p>
+<h1 id="关闭摄像头"><a href="#关闭摄像头" class="headerlink" title="关闭摄像头"></a>关闭摄像头</h1><p>我们需要在退出应用的时候关闭摄像头,要不然可能会影响其他应用使用摄像头:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">private</span> <span class="string">CameraDevice</span> <span class="string">mCameraDevice;。</span></span><br><span class="line"></span><br><span class="line"><span class="string">...</span>    </span><br><span class="line"></span><br><span class="line"><span class="string">if</span> <span class="string">(mImageReader</span> <span class="string">!=</span> <span class="literal">null</span><span class="string">)</span> <span class="string">&#123;</span></span><br><span class="line">    <span class="string">mImageReader.close();</span></span><br><span class="line">    <span class="string">mImageReader</span> <span class="string">=</span> <span class="literal">null</span><span class="string">;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="string">if</span> <span class="string">(mCameraCaptureSession</span> <span class="string">!=</span> <span class="literal">null</span><span class="string">)</span> <span class="string">&#123;</span></span><br><span class="line">    <span class="string">mCameraCaptureSession.close();</span></span><br><span class="line">    <span class="string">mCameraCaptureSession</span> <span class="string">=</span> <span class="literal">null</span><span class="string">;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="string">if</span> <span class="string">(mCameraDevice</span> <span class="string">!=</span> <span class="literal">null</span><span class="string">)</span> <span class="string">&#123;</span></span><br><span class="line">    <span class="string">mCameraDevice.close();</span></span><br><span class="line">    <span class="string">mCameraDevice</span> <span class="string">=</span> <span class="literal">null</span><span class="string">;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>本篇文章的完整代码可以在<a href="https://github.com/bluesky466/CameraDemo" target="_blank" rel="noopener">github</a>上获取</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/06/22/binder机制深入探究/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2019/09/13/安卓特效相机-二-EGL基础/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'http://139.199.4.241/2019/08/27/安卓特效相机-一-Camera2的使用/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
