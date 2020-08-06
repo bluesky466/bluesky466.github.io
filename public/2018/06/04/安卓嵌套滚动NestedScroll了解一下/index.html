@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓嵌套滚动NestedScroll了解一下 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="其实嵌套滚动已经算一个比较常见的特效了,下面这个动图就是嵌套滚动的一个例子:   看到这个动效,大家可能都知道可以用CoordinatorLayout去实现.其实CoordinatorLayout是基于NestedScroll机制去实现的,而我们直接通过NestedScroll机制也能很方便的实现这个动效. 原理NestedScroll的其实很简单. 一般的触摸消息的分发都是从外向内的,由外层的V">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓嵌套滚动NestedScroll了解一下">
+<meta property="og:url" content="http://139.199.4.241/2018/06/04/安卓嵌套滚动NestedScroll了解一下/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="其实嵌套滚动已经算一个比较常见的特效了,下面这个动图就是嵌套滚动的一个例子:   看到这个动效,大家可能都知道可以用CoordinatorLayout去实现.其实CoordinatorLayout是基于NestedScroll机制去实现的,而我们直接通过NestedScroll机制也能很方便的实现这个动效. 原理NestedScroll的其实很简单. 一般的触摸消息的分发都是从外向内的,由外层的V">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/安卓嵌套滚动NestedScroll了解一下/1.gif">
+<meta property="og:image" content="http://139.199.4.241/安卓嵌套滚动NestedScroll了解一下/2.png">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.279Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓嵌套滚动NestedScroll了解一下">
+<meta name="twitter:description" content="其实嵌套滚动已经算一个比较常见的特效了,下面这个动图就是嵌套滚动的一个例子:   看到这个动效,大家可能都知道可以用CoordinatorLayout去实现.其实CoordinatorLayout是基于NestedScroll机制去实现的,而我们直接通过NestedScroll机制也能很方便的实现这个动效. 原理NestedScroll的其实很简单. 一般的触摸消息的分发都是从外向内的,由外层的V">
+<meta name="twitter:image" content="http://139.199.4.241/安卓嵌套滚动NestedScroll了解一下/1.gif">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#原理"><span class="toc-text">原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#具体实现"><span class="toc-text">具体实现</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#布局"><span class="toc-text">布局</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码"><span class="toc-text">代码</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓嵌套滚动NestedScroll了解一下" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓嵌套滚动NestedScroll了解一下</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.06.04</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>其实嵌套滚动已经算一个比较常见的特效了,下面这个动图就是嵌套滚动的一个例子:</p>
+<img src="/安卓嵌套滚动NestedScroll了解一下/1.gif">
+
+<p>看到这个动效,大家可能都知道可以用CoordinatorLayout去实现.其实CoordinatorLayout是基于NestedScroll机制去实现的,而我们直接通过NestedScroll机制也能很方便的实现这个动效.</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><p>NestedScroll的其实很简单.</p>
+<p>一般的触摸消息的分发都是从外向内的,由外层的ViewGroup的dispatchTouchEvent方法调用到内层的View的dispatchTouchEvent方法.</p>
+<p>而NestedScroll提供了一个反向的机制,内层的view在接收到ACTION_MOVE的时候,将滚动消息先传回给外层的ViewGroup,看外层的ViewGroup是不是需要消耗一部分的移动,然后内层的View再去消耗剩下的移动.内层view可以消耗剩下的滚动的一部分,如果还没有消耗完,外层的view可以再选择把最后剩下的滚动消耗掉.</p>
+<p>上面的描述可能有点绕,可以看下面的图来帮助理解:</p>
+<img src="/安卓嵌套滚动NestedScroll了解一下/2.png">
+
+<h1 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h1><p>NestedScroll机制会涉及到四个类:</p>
+<p>NestedScrollingChild， NestedScrollingChildHelper 和 NestedScrollingParent ， NestedScrollingParentHelper</p>
+<p>NestedScrollingChild和NestedScrollingParent是两个接口,我们先看看他们的声明:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">NestedScrollingChild</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">setNestedScrollingEnabled</span><span class="params">(<span class="keyword">boolean</span> enabled)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">isNestedScrollingEnabled</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">startNestedScroll</span><span class="params">(<span class="keyword">int</span> axes)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">stopNestedScroll</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">hasNestedScrollingParent</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">boolean</span> dispatchNestedScroll(<span class="keyword">int</span> dxConsumed, <span class="keyword">int</span> dyConsumed,</span><br><span class="line">            <span class="keyword">int</span> dxUnconsumed, <span class="keyword">int</span> dyUnconsumed, <span class="keyword">int</span>[] offsetInWindow);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">dispatchNestedPreScroll</span><span class="params">(<span class="keyword">int</span> dx, <span class="keyword">int</span> dy, <span class="keyword">int</span>[] consumed, <span class="keyword">int</span>[] offsetInWindow)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">dispatchNestedFling</span><span class="params">(<span class="keyword">float</span> velocityX, <span class="keyword">float</span> velocityY, <span class="keyword">boolean</span> consumed)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">dispatchNestedPreFling</span><span class="params">(<span class="keyword">float</span> velocityX, <span class="keyword">float</span> velocityY)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">NestedScrollingParent</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">onStartNestedScroll</span><span class="params">(View child, View <span class="keyword">target</span>, <span class="keyword">int</span> nestedScrollAxes)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onNestedScrollAccepted</span><span class="params">(View child, View <span class="keyword">target</span>, <span class="keyword">int</span> nestedScrollAxes)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onStopNestedScroll</span><span class="params">(View <span class="keyword">target</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> onNestedScroll(View <span class="keyword">target</span>, <span class="keyword">int</span> dxConsumed, <span class="keyword">int</span> dyConsumed,</span><br><span class="line">            <span class="keyword">int</span> dxUnconsumed, <span class="keyword">int</span> dyUnconsumed);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onNestedPreScroll</span><span class="params">(View <span class="keyword">target</span>, <span class="keyword">int</span> dx, <span class="keyword">int</span> dy, <span class="keyword">int</span>[] consumed)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">onNestedFling</span><span class="params">(View <span class="keyword">target</span>, <span class="keyword">float</span> velocityX, <span class="keyword">float</span> velocityY, <span class="keyword">boolean</span> consumed)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">onNestedPreFling</span><span class="params">(View <span class="keyword">target</span>, <span class="keyword">float</span> velocityX, <span class="keyword">float</span> velocityY)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">getNestedScrollAxes</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里真正重要的其实是NestedScrollingParent的几个方法,因为其他方法都能直接让NestedScrollingChildHelper或者NestedScrollingParentHelper去代理:</p>
+<ul>
+<li>onStartNestedScroll 是否接受嵌套滚动,只有它返回true,后面的其他方法才会被调用</li>
+<li>onNestedPreScroll 在内层view处理滚动事件前先被调用,可以让外层view先消耗部分滚动</li>
+<li>onNestedScroll 在内层view将剩下的滚动消耗完之后调用,可以在这里处理最后剩下的滚动</li>
+<li>onNestedPreFling 在内层view的Fling事件处理之前被调用</li>
+<li>onNestedFling 在内层view的Fling事件处理完之后调用</li>
+</ul>
+<p>我们只要让子view和父view分别实现NestedScrollingChild和NestedScrollingParent接口,然后分别调用NestedScrollingChildHelper和NestedScrollingParentHelper的对应方法去代理一些具体功能,然后在NestedScrollingChild的onTouchEvent那里根据需求调用startNestedScroll/dispatchNestedPreScroll/stopNestedScroll就能实现嵌套滚动了:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//NestedScrollingChild</span></span><br><span class="line"><span class="keyword">private</span> NestedScrollingChildHelper mHelper = <span class="keyword">new</span> NestedScrollingChildHelper(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">startNestedScroll</span><span class="params">(<span class="keyword">int</span> axes)</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">return</span> mHelper.<span class="title">startNestedScroll</span><span class="params">(axes)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">boolean</span> dispatchNestedScroll(<span class="keyword">int</span> dxConsumed, <span class="keyword">int</span> dyConsumed,</span><br><span class="line">            <span class="keyword">int</span> dxUnconsumed, <span class="keyword">int</span> dyUnconsumed, <span class="keyword">int</span>[] offsetInWindow) &#123;</span><br><span class="line">  <span class="keyword">return</span> mHelper.dispatchNestedScroll(dxConsumed,  dyConsumed,</span><br><span class="line">             dxUnconsumed,  dyUnconsumed, offsetInWindow);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//NestedScrollingParent</span></span><br><span class="line"><span class="keyword">private</span> NestedScrollingParentHelper mHelper = <span class="keyword">new</span> NestedScrollingParentHelper(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onNestedScrollAccepted</span><span class="params">(View child, View <span class="keyword">target</span>, <span class="keyword">int</span> axes)</span> </span>&#123;</span><br><span class="line">  mHelper.onNestedScrollAccepted(child, <span class="keyword">target</span>, axes);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">getNestedScrollAxes</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">return</span> mHelper.<span class="title">getNestedScrollAxes</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>但是如果你使用sdk21及以上的版本,NestedScroll机制已经直接集成到了View中了,你只需要直接重写View的对应方法就好</p>
+<h2 id="布局"><a href="#布局" class="headerlink" title="布局"></a>布局</h2><p>我们先看布局文件</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">&lt;me<span class="selector-class">.linjw</span><span class="selector-class">.nestedscrolldemo</span><span class="selector-class">.NestedScrollParentView</span> xmlns:android=<span class="string">"http://schemas.android.com/apk/res/android"</span></span><br><span class="line">    android:layout_width=<span class="string">"match_parent"</span></span><br><span class="line">    android:layout_height=<span class="string">"match_parent"</span></span><br><span class="line">    android:orientation=<span class="string">"vertical"</span>&gt;</span><br><span class="line"></span><br><span class="line">    &lt;FrameLayout</span><br><span class="line">        android:id=<span class="string">"@+id/header"</span></span><br><span class="line">        android:layout_width=<span class="string">"match_parent"</span></span><br><span class="line">        android:layout_height=<span class="string">"wrap_content"</span>&gt;</span><br><span class="line"></span><br><span class="line">        &lt;ImageView</span><br><span class="line">            android:layout_width=<span class="string">"match_parent"</span></span><br><span class="line">            android:layout_height=<span class="string">"200dp"</span></span><br><span class="line">            android:src=<span class="string">"@mipmap/ic_launcher"</span> /&gt;</span><br><span class="line">    &lt;/FrameLayout&gt;</span><br><span class="line"></span><br><span class="line">    &lt;TextView</span><br><span class="line">        android:layout_width=<span class="string">"match_parent"</span></span><br><span class="line">        android:layout_height=<span class="string">"wrap_content"</span></span><br><span class="line">        android:<span class="attribute">background</span>=<span class="string">"@color/colorAccent"</span></span><br><span class="line">        android:text=<span class="string">"Title"</span></span><br><span class="line">        android:textAlignment=<span class="string">"center"</span></span><br><span class="line">        android:textSize=<span class="string">"20dp"</span> /&gt;</span><br><span class="line"></span><br><span class="line">    &lt;android<span class="selector-class">.support</span><span class="selector-class">.v7</span><span class="selector-class">.widget</span>.RecyclerView</span><br><span class="line">        android:id=<span class="string">"@+id/list"</span></span><br><span class="line">        android:layout_width=<span class="string">"match_parent"</span></span><br><span class="line">        android:layout_height=<span class="string">"match_parent"</span> /&gt;</span><br><span class="line">&lt;/me<span class="selector-class">.linjw</span><span class="selector-class">.nestedscrolldemo</span>.NestedScrollParentView&gt;</span><br></pre></td></tr></table></figure>
+
+<p>最外层是我们自定义的NestedScrollParentView,其实它是一个LinearLayout,内部竖直排列了三个子view:</p>
+<ul>
+<li>一个由FrameLayout包裹的ImageView</li>
+<li>一个TextView</li>
+<li>一个RecyclerView</li>
+</ul>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><p>为了简便起见,我们先直接用sdk22的版本用重写View方法的方式去实现它.</p>
+<p>NestedScrollParentView中有两个方法比较重要,嵌套滚动基本上就是由这两个方法实现的:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">onStartNestedScroll</span><span class="params">(View child, View <span class="keyword">target</span>, <span class="keyword">int</span> nestedScrollAxes)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onNestedPreScroll</span><span class="params">(View <span class="keyword">target</span>, <span class="keyword">int</span> dx, <span class="keyword">int</span> dy, <span class="keyword">int</span>[] consumed)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">super</span>.onNestedPreScroll(<span class="keyword">target</span>, dx, dy, consumed);</span><br><span class="line"></span><br><span class="line">      <span class="keyword">boolean</span> headerScrollUp = dy &gt; <span class="number">0</span> &amp;&amp; getScrollY() &lt; mHeaderHeight;</span><br><span class="line">      <span class="keyword">boolean</span> headerScrollDown = dy &lt; <span class="number">0</span> &amp;&amp; getScrollY() &gt; <span class="number">0</span> &amp;&amp; !<span class="keyword">target</span>.canScrollVertically(<span class="number">-1</span>);</span><br><span class="line">      <span class="keyword">if</span> (headerScrollUp || headerScrollDown) &#123;</span><br><span class="line">          scrollBy(<span class="number">0</span>, dy);</span><br><span class="line">          consumed[<span class="number">1</span>] = dy;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>onStartNestedScroll 这个方法如果返回true的话代表接受由内层传来的滚动消息,我们直接返回true就好,否则后面的消息都接受不到</p>
+</li>
+<li><p>onNestedPreScroll 这个方法用于消耗内层view的一部分滚动.我们需要将消耗掉的滚动存到counsumed中让consumed知道.例如我们这里在顶部的FrameLayout需要移动的情况下会消耗掉所有的dy,这样内层的view(即RecyclerView)就不会滚动了.</p>
+</li>
+</ul>
+<p>这里的mHeaderHeight保存的是顶部的FrameLayout的高度:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">super</span>.onSizeChanged(w, h, oldw, oldh);</span><br><span class="line">       mHeaderHeight = mHeader.getMeasuredHeight();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>到这里基本上就实现了动图的效果,是不是很简单?</p>
+<p>完整代码可以参考 <a href="https://github.com/bluesky466/NestedScrollDemo/tree/sdk22" target="_blank" rel="noopener">https://github.com/bluesky466/NestedScrollDemo/tree/sdk22</a></p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/03/08/从源码看安卓应用的启动过程/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2018/07/29/写给安卓程序员的cc-编译入门/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

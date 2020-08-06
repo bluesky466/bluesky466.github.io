@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>automake学习笔记 - 安装与发布 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,编译相关,">
+  
+
+  <meta name="description" content="辛辛苦苦写出来的代码当然是需要发布出来给自己或者别人去使用的。这篇文章就谈一谈发布相关的东西吧。 安装软件在编译完后就需要进行安装。configure生成的Makefile支持install。使用make install 命令就可以将编译出来的软件安装到系统中。 如果没有做配置，默认会安装到/usr/local中,当然如果需要的话也可以使用configure的–prefix参数指定安装的路径,如在">
+<meta name="keywords" content="技术相关,编译相关">
+<meta property="og:type" content="article">
+<meta property="og:title" content="automake学习笔记 - 安装与发布">
+<meta property="og:url" content="http://139.199.4.241/2017/03/26/automake学习笔记-安装与发布/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="辛辛苦苦写出来的代码当然是需要发布出来给自己或者别人去使用的。这篇文章就谈一谈发布相关的东西吧。 安装软件在编译完后就需要进行安装。configure生成的Makefile支持install。使用make install 命令就可以将编译出来的软件安装到系统中。 如果没有做配置，默认会安装到/usr/local中,当然如果需要的话也可以使用configure的–prefix参数指定安装的路径,如在">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.266Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="automake学习笔记 - 安装与发布">
+<meta name="twitter:description" content="辛辛苦苦写出来的代码当然是需要发布出来给自己或者别人去使用的。这篇文章就谈一谈发布相关的东西吧。 安装软件在编译完后就需要进行安装。configure生成的Makefile支持install。使用make install 命令就可以将编译出来的软件安装到系统中。 如果没有做配置，默认会安装到/usr/local中,当然如果需要的话也可以使用configure的–prefix参数指定安装的路径,如在">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#安装"><span class="toc-text">安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#卸载"><span class="toc-text">卸载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#libtool-库版本号系统"><span class="toc-text">libtool 库版本号系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#手动指定版本号"><span class="toc-text">手动指定版本号</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-automake学习笔记-安装与发布" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">automake学习笔记 - 安装与发布</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.03.26</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>辛辛苦苦写出来的代码当然是需要发布出来给自己或者别人去使用的。这篇文章就谈一谈发布相关的东西吧。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>软件在编译完后就需要进行安装。configure生成的Makefile支持install。使用make install 命令就可以将编译出来的软件安装到系统中。</p>
+<p>如果没有做配置，默认会安装到/usr/local中,当然如果需要的话也可以使用configure的–prefix参数指定安装的路径,如在build中执行下面的命令就可以将build目录指定为安装目录:</p>
+<blockquote>
+<p>../configure –prefix=`pwd`</p>
+</blockquote>
+<p>之后再执行下面的安装命令,工程在编译完后就会安装到build目录下。安装完毕之后可以看到build里面多了bin和lib两个目录</p>
+<blockquote>
+<p>make install</p>
+</blockquote>
+<p>bin目录下是编译出来的可执行文件example,而lib目录下就是编译出来的依赖库:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">-rw-r--r--</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span> <span class="string">263K</span> <span class="number">3</span><span class="string">月</span>  <span class="number">22</span> <span class="number">13</span><span class="string">:44</span> <span class="string">libeasylog.a</span></span><br><span class="line"><span class="string">-rwxr-xr-x</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>  <span class="number">985</span> <span class="number">3</span><span class="string">月</span>  <span class="number">22</span> <span class="number">13</span><span class="string">:44</span> <span class="string">libeasylog.la</span></span><br><span class="line"><span class="string">lrwxrwxrwx</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>   <span class="number">19</span> <span class="number">3</span><span class="string">月</span>  <span class="number">22</span> <span class="number">13</span><span class="string">:44</span> <span class="string">libeasylog.so</span> <span class="string">-&gt;</span> <span class="string">libeasylog.so.0.0.0</span></span><br><span class="line"><span class="string">lrwxrwxrwx</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>   <span class="number">19</span> <span class="number">3</span><span class="string">月</span>  <span class="number">22</span> <span class="number">13</span><span class="string">:44</span> <span class="string">libeasylog.so.0</span> <span class="string">-&gt;</span> <span class="string">libeasylog.so.0.0.0</span></span><br><span class="line"><span class="string">-rwxr-xr-x</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span> <span class="string">143K</span> <span class="number">3</span><span class="string">月</span>  <span class="number">22</span> <span class="number">13</span><span class="string">:44</span> <span class="string">libeasylog.so.0.0.0</span></span><br></pre></td></tr></table></figure>
+
+<p>编译出来的libeasylog.so.0.0.0就可以直接拿出去给其他人使用了</p>
+<h2 id="卸载"><a href="#卸载" class="headerlink" title="卸载"></a>卸载</h2><p>卸载的话很简单，只需要执行下面的命令就行了</p>
+<blockquote>
+<p>make uninstall</p>
+</blockquote>
+<p>当然你也可以选择手动去将安装的文件一个个删除,但是这样既麻烦又容易漏删或者错删</p>
+<h2 id="libtool-库版本号系统"><a href="#libtool-库版本号系统" class="headerlink" title="libtool 库版本号系统"></a>libtool 库版本号系统</h2><p>我们可以看到编译出来的so库是带版本号的，默认0.0.0,当然我们也能直接忽略版本号(某些可动态加载的的插件模块可能不需要版本号):</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">lib_LTLIBRARIES = libeasylog.la</span><br><span class="line"></span><br><span class="line">libeasylog_la_SOURCES = cout_log_interface.cpp \</span><br><span class="line">					 easy_log.cpp </span><br><span class="line"></span><br><span class="line">libeasylog_la_LDFLAGS = -avoid-version</span><br></pre></td></tr></table></figure>
+
+<p>这样生成安装的so库就不会带版本号了:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">-rw-r--r--</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span> <span class="string">263K</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">11</span><span class="string">:27</span> <span class="string">libeasylog.a</span></span><br><span class="line"><span class="string">-rwxr-xr-x</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>  <span class="number">975</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">11</span><span class="string">:27</span> <span class="string">libeasylog.la</span></span><br><span class="line"><span class="string">-rwxr-xr-x</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span> <span class="string">143K</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">11</span><span class="string">:27</span> <span class="string">libeasylog.so</span></span><br></pre></td></tr></table></figure>
+
+<p>当然，绝大部分的库都是需要带上版本号的。每个系统的库版本机制都不一样,libtool通过一种抽象的版本机制最终在创建库的时候才映射到具体的系统版本机制上。这是为了方便在交叉编译的时候可以用一种机制去管理不同平台上的各种版本机制。</p>
+<p>libtool 库版本号系统有下面三个部分:</p>
+<ul>
+<li>current</li>
+</ul>
+<p>接口的修改次数</p>
+<ul>
+<li>revision</li>
+</ul>
+<p>上次修改后源码的修改次数(注意这里指的是只改动了实现,没有修改接口,如果改了接口的话应该要改current号，并且把revision置零)</p>
+<ul>
+<li>age</li>
+</ul>
+<p>当前版本可以向前兼容的版本数</p>
+<p><a href="http://www.gnu.org/software/libtool/manual/libtool.html#Updating-version-info" target="_blank" rel="noopener">官方文档</a>是这么描述这三个部分的更新规则的:</p>
+<blockquote>
+<p>Here are a set of rules to help you update your library version information:</p>
+</blockquote>
+<ol>
+<li>Start with version information of ‘0:0:0’ for each libtool library.</li>
+<li>Update the version information only immediately before a public release of your software. More frequent updates are unnecessary, and only guarantee that the current interface number gets larger faster.</li>
+<li>If the library source code has changed at all since the last update, then increment revision (‘c:r:a’ becomes ‘c:r+1:a’).</li>
+<li>If any interfaces have been added, removed, or changed since the last update, increment current, and set revision to 0.</li>
+<li>If any interfaces have been added since the last public release, then increment age.</li>
+<li>If any interfaces have been removed or changed since the last public release, then set age to 0. </li>
+</ol>
+<p>翻译过来就是</p>
+<ol>
+<li>库版本号应该开始于0.0.0</li>
+<li>只有在正式发布库的时候才更新版本号以避免版本号增长过快</li>
+<li>当实现代码改变的时候revision加1</li>
+<li>当接口改变(无论是添加，删除还是修改接口声明)的时候current加1,同时revision重置为0</li>
+<li>如果库只是增加了接口,则age加1</li>
+<li>如果库删除或者修改了接口声明,则age重置为0</li>
+</ol>
+<p>这三个值可以用-version-info指定</p>
+<blockquote>
+<p>-version-info current[:revision[:age]] </p>
+</blockquote>
+<p>revision 和 age都可以省略,例如你这样设置:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">lib_LTLIBRARIES = libeasylog.la</span><br><span class="line"></span><br><span class="line">libeasylog_la_SOURCES = cout_log_interface.cpp \</span><br><span class="line">					 easy_log.cpp </span><br><span class="line"></span><br><span class="line">libeasylog_la_LDFLAGS = -version-info 3:12:1</span><br></pre></td></tr></table></figure>
+
+<p>表明接口被修改了三次,第三次修改接口之后又修改了12次源码,接口可以向前兼容1个版本</p>
+<p>make install 后可以看到lib目录下生成的库长这样:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">-rw-r--r--</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span> <span class="string">263K</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">12</span><span class="string">:11</span> <span class="string">libeasylog.a</span></span><br><span class="line"><span class="string">-rwxr-xr-x</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>  <span class="number">987</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">12</span><span class="string">:11</span> <span class="string">libeasylog.la</span></span><br><span class="line"><span class="string">lrwxrwxrwx</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>   <span class="number">20</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">12</span><span class="string">:11</span> <span class="string">libeasylog.so</span> <span class="string">-&gt;</span> <span class="string">libeasylog.so.2.1.12</span></span><br><span class="line"><span class="string">lrwxrwxrwx</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>   <span class="number">20</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">12</span><span class="string">:11</span> <span class="string">libeasylog.so.2</span> <span class="string">-&gt;</span> <span class="string">libeasylog.so.2.1.12</span></span><br><span class="line"><span class="string">-rwxr-xr-x</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span> <span class="string">143K</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">12</span><span class="string">:11</span> <span class="string">libeasylog.so.2.1.12</span></span><br></pre></td></tr></table></figure>
+
+<p>为啥是libeasylog.so.2.1.12而不是libeasylog.so.3.12.1呢？</p>
+<p>原来这几个数字是这样计算的:</p>
+<p>库名.so.current-age.age.revision</p>
+<p>这样会引发一个问题:</p>
+<blockquote>
+<p>假设你的库有两个【3：0：1】【4：0：2】。 再假设在你编译程序的机器上安装了最新的【4：0：2】， 且你在程序中使用了该版本中新加的接口。当你程序编译好后， 你ldd发现你的程序依赖libraryname.so.2， 同时你将程序安装在了只安装了【3：0：1】的机器上， 你会发现你的程序能搜索到动态库， 却在运行的时候发现未定义的符号， 因为【3：0：1】中没有新添加的接口。 故你需要在运行机器上保证安装了同一主版本号最新的library， 以保证你的程序能正确运行。</p>
+</blockquote>
+<p>从 <a href="http://blog.csdn.net/zlyong0018/article/details/16846325" target="_blank" rel="noopener">libtool动态库版本系统之个人理解 </a> 这篇博客引用</p>
+<h2 id="手动指定版本号"><a href="#手动指定版本号" class="headerlink" title="手动指定版本号"></a>手动指定版本号</h2><p>我之前了解到的so的命名规范其实和libtool的版本号系统的so库命名规范不一样:</p>
+<blockquote>
+<p>库名.so.主版本号.次版本号.发布版本号</p>
+</blockquote>
+<p><a href="http://www.gnu.org/software/libtool/manual/libtool.html#Release-numbers" target="_blank" rel="noopener">官方文档</a>也有提到这一点:</p>
+<blockquote>
+<p>Often, people want to encode the name of the package release into the shared library so that it is obvious to the user what package their programs are linked against. This convention is used especially on GNU/Linux:</p>
+<p>trick$ ls /usr/lib/libbfd*<br>/usr/lib/libbfd.a           /usr/lib/libbfd.so.2.7.0.2<br>/usr/lib/libbfd.so<br>trick$</p>
+<p>On ‘trick’, /usr/lib/libbfd.so is a symbolic link to libbfd.so.2.7.0.2, which was distributed as a part of ‘binutils-2.7.0.2’.</p>
+<p>Unfortunately, this convention conflicts directly with libtool’s idea of library interface versions, because the library interface rarely changes at the same time that the release number does, and the library suffix is never the same across all platforms.</p>
+<p>So, to accommodate both views, you can use the -release flag to set release information for libraries for which you do not want to use -version-info. For the libbfd example, the next release that uses libtool should be built with ‘-release 2.9.0’, which will produce the following files on GNU/Linux:</p>
+<p>trick$ ls /usr/lib/libbfd*<br>/usr/lib/libbfd-2.9.0.so     /usr/lib/libbfd.a<br>/usr/lib/libbfd.so<br>trick$</p>
+<p>In this case, /usr/lib/libbfd.so is a symbolic link to libbfd-2.9.0.so. This makes it obvious that the user is dealing with ‘binutils-2.9.0’, without compromising libtool’s idea of interface versions.</p>
+<p>Note that this option causes a modification of the library name, so do not use it unless you want to break binary compatibility with any past library releases. In general, you should only use -release for package-internal libraries or for ones whose interfaces change very frequently. </p>
+</blockquote>
+<p>可以使用-release去手动指定版本号,虽然官方不推荐用这种方式:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">lib_LTLIBRARIES = libeasylog.la</span><br><span class="line"></span><br><span class="line">libeasylog_la_SOURCES = cout_log_interface.cpp \</span><br><span class="line">					 easy_log.cpp </span><br><span class="line"></span><br><span class="line">libeasylog_la_LDFLAGS = -release 0.0.3</span><br></pre></td></tr></table></figure>
+
+<p>安装之后lib目录如下:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">-rwxr-xr-x</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span> <span class="string">143K</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">14</span><span class="string">:48</span> <span class="string">libeasylog-0.0.3.so</span></span><br><span class="line"><span class="string">-rw-r--r--</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span> <span class="string">263K</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">14</span><span class="string">:48</span> <span class="string">libeasylog.a</span></span><br><span class="line"><span class="string">-rwxr-xr-x</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>  <span class="number">993</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">14</span><span class="string">:48</span> <span class="string">libeasylog.la</span></span><br><span class="line"><span class="string">lrwxrwxrwx</span> <span class="number">1</span> <span class="string">linjw</span> <span class="string">linjw</span>   <span class="number">19</span> <span class="number">3</span><span class="string">月</span>  <span class="number">26</span> <span class="number">14</span><span class="string">:48</span> <span class="string">libeasylog.so</span> <span class="string">-&gt;</span> <span class="string">libeasylog-0.0.3.so</span></span><br></pre></td></tr></table></figure>
+
+<p>可以在<a href="https://github.com/bluesky466/automake-demo/tree/v0.0.3" target="_blank" rel="noopener">这里</a>查看完整的项目代码</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/03/21/automake学习笔记-模块化编译/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/04/02/automake学习笔记-交叉编译/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓音视频播放 - AwesomePlayer | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="系列文章:  安卓音视频播放 - 总体架构 安卓音视频播放 - AwesomePlayer 安卓音视频播放 - NuPlayer  音视频播放基础流程在讲具体的实现之前我们看一下音视频播放的基础流程:   流程很简单,就是将复用的音视频流解复用出编码后的音频流和编码后的视频流。然后通过音频解码解出PCM数据给音频设备去播放,通过视频解码解出YUV数据给视频设备去播放。 StagefrightPla">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓音视频播放 - AwesomePlayer">
+<meta property="og:url" content="http://139.199.4.241/2019/01/17/安卓音视频播放-AwesomePlayer/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="系列文章:  安卓音视频播放 - 总体架构 安卓音视频播放 - AwesomePlayer 安卓音视频播放 - NuPlayer  音视频播放基础流程在讲具体的实现之前我们看一下音视频播放的基础流程:   流程很简单,就是将复用的音视频流解复用出编码后的音频流和编码后的视频流。然后通过音频解码解出PCM数据给音频设备去播放,通过视频解码解出YUV数据给视频设备去播放。 StagefrightPla">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/1.png">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/2.png">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/3.png">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/4.png">
+<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/5.png">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.281Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓音视频播放 - AwesomePlayer">
+<meta name="twitter:description" content="系列文章:  安卓音视频播放 - 总体架构 安卓音视频播放 - AwesomePlayer 安卓音视频播放 - NuPlayer  音视频播放基础流程在讲具体的实现之前我们看一下音视频播放的基础流程:   流程很简单,就是将复用的音视频流解复用出编码后的音频流和编码后的视频流。然后通过音频解码解出PCM数据给音频设备去播放,通过视频解码解出YUV数据给视频设备去播放。 StagefrightPla">
+<meta name="twitter:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#音视频播放基础流程"><span class="toc-text">音视频播放基础流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#StagefrightPlayer"><span class="toc-text">StagefrightPlayer</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#多线程架构"><span class="toc-text">多线程架构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Demux"><span class="toc-text">Demux</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#解码器"><span class="toc-text">解码器</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#播放流程"><span class="toc-text">播放流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#VideoRender"><span class="toc-text">VideoRender</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#完整架构图"><span class="toc-text">完整架构图</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓音视频播放-AwesomePlayer" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓音视频播放 - AwesomePlayer</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.01.17</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ul>
+<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/" target="_blank" rel="noopener">安卓音视频播放 - 总体架构</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-AwesomePlayer/" target="_blank" rel="noopener">安卓音视频播放 - AwesomePlayer</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/19/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-NuPlayer/" target="_blank" rel="noopener">安卓音视频播放 - NuPlayer</a></li>
+</ul>
+<h1 id="音视频播放基础流程"><a href="#音视频播放基础流程" class="headerlink" title="音视频播放基础流程"></a>音视频播放基础流程</h1><p>在讲具体的实现之前我们看一下音视频播放的基础流程:</p>
+<img src="/安卓音视频播放-AwesomePlayer/1.png">
+
+<p>流程很简单,就是将复用的音视频流解复用出编码后的音频流和编码后的视频流。然后通过音频解码解出PCM数据给音频设备去播放,通过视频解码解出YUV数据给视频设备去播放。</p>
+<h1 id="StagefrightPlayer"><a href="#StagefrightPlayer" class="headerlink" title="StagefrightPlayer"></a>StagefrightPlayer</h1><p><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/" target="_blank" rel="noopener">上一篇文章</a>有讲到MediaPlayerService会通过MediaPlayerFactory创建Player,其中一个创建的就是StagefrightPlayer.但它实际上是一个空壳,只是简单的调用AwesomePlayer的实现而已:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//StagefrightPlayer.h</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">StagefrightPlayer</span> :</span> <span class="keyword">public</span> MediaPlayerInterface &#123;</span><br><span class="line">	...</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	AwesomePlayer *mPlayer;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//StagefrightPlayer.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> StagefrightPlayer::pause() &#123;</span><br><span class="line">    ALOGV(<span class="string">"pause"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> mPlayer-&gt;pause();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> StagefrightPlayer::isPlaying() &#123;</span><br><span class="line">    ALOGV(<span class="string">"isPlaying"</span>);</span><br><span class="line">    <span class="keyword">return</span> mPlayer-&gt;isPlaying();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">status_t</span> StagefrightPlayer::seekTo(<span class="keyword">int</span> msec) &#123;</span><br><span class="line">    ALOGV(<span class="string">"seekTo %.2f secs"</span>, msec / <span class="number">1E3</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">status_t</span> err = mPlayer-&gt;seekTo((<span class="keyword">int64_t</span>)msec * <span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> err;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>所以我们直接看AwesomePlayer的实现。</p>
+<h1 id="多线程架构"><a href="#多线程架构" class="headerlink" title="多线程架构"></a>多线程架构</h1><p>音视频的处理一般都很耗时,所以AwesomePlayer开了一个子线程去工作,防止阻塞住MediaPlayerService的主线程。</p>
+<p>具体的架构如下(这幅图是在这篇<a href="https://www.cnblogs.com/shakin/p/4463639.html" target="_blank" rel="noopener">博客</a>抄来的,这篇文章写得的确不错,大家感兴趣可以去仔细读一下:</p>
+<img src="/安卓音视频播放-AwesomePlayer/2.png">
+
+<p>首先AwesomePlayer内部有个TimedEventQueue对象,所有的操作都会封装成一个个的Event,丢到这个队列里。然后TimedEventQueue创建了一个子线程,不断从队列中拿出Event来执行。</p>
+<p>例如prepare操作最后会调到prepareAsync_l,这里面就是创建了个Event,通过postEvent丢到队列里:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">status_t AwesomePlayer<span class="type">::prepareAsync_l</span>() &#123;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!mQueueStarted) &#123;</span><br><span class="line">        mQueue.start();</span><br><span class="line">        mQueueStarted = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	<span class="params">...</span></span><br><span class="line">    mAsyncPrepareEvent = <span class="literal">new</span> AwesomeEvent(</span><br><span class="line">            this, &amp;AwesomePlayer<span class="type">::onPrepareAsyncEvent</span>);</span><br><span class="line"></span><br><span class="line">    mQueue.postEvent(mAsyncPrepareEvent);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AwesomeEvent继承TimedEventQueue::Event,实现了fire方法,回调了注册的方法:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">AwesomeEvent</span> :</span> <span class="keyword">public</span> TimedEventQueue::Event &#123;</span><br><span class="line">    AwesomeEvent(</span><br><span class="line">            AwesomePlayer *player,</span><br><span class="line">            <span class="keyword">void</span> (AwesomePlayer::*method)())</span><br><span class="line">        : mPlayer(player),</span><br><span class="line">          mMethod(method) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">fire</span><span class="params">(TimedEventQueue *<span class="built_in">queue</span>, <span class="keyword">int64_t</span> <span class="comment">/* now_us */</span>)</span> </span>&#123;</span><br><span class="line">        (mPlayer-&gt;*mMethod)();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>TimedEventQueue::start创建了一个子线程,调用TimedEventQueue::threadEntry方法,这里面有个死循环一直在从Event队列中拿出Event,执行fire方法:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> TimedEventQueue::start() &#123;</span><br><span class="line">    <span class="keyword">if</span> (mRunning) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mStopped = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pthread_attr_t</span> attr;</span><br><span class="line">    pthread_attr_init(&amp;attr);</span><br><span class="line">    pthread_attr_setdetachstate(&amp;attr, PTHREAD_CREATE_JOINABLE);</span><br><span class="line"></span><br><span class="line">    pthread_create(&amp;mThread, &amp;attr, ThreadWrapper, <span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">    pthread_attr_destroy(&amp;attr);</span><br><span class="line"></span><br><span class="line">    mRunning = <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> *TimedEventQueue::ThreadWrapper(<span class="keyword">void</span> *me) &#123;</span><br><span class="line"></span><br><span class="line">    androidSetThreadPriority(<span class="number">0</span>, ANDROID_PRIORITY_FOREGROUND);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static_cast</span>&lt;TimedEventQueue *&gt;(me)-&gt;threadEntry();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> TimedEventQueue::threadEntry() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        ...</span><br><span class="line">        event = removeEventFromQueue_l(eventID);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (event != <span class="literal">NULL</span>) &#123;</span><br><span class="line">            <span class="comment">// Fire event with the lock NOT held.</span></span><br><span class="line">            event-&gt;fire(<span class="keyword">this</span>, now_us);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Demux"><a href="#Demux" class="headerlink" title="Demux"></a>Demux</h1><p>我们先来看看prepare回调的时候实际是调用了AwesomePlayer::beginPrepareAsync_l()方法,在这里会实际的去设置数据源,然后初始化Demux、视频解码器和音频解码器:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> AwesomePlayer::onPrepareAsyncEvent() &#123;</span><br><span class="line">    Mutex::<span class="function">Autolock <span class="title">autoLock</span><span class="params">(mLock)</span></span>;</span><br><span class="line">    beginPrepareAsync_l();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> AwesomePlayer::beginPrepareAsync_l() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> err = finishSetDataSource_l();</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> err = initVideoDecoder();</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> err = initAudioDecoder();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先来看看AwesomePlayer::finishSetDataSource_l实际上是为音视频源找到对应的MediaExtractor,这个MediaExtractor的功能就是实现播放器的基础流程中的Demux,分解出视频流和音频流:</p>
+<img src="/安卓音视频播放-AwesomePlayer/3.png">
+
+<p>代码如下:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">status_t AwesomePlayer<span class="type">::finishSetDataSource_l</span>() &#123;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    extractor = MediaExtractor<span class="type">::Create</span>(dataSource, sniffedMIME.empty() ? <span class="built_in">NULL</span> : sniffedMIME.c_str());</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    status_t err = setDataSource_l(extractor);</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">status_t AwesomePlayer<span class="type">::setDataSource_l</span>(const sp&lt;MediaExtractor&gt; &amp;extractor) &#123;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    for (size_t i = <span class="number">0</span>; i &lt; extractor-&gt;countTracks(); ++i) &#123;</span><br><span class="line">        sp&lt;MetaData&gt; meta = extractor-&gt;getTrackMetaData(i);</span><br><span class="line"></span><br><span class="line">        const char *_mime;</span><br><span class="line">        CHECK(meta-&gt;findCString(kKeyMIMEType, &amp;_mime));</span><br><span class="line"></span><br><span class="line">        String8 mime = String8(_mime);</span><br><span class="line">        <span class="params">...</span></span><br><span class="line">        <span class="keyword">if</span> (!haveVideo &amp;&amp; !strncasecmp(mime.<span class="built_in">string</span>(), <span class="string">"video/"</span>, <span class="number">6</span>)) &#123;</span><br><span class="line">            setVideoSource(extractor-&gt;getTrack(i));</span><br><span class="line">            <span class="params">...</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!haveAudio &amp;&amp; !strncasecmp(mime.<span class="built_in">string</span>(), <span class="string">"audio/"</span>, <span class="number">6</span>)) &#123;</span><br><span class="line">            setAudioSource(extractor-&gt;getTrack(i));</span><br><span class="line">            <span class="params">...</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="params">...</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>MediaExtractor::Create的实现也是蛮粗暴的,判断媒体类型,然后创建不同的MediaExtractor,如MPEG4Extractor、MP3Extractor等:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">sp&lt;MediaExtractor&gt; MediaExtractor::Create(const sp&lt;DataSource&gt; &amp;<span class="keyword">source</span>, const <span class="keyword">char</span> *mime) &#123;</span><br><span class="line">	..</span><br><span class="line">	MediaExtractor *ret = <span class="keyword">NULL</span>;</span><br><span class="line">	    <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MPEG4)</span><br><span class="line">	            || !strcasecmp(mime, <span class="string">"audio/mp4"</span>)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> MPEG4Extractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_MPEG)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> MP3Extractor(<span class="keyword">source</span>, meta);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_AMR_NB)</span><br><span class="line">	            || !strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_AMR_WB)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> AMRExtractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_FLAC)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> FLACExtractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_WAV)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> WAVExtractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_OGG)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> OggExtractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MATROSKA)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> MatroskaExtractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MPEG2TS)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> MPEG2TSExtractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_WVM)) &#123;</span><br><span class="line">	        <span class="comment">// Return now.  WVExtractor should not have the DrmFlag set in the block below.</span></span><br><span class="line">	        <span class="keyword">return</span> <span class="keyword">new</span> WVMExtractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_AAC_ADTS)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> AACExtractor(<span class="keyword">source</span>, meta);</span><br><span class="line">	    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!strcasecmp(mime, MEDIA_MIMETYPE_CONTAINER_MPEG2PS)) &#123;</span><br><span class="line">	        ret = <span class="keyword">new</span> MPEG2PSExtractor(<span class="keyword">source</span>);</span><br><span class="line">	    &#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<img src="/安卓音视频播放-AwesomePlayer/4.png">
+
+<h1 id="解码器"><a href="#解码器" class="headerlink" title="解码器"></a>解码器</h1><p>然后AwesomePlayer::initVideoDecoder、AwesomePlayer::initAudioDecoder里面就是调用OMXCodec去做解码,OMXCodec其实是OpenMax的一层封装。OpenMax就是具体的解码器实现了:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">status_t AwesomePlayer<span class="type">::initVideoDecoder</span>(uint32_t flags) &#123;</span><br><span class="line">	<span class="params">...</span></span><br><span class="line">	mVideoSource = OMXCodec<span class="type">::Create</span>(</span><br><span class="line">            mClient.interface(), mVideoTrack-&gt;getFormat(),</span><br><span class="line">            <span class="literal">false</span>, <span class="comment">// createEncoder</span></span><br><span class="line">            mVideoTrack,</span><br><span class="line">            <span class="built_in">NULL</span>, flags, USE_SURFACE_ALLOC ? mNativeWindow : <span class="built_in">NULL</span>);</span><br><span class="line">   <span class="params">...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">status_t AwesomePlayer<span class="type">::initAudioDecoder</span>() &#123;</span><br><span class="line">	<span class="params">...</span></span><br><span class="line">	mOmxSource = OMXCodec<span class="type">::Create</span>(</span><br><span class="line">                mClient.interface(), mAudioTrack-&gt;getFormat(),</span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// createEncoder</span></span><br><span class="line">                mAudioTrack);</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="播放流程"><a href="#播放流程" class="headerlink" title="播放流程"></a>播放流程</h1><p>应用在java层调用MediaPlayer.start,最终会通过IPC去到MediaPlayerService里调用到StagefrightPlayer::start方法,我们直接从这里开始往下挖:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//从这里开始是StagefrightPlayer.cpp里的代码</span></span><br><span class="line">status_t StagefrightPlayer<span class="type">::start</span>() &#123;</span><br><span class="line">    <span class="keyword">return</span> mPlayer-&gt;play();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//从这里开始是AwesomePlayer.cpp里的代码</span></span><br><span class="line">status_t AwesomePlayer<span class="type">::play</span>() &#123;</span><br><span class="line">	<span class="params">...</span></span><br><span class="line">    <span class="keyword">return</span> play_l();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">status_t AwesomePlayer<span class="type">::play_l</span>() &#123;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    createAudioPlayer_l();</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    postVideoEvent_l();</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    <span class="keyword">return</span> OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="literal">void</span> AwesomePlayer<span class="type">::postVideoEvent_l</span>(int64_t delayUs) &#123;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    mQueue.postEventWithDelay(mVideoEvent, delayUs &lt; <span class="number">0</span> ? <span class="number">10000</span> : delayUs);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在AwesomePlayer::play_l方法里面调用AwesomePlayer::createAudioPlayer_l创建了一个AudioPlayer,然后调用AwesomePlayer::postVideoEvent_l往mQueue里丢了一个事件。</p>
+<p>还记得这个mVideoEvent吗?它对应的是AwesomePlayer::onVideoEvent方法,也就是说把这个Event丢到mQueue里面之后AwesomePlayer::onVideoEvent就会在子线程中被调用</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">mVideoEvent</span> = new AwesomeEvent(this, &amp;AwesomePlayer::<span class="literal">on</span>VideoEvent)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>让我们继续看看AwesomePlayer::onVideoEvent方法里面干了什么:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="literal">void</span> AwesomePlayer<span class="type">::onVideoEvent</span>() &#123;</span><br><span class="line">	<span class="params">...</span></span><br><span class="line">	status_t err = mVideoSource-&gt;read(&amp;mVideoBuffer, &amp;options);</span><br><span class="line">	<span class="params">...</span></span><br><span class="line">	<span class="keyword">if</span> ((mNativeWindow != <span class="built_in">NULL</span>)</span><br><span class="line">            &amp;&amp; (mVideoRendererIsPreview || mVideoRenderer == <span class="built_in">NULL</span>)) &#123;</span><br><span class="line">        mVideoRendererIsPreview = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">        initRenderer_l();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    <span class="keyword">if</span> (mAudioPlayer != <span class="built_in">NULL</span> &amp;&amp; !(mFlags &amp; (AUDIO_RUNNING | SEEK_PREVIEW))) &#123;</span><br><span class="line">        startAudioPlayer_l();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">    <span class="keyword">if</span> (mVideoRenderer != <span class="built_in">NULL</span>) &#123;</span><br><span class="line">        <span class="params">...</span></span><br><span class="line">        mVideoRenderer-&gt;render(mVideoBuffer);</span><br><span class="line">        <span class="params">...</span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="params">...</span></span><br><span class="line">	postVideoEvent_l();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个方法最重要的就是创建一个VideoRender,从mVideoSource读取解码好的视频帧去渲染,渲染完之后再调AwesomePlayer::postVideoEvent_l再往队列丢入一个VideoEvent。于是画面就不断的刷新了。</p>
+<p>可以看到,这个方法内部也启动了音频播放器去播放音频。而且其实它还做了一些音视频同步的工作,但是考虑到逻辑比较啰嗦,我这里就省略了。</p>
+<h1 id="VideoRender"><a href="#VideoRender" class="headerlink" title="VideoRender"></a>VideoRender</h1><p>最后让我们来看看VideoRendere是怎么来的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> AwesomePlayer::initRenderer_l() &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> (USE_SURFACE_ALLOC</span><br><span class="line">	        &amp;&amp; !<span class="built_in">strncmp</span>(component, <span class="string">"OMX."</span>, <span class="number">4</span>)</span><br><span class="line">	        &amp;&amp; <span class="built_in">strncmp</span>(component, <span class="string">"OMX.google."</span>, <span class="number">11</span>)</span><br><span class="line">	        &amp;&amp; <span class="built_in">strcmp</span>(component, <span class="string">"OMX.Nvidia.mpeg2v.decode"</span>)) &#123;</span><br><span class="line">	    mVideoRenderer =</span><br><span class="line">	        <span class="keyword">new</span> AwesomeNativeWindowRenderer(mNativeWindow, rotationDegrees);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	    mVideoRenderer = <span class="keyword">new</span> AwesomeLocalRenderer(mNativeWindow, meta);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到,是根据解码器类型用mNativeWindow创建了不同的AwesomeNativeWindowRenderer或者AwesomeLocalRenderer。这个mNativeWindow就是画面最终需要渲染到的地方</p>
+<p>我们看看mNativeWindow是怎么来的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AwesomePlayer.cpp</span></span><br><span class="line">status_t AwesomePlayer::setNativeWindow_l(<span class="keyword">const</span> sp&lt;ANativeWindow&gt; &amp;<span class="keyword">native</span>) &#123;</span><br><span class="line">    mNativeWindow = <span class="keyword">native</span>;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">status_t AwesomePlayer::setSurfaceTexture(<span class="keyword">const</span> sp&lt;IGraphicBufferProducer&gt; &amp;bufferProducer) &#123;</span><br><span class="line">   ...</span><br><span class="line">   err = setNativeWindow_l(<span class="keyword">new</span> Surface(bufferProducer));</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//StagefrightPlayer.cpp</span></span><br><span class="line">status_t StagefrightPlayer::setVideoSurfaceTexture(</span><br><span class="line">        <span class="keyword">const</span> sp&lt;IGraphicBufferProducer&gt; &amp;bufferProducer) &#123;</span><br><span class="line">    ALOGV(<span class="string">"setVideoSurfaceTexture"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> mPlayer-&gt;setSurfaceTexture(bufferProducer);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//MediaPlayerService.cpp</span></span><br><span class="line">status_t MediaPlayerService::Client::setVideoSurfaceTexture(</span><br><span class="line">	...</span><br><span class="line">	sp&lt;MediaPlayerBase&gt; p = getPlayer();</span><br><span class="line">	...</span><br><span class="line">	status_t err = p-&gt;setVideoSurfaceTexture(bufferProducer);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//MediaPlayer.cpp</span></span><br><span class="line">status_t MediaPlayer::setVideoSurfaceTexture(</span><br><span class="line">        <span class="keyword">const</span> sp&lt;IGraphicBufferProducer&gt;&amp; bufferProducer)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> mPlayer-&gt;setVideoSurfaceTexture(bufferProducer);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//android_media_MediaPlayer.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setVideoSurface</span><span class="params">(JNIEnv *env, jobject thiz, jobject jsurface, jboolean mediaPlayerMustBeAlive)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    sp&lt;MediaPlayer&gt; mp = getMediaPlayer(env, thiz);</span><br><span class="line">    ...</span><br><span class="line">    <span class="function">sp&lt;Surface&gt; <span class="title">surface</span><span class="params">(android_view_Surface_getSurface(env, jsurface)</span>)</span>;</span><br><span class="line">    ...</span><br><span class="line">    new_st = surface-&gt;getIGraphicBufferProducer();</span><br><span class="line">    ...</span><br><span class="line">    mp-&gt;setVideoSurfaceTexture(new_st);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">android_media_MediaPlayer_setVideoSurface</span><span class="params">(JNIEnv *env, jobject thiz, jobject jsurface)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    setVideoSurface(env, thiz, jsurface, <span class="keyword">true</span> <span class="comment">/* mediaPlayerMustBeAlive */</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//android.media.MediaPlayer.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MediaPlayer</span> <span class="keyword">extends</span> <span class="title">PlayerBase</span></span></span><br><span class="line"><span class="class">                         <span class="keyword">implements</span> <span class="title">SubtitleController</span>.<span class="title">Listener</span></span></span><br><span class="line"><span class="class">                                  , <span class="title">VolumeAutomation</span></span></span><br><span class="line"><span class="class">                                  , <span class="title">AudioRouting</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">_setVideoSurface</span><span class="params">(Surface surface)</span></span>;</span><br><span class="line">	...</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setDisplay</span><span class="params">(SurfaceHolder sh)</span> </span>&#123;</span><br><span class="line">        mSurfaceHolder = sh;</span><br><span class="line">        Surface surface;</span><br><span class="line">        <span class="keyword">if</span> (sh != <span class="keyword">null</span>) &#123;</span><br><span class="line">            surface = sh.getSurface();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            surface = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        _setVideoSurface(surface);</span><br><span class="line">        updateSurfaceScreenOn();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到,VideoRendere最终是根据MediaPlayer.setDisplay这个方法设置的SurfaceHolder创建的到的。这就解释了画面是怎么渲染到指定的SurfaceView上的。</p>
+<h1 id="完整架构图"><a href="#完整架构图" class="headerlink" title="完整架构图"></a>完整架构图</h1><p>整个渲染的架构如下:</p>
+<img src="/安卓音视频播放-AwesomePlayer/5.png">
+
+
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/01/17/安卓音视频播放-总体架构/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2019/01/19/安卓音视频播放-NuPlayer/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

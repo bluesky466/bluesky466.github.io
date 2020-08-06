@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android跨进程抛异常的原理 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="今天接到了个需求,需要用到跨进程抛异常。 怎样将异常从服务端抛到客户端也就是说在Service端抛出的异常需要可以在Client端接收。印象中binder是可以传异常的,所以aidl直接走起: 1234567891011121314151617181920212223242526272829303132333435363738394041// aidl文件interface ITestExcept">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android跨进程抛异常的原理">
+<meta property="og:url" content="http://139.199.4.241/2018/11/10/Android跨进程抛异常的原理/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="今天接到了个需求,需要用到跨进程抛异常。 怎样将异常从服务端抛到客户端也就是说在Service端抛出的异常需要可以在Client端接收。印象中binder是可以传异常的,所以aidl直接走起: 1234567891011121314151617181920212223242526272829303132333435363738394041// aidl文件interface ITestExcept">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/Android跨进程抛异常的原理/1.png">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.260Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android跨进程抛异常的原理">
+<meta name="twitter:description" content="今天接到了个需求,需要用到跨进程抛异常。 怎样将异常从服务端抛到客户端也就是说在Service端抛出的异常需要可以在Client端接收。印象中binder是可以传异常的,所以aidl直接走起: 1234567891011121314151617181920212223242526272829303132333435363738394041// aidl文件interface ITestExcept">
+<meta name="twitter:image" content="http://139.199.4.241/Android跨进程抛异常的原理/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#怎样将异常从服务端抛到客户端"><span class="toc-text">怎样将异常从服务端抛到客户端</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#跨进程传递异常的原理"><span class="toc-text">跨进程传递异常的原理</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android跨进程抛异常的原理" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android跨进程抛异常的原理</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.11.10</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>今天接到了个需求,需要用到跨进程抛异常。</p>
+<h1 id="怎样将异常从服务端抛到客户端"><a href="#怎样将异常从服务端抛到客户端" class="headerlink" title="怎样将异常从服务端抛到客户端"></a>怎样将异常从服务端抛到客户端</h1><p>也就是说在Service端抛出的异常需要可以在Client端接收。印象中binder是可以传异常的,所以aidl直接走起:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// aidl文件</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">ITestExceptionAidl</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">testThrowException</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// service端实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AidlService</span> <span class="keyword">extends</span> <span class="title">Service</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> IBinder <span class="title">onBind</span><span class="params">(Intent intent)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ITestExceptionAidl.Stub() &#123;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">testThrowException</span><span class="params">()</span> <span class="keyword">throws</span> RemoteException </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"TestException"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// client端实现</span></span><br><span class="line">bindService(intent, <span class="keyword">new</span> ServiceConnection() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceConnected</span><span class="params">(ComponentName name, IBinder service)</span> </span>&#123;</span><br><span class="line">        ITestExceptionAidl aidl = ITestExceptionAidl.Stub.asInterface(service);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            aidl.testThrowException();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            Log.e(<span class="string">"testtest"</span>, <span class="string">"Exception"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceDisconnected</span><span class="params">(ComponentName name)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;, Context.BIND_AUTO_CREATE);</span><br></pre></td></tr></table></figure>
+
+<p>但是这个程序实际上运行起来是这样的:</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder: *** Uncaught <span class="comment">remote exception!  (Exceptions are not yet supported across processes.)</span></span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder: java.lang.RuntimeException: TestException</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder:    at me.linjw.demo.ipcdemo.AidlService$<span class="number">1.</span>testThrowException(AidlService.java:<span class="number">22</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder:    at me.linjw.demo.ipcdemo.ITestExceptionAidl$Stub.onTransact(ITestExceptionAidl.java:<span class="number">48</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder:    at android.os.Binder.execTransact(Binder.java:<span class="number">565</span>)</span><br></pre></td></tr></table></figure>
+
+<p>看日志里面的ITestExceptionAidl$Stub.onTransact,也就是说在service端就已经被异常打断了,并没有传给client端,而且第一个大大的”Exceptions are not yet supported across processes.”是说异常不允许跨进程吗?但是我明明记得AIDL生成的代码里面就有向Parcel写入异常啊:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">boolean</span> onTransact(<span class="keyword">int</span> code, android.os.Parcel data, android.os.Parcel reply, <span class="keyword">int</span> flags) <span class="keyword">throws</span> android.os.RemoteException &#123;</span><br><span class="line">    <span class="keyword">switch</span> (code) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">INTERFACE_TRANSACTION:</span> &#123;</span><br><span class="line">            reply.writeString(DESCRIPTOR);</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">TRANSACTION_testThrowException:</span> &#123;</span><br><span class="line">            data.enforceInterface(DESCRIPTOR);</span><br><span class="line">            <span class="keyword">boolean</span> _result = <span class="keyword">this</span>.testThrowException();</span><br><span class="line">            reply.writeNoException(); <span class="comment">// 这里写入的是没有抛出异常</span></span><br><span class="line">            reply.writeInt(((_result) ? (1) : (<span class="number">0</span>)));</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">super</span>.onTransact(code, data, reply, flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>查找Parcel的源码,其实是有writeException方法的:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">writeException</span><span class="params">(Exception e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> code = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Parcelable</span><br><span class="line">            &amp;&amp; (e.getClass().getClassLoader() == Parcelable<span class="class">.<span class="keyword">class</span>.<span class="title">getClassLoader</span>())) </span>&#123;</span><br><span class="line">        <span class="comment">// We only send Parcelable exceptions that are in the</span></span><br><span class="line">        <span class="comment">// BootClassLoader to ensure that the receiver can unpack them</span></span><br><span class="line">        code = EX_PARCELABLE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> SecurityException)</span> </span>&#123;</span><br><span class="line">        code = EX_SECURITY;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> BadParcelableException)</span> </span>&#123;</span><br><span class="line">        code = EX_BAD_PARCELABLE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> IllegalArgumentException)</span> </span>&#123;</span><br><span class="line">        code = EX_ILLEGAL_ARGUMENT;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> NullPointerException)</span> </span>&#123;</span><br><span class="line">        code = EX_NULL_POINTER;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> IllegalStateException)</span> </span>&#123;</span><br><span class="line">        code = EX_ILLEGAL_STATE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> NetworkOnMainThreadException)</span> </span>&#123;</span><br><span class="line">        code = EX_NETWORK_MAIN_THREAD;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> UnsupportedOperationException)</span> </span>&#123;</span><br><span class="line">        code = EX_UNSUPPORTED_OPERATION;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> ServiceSpecificException)</span> </span>&#123;</span><br><span class="line">        code = EX_SERVICE_SPECIFIC;</span><br><span class="line">    &#125;</span><br><span class="line">    writeInt(code);</span><br><span class="line">    StrictMode.clearGatheredViolations();</span><br><span class="line">    <span class="keyword">if</span> (code == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (e <span class="keyword">instanceof</span> RuntimeException) &#123;</span><br><span class="line">            <span class="keyword">throw</span> (RuntimeException) e;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">    &#125;</span><br><span class="line">    writeString(e.getMessage());</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到其实Parcel是支持写入异常的,但是只支持Parcelable的异常或者下面这几种异常:</p>
+<ul>
+<li>SecurityException</li>
+<li>BadParcelableException</li>
+<li>IllegalArgumentException</li>
+<li>NullPointerException</li>
+<li>IllegalStateException</li>
+<li>NetworkOnMainThreadException</li>
+<li>UnsupportedOperationException</li>
+<li>ServiceSpecificException</li>
+</ul>
+<p>如果是普通的RuntimeException,这打断写入,继续抛出。</p>
+<p>于是我们将RuntimeException改成它支持的UnsupportedOperationException试试:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// service端改成抛出UnsupportedOperationException</span></span><br><span class="line">ppublic <span class="class"><span class="keyword">class</span> <span class="title">AidlService</span> <span class="keyword">extends</span> <span class="title">Service</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> IBinder <span class="title">onBind</span><span class="params">(Intent intent)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ITestExceptionAidl.Stub() &#123;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">testThrowException</span><span class="params">()</span> <span class="keyword">throws</span> RemoteException </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">"TestException"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// client端实现还是一样,不变</span></span><br><span class="line">bindService(intent, <span class="keyword">new</span> ServiceConnection() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceConnected</span><span class="params">(ComponentName name, IBinder service)</span> </span>&#123;</span><br><span class="line">        ITestExceptionAidl aidl = ITestExceptionAidl.Stub.asInterface(service);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            aidl.testThrowException();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            Log.e(<span class="string">"testtest"</span>, <span class="string">"Exception"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onServiceDisconnected</span><span class="params">(ComponentName name)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;, Context.BIND_AUTO_CREATE);</span><br></pre></td></tr></table></figure>
+
+<p>这样运行的话客户端就能捕获到异常:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest: RemoteException</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest: java<span class="selector-class">.lang</span><span class="selector-class">.UnsupportedOperationException</span>: TestException</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at android<span class="selector-class">.os</span><span class="selector-class">.Parcel</span>.readException(Parcel<span class="selector-class">.java</span>:<span class="number">1728</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at android<span class="selector-class">.os</span><span class="selector-class">.Parcel</span>.readException(Parcel<span class="selector-class">.java</span>:<span class="number">1669</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at me<span class="selector-class">.linjw</span><span class="selector-class">.demo</span><span class="selector-class">.ipcdemo</span>.ITestExceptionAidl<span class="variable">$Stub</span><span class="variable">$Proxy</span>.testThrowException(ITestExceptionAidl<span class="selector-class">.java</span>:<span class="number">77</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at me<span class="selector-class">.linjw</span><span class="selector-class">.demo</span><span class="selector-class">.ipcdemo</span>.MainActivity$<span class="number">3</span>.onServiceConnected(MainActivity<span class="selector-class">.java</span>:<span class="number">132</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at android<span class="selector-class">.app</span>.LoadedApk<span class="variable">$ServiceDispatcher</span>.doConnected(LoadedApk<span class="selector-class">.java</span>:<span class="number">1465</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at android<span class="selector-class">.app</span>.LoadedApk<span class="variable">$ServiceDispatcher</span><span class="variable">$RunConnection</span>.run(LoadedApk<span class="selector-class">.java</span>:<span class="number">1482</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at android<span class="selector-class">.os</span><span class="selector-class">.Handler</span>.handleCallback(Handler<span class="selector-class">.java</span>:<span class="number">751</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at android<span class="selector-class">.os</span><span class="selector-class">.Handler</span>.dispatchMessage(Handler<span class="selector-class">.java</span>:<span class="number">95</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at android<span class="selector-class">.os</span><span class="selector-class">.Looper</span>.loop(Looper<span class="selector-class">.java</span>:<span class="number">154</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at android<span class="selector-class">.app</span><span class="selector-class">.ActivityThread</span>.main(ActivityThread<span class="selector-class">.java</span>:<span class="number">6097</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at java<span class="selector-class">.lang</span><span class="selector-class">.reflect</span><span class="selector-class">.Method</span>.invoke(Native Method)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at com<span class="selector-class">.android</span><span class="selector-class">.internal</span><span class="selector-class">.os</span>.ZygoteInit<span class="variable">$MethodAndArgsCaller</span>.run(ZygoteInit<span class="selector-class">.java</span>:<span class="number">1052</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">49</span>:<span class="number">46.770</span> <span class="number">19937</span> <span class="number">19937</span> E testtest:      at com<span class="selector-class">.android</span><span class="selector-class">.internal</span><span class="selector-class">.os</span><span class="selector-class">.ZygoteInit</span>.main(ZygoteInit<span class="selector-class">.java</span>:<span class="number">942</span>)</span><br></pre></td></tr></table></figure>
+
+<h1 id="跨进程传递异常的原理"><a href="#跨进程传递异常的原理" class="headerlink" title="跨进程传递异常的原理"></a>跨进程传递异常的原理</h1><p>好,知道了如何去跨进程传递异常之后,然后我们来看看异常到底是如何传递过去的。</p>
+<p>让我们再来看看异常写入的代码:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 有异常的情况</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">writeException</span><span class="params">(Exception e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> code = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Parcelable</span><br><span class="line">            &amp;&amp; (e.getClass().getClassLoader() == Parcelable<span class="class">.<span class="keyword">class</span>.<span class="title">getClassLoader</span>())) </span>&#123;</span><br><span class="line">        <span class="comment">// We only send Parcelable exceptions that are in the</span></span><br><span class="line">        <span class="comment">// BootClassLoader to ensure that the receiver can unpack them</span></span><br><span class="line">        code = EX_PARCELABLE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> SecurityException)</span> </span>&#123;</span><br><span class="line">        code = EX_SECURITY;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> BadParcelableException)</span> </span>&#123;</span><br><span class="line">        code = EX_BAD_PARCELABLE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> IllegalArgumentException)</span> </span>&#123;</span><br><span class="line">        code = EX_ILLEGAL_ARGUMENT;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> NullPointerException)</span> </span>&#123;</span><br><span class="line">        code = EX_NULL_POINTER;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> IllegalStateException)</span> </span>&#123;</span><br><span class="line">        code = EX_ILLEGAL_STATE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> NetworkOnMainThreadException)</span> </span>&#123;</span><br><span class="line">        code = EX_NETWORK_MAIN_THREAD;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> UnsupportedOperationException)</span> </span>&#123;</span><br><span class="line">        code = EX_UNSUPPORTED_OPERATION;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> ServiceSpecificException)</span> </span>&#123;</span><br><span class="line">        code = EX_SERVICE_SPECIFIC;</span><br><span class="line">    &#125;</span><br><span class="line">    writeInt(code);</span><br><span class="line">    StrictMode.clearGatheredViolations();</span><br><span class="line">    <span class="keyword">if</span> (code == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (e <span class="keyword">instanceof</span> RuntimeException) &#123;</span><br><span class="line">            <span class="keyword">throw</span> (RuntimeException) e;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">    &#125;</span><br><span class="line">    writeString(e.getMessage());</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 之后还有一些写入堆栈的操作,比较多,这里可以不看</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">writeNoException</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (StrictMode.hasGatheredViolations()) &#123;</span><br><span class="line">    	</span><br><span class="line">		<span class="comment">// 如果StrictMode收集到了写违规行为会走这里,我们可以不关注它</span></span><br><span class="line">        writeInt(EX_HAS_REPLY_HEADER);</span><br><span class="line">        ...</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    	<span class="comment">// 一般情况下会走这里</span></span><br><span class="line">        writeInt(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里给每种支持的异常都编了个号码,它会往Parcel写入。而0代表的是没有发生异常。然后再看看读取异常的代码:</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">public</span> <span class="keyword">boolean </span>testThrowException() throws <span class="keyword">android.os.RemoteException </span>&#123;</span><br><span class="line">    <span class="keyword">android.os.Parcel </span>_<span class="meta">data</span> = <span class="keyword">android.os.Parcel.obtain();</span></span><br><span class="line"><span class="keyword"> </span>   <span class="keyword">android.os.Parcel </span>_reply = <span class="keyword">android.os.Parcel.obtain();</span></span><br><span class="line"><span class="keyword"> </span>   <span class="keyword">boolean </span>_result<span class="comment">;</span></span><br><span class="line">    try &#123;</span><br><span class="line">        _<span class="meta">data</span>.writeInterfaceToken(DESCRIPTOR)<span class="comment">;</span></span><br><span class="line">        mRemote.transact(Stub.TRANSACTION_testThrowException, _<span class="meta">data</span>, _reply, <span class="number">0</span>)<span class="comment">;</span></span><br><span class="line">        _reply.readException()<span class="comment">;</span></span><br><span class="line">        _result = (<span class="number">0</span> != _reply.readInt())<span class="comment">;</span></span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        _reply.recycle()<span class="comment">;</span></span><br><span class="line">        _<span class="meta">data</span>.recycle()<span class="comment">;</span></span><br><span class="line">    &#125;</span><br><span class="line">    return _result<span class="comment">;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// <span class="keyword">android.os.Parcel.readException</span></span><br><span class="line"><span class="keyword">public </span>final void readException() &#123;</span><br><span class="line">    int <span class="meta">code</span> = readExceptionCode()<span class="comment">;</span></span><br><span class="line">    <span class="meta">if</span> (<span class="meta">code</span> != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">String </span>msg = readString()<span class="comment">;</span></span><br><span class="line">        </span><br><span class="line">        //在这个方法里面创建异常并且抛出</span><br><span class="line">        readException(<span class="meta">code</span>, msg)<span class="comment">;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后这里有个需要注意的点就是异常必须是写在Parcel的头部的,也就是说如果没有异常,我们先要将0写到头部,然后再将返回值继续往后面写入。如果有异常,我们要先将异常编码写入头部,然后就不需要再写入返回值了。</p>
+<p>这样,在客户端读取的时候读取的头部就能知道到底有没有异常,没有异常就继续读取返回值,有异常就将异常读取出来并且抛出。</p>
+<figure class="highlight sqf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// service端代码</span></span><br><span class="line">boolean <span class="variable">_result</span> = this.testThrowException();</span><br><span class="line">reply.writeNoException(); <span class="comment">// 先写入异常</span></span><br><span class="line">reply.writeInt(((<span class="variable">_result</span>) ? (<span class="number">1</span>) : (<span class="number">0</span>))); <span class="comment">// 再写入返回值</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// client端代码</span></span><br><span class="line">mRemote.transact(Stub.TRANSACTION_testThrowException, <span class="variable">_data</span>, <span class="variable">_reply</span>, <span class="number">0</span>);</span><br><span class="line"><span class="variable">_reply</span>.readException(); <span class="comment">// 先读取异常,有异常的话readException方法里面会直接抛出</span></span><br><span class="line"><span class="variable">_result</span> = (<span class="number">0</span> != <span class="variable">_reply</span>.readInt()); <span class="comment">// 再读取返回值</span></span><br></pre></td></tr></table></figure>
+
+<p>也就是Parcel的头部是一个标志位,标志了有异常或者无异常:</p>
+<img src="/Android跨进程抛异常的原理/1.png">
+
+<p>但是我们看到AIDL生成的代码都是写入的无异常,那我们抛出的异常是怎么传过去的呢?还记得这个打印吗?</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder: *** Uncaught <span class="comment">remote exception!  (Exceptions are not yet supported across processes.)</span></span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder: java.lang.RuntimeException: TestException</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder:    at me.linjw.demo.ipcdemo.AidlService$<span class="number">1.</span>testThrowException(AidlService.java:<span class="number">22</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder:    at me.linjw.demo.ipcdemo.ITestExceptionAidl$Stub.onTransact(ITestExceptionAidl.java:<span class="number">48</span>)</span><br><span class="line"><span class="number">01</span>-<span class="number">01</span> <span class="number">05</span>:<span class="number">31</span>:<span class="number">55.475</span>  <span class="number">4868</span>  <span class="number">4880</span> E JavaBinder:    at android.os.Binder.execTransact(Binder.java:<span class="number">565</span>)</span><br></pre></td></tr></table></figure>
+
+<p>我们去android.os.Binder.execTransact这里找找看, onTransact方法实际就是在这里被调用的</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">execTransact</span><span class="params">(<span class="keyword">int</span> code, <span class="keyword">long</span> dataObj, <span class="keyword">long</span> replyObj, <span class="keyword">int</span> flags)</span> </span>&#123;</span><br><span class="line">	Parcel data = Parcel.obtain(dataObj);</span><br><span class="line">	Parcel reply = Parcel.obtain(replyObj);</span><br><span class="line">	<span class="keyword">boolean</span> res;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">	    res = onTransact(code, data, reply, flags);</span><br><span class="line">	&#125; <span class="keyword">catch</span> (RemoteException|RuntimeException e) &#123;</span><br><span class="line">	    ...</span><br><span class="line">	    reply.setDataPosition(<span class="number">0</span>);</span><br><span class="line">	    reply.writeException(e);</span><br><span class="line">	    res = <span class="literal">true</span>;</span><br><span class="line">	&#125; <span class="keyword">catch</span> (OutOfMemoryError e) &#123;</span><br><span class="line">	    RuntimeException re = <span class="keyword">new</span> RuntimeException(<span class="string">"Out of memory"</span>, e);</span><br><span class="line">	    reply.setDataPosition(<span class="number">0</span>);</span><br><span class="line">	    reply.writeException(re);</span><br><span class="line">	    res = <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	checkParcel(<span class="keyword">this</span>, code, reply, <span class="string">"Unreasonably large binder reply buffer"</span>);</span><br><span class="line">	reply.recycle();</span><br><span class="line">	data.recycle();</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看,这里如果catch到了方法,也就是说我们服务端有抛出异常,就会在catch代码块里面先就Parcel的游标重置回0,然后往Parcel头部写入异常。</p>
+<p>好,到了这里其实整个流程就差不多了,但是我发现我没有看到那个”Exceptions are not yet supported across processes.”字符串,这个不支持的提示又是哪里来的呢?</p>
+<p>让我们再回忆下代码,在遇到不支持的异常类型的时候, writeException也会抛出异常:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="function"><span class="keyword">void</span> <span class="title">writeException</span><span class="params">(Exception e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> code = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (e <span class="keyword">instanceof</span> Parcelable</span><br><span class="line">            &amp;&amp; (e.getClass().getClassLoader() == Parcelable<span class="class">.<span class="keyword">class</span>.<span class="title">getClassLoader</span>())) </span>&#123;</span><br><span class="line">        <span class="comment">// We only send Parcelable exceptions that are in the</span></span><br><span class="line">        <span class="comment">// BootClassLoader to ensure that the receiver can unpack them</span></span><br><span class="line">        code = EX_PARCELABLE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> SecurityException)</span> </span>&#123;</span><br><span class="line">        code = EX_SECURITY;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> BadParcelableException)</span> </span>&#123;</span><br><span class="line">        code = EX_BAD_PARCELABLE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> IllegalArgumentException)</span> </span>&#123;</span><br><span class="line">        code = EX_ILLEGAL_ARGUMENT;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> NullPointerException)</span> </span>&#123;</span><br><span class="line">        code = EX_NULL_POINTER;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> IllegalStateException)</span> </span>&#123;</span><br><span class="line">        code = EX_ILLEGAL_STATE;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> NetworkOnMainThreadException)</span> </span>&#123;</span><br><span class="line">        code = EX_NETWORK_MAIN_THREAD;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> UnsupportedOperationException)</span> </span>&#123;</span><br><span class="line">        code = EX_UNSUPPORTED_OPERATION;</span><br><span class="line">    &#125; <span class="function"><span class="keyword">else</span> <span class="title">if</span> <span class="params">(e <span class="keyword">instanceof</span> ServiceSpecificException)</span> </span>&#123;</span><br><span class="line">        code = EX_SERVICE_SPECIFIC;</span><br><span class="line">    &#125;</span><br><span class="line">    writeInt(code);</span><br><span class="line">    StrictMode.clearGatheredViolations();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// code为0,代表不支持这种异常,继续把异常抛出或者创建RuntimeException抛出</span></span><br><span class="line">    <span class="keyword">if</span> (code == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (e <span class="keyword">instanceof</span> RuntimeException) &#123;</span><br><span class="line">            <span class="keyword">throw</span> (RuntimeException) e;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于这个writeException,已经是在catch代码块里面运行的了,没有人再去catch它,于是就会打断这个流程,直接跳出。形成了一个Uncaught remote exception。</p>
+<p>最后我们找到/frameworks/base/core/jni/android_util_Binder.cpp的onTransact方法,这里通过jni调到Java的execTransact方法,调用完之后进行ExceptionCheck,如果发现有异常的话就report_exception:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">virtual</span> status_t <span class="title">onTransact</span><span class="params">(<span class="keyword">uint32_t</span> code, <span class="keyword">const</span> Parcel&amp; data, Parcel* reply, <span class="keyword">uint32_t</span> flags = <span class="number">0</span>)</span> </span>&#123;</span><br><span class="line">    JNIEnv* env = javavm_to_jnienv(mVM);</span><br><span class="line"></span><br><span class="line">    IPCThreadState* thread_state = IPCThreadState::self();</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int32_t</span> strict_policy_before = thread_state-&gt;getStrictModePolicy();</span><br><span class="line">    </span><br><span class="line">    jboolean res = env-&gt;CallBooleanMethod(mObject, gBinderOffsets.mExecTransact,</span><br><span class="line">        code, <span class="keyword">reinterpret_cast</span>&lt;jlong&gt;(&amp;data), <span class="keyword">reinterpret_cast</span>&lt;jlong&gt;(reply), flags);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (env-&gt;ExceptionCheck()) &#123;</span><br><span class="line">        jthrowable excep = env-&gt;ExceptionOccurred();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 就是这里啦</span></span><br><span class="line">        report_exception(env, excep,</span><br><span class="line">            <span class="string">"*** Uncaught remote exception!  "</span></span><br><span class="line">            <span class="string">"(Exceptions are not yet supported across processes.)"</span>);</span><br><span class="line">        res = JNI_FALSE;</span><br><span class="line"></span><br><span class="line">        env-&gt;DeleteLocalRef(excep);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/11/09/记一个多线程锁的bug/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2019/01/17/安卓音视频播放-总体架构/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

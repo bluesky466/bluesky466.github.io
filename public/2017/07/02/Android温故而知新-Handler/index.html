@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android温故而知新 - Handler | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="我们都知道,安卓主线程(也就是ui线程)中不能做耗时操作,一旦主线程阻塞了超过5秒钟就会被系统强制关闭,甚至在主线程中访问网络都会直接抛异常。但是我们的ui操作又必须在主线程中进行。所以我们会在子线程中进行耗时的操作,完成之后将结果同步到主线程进行ui的刷新。 而Handler机制就是谷歌用来方便我们进行线程同步的,我们可以很方便的通过它,在子线程中将ui刷新的操作同步回主线程中进行。 使用Han">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android温故而知新 - Handler">
+<meta property="og:url" content="http://139.199.4.241/2017/07/02/Android温故而知新-Handler/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="我们都知道,安卓主线程(也就是ui线程)中不能做耗时操作,一旦主线程阻塞了超过5秒钟就会被系统强制关闭,甚至在主线程中访问网络都会直接抛异常。但是我们的ui操作又必须在主线程中进行。所以我们会在子线程中进行耗时的操作,完成之后将结果同步到主线程进行ui的刷新。 而Handler机制就是谷歌用来方便我们进行线程同步的,我们可以很方便的通过它,在子线程中将ui刷新的操作同步回主线程中进行。 使用Han">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/Android温故而知新-Handler/1.png">
+<meta property="og:image" content="http://139.199.4.241/Android温故而知新-Handler/2.png">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.260Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android温故而知新 - Handler">
+<meta name="twitter:description" content="我们都知道,安卓主线程(也就是ui线程)中不能做耗时操作,一旦主线程阻塞了超过5秒钟就会被系统强制关闭,甚至在主线程中访问网络都会直接抛异常。但是我们的ui操作又必须在主线程中进行。所以我们会在子线程中进行耗时的操作,完成之后将结果同步到主线程进行ui的刷新。 而Handler机制就是谷歌用来方便我们进行线程同步的,我们可以很方便的通过它,在子线程中将ui刷新的操作同步回主线程中进行。 使用Han">
+<meta name="twitter:image" content="http://139.199.4.241/Android温故而知新-Handler/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#使用Handler将ui刷新操作同步到主线程中进行"><span class="toc-text">使用Handler将ui刷新操作同步到主线程中进行</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-创建handler并重写handleMessage方法"><span class="toc-text">1.创建handler并重写handleMessage方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-在子线程中发送Message给Handler"><span class="toc-text">2.在子线程中发送Message给Handler</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#同步到主线程的各种姿势"><span class="toc-text">同步到主线程的各种姿势</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Handler机制的基本原理"><span class="toc-text">Handler机制的基本原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#主线程中的Looper"><span class="toc-text">主线程中的Looper</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#使用Handler将消息同步到其他线程"><span class="toc-text">使用Handler将消息同步到其他线程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#HandlerThread"><span class="toc-text">HandlerThread</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#IntentService"><span class="toc-text">IntentService</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android温故而知新-Handler" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android温故而知新 - Handler</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.07.02</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>我们都知道,安卓主线程(也就是ui线程)中不能做耗时操作,一旦主线程阻塞了超过5秒钟就会被系统强制关闭,甚至在主线程中访问网络都会直接抛异常。但是我们的ui操作又必须在主线程中进行。所以我们会在子线程中进行耗时的操作,完成之后将结果同步到主线程进行ui的刷新。</p>
+<p>而Handler机制就是谷歌用来方便我们进行线程同步的,我们可以很方便的通过它,在子线程中将ui刷新的操作同步回主线程中进行。</p>
+<h1 id="使用Handler将ui刷新操作同步到主线程中进行"><a href="#使用Handler将ui刷新操作同步到主线程中进行" class="headerlink" title="使用Handler将ui刷新操作同步到主线程中进行"></a>使用Handler将ui刷新操作同步到主线程中进行</h1><p>我们先来看一个例子直观感受下如何使用Handler将ui刷新操作从子线程同步到主线程中进行:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MSG_UPDATE_PROGRESS_BAR_ABOVE = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MSG_UPDATE_PROGRESS_BAR_BELOW = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">private</span> ProgressBar mProgressBarAbove;</span><br><span class="line">    <span class="keyword">private</span> ProgressBar mProgressBarBelow;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Handler mHandler;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_main);</span><br><span class="line"></span><br><span class="line">        mProgressBarAbove = (ProgressBar) findViewById(R.id.progressAbove);</span><br><span class="line"></span><br><span class="line">        mProgressBarBelow = (ProgressBar) findViewById(R.id.progressBelow);</span><br><span class="line"></span><br><span class="line">        mHandler = <span class="keyword">new</span> Handler() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">super</span>.handleMessage(msg);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">switch</span> (msg.what) &#123;</span><br><span class="line">                    <span class="keyword">case</span> MSG_UPDATE_PROGRESS_BAR_ABOVE:</span><br><span class="line">                        mProgressBarAbove.setProgress(msg.arg1);</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    <span class="keyword">case</span> MSG_UPDATE_PROGRESS_BAR_BELOW:</span><br><span class="line">                        Bundle data = msg.getData();</span><br><span class="line">                        mProgressBarBelow.setProgress(data.getInt(<span class="string">"progress"</span>));</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="keyword">int</span> progressAbove = <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">int</span> progressBelow = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">while</span> (progressAbove &lt; <span class="number">100</span> || progressBelow &lt; <span class="number">100</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (progressAbove &lt; <span class="number">100</span>) &#123;</span><br><span class="line">                        progressAbove++;</span><br><span class="line"></span><br><span class="line">                        Message above = <span class="keyword">new</span> Message();</span><br><span class="line">                        above.what = MSG_UPDATE_PROGRESS_BAR_ABOVE;</span><br><span class="line">                        above.arg1 = progressAbove;</span><br><span class="line">                        mHandler.sendMessage(above);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (progressBelow &lt; <span class="number">100</span>) &#123;</span><br><span class="line">                        progressBelow += <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">                        Message below = mHandler.obtainMessage();</span><br><span class="line">                        below.what = MSG_UPDATE_PROGRESS_BAR_BELOW;</span><br><span class="line">                        Bundle data = <span class="keyword">new</span> Bundle();</span><br><span class="line">                        data.putInt(<span class="string">"progress"</span>, progressBelow);</span><br><span class="line">                        below.setData(data);</span><br><span class="line">                        mHandler.sendMessage(below);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        Thread.sleep(<span class="number">100</span>);</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                        e.printStackTrace();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的例子很简单,界面有上下两条进度条,我们在子线程中使用Thread.sleep(100)模拟耗时操作,每隔100毫秒更新一下进度,上面的进度条进度每次加1,下面的进度条每次加2。</p>
+<img src="/Android温故而知新-Handler/1.png">
+
+<h2 id="1-创建handler并重写handleMessage方法"><a href="#1-创建handler并重写handleMessage方法" class="headerlink" title="1.创建handler并重写handleMessage方法"></a>1.创建handler并重写handleMessage方法</h2><p>首先我们会创建一个Handler并重写它的handleMessage,这个方法就是在主线程中被调用的,我们通过传给这个方法的Message去刷新ui。</p>
+<p>Message的what成员变量用来标识消息的类型,我们这里用来区分更新哪一个进度条。同时我们可以从Message中取得从子线程中传过来的进度,然后直接在handleMessage里面刷新进度条的进度。</p>
+<h2 id="2-在子线程中发送Message给Handler"><a href="#2-在子线程中发送Message给Handler" class="headerlink" title="2.在子线程中发送Message给Handler"></a>2.在子线程中发送Message给Handler</h2><p>Message是在子线程中被创建的。如代码所示,我们可以直接将它new出来,也可以使用mHandler.obtainMessage()从mHandler的Message池中获取一个实例。</p>
+<p><font color="#FF0000">一般推荐使用obtainMessage的方式</font>,因为Message池中的Message是可以被重复利用的,避免了创建对象申请内存的开销。</p>
+<p>在前面说过Message的what成员变量是用来标志消息的类型的,我们这里直接将MSG_UPDATE_PROGRESS_BAR_ABOVE或者MSG_UPDATE_PROGRESS_BAR_ABOVE赋值进去,在handleMessage的时候就能用它来区分到底更新哪个进度条了。</p>
+<p>消息的值也有多种赋值方式。</p>
+<p>第一种很简单,Message提供了arg1、arg2、obj、replyTo等public成员变量,可以直接将想保存的数据赋值給他们,在handleMessage方法中就能直接获取到他们了。</p>
+<p>第二种就是创建一个Bundle对象,在Bundle对象中存入数据,然后再通过setData方法传给Message,在handleMessage方法中通过getData可以获得Message中保存的Bundle对象,从而获得保存的数据。</p>
+<h1 id="同步到主线程的各种姿势"><a href="#同步到主线程的各种姿势" class="headerlink" title="同步到主线程的各种姿势"></a>同步到主线程的各种姿势</h1><p>使用Handler将操作同步到主线程中进行有两种方式,一种是上面例子中的发送Message的方式。另一种是直接将一个Runnable传给Handler,Handler就会在主线程中执行它:</p>
+<ul>
+<li>sendEmptyMessage(int what)</li>
+<li>sendEmptyMessageDelayed(int what, long delayMillis)</li>
+<li>sendEmptyMessageAtTime(int what, long uptimeMillis)</li>
+<li>sendMessage(Message msg)</li>
+<li>sendMessageDelayed(Message msg, long delayMillis)</li>
+<li>sendMessageAtTime(Message msg, long uptimeMillis)</li>
+<li>sendMessageAtFrontOfQueue(Message msg)</li>
+<li>post(Runnable r)</li>
+<li>postDelayed(Runnable r, long delayMillis)</li>
+<li>postAtTime(Runnable r, long uptimeMillis)</li>
+<li>postAtTime(Runnable r, Object token, long uptimeMillis)</li>
+<li>postAtFrontOfQueue(Runnable r)</li>
+</ul>
+<p>上面就是可以使用的一些方法,send前缀的方法用于发送一个带数据的Message对象,post前缀的方法用于安排一个Runnable对象到主线程中执行。他们都有延迟发送,定时发送等姿势可以使用。</p>
+<p>当然你也可以在Message或者Runnable未同步到主线程的时候使用下面的remove方法将他们取消:</p>
+<ul>
+<li>removeMessages(int what)</li>
+<li>removeMessages(int what, Object object)</li>
+<li>removeCallbacks(Runnable r)</li>
+<li>removeCallbacks(Runnable r, Object token)</li>
+<li>removeCallbacksAndMessages(Object token)</li>
+</ul>
+<p>实际上将Runnable post到Handler中的时候也是用Message去包装的:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> post(Runnable r)</span><br><span class="line">   &#123;</span><br><span class="line">      <span class="keyword">return</span>  sendMessageDelayed(getPostMessage(r), <span class="number">0</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">static</span> <span class="function">Message <span class="title">getPostMessage</span><span class="params">(Runnable r)</span> </span>&#123;</span><br><span class="line">       Message m = Message.obtain();</span><br><span class="line">       m.callback = r;</span><br><span class="line">       <span class="keyword">return</span> m;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在主线程分发消息的时候如果判断到Message有callback则会直接执行callback,否则就将消息传到handleMessage中进行处理:</p>
+<figure class="highlight cs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">    * Handle system messages here.</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dispatchMessage</span>(<span class="params">Message msg</span>)</span> &#123;</span><br><span class="line">       <span class="keyword">if</span> (msg.callback != <span class="literal">null</span>) &#123;</span><br><span class="line">           handleCallback(msg);</span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">           <span class="keyword">if</span> (mCallback != <span class="literal">null</span>) &#123;</span><br><span class="line">               <span class="keyword">if</span> (mCallback.handleMessage(msg)) &#123;</span><br><span class="line">                   <span class="keyword">return</span>;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">           handleMessage(msg);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Handler机制的基本原理"><a href="#Handler机制的基本原理" class="headerlink" title="Handler机制的基本原理"></a>Handler机制的基本原理</h1><p>Handler机制有四个重要的组件:</p>
+<ul>
+<li>Handler</li>
+<li>Message</li>
+<li>MessageQueue</li>
+<li>Looper</li>
+</ul>
+<p>Handler和Message通过前面的例子应该已经很清楚了,但是MessageQueue和Looper又是什么鬼？</p>
+<p>MessageQueue顾名思义,就是Message的队列,我们调用Handler的各种方法发送Message其实就是将Message放到MessageQueue中。</p>
+<p>而Looper就将Message从MessageQueue中拿出来。Looper有一个loop方法,它里面有个死循环,不断从MessageQueue中拿Message出来并且将它传给Handler去处理。</p>
+<p>我们在子线程中将Message放入MessageQueue,然后在主线程中运行Looper的loop方法,不断从MessageQueue中获取Message。这就是Message从子线程同步到主线程的原理。</p>
+<p>我画了一幅图来更加形象的展示这个机制:</p>
+<img src="/Android温故而知新-Handler/2.png">
+
+<h1 id="主线程中的Looper"><a href="#主线程中的Looper" class="headerlink" title="主线程中的Looper"></a>主线程中的Looper</h1><p>有人会问了,我们也没有在主线程中中调用Looper的loop方法啊,而且再说了loop中不是一个死循环吗,如果在主线程中运行它的话不会被堵死吗？</p>
+<p>其实安卓在启动主线程的时候就会自动创建一个Looper和执行Looper.loop()的了,不需要自己去手动操作。</p>
+<p>至于第二个问题,我们可以直接看安卓的源码:</p>
+<p>一般来讲我们认为ActivityThread.main(String[] args)就是安卓程序运行的入口,也就是我们熟悉的main方法。它其实很短,我们在它的最后可以看到Looper.loop()这个方法的确是被调用了的。</p>
+<figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> void main(<span class="keyword">String</span>[] args) &#123;</span><br><span class="line">       SamplingProfilerIntegration.start();</span><br><span class="line"></span><br><span class="line">       <span class="comment">// CloseGuard defaults to true and can be quite spammy.  We</span></span><br><span class="line">       <span class="comment">// disable it here, but selectively enable it later (via</span></span><br><span class="line">       <span class="comment">// StrictMode) on debug builds, but using DropBox, not logs.</span></span><br><span class="line">       CloseGuard.setEnabled(<span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">       Environment.initForCurrentUser();</span><br><span class="line"></span><br><span class="line">       <span class="comment">// Set the reporter for event logging in libcore</span></span><br><span class="line">       EventLogger.setReporter(<span class="keyword">new</span> <span class="type">EventLoggingReporter</span>());</span><br><span class="line"></span><br><span class="line">       Security.addProvider(<span class="keyword">new</span> <span class="type">AndroidKeyStoreProvider</span>());</span><br><span class="line"></span><br><span class="line">       Process.setArgV0(<span class="string">"&lt;pre-initialized&gt;"</span>);</span><br><span class="line"></span><br><span class="line">       Looper.prepareMainLooper();</span><br><span class="line"></span><br><span class="line">       ActivityThread thread = <span class="keyword">new</span> <span class="type">ActivityThread</span>();</span><br><span class="line">       thread.attach(<span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">       <span class="keyword">if</span> (sMainThreadHandler == <span class="literal">null</span>) &#123;</span><br><span class="line">           sMainThreadHandler = thread.getHandler();</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       AsyncTask.init();</span><br><span class="line"></span><br><span class="line">       <span class="keyword">if</span> (<span class="literal">false</span>) &#123;</span><br><span class="line">           Looper.myLooper().setMessageLogging(<span class="keyword">new</span><span class="type"></span></span><br><span class="line"><span class="type"></span>                   LogPrinter(Log.DEBUG, <span class="string">"ActivityThread"</span>));</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       Looper.loop();</span><br><span class="line"></span><br><span class="line">       <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">RuntimeException</span>(<span class="string">"Main thread loop unexpectedly exited"</span>);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是调用了loop方法之后,线程不就被堵住了吗？那主线程又是怎样接收到按键消息和调用各种生命周期方法的？我们可以看到代码里还有个sMainThreadHandler,这个sMainThreadHandler是个H类,它的定义如下:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">H</span> <span class="keyword">extends</span> <span class="title">Handler</span> </span>&#123;</span><br><span class="line">	public void handleMessage(<span class="type">Message</span> msg) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="type">DEBUG_MESSAGES</span>) <span class="type">Slog</span>.v(<span class="type">TAG</span>, <span class="string">"&gt;&gt;&gt; handling: "</span> + codeToString(msg.what));</span><br><span class="line">            switch (msg.what) &#123;</span><br><span class="line">                <span class="keyword">case</span> <span class="type">LAUNCH_ACTIVITY</span>: &#123;</span><br><span class="line">                    ...</span><br><span class="line">                &#125; <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> <span class="type">RELAUNCH_ACTIVITY</span>: &#123;</span><br><span class="line">                    ...</span><br><span class="line">                &#125; <span class="keyword">break</span>;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看Activity的各个生命周期，还有事件处理也是通过Handler机制实现的！</p>
+<h1 id="使用Handler将消息同步到其他线程"><a href="#使用Handler将消息同步到其他线程" class="headerlink" title="使用Handler将消息同步到其他线程"></a>使用Handler将消息同步到其他线程</h1><p>根据上面的原理,其实我们不仅可以使用Handler将消息同步到主线程中,也能用它来将消息从主线程同步到子线程中去执行。</p>
+<p>只需要在子线程中运行Looper的loop方法,让它不断获取Message,然后在主线程中发送Message就能在子线程中被处理了。</p>
+<p>代码如下</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Handler mHandler;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> Thread mThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Looper.prepare();</span><br><span class="line"></span><br><span class="line">        mHandler = <span class="keyword">new</span> Handler() &#123;</span><br><span class="line">            <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">                <span class="comment">// process incoming messages here</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        Looper.loop();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>我们在需要在子线程中先调用Looper.prepare()。这个是个静态方法它用来创建一个Looper并绑定到当前的线程中。</p>
+<p>然后创建Handler,Handler会自动绑定当前线程中的Looper。</p>
+<p>最后调用Looper.loop()就大功告成了。</p>
+<p>之后我们就能在主线程中使用mHandler将消息发送到子线程中处理了。</p>
+<h1 id="HandlerThread"><a href="#HandlerThread" class="headerlink" title="HandlerThread"></a>HandlerThread</h1><p>在上面一节中我们看到,在子线程中创建Handler还需要手动调用Looper.prepare()和Looper.loop()。为了简化操作,谷歌官方提供了HandlerThread给我们使用。</p>
+<p>HandlerThread是Thread的子类,当HandlerThread启动的时候会自动调用Looper.prepare()和Looper.loop(),它的run方法源码如下:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public void run() &#123;</span><br><span class="line">    mTid = Process.myTid()<span class="comment">;</span></span><br><span class="line">    Looper.prepare()<span class="comment">;</span></span><br><span class="line">    synchronized (this) &#123;</span><br><span class="line">        mLooper = Looper.myLooper()<span class="comment">;</span></span><br><span class="line">        notifyAll()<span class="comment">;</span></span><br><span class="line">    &#125;</span><br><span class="line">    Process.setThreadPriority(mPriority)<span class="comment">;</span></span><br><span class="line">    onLooperPrepared()<span class="comment">;</span></span><br><span class="line">    Looper.loop()<span class="comment">;</span></span><br><span class="line">    mTid = -<span class="number">1</span><span class="comment">;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>于是我们只需要在Handler构造的时候传入HandlerThread的Looper就行了:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">HandlerThread handlerThread = <span class="keyword">new</span> HandlerThread(<span class="string">"HandlerThread"</span>);</span><br><span class="line">handlerThread.start();</span><br><span class="line"></span><br><span class="line">mHandler = <span class="keyword">new</span> Handler(handlerThread.getLooper()) &#123;</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">super</span>.handleMessage(msg);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="IntentService"><a href="#IntentService" class="headerlink" title="IntentService"></a>IntentService</h1><p>我们知道Service的各个声明周期函数也是在主线程中执行的,它也不能直接执行耗时操作。需要将耗时操作放到子线程中进行。</p>
+<p>为了方便在Service中进行耗时操作,谷歌提供了Service的子类IntentService。它有和Service相同的生命周期,同时也提供了在子线程处理耗时操作的机制。</p>
+<p>IntentService是一个抽象类,使用的时候需要继承并实现它的onHandleIntent方法,这个方法是在子线程中执行的,可以直接在这里进行耗时操作。</p>
+<p>其实IntentService内部也是通过HandlerThread实现的,而且代码十分简单:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">IntentService</span> <span class="keyword">extends</span> <span class="title">Service</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> Looper mServiceLooper;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> ServiceHandler mServiceHandler;</span><br><span class="line">    <span class="keyword">private</span> String mName;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> mRedelivery;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceHandler</span> <span class="keyword">extends</span> <span class="title">Handler</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">ServiceHandler</span><span class="params">(Looper looper)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">super</span>(looper);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">            onHandleIntent((Intent)msg.obj);</span><br><span class="line">            stopSelf(msg.arg1);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">IntentService</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line">        mName = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setIntentRedelivery</span><span class="params">(<span class="keyword">boolean</span> enabled)</span> </span>&#123;</span><br><span class="line">        mRedelivery = enabled;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate();</span><br><span class="line">        HandlerThread thread = <span class="keyword">new</span> HandlerThread(<span class="string">"IntentService["</span> + mName + <span class="string">"]"</span>);</span><br><span class="line">        thread.start();</span><br><span class="line"></span><br><span class="line">        mServiceLooper = thread.getLooper();</span><br><span class="line">        mServiceHandler = <span class="keyword">new</span> ServiceHandler(mServiceLooper);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onStart</span><span class="params">(@Nullable Intent intent, <span class="keyword">int</span> startId)</span> </span>&#123;</span><br><span class="line">        Message msg = mServiceHandler.obtainMessage();</span><br><span class="line">        msg.arg1 = startId;</span><br><span class="line">        msg.obj = intent;</span><br><span class="line">        mServiceHandler.sendMessage(msg);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">onStartCommand</span><span class="params">(@Nullable Intent intent, <span class="keyword">int</span> flags, <span class="keyword">int</span> startId)</span> </span>&#123;</span><br><span class="line">        onStart(intent, startId);</span><br><span class="line">        <span class="keyword">return</span> mRedelivery ? START_REDELIVER_INTENT : START_NOT_STICKY;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onDestroy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        mServiceLooper.quit();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@Nullable</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> IBinder <span class="title">onBind</span><span class="params">(Intent intent)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@WorkerThread</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">onHandleIntent</span><span class="params">(@Nullable Intent intent)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/06/30/Android温故而知新-launchMode/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/07/06/Android温故而知新-Java的四种引用/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

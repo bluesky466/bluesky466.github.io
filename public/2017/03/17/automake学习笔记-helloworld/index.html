@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>automake学习笔记 - helloworld | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,编译相关,">
+  
+
+  <meta name="description" content="虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃文档,并将学的的东西记录下来。 这篇文章用一个简单的log工具的编译先对automake做一个hello world级别的介绍。 代码我们的demo有6个文件cout_log_interface.h, cout_log_interface.cpp, log_interface.h,">
+<meta name="keywords" content="技术相关,编译相关">
+<meta property="og:type" content="article">
+<meta property="og:title" content="automake学习笔记 - helloworld">
+<meta property="og:url" content="http://139.199.4.241/2017/03/17/automake学习笔记-helloworld/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃文档,并将学的的东西记录下来。 这篇文章用一个简单的log工具的编译先对automake做一个hello world级别的介绍。 代码我们的demo有6个文件cout_log_interface.h, cout_log_interface.cpp, log_interface.h,">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.265Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="automake学习笔记 - helloworld">
+<meta name="twitter:description" content="虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃文档,并将学的的东西记录下来。 这篇文章用一个简单的log工具的编译先对automake做一个hello world级别的介绍。 代码我们的demo有6个文件cout_log_interface.h, cout_log_interface.cpp, log_interface.h,">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#代码"><span class="toc-text">代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Makefile-am"><span class="toc-text">Makefile.am</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#configure-ac"><span class="toc-text">configure.ac</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#生成Makefile"><span class="toc-text">生成Makefile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#编译工程"><span class="toc-text">编译工程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#在build目录中编译项目"><span class="toc-text">在build目录中编译项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用autoscan生成configure-ac"><span class="toc-text">使用autoscan生成configure.ac</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Demo项目"><span class="toc-text">Demo项目</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-automake学习笔记-helloworld" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">automake学习笔记 - helloworld</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.03.17</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃<a href="http://www.gnu.org/software/automake/manual/automake.html" target="_blank" rel="noopener">文档</a>,并将学的的东西记录下来。</p>
+<p>这篇文章用一个简单的log工具的编译先对automake做一个hello world级别的介绍。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><p>我们的demo有6个文件cout_log_interface.h, cout_log_interface.cpp, log_interface.h, easy_log.h, easy_log.cpp, main.cpp</p>
+<p>简单介绍下代码吧,首先有个简单的Log类:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">EasyLog</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    EasyLog(<span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;LogInterface&gt; interface);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Info</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Debug</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Warn</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Error</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">std</span>::<span class="function"><span class="built_in">string</span> <span class="title">GetLog</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;LogInterface&gt; interface_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>它的实现十分简单，就是将所有的操作代理给LogInterface:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">EasyLog::EasyLog(<span class="built_in">shared_ptr</span>&lt;LogInterface&gt; interface)</span><br><span class="line">    : interface_(interface)</span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> EasyLog::Info(<span class="keyword">const</span> <span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span><br><span class="line">&#123;</span><br><span class="line">    interface_-&gt;DoLog(kInfo, tag, GetLog(tag, <span class="built_in">log</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> EasyLog::Debug(<span class="keyword">const</span> <span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span><br><span class="line">&#123;</span><br><span class="line">    interface_-&gt;DoLog(kDebug, tag, GetLog(tag, <span class="built_in">log</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> EasyLog::Warn(<span class="keyword">const</span> <span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span><br><span class="line">&#123;</span><br><span class="line">    interface_-&gt;DoLog(kWarn, tag, GetLog(tag, <span class="built_in">log</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> EasyLog::Error(<span class="keyword">const</span> <span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span><br><span class="line">&#123;</span><br><span class="line">    interface_-&gt;DoLog(kError, tag, GetLog(tag, <span class="built_in">log</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> EasyLog::GetLog(<span class="keyword">const</span> <span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">string</span>&amp; <span class="built_in">log</span>) <span class="keyword">const</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"["</span> + tag + <span class="string">"]"</span> + <span class="string">" "</span> + <span class="built_in">log</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LogInterface是一个纯虚类，然后LogLevel是一个枚举体:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> LogLevel &#123;</span><br><span class="line">    kInfo,</span><br><span class="line">    kDebug,</span><br><span class="line">    kWarn,</span><br><span class="line">    kError</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LogInterface</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">DoLog</span><span class="params">(LogLevel level, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span> </span>= <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>我们再写一个使用标准输出打印log的LogInterface:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">COutLogInterface</span> :</span> <span class="keyword">public</span> LogInterface &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">DoLog</span><span class="params">(LogLevel level, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; <span class="built_in">log</span>)</span></span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>它的实现就是使用cout打印log:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> COutLogInterface::DoLog(LogLevel level, <span class="keyword">const</span> <span class="built_in">string</span>&amp; tag, <span class="keyword">const</span> <span class="built_in">string</span>&amp; <span class="built_in">log</span>) &#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="built_in">log</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然需要有个main函数:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">EasyLog <span class="title">log</span><span class="params">(<span class="built_in">std</span>::make_shared&lt;COutLogInterface&gt;())</span></span>;</span><br><span class="line">    <span class="built_in">log</span>.Debug(<span class="string">"test"</span>, <span class="string">"testlog"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Makefile-am"><a href="#Makefile-am" class="headerlink" title="Makefile.am"></a>Makefile.am</h2><p>automake使用Makefile.am配置工程的源码,它的内容如下:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">bin_PROGRAMS = easylog</span><br><span class="line">easylog_SOURCES = cout_log_interface.cpp \</span><br><span class="line">                  easy_log.cpp \</span><br><span class="line">                  main.cpp</span><br></pre></td></tr></table></figure>
+
+<p>bin_PROGRAMS 指定了要编译生成的目标程序的名字,在这里我们最终编译出来的目标程序的文件名是easylog</p>
+<p>之后的 easylog_SOURCES 指定了需要参与编译的源代码。</p>
+<p>如果需要同时编译多个目标程序的话可以用下面的方式分别指定各个目标程序的源代码</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">bin_PROGRAMS</span> = program_a program_b</span><br><span class="line"><span class="attr">program_a_SOURCES</span> = code_a.cpp</span><br><span class="line"><span class="attr">program_b_SOURCES</span> = code_b.cpp</span><br></pre></td></tr></table></figure>
+
+<h2 id="configure-ac"><a href="#configure-ac" class="headerlink" title="configure.ac"></a>configure.ac</h2><p>指定了源代码还不够，因为automake不仅仅可以用来生成编译c/c++的makefile，还可以用来编译生成其他许许多多语言的makefile，所以还需要指定编译器和依赖文件等。automake使用configure.ac配置这些东西,本例子的configure.ac是这么写的:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">AC_INIT</span>([easylog], [<span class="number">0.0</span>.<span class="number">1</span>], [<span class="number">466474482</span><span class="variable">@qq</span>.com])</span><br><span class="line"><span class="selector-tag">AM_INIT_AUTOMAKE</span>([-Wall -Werror foreign])</span><br><span class="line"><span class="selector-tag">AC_CONFIG_HEADERS</span>([config.h])</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">AC_PROG_CXX</span></span><br><span class="line"><span class="selector-tag">AX_CXX_COMPILE_STDCXX_11</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">AC_CONFIG_FILES</span>([Makefile])</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">AC_OUTPUT</span></span><br></pre></td></tr></table></figure>
+
+<p>简单分析一下configure.ac的内容:</p>
+<ul>
+<li>AC_INIT </li>
+</ul>
+<p>指定了工程的名字、版本号、和bug的报告邮箱</p>
+<ul>
+<li>AM_INIT_AUTOMAKE</li>
+</ul>
+<p>指定了一些选项,-Wall和-Werror指定编译的时候将所有的warning当做error来报错, foreign告诉automake这里不用遵循GNU标准。GNU软件包应该包括一些附加文件去描述如修改项，作者等信息。在这里我们不需要automake去检查这些附加文件的存在。</p>
+<ul>
+<li>AC_CONFIG_HEADERS </li>
+</ul>
+<p>我们在AC_INIT中配置了版本号等信息,c/c++中一般需要用宏来定义它们,这里就指定了生成的配置宏的头文件名。配置了这里,automake就会自动帮我们生成config.h头文件,里面定义了一些VERSION之类的宏</p>
+<ul>
+<li>AC_PROG_CXX</li>
+</ul>
+<p>该宏用于检查系统中是否有g++编译器</p>
+<ul>
+<li>AX_CXX_COMPILE_STDCXX_11 </li>
+</ul>
+<p>检查系统的c++11编译支持</p>
+<ul>
+<li>AC_CONFIG_FILES </li>
+</ul>
+<p>指定了需要configure生成的Makefile,autoreconf的时候会通过Makefile.am生成Makefile.in。而configure的时候会通过Makefile.in生成Makefile。因为Makefile.am和configure.ac在同级目录,所以直接写Makefile就好了。在后面我会介绍当Makefile.am和configure.ac不在同级目录的时候需要怎么配置</p>
+<ul>
+<li>AC_OUTPUT</li>
+</ul>
+<p>这是一个结束标志,实际上它是一个脚本命令用来创建AC_CONFIG_HEADERS和AC_CONFIG_FILES所配置的文件</p>
+<h2 id="生成Makefile"><a href="#生成Makefile" class="headerlink" title="生成Makefile"></a>生成Makefile</h2><p>首先要安装autoconf</p>
+<blockquote>
+<p>sudo apt-get install autoconf</p>
+</blockquote>
+<p>然后使用下面的命令生成configure</p>
+<blockquote>
+<p>autoreconf –install</p>
+</blockquote>
+<p>除了configure之外，它还会生成一些其他的文件，当然现在我们不需要去管这些文件</p>
+<p>之后就能使用configure脚本去生成Makefile和config.h等</p>
+<blockquote>
+<p>./configure</p>
+</blockquote>
+<h2 id="编译工程"><a href="#编译工程" class="headerlink" title="编译工程"></a>编译工程</h2><p>Makefile都已经生成了，现在就可以使用make命令编译工程啦  </p>
+<p>编译成功之后就能在当前目录看到easylog程序。我们可以运行它:</p>
+<blockquote>
+<p>./easylog</p>
+</blockquote>
+<p>得到下面输出:</p>
+<blockquote>
+<p>[test] testlog</p>
+</blockquote>
+<h2 id="在build目录中编译项目"><a href="#在build目录中编译项目" class="headerlink" title="在build目录中编译项目"></a>在build目录中编译项目</h2><p>现在我们编译生成的.o文件和目标程序都混在源代码中间,看起来很不舒服。我们可以创建一个build目录。然后进入build目录执行下面命令</p>
+<blockquote>
+<p>../configure</p>
+</blockquote>
+<p>这样就在build目录下生成Makefile了,于是现在我们在build中使用make命令编辑工程就会发现编译产生的.o文件和目标文件都在build中而不会污染源代码了。</p>
+<h2 id="使用autoscan生成configure-ac"><a href="#使用autoscan生成configure-ac" class="headerlink" title="使用autoscan生成configure.ac"></a>使用autoscan生成configure.ac</h2><p>如果直接手写configure.ac的话是比较困难的,很容易漏掉一些依赖项没有检查。所以就出现了autoscan这个工具,它可以帮我们检查工程中的依赖项生成configure.ac的模板,然后我们只需要在它生成的模板上略加改动就可以了。</p>
+<p>我们在工程目录下使用autoscan命令,会得到下面的两个文件:                           </p>
+<ol>
+<li><p>autoscan.log                                                                  </p>
+</li>
+<li><p>configure.scan                                                                </p>
+</li>
+</ol>
+<p>autoscan.log是一个日志文件,通过它我们可以知道一些配置为什么会被需要              </p>
+<p>而configure.scan就是生成出来的configure.ac的模板了,在easylog工程目录使用autoscan,生成的configure.scan内容如下</p>
+<pre><code>#                                               -*- Autoconf -*-                 
+# Process this file with autoconf to produce a configure script.                 
+
+AC_PREREQ([2.69])                                                                
+AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])                    
+AC_CONFIG_SRCDIR([log_interface.h])                                              
+AC_CONFIG_HEADERS([config.h])                                                    
+
+# Checks for programs.                                                           
+AC_PROG_CXX                                                                      
+AC_PROG_CC                                                                       
+
+# Checks for libraries.                                                          
+
+# Checks for header files.                                                       
+
+# Checks for typedefs, structures, and compiler characteristics.                 
+
+# Checks for library functions.                                                  
+
+AC_CONFIG_FILES([Makefile])                                                      
+AC_OUTPUT                                                                        </code></pre><p>看是不是和我们之前手写的很像?我们只有在上面进行一些小的修改就能得到最终我们需要的configure.ac了</p>
+<p>这里有两个宏我们是没有见过的</p>
+<ul>
+<li>AC_PREREQ</li>
+</ul>
+<p>用于检查autoconf的最低版本</p>
+<ul>
+<li>AC_CONFIG_SRCDIR</li>
+</ul>
+<p>用一个项目中一定存在的文件去确定源码目录的有效性,这是一个安全检查宏。configure有一个–srcdir的参数可以指定源码目录,这个宏就可以检查出源码目录是否不小心配置错了</p>
+<h2 id="Demo项目"><a href="#Demo项目" class="headerlink" title="Demo项目"></a>Demo项目</h2><p>可以在<a href="https://github.com/bluesky466/automake-demo/tree/v0.0.1" target="_blank" rel="noopener">这里</a>查看完整的项目代码</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/03/03/在android上使用grpc/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/03/21/automake学习笔记-模块化编译/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

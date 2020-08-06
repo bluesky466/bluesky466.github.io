@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android Input系统(二) 事件的分发流程 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="上篇笔记说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么: 首先会用haveCommandsLocked判断是否有Command,如果没有的话才去分发事件,如果有的话不分发,而是在下面的runCommandsLoc">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Input系统(二) 事件的分发流程">
+<meta property="og:url" content="http://139.199.4.241/2020/02/06/Android-Input系统-二-事件的分发流程/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="上篇笔记说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么: 首先会用haveCommandsLocked判断是否有Command,如果没有的话才去分发事件,如果有的话不分发,而是在下面的runCommandsLoc">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/AndroidInput系统二/1.png">
+<meta property="og:image" content="http://139.199.4.241/AndroidInput系统二/2.png">
+<meta property="og:image" content="http://139.199.4.241/AndroidInput系统二/3.png">
+<meta property="og:updated_time" content="2020-04-08T12:28:54.529Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android Input系统(二) 事件的分发流程">
+<meta name="twitter:description" content="上篇笔记说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么: 首先会用haveCommandsLocked判断是否有Command,如果没有的话才去分发事件,如果有的话不分发,而是在下面的runCommandsLoc">
+<meta name="twitter:image" content="http://139.199.4.241/AndroidInput系统二/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#InputChannel通信"><span class="toc-text">InputChannel通信</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#焦点窗口确定机制"><span class="toc-text">焦点窗口确定机制</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#事件分发"><span class="toc-text">事件分发</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android-Input系统-二-事件的分发流程" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android Input系统(二) 事件的分发流程</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2020.02.06</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p><a href="http://blog.islinjw.cn/2020/01/23/Android-Input%E7%B3%BB%E7%BB%9F-%E4%B8%80-%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%8E%B7%E5%8F%96%E6%B5%81%E7%A8%8B/" target="_blank" rel="noopener">上篇笔记</a>说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么:</p>
+<p>首先会用haveCommandsLocked判断是否有Command,如果没有的话才去分发事件,如果有的话不分发,而是在下面的runCommandsLockedInterruptible里面执行Command:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> InputDispatcher::dispatchOnce() &#123;</span><br><span class="line">    <span class="keyword">nsecs_t</span> nextWakeupTime = LONG_LONG_MAX;</span><br><span class="line">    &#123;</span><br><span class="line">        AutoMutex _l(mLock);</span><br><span class="line">        mDispatcherIsAliveCondition.broadcast();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!haveCommandsLocked()) &#123;</span><br><span class="line">            dispatchOnceInnerLocked(&amp;nextWakeupTime);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (runCommandsLockedInterruptible()) &#123;</span><br><span class="line">            nextWakeupTime = LONG_LONG_MIN;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说在dispatchOnce里面其实主要是做两件事情,执行指令或者分发事件,而且指令的优先级会比较高。由于上一篇笔记里面讲到的时候事件唤醒了InputDispatcherThread,所以我们这里先讲事件的分发:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> InputDispatcher::dispatchOnceInnerLocked(<span class="keyword">nsecs_t</span>* nextWakeupTime) &#123;</span><br><span class="line">    <span class="keyword">if</span> (! mPendingEvent) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mInboundQueue.isEmpty()) &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mPendingEvent = mInboundQueue.dequeueAtHead();</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (mPendingEvent-&gt;type) &#123;</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">case</span> EventEntry::TYPE_KEY: &#123;</span><br><span class="line">        KeyEntry* typedEntry = <span class="keyword">static_cast</span>&lt;KeyEntry*&gt;(mPendingEvent);</span><br><span class="line">        ...</span><br><span class="line">        done = dispatchKeyLocked(currentTime, typedEntry, &amp;dropReason, nextWakeupTime);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">case</span> EventEntry::TYPE_MOTION: &#123;</span><br><span class="line">        MotionEntry* typedEntry = <span class="keyword">static_cast</span>&lt;MotionEntry*&gt;(mPendingEvent);</span><br><span class="line">        ...</span><br><span class="line">        done = dispatchMotionLocked(currentTime, typedEntry,</span><br><span class="line">                &amp;dropReason, nextWakeupTime);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (done) &#123;</span><br><span class="line">        ...</span><br><span class="line">        releasePendingEventLocked();</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> InputDispatcher::releasePendingEventLocked() &#123;</span><br><span class="line">    <span class="keyword">if</span> (mPendingEvent) &#123;</span><br><span class="line">		...</span><br><span class="line">		releaseInboundEventLocked(mPendingEvent);</span><br><span class="line">		mPendingEvent = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从这里可以看到如果mPendingEvent是正在处理的事件,如果是null的话就会从mInboundQueue里面拿队列头的事件,然后在后面判断事件类型,如果是按键事件就调用dispatchKeyLocked,如果是触摸事件就调用dispatchMotionLocked,然后如果完成了的话就会在releasePendingEventLocked里面将mPendingEvent设置回null。</p>
+<p>这里我们只拿按键事件处理来分析,触摸事件的原理大同小异:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">bool</span> InputDispatcher::dispatchKeyLocked(<span class="keyword">nsecs_t</span> currentTime, KeyEntry* entry,</span><br><span class="line">        DropReason* dropReason, <span class="keyword">nsecs_t</span>* nextWakeupTime) &#123;</span><br><span class="line">          ...</span><br><span class="line">          Vector&lt;InputTarget&gt; inputTargets;</span><br><span class="line">          <span class="keyword">int32_t</span> injectionResult = findFocusedWindowTargetsLocked(currentTime,</span><br><span class="line">                  entry, inputTargets, nextWakeupTime);</span><br><span class="line">          ...</span><br><span class="line"></span><br><span class="line">          addMonitoringTargetsLocked(inputTargets);</span><br><span class="line"></span><br><span class="line">          dispatchEventLocked(currentTime, entry, inputTargets);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>dispatchKeyLocked里面最主要是两个步骤,一是找到焦点窗口,将它放到inputTargets里面:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">int32_t InputDispatcher::findFocusedWindowTargetsLocked(nsecs_t currentTime,</span><br><span class="line">        <span class="keyword">const</span> EventEntry* entry, Vector&lt;InputTarget&gt;&amp; inputTargets, nsecs_t* nextWakeupTime) &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    injectionResult = INPUT_EVENT_INJECTION_SUCCEEDED;</span><br><span class="line">    addWindowTargetLocked(mFocusedWindowHandle,</span><br><span class="line">            InputTarget::FLAG_FOREGROUND | InputTarget::FLAG_DISPATCH_AS_IS, BitSet32(<span class="number">0</span>),</span><br><span class="line">            inputTargets);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> injectionResult;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputDispatcher::addWindowTargetLocked(<span class="keyword">const</span> sp&lt;InputWindowHandle&gt;&amp; windowHandle,</span><br><span class="line">        int32_t targetFlags, BitSet32 pointerIds, Vector&lt;InputTarget&gt;&amp; inputTargets) &#123;</span><br><span class="line">    inputTargets.push();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> InputWindowInfo* windowInfo = windowHandle-&gt;getInfo();</span><br><span class="line">    InputTarget&amp; target = inputTargets.editTop();</span><br><span class="line">    target.inputChannel = windowInfo-&gt;inputChannel;</span><br><span class="line">    target.flags = targetFlags;</span><br><span class="line">    target.xOffset = - windowInfo-&gt;frameLeft;</span><br><span class="line">    target.yOffset = - windowInfo-&gt;frameTop;</span><br><span class="line">    target.scaleFactor = windowInfo-&gt;scaleFactor;</span><br><span class="line">    target.pointerIds = pointerIds;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后去dispatchEventLocked里面会将事件进行分发,这块我们之后详细聊。这里可以看到dispatchEventLocked并不是只将消息分发给当前焦点窗口,而是会分发给inputTargets里面的所有监听者,另外的一些特殊需求需要监听事件的时候就能把自己注册到mMonitoringChannels里面,分发事件的时候会把mMonitoringChannels里面的channel放到inputTargets里面:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> InputDispatcher::addMonitoringTargetsLocked(Vector&lt;InputTarget&gt;&amp; inputTargets) &#123;</span><br><span class="line">    <span class="keyword">for</span> (size_t i = <span class="number">0</span>; i &lt; mMonitoringChannels.size(); i++) &#123;</span><br><span class="line">        inputTargets.push();</span><br><span class="line"></span><br><span class="line">        InputTarget&amp; <span class="keyword">target</span> = inputTargets.editTop();</span><br><span class="line">        <span class="keyword">target</span>.inputChannel = mMonitoringChannels[i];</span><br><span class="line">        <span class="keyword">target</span>.flags = InputTarget::FLAG_DISPATCH_AS_IS;</span><br><span class="line">        <span class="keyword">target</span>.xOffset = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">target</span>.yOffset = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">target</span>.pointerIds.clear();</span><br><span class="line">        <span class="keyword">target</span>.scaleFactor = <span class="number">1.0</span>f;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="InputChannel通信"><a href="#InputChannel通信" class="headerlink" title="InputChannel通信"></a>InputChannel通信</h1><p>在继续讲事件分发之前我们先来看看InputDispatcher是怎么和窗口通信的。</p>
+<p>在应用层新的顶层窗口需要被注册到WMS中是在ViewRootImpl.setView实现的,我们从这里开始一路往下追,可以看到最后会调用到InputDispatcher::registerInputChannel注册通信的channel__放到InputDispatcher::mConnectionsByFd__这个KeyedVector里面:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/core/java/android/view/ViewRootImpl.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setView</span><span class="params">(View view, WindowManager.LayoutParams attrs, View panelParentView)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	mInputChannel = <span class="keyword">new</span> InputChannel();</span><br><span class="line">	...</span><br><span class="line">	res = mWindowSession.addToDisplay(mWindow, mSeq, mWindowAttributes,</span><br><span class="line">                            getHostVisibility(), mDisplay.getDisplayId(),</span><br><span class="line">                            mAttachInfo.mContentInsets, mAttachInfo.mStableInsets,</span><br><span class="line">                            mAttachInfo.mOutsets, mInputChannel);</span><br><span class="line">	...</span><br><span class="line">	mInputEventReceiver = <span class="keyword">new</span> WindowInputEventReceiver(mInputChannel,</span><br><span class="line">                            Looper.myLooper());</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/java/com/android/server/wm/Session.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Session</span> <span class="title">extends</span> <span class="title">IWindowSession</span>.<span class="title">Stub</span></span></span><br><span class="line"><span class="class">        <span class="title">implements</span> <span class="title">IBinder</span>.<span class="title">DeathRecipient</span> &#123;</span></span><br><span class="line">    ...</span><br><span class="line">	@Override</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">addToDisplay</span><span class="params">(IWindow window, <span class="keyword">int</span> seq, WindowManager.LayoutParams attrs,</span></span></span><br><span class="line"><span class="function"><span class="params">	        <span class="keyword">int</span> viewVisibility, <span class="keyword">int</span> displayId, Rect outContentInsets, Rect outStableInsets,</span></span></span><br><span class="line"><span class="function"><span class="params">	        Rect outOutsets, InputChannel outInputChannel)</span> </span>&#123;</span><br><span class="line">	    <span class="keyword">return</span> mService.addWindow(<span class="keyword">this</span>, window, seq, attrs, viewVisibility, displayId,</span><br><span class="line">	            outContentInsets, outStableInsets, outOutsets, outInputChannel);</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">addWindow</span><span class="params">(Session session, IWindow client, <span class="keyword">int</span> seq,</span></span></span><br><span class="line"><span class="function"><span class="params">        WindowManager.LayoutParams attrs, <span class="keyword">int</span> viewVisibility, <span class="keyword">int</span> displayId,</span></span></span><br><span class="line"><span class="function"><span class="params">        Rect outContentInsets, Rect outStableInsets, Rect outOutsets,</span></span></span><br><span class="line"><span class="function"><span class="params">        InputChannel outInputChannel)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	final WindowState win = <span class="keyword">new</span> WindowState(<span class="keyword">this</span>, session, client, token, parentWindow,</span><br><span class="line">	        appOp[<span class="number">0</span>], seq, attrs, viewVisibility, session.mUid,</span><br><span class="line">	        session.mCanAddInternalSystemWindow);</span><br><span class="line">	...</span><br><span class="line">    win.openInputChannel(outInputChannel);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/java/com/android/server/wm/WindowState.java</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">openInputChannel</span><span class="params">(InputChannel outInputChannel)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">String</span> name = getName();</span><br><span class="line">    InputChannel[] inputChannels = InputChannel.openInputChannelPair(name);</span><br><span class="line">    mInputChannel = inputChannels[<span class="number">0</span>];</span><br><span class="line">    mClientChannel = inputChannels[<span class="number">1</span>];</span><br><span class="line">    mInputWindowHandle.inputChannel = inputChannels[<span class="number">0</span>];</span><br><span class="line">    <span class="keyword">if</span> (outInputChannel != null) &#123;</span><br><span class="line">        mClientChannel.transferTo(outInputChannel);</span><br><span class="line">        mClientChannel.dispose();</span><br><span class="line">        mClientChannel = null;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    mService.mInputManager.registerInputChannel(mInputChannel, mInputWindowHandle);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/java/com/android/server/input/InputManagerService.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerInputChannel</span><span class="params">(InputChannel inputChannel,</span></span></span><br><span class="line"><span class="function"><span class="params">        InputWindowHandle inputWindowHandle)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    nativeRegisterInputChannel(mPtr, inputChannel, inputWindowHandle, <span class="literal">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/jni/com_android_server_input_InputManagerService.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">nativeRegisterInputChannel</span><span class="params">(JNIEnv* env, jclass <span class="comment">/* clazz */</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">        jlong ptr, jobject inputChannelObj, jobject inputWindowHandleObj, jboolean monitor)</span> </span>&#123;</span><br><span class="line">    NativeInputManager* im = <span class="keyword">reinterpret_cast</span>&lt;NativeInputManager*&gt;(ptr);</span><br><span class="line"></span><br><span class="line">    sp&lt;InputChannel&gt; inputChannel = android_view_InputChannel_getInputChannel(env,</span><br><span class="line">            inputChannelObj);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> status = im-&gt;registerInputChannel(</span><br><span class="line">            env, inputChannel, inputWindowHandle, monitor);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/jni/com_android_server_input_InputManagerService.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> NativeInputManager::registerInputChannel(JNIEnv* <span class="comment">/* env */</span>,</span><br><span class="line">        <span class="keyword">const</span> sp&lt;InputChannel&gt;&amp; inputChannel,</span><br><span class="line">        <span class="keyword">const</span> sp&lt;InputWindowHandle&gt;&amp; inputWindowHandle, <span class="keyword">bool</span> monitor) &#123;</span><br><span class="line">    <span class="keyword">return</span> mInputManager-&gt;getDispatcher()-&gt;registerInputChannel(</span><br><span class="line">            inputChannel, inputWindowHandle, monitor);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/native/services/inputflinger/InputDispatcher.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> InputDispatcher::registerInputChannel(<span class="keyword">const</span> sp&lt;InputChannel&gt;&amp; inputChannel,</span><br><span class="line">        <span class="keyword">const</span> sp&lt;InputWindowHandle&gt;&amp; inputWindowHandle, <span class="keyword">bool</span> monitor) &#123;</span><br><span class="line">		...</span><br><span class="line">        sp&lt;Connection&gt; connection = <span class="keyword">new</span> Connection(inputChannel, inputWindowHandle, monitor);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> fd = inputChannel-&gt;getFd();</span><br><span class="line">        mConnectionsByFd.add(fd, connection);</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        <span class="comment">// registerInputChannel里面传入的monitor是false --&gt; nativeRegisterInputChannel(mPtr, inputChannel, inputWindowHandle, false);</span></span><br><span class="line">        <span class="comment">// 所以这个流程不会将窗口的channel放到mMonitoringChannels里面</span></span><br><span class="line">        <span class="keyword">if</span> (monitor) &#123;</span><br><span class="line">            mMonitoringChannels.push(inputChannel);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>时序图如下:</p>
+<img src="/AndroidInput系统二/1.png">
+
+<p>值得注意的是这个流程里InputDispatcher::registerInputChannel的monitor是false(原因看注释),所以不会将channel放到mMonitoringChannels,要不然分发消息的时候就不止会分发到焦点窗口而是分发到所有窗口了。</p>
+<p>细心的同学可能会发现ViewRootImpl.setView里面new的InputChannel到了WindowState.openInputChannel里面就不再继续往下传了,而是保存到mClientChannel。而继续往下传的其实是mInputChannel:</p>
+<figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/java/com/android/server/wm/WindowState.java</span><br><span class="line">void openInputChannel(InputChannel outInputChannel) &#123;</span><br><span class="line">    ...</span><br><span class="line">    String <span class="attr">name</span> = getName();</span><br><span class="line">    InputChannel[] <span class="attr">inputChannels</span> = InputChannel.openInputChannelPair(name);</span><br><span class="line">    <span class="attr">mInputChannel</span> = inputChannels[<span class="number">0</span>];</span><br><span class="line">    <span class="attr">mClientChannel</span> = inputChannels[<span class="number">1</span>];</span><br><span class="line">    mInputWindowHandle.<span class="attr">inputChannel</span> = inputChannels[<span class="number">0</span>];</span><br><span class="line">    <span class="keyword">if</span> (outInputChannel != <span class="literal">null</span>) &#123;</span><br><span class="line">        mClientChannel.transferTo(outInputChannel);</span><br><span class="line">        mClientChannel.dispose();</span><br><span class="line">        <span class="attr">mClientChannel</span> = <span class="literal">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    mService.mInputManager.registerInputChannel(mInputChannel, mInputWindowHandle);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这两个都是是啥?我们直接来看看InputChannel.openInputChannelPair的代码:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/core/java/android/view/InputChannel.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> InputChannel[] openInputChannelPair(<span class="keyword">String</span> name) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> nativeOpenInputChannelPair(name);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/core/jni/android_view_InputChannel.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> jobjectArray <span class="title">android_view_InputChannel_nativeOpenInputChannelPair</span><span class="params">(JNIEnv* env,</span></span></span><br><span class="line"><span class="function"><span class="params">        jclass clazz, jstring nameObj)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    sp&lt;InputChannel&gt; serverChannel;</span><br><span class="line">    sp&lt;InputChannel&gt; clientChannel;</span><br><span class="line">    <span class="keyword">status_t</span> result = InputChannel::openInputChannelPair(name, serverChannel, clientChannel);</span><br><span class="line">	...</span><br><span class="line">    env-&gt;SetObjectArrayElement(channelPair, <span class="number">0</span>, serverChannelObj);</span><br><span class="line">    env-&gt;SetObjectArrayElement(channelPair, <span class="number">1</span>, clientChannelObj);</span><br><span class="line">    <span class="keyword">return</span> channelPair;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/native/libs/input/InputTransport.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> InputChannel::openInputChannelPair(<span class="keyword">const</span> String8&amp; name,</span><br><span class="line">        sp&lt;InputChannel&gt;&amp; outServerChannel, sp&lt;InputChannel&gt;&amp; outClientChannel) &#123;</span><br><span class="line">    <span class="keyword">int</span> sockets[<span class="number">2</span>];</span><br><span class="line">    <span class="keyword">if</span> (socketpair(AF_UNIX, SOCK_SEQPACKET, <span class="number">0</span>, sockets)) &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> bufferSize = SOCKET_BUFFER_SIZE;</span><br><span class="line">    setsockopt(sockets[<span class="number">0</span>], SOL_SOCKET, SO_SNDBUF, &amp;bufferSize, <span class="keyword">sizeof</span>(bufferSize));</span><br><span class="line">    setsockopt(sockets[<span class="number">0</span>], SOL_SOCKET, SO_RCVBUF, &amp;bufferSize, <span class="keyword">sizeof</span>(bufferSize));</span><br><span class="line">    setsockopt(sockets[<span class="number">1</span>], SOL_SOCKET, SO_SNDBUF, &amp;bufferSize, <span class="keyword">sizeof</span>(bufferSize));</span><br><span class="line">    setsockopt(sockets[<span class="number">1</span>], SOL_SOCKET, SO_RCVBUF, &amp;bufferSize, <span class="keyword">sizeof</span>(bufferSize));</span><br><span class="line"></span><br><span class="line">    String8 serverChannelName = name;</span><br><span class="line">    serverChannelName.append(<span class="string">" (server)"</span>);</span><br><span class="line">    outServerChannel = <span class="keyword">new</span> InputChannel(serverChannelName, sockets[<span class="number">0</span>]);</span><br><span class="line"></span><br><span class="line">    String8 clientChannelName = name;</span><br><span class="line">    clientChannelName.append(<span class="string">" (client)"</span>);</span><br><span class="line">    outClientChannel = <span class="keyword">new</span> InputChannel(clientChannelName, sockets[<span class="number">1</span>]);</span><br><span class="line">    <span class="keyword">return</span> OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后追下来,它们其实是两个socket,0是服务端,1是客户端。然后再让我们品味一下这个代码:</p>
+<figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/java/com/android/server/wm/WindowState.java</span><br><span class="line">void openInputChannel(InputChannel outInputChannel) &#123;</span><br><span class="line">    ...</span><br><span class="line">    String <span class="attr">name</span> = getName();</span><br><span class="line">    InputChannel[] <span class="attr">inputChannels</span> = InputChannel.openInputChannelPair(name);</span><br><span class="line">    <span class="attr">mInputChannel</span> = inputChannels[<span class="number">0</span>];</span><br><span class="line">    <span class="attr">mClientChannel</span> = inputChannels[<span class="number">1</span>];</span><br><span class="line">    mInputWindowHandle.<span class="attr">inputChannel</span> = inputChannels[<span class="number">0</span>];</span><br><span class="line">    <span class="keyword">if</span> (outInputChannel != <span class="literal">null</span>) &#123;</span><br><span class="line">        mClientChannel.transferTo(outInputChannel);</span><br><span class="line">        mClientChannel.dispose();</span><br><span class="line">        <span class="attr">mClientChannel</span> = <span class="literal">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    mService.mInputManager.registerInputChannel(mInputChannel, mInputWindowHandle);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它将服务端socket注册给InputDispatcher,于是InputDispatcher就可以往服务端写入数据传给WindowState。而客户端的socket和ViewRootImpl传下来的outInputChannel绑定,也就是说可以往客户端socket里面写入数据通知ViewRootImpl。没错,事件机制的消息传输靠的是socket!</p>
+<p>大概的原理是这样的:</p>
+<img src="/AndroidInput系统二/2.png">
+
+<h1 id="焦点窗口确定机制"><a href="#焦点窗口确定机制" class="headerlink" title="焦点窗口确定机制"></a>焦点窗口确定机制</h1><p>好了,上一小节里面我们知道了应用启动的时候最终会调用InputDispatcher::registerInputChannel往mConnectionsByFd添加一个socket连接,那InputDispatcher又是怎样确定事件分发的时候要分发给谁的呢?</p>
+<p>应该有同学记得事件分发时findFocusedWindowTargetsLocked里面这个mFocusedWindowHandle:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> InputDispatcher::dispatchKeyLocked(<span class="keyword">nsecs_t</span> currentTime, KeyEntry* entry,</span><br><span class="line">        DropReason* dropReason, <span class="keyword">nsecs_t</span>* nextWakeupTime) &#123;</span><br><span class="line">          ...</span><br><span class="line">          Vector&lt;InputTarget&gt; inputTargets;</span><br><span class="line">          <span class="keyword">int32_t</span> injectionResult = findFocusedWindowTargetsLocked(currentTime,</span><br><span class="line">                  entry, inputTargets, nextWakeupTime);</span><br><span class="line">          ...</span><br><span class="line"></span><br><span class="line">          addMonitoringTargetsLocked(inputTargets);</span><br><span class="line"></span><br><span class="line">          dispatchEventLocked(currentTime, entry, inputTargets);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int32_t</span> InputDispatcher::findFocusedWindowTargetsLocked(<span class="keyword">nsecs_t</span> currentTime,</span><br><span class="line">        <span class="keyword">const</span> EventEntry* entry, Vector&lt;InputTarget&gt;&amp; inputTargets, <span class="keyword">nsecs_t</span>* nextWakeupTime) &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    injectionResult = INPUT_EVENT_INJECTION_SUCCEEDED;</span><br><span class="line">    addWindowTargetLocked(mFocusedWindowHandle,</span><br><span class="line">            InputTarget::FLAG_FOREGROUND | InputTarget::FLAG_DISPATCH_AS_IS, BitSet32(<span class="number">0</span>),</span><br><span class="line">            inputTargets);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> injectionResult;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> InputDispatcher::addWindowTargetLocked(<span class="keyword">const</span> sp&lt;InputWindowHandle&gt;&amp; windowHandle,</span><br><span class="line">        <span class="keyword">int32_t</span> targetFlags, BitSet32 pointerIds, Vector&lt;InputTarget&gt;&amp; inputTargets) &#123;</span><br><span class="line">    inputTargets.push();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> InputWindowInfo* windowInfo = windowHandle-&gt;getInfo();</span><br><span class="line">    InputTarget&amp; target = inputTargets.editTop();</span><br><span class="line">    target.inputChannel = windowInfo-&gt;inputChannel;</span><br><span class="line">    target.flags = targetFlags;</span><br><span class="line">    target.xOffset = - windowInfo-&gt;frameLeft;</span><br><span class="line">    target.yOffset = - windowInfo-&gt;frameTop;</span><br><span class="line">    target.scaleFactor = windowInfo-&gt;scaleFactor;</span><br><span class="line">    target.pointerIds = pointerIds;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们来看看它是怎么被赋值的,当焦点窗口改变的时候WindowManagerService.mInputMonitor的setInputFocusL和updateInputWindowsLw会被调用,我们从这里开始追踪:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java</span></span><br><span class="line">@Override</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">addWindow</span><span class="params">(Session session, IWindow client, <span class="keyword">int</span> seq,</span></span></span><br><span class="line"><span class="function"><span class="params">            WindowManager.LayoutParams attrs, <span class="keyword">int</span> viewVisibility, <span class="keyword">int</span> displayId,</span></span></span><br><span class="line"><span class="function"><span class="params">            Rect outContentInsets, Rect outStableInsets, Rect outOutsets,</span></span></span><br><span class="line"><span class="function"><span class="params">            InputChannel outInputChannel)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">if</span> (focusChanged) &#123;</span><br><span class="line">        mInputMonitor.setInputFocusLw(mCurrentFocus, <span class="literal">false</span> <span class="comment">/*updateInputWindows*/</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    mInputMonitor.updateInputWindowsLw(<span class="literal">false</span> <span class="comment">/*force*/</span>);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/java/com/android/server/wm/InputMonitor.java</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">updateInputWindowsLw</span><span class="params">(<span class="keyword">boolean</span> force)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">    mUpdateInputForAllWindowsConsumer.updateInputWindows(inDrag);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/java/com/android/server/wm/InputMonitor.java</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">updateInputWindows</span><span class="params">(<span class="keyword">boolean</span> inDrag)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	mService.mInputManager.setInputWindows(mInputWindowHandles, mFocusedInputWindowHandle);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/java/com/android/server/input/InputManagerService.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setInputWindows</span><span class="params">(InputWindowHandle[] windowHandles,</span></span></span><br><span class="line"><span class="function"><span class="params">        InputWindowHandle focusedWindowHandle)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    nativeSetInputWindows(mPtr, windowHandles);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/jni/com_android_server_input_InputManagerService.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">nativeSetInputWindows</span><span class="params">(JNIEnv* env, jclass <span class="comment">/* clazz */</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">        jlong ptr, jobjectArray windowHandleObjArray)</span> </span>&#123;</span><br><span class="line">    NativeInputManager* im = <span class="keyword">reinterpret_cast</span>&lt;NativeInputManager*&gt;(ptr);</span><br><span class="line"></span><br><span class="line">    im-&gt;setInputWindows(env, windowHandleObjArray);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/base/services/core/jni/com_android_server_input_InputManagerService.cpp</span></span><br><span class="line"><span class="keyword">void</span> NativeInputManager::setInputWindows(JNIEnv* env, jobjectArray windowHandleObjArray) &#123;</span><br><span class="line">    ...</span><br><span class="line">    mInputManager-&gt;getDispatcher()-&gt;setInputWindows(windowHandles);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// frameworks/native/services/inputflinger/InputDispatcher.cpp</span></span><br><span class="line"><span class="keyword">void</span> InputDispatcher::setInputWindows(<span class="keyword">const</span> Vector&lt;sp&lt;InputWindowHandle&gt; &gt;&amp; inputWindowHandles) &#123;</span><br><span class="line">	...</span><br><span class="line">    mWindowHandles = inputWindowHandles;</span><br><span class="line"></span><br><span class="line">    sp&lt;InputWindowHandle&gt; newFocusedWindowHandle;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; mWindowHandles.<span class="built_in">size</span>(); i++) &#123;</span><br><span class="line">        <span class="keyword">const</span> sp&lt;InputWindowHandle&gt;&amp; windowHandle = mWindowHandles.itemAt(i);</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">if</span> (windowHandle-&gt;getInfo()-&gt;hasFocus) &#123;</span><br><span class="line">            newFocusedWindowHandle = windowHandle;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        mFocusedWindowHandle = newFocusedWindowHandle;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个流程主要是更新窗口的焦点状态,然后最终调用setInputWindows,更新mWindowHandles和mFocusedWindowHandle,他们一个代表所有window的handler一个代码焦点window的handler。</p>
+<p>时序图如下:</p>
+<img src="/AndroidInput系统二/3.png">
+
+<h1 id="事件分发"><a href="#事件分发" class="headerlink" title="事件分发"></a>事件分发</h1><p>于是我们就到了最后的具体的事件分发流程里面,大家下看看代码:</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line">void InputDispatcher::dispatchEventLocked(nsecs_t currentTime,</span><br><span class="line">        EventEntry* eventEntry, const Vector&lt;InputTarget&gt;&amp; inputTargets) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">for</span> (size_t i = <span class="number">0</span>; i &lt; inputTargets.size(); i++) &#123;</span><br><span class="line">        const InputTarget&amp; inputTarget = inputTargets.itemAt(i);</span><br><span class="line"></span><br><span class="line">        ssize_t connectionIndex = getConnectionIndexLocked(inputTarget.inputChannel);</span><br><span class="line">        <span class="keyword">if</span> (connectionIndex &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            sp&lt;Connection&gt; connection = mConnectionsByFd.valueAt(connectionIndex);</span><br><span class="line">            prepareDispatchCycleLocked(currentTime, connection, eventEntry, &amp;inputTarget);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputDispatcher::prepareDispatchCycleLocked(nsecs_t currentTime,</span><br><span class="line">        const sp&lt;Connection&gt;&amp; connection, EventEntry* eventEntry, const InputTarget* inputTarget) &#123;</span><br><span class="line">    ...</span><br><span class="line">    enqueueDispatchEntriesLocked(currentTime, connection, eventEntry, inputTarget);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputDispatcher::enqueueDispatchEntriesLocked(nsecs_t currentTime,</span><br><span class="line">        const sp&lt;Connection&gt;&amp; connection, EventEntry* eventEntry, const InputTarget* inputTarget) &#123;</span><br><span class="line">    <span class="function"><span class="title">bool</span> wasEmpty = connection-&gt;</span>outboundQueue.isEmpty();</span><br><span class="line">    ...</span><br><span class="line">    enqueueDispatchEntryLocked(connection, eventEntry, inputTarget,</span><br><span class="line">            InputTarget::FLAG_DISPATCH_AS_IS);</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="title">if</span> (wasEmpty &amp;&amp; !connection-&gt;</span>outboundQueue.isEmpty()) &#123;</span><br><span class="line">        startDispatchCycleLocked(currentTime, connection);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputDispatcher::enqueueDispatchEntryLocked(</span><br><span class="line">        const sp&lt;Connection&gt;&amp; connection, EventEntry* eventEntry, const InputTarget* inputTarget,</span><br><span class="line">        int32_t dispatchMode) &#123;</span><br><span class="line">    ...</span><br><span class="line">    inputTargetFlags = (inputTargetFlags &amp; ~InputTarget::FLAG_DISPATCH_MASK) | dispatchMode;</span><br><span class="line"></span><br><span class="line">    DispatchEntry* dispatchEntry = new DispatchEntry(eventEntry,</span><br><span class="line">            <span class="function"><span class="title">inputTargetFlags</span>, inputTarget-&gt;</span><span class="function"><span class="title">xOffset</span>, inputTarget-&gt;</span>yOffset,</span><br><span class="line">            <span class="function"><span class="title">inputTarget</span>-&gt;</span>scaleFactor);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">switch</span> (eventEntry-&gt;</span>type) &#123;</span><br><span class="line">        case EventEntry::TYPE_KEY: &#123;</span><br><span class="line">            KeyEntry* keyEntry = static_cast&lt;KeyEntry*&gt;(eventEntry);</span><br><span class="line">            <span class="function"><span class="title">dispatchEntry</span>-&gt;</span><span class="function"><span class="title">resolvedAction</span> = keyEntry-&gt;</span>action;</span><br><span class="line">            <span class="function"><span class="title">dispatchEntry</span>-&gt;</span><span class="function"><span class="title">resolvedFlags</span> = keyEntry-&gt;</span>flags;</span><br><span class="line">            ...</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="title">connection</span>-&gt;</span>outboundQueue.enqueueAtTail(dispatchEntry);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,</span><br><span class="line">        const sp&lt;Connection&gt;&amp; connection) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="title">while</span> (connection-&gt;</span>status == Connection::STATUS_NORMAL</span><br><span class="line">            &amp;&amp; !<span class="function"><span class="title">connection</span>-&gt;</span>outboundQueue.isEmpty()) &#123;</span><br><span class="line">        D<span class="function"><span class="title">ispatchEntry</span>* dispatchEntry = connection-&gt;</span>outboundQueue.head;</span><br><span class="line">        <span class="function"><span class="title">dispatchEntry</span>-&gt;</span>deliveryTime = currentTime;</span><br><span class="line">        ...</span><br><span class="line">        E<span class="function"><span class="title">ventEntry</span>* eventEntry = dispatchEntry-&gt;</span>eventEntry;</span><br><span class="line">        <span class="function"><span class="title">switch</span> (eventEntry-&gt;</span>type) &#123;</span><br><span class="line">            case EventEntry::TYPE_KEY: &#123;</span><br><span class="line">                KeyEntry* keyEntry = static_cast&lt;KeyEntry*&gt;(eventEntry);</span><br><span class="line"></span><br><span class="line">                <span class="comment">// Publish the key event.</span></span><br><span class="line">                <span class="function"><span class="title">status</span> = connection-&gt;</span><span class="function"><span class="title">inputPublisher</span>.publishKeyEvent(dispatchEntry-&gt;</span>seq,</span><br><span class="line">                        <span class="function"><span class="title">keyEntry</span>-&gt;</span><span class="function"><span class="title">deviceId</span>, keyEntry-&gt;</span>source,</span><br><span class="line">                        <span class="function"><span class="title">dispatchEntry</span>-&gt;</span><span class="function"><span class="title">resolvedAction</span>, dispatchEntry-&gt;</span>resolvedFlags,</span><br><span class="line">                        <span class="function"><span class="title">keyEntry</span>-&gt;</span><span class="function"><span class="title">keyCode</span>, keyEntry-&gt;</span>scanCode,</span><br><span class="line">                        <span class="function"><span class="title">keyEntry</span>-&gt;</span><span class="function"><span class="title">metaState</span>, keyEntry-&gt;</span><span class="function"><span class="title">repeatCount</span>, keyEntry-&gt;</span>downTime,</span><br><span class="line">                        <span class="function"><span class="title">keyEntry</span>-&gt;</span>eventTime);</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        <span class="function"><span class="title">connection</span>-&gt;</span>outboundQueue.dequeue(dispatchEntry);</span><br><span class="line">        ...</span><br><span class="line">        <span class="function"><span class="title">connection</span>-&gt;</span>waitQueue.enqueueAtTail(dispatchEntry);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码简单来说就是:</p>
+<ol>
+<li>遍历inputTargets拿到对应的connection</li>
+<li>在enqueueDispatchEntryLocked里面将事件放到connection-&gt;outboundQueue里面</li>
+<li>在startDispatchCycleLocked里面用connection-&gt;inputPublisher.publishKeyEvent去将消息通过socket传到应用层</li>
+<li>从connection-&gt;outboundQueue里面移出事件放到connection-&gt;waitQueue里面等待事件完成。</li>
+</ol>
+<p>然后就是等待事件完成了,由于上层的事件分发机制大家都比较熟悉了我这里就不讲了。</p>
+<p>我们回过头来看InputDispatcher::registerInputChannel,里面注册了handleReceiveCallback回调:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">status_t</span> InputDispatcher::registerInputChannel(<span class="keyword">const</span> sp&lt;InputChannel&gt;&amp; inputChannel,</span><br><span class="line">        <span class="keyword">const</span> sp&lt;InputWindowHandle&gt;&amp; inputWindowHandle, <span class="keyword">bool</span> monitor) &#123;</span><br><span class="line">        ...</span><br><span class="line">        mLooper-&gt;addFd(fd, <span class="number">0</span>, ALOOPER_EVENT_INPUT, handleReceiveCallback, <span class="keyword">this</span>);</span><br><span class="line">        ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当上层完成了事件的处理之后就会发送消息调用handleReceiveCallback:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> InputDispatcher::handleReceiveCallback(<span class="keyword">int</span> fd, <span class="keyword">int</span> events, <span class="keyword">void</span>* data) &#123;</span><br><span class="line">    InputDispatcher* d = <span class="keyword">static_cast</span>&lt;InputDispatcher*&gt;(data);</span><br><span class="line">    ...</span><br><span class="line">    d-&gt;finishDispatchCycleLocked(currentTime, connection, seq, handled);</span><br><span class="line">    ...</span><br><span class="line">    d-&gt;runCommandsLockedInterruptible();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里会先调用InputDispatcher::finishDispatchCycleLocked去往mCommandQueue里面加入一个执行InputDispatcher:: doDispatchCycleFinishedLockedInterruptible的Command:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> InputDispatcher::finishDispatchCycleLocked(<span class="keyword">nsecs_t</span> currentTime,</span><br><span class="line">        <span class="keyword">const</span> sp&lt;Connection&gt;&amp; connection, <span class="keyword">uint32_t</span> seq, <span class="keyword">bool</span> handled) &#123;</span><br><span class="line">    ...</span><br><span class="line">    onDispatchCycleFinishedLocked(currentTime, connection, seq, handled);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> InputDispatcher::onDispatchCycleFinishedLocked(</span><br><span class="line">        <span class="keyword">nsecs_t</span> currentTime, <span class="keyword">const</span> sp&lt;Connection&gt;&amp; connection, <span class="keyword">uint32_t</span> seq, <span class="keyword">bool</span> handled) &#123;</span><br><span class="line">    CommandEntry* commandEntry = postCommandLocked(</span><br><span class="line">            &amp; InputDispatcher::doDispatchCycleFinishedLockedInterruptible);</span><br><span class="line">    commandEntry-&gt;connection = connection;</span><br><span class="line">    commandEntry-&gt;eventTime = currentTime;</span><br><span class="line">    commandEntry-&gt;seq = seq;</span><br><span class="line">    commandEntry-&gt;handled = handled;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">InputDispatcher::CommandEntry* InputDispatcher::postCommandLocked(Command command) &#123;</span><br><span class="line">    CommandEntry* commandEntry = <span class="keyword">new</span> CommandEntry(command);</span><br><span class="line">    mCommandQueue.enqueueAtTail(commandEntry);</span><br><span class="line">    <span class="keyword">return</span> commandEntry;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后InputDispatcher::runCommandsLockedInterruptible会执行这个Command:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> InputDispatcher::runCommandsLockedInterruptible() &#123;</span><br><span class="line">    <span class="keyword">if</span> (mCommandQueue.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        CommandEntry* commandEntry = mCommandQueue.dequeueAtHead();</span><br><span class="line"></span><br><span class="line">        Command command = commandEntry-&gt;command;</span><br><span class="line">        (<span class="keyword">this</span>-&gt;*command)(commandEntry);</span><br><span class="line"></span><br><span class="line">        commandEntry-&gt;connection.<span class="built_in">clear</span>();</span><br><span class="line">        <span class="keyword">delete</span> commandEntry;</span><br><span class="line">    &#125; <span class="keyword">while</span> (! mCommandQueue.isEmpty());</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说InputDispatcher:: doDispatchCycleFinishedLockedInterruptible会被调用,然后在里面会将消息移出connection-&gt;waitQueue:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">void InputDispatcher::doDispatchCycleFinishedLockedInterruptible(</span><br><span class="line">        CommandEntry* commandEntry) &#123;</span><br><span class="line">    sp&lt;Connection&gt;<span class="built_in"> connection </span>= commandEntry-&gt;connection;</span><br><span class="line">    <span class="built_in">..</span>.</span><br><span class="line">    DispatchEntry* dispatchEntry = connection-&gt;findWaitQueueEntry(seq);</span><br><span class="line">    <span class="built_in">..</span>.</span><br><span class="line">    <span class="keyword">if</span> (dispatchEntry == connection-&gt;findWaitQueueEntry(seq)) &#123;</span><br><span class="line">        connection-&gt;waitQueue.dequeue(dispatchEntry);</span><br><span class="line">        <span class="built_in">..</span>.</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>到这里整个消息的分发流程就完成了。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2020/01/23/Android-Input系统-一-事件的获取流程/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2020/04/08/JNI内存管理/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android温故而知新 - Java的四种引用 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="java对象的引用包括强引用，软引用，弱引用，虚引用四种 强引用强引用是最常用的引用,我们在代码中处处可见: 123String str = &quot;hello world&quot;;Map&amp;lt;String, String&amp;gt; map = new HashMap&amp;lt;&amp;gt;();int[] arr = new int[10];  上面的str、map、arr都是强引用。一个对象,只要有强引用与它关联">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android温故而知新 - Java的四种引用">
+<meta property="og:url" content="http://139.199.4.241/2017/07/06/Android温故而知新-Java的四种引用/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="java对象的引用包括强引用，软引用，弱引用，虚引用四种 强引用强引用是最常用的引用,我们在代码中处处可见: 123String str = &quot;hello world&quot;;Map&amp;lt;String, String&amp;gt; map = new HashMap&amp;lt;&amp;gt;();int[] arr = new int[10];  上面的str、map、arr都是强引用。一个对象,只要有强引用与它关联">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/Android温故而知新-Java的四种引用/1.png">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.260Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android温故而知新 - Java的四种引用">
+<meta name="twitter:description" content="java对象的引用包括强引用，软引用，弱引用，虚引用四种 强引用强引用是最常用的引用,我们在代码中处处可见: 123String str = &quot;hello world&quot;;Map&amp;lt;String, String&amp;gt; map = new HashMap&amp;lt;&amp;gt;();int[] arr = new int[10];  上面的str、map、arr都是强引用。一个对象,只要有强引用与它关联">
+<meta name="twitter:image" content="http://139.199.4.241/Android温故而知新-Java的四种引用/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#强引用"><span class="toc-text">强引用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#软引用"><span class="toc-text">软引用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#弱引用"><span class="toc-text">弱引用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#虚引用"><span class="toc-text">虚引用</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android温故而知新-Java的四种引用" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android温故而知新 - Java的四种引用</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.07.06</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>java对象的引用包括强引用，软引用，弱引用，虚引用四种</p>
+<h1 id="强引用"><a href="#强引用" class="headerlink" title="强引用"></a>强引用</h1><p>强引用是最常用的引用,我们在代码中处处可见:</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">String</span> <span class="built_in">str</span> = <span class="string">"hello world"</span>;</span><br><span class="line">Map&lt;<span class="keyword">String</span>, <span class="keyword">String</span>&gt; <span class="built_in">map</span> = <span class="keyword">new</span> <span class="keyword">HashMap</span>&lt;&gt;();</span><br><span class="line"><span class="built_in">int</span>[] arr = <span class="keyword">new</span> <span class="built_in">int</span>[<span class="number">10</span>];</span><br></pre></td></tr></table></figure>
+
+<p>上面的str、map、arr都是强引用。一个对象,只要有强引用与它关联,那么JVM就不会回收它。即使是在内存不足的情况下,JVM宁愿抛出OutOfMemory的异常也不会回收它。</p>
+<figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public void function() &#123;</span><br><span class="line">	Object object =<span class="built_in"> new </span>Object();</span><br><span class="line">	Object[]<span class="built_in"> array </span>=<span class="built_in"> new </span>Object[9999];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>比如上面的方法,当运行到Object[] array = new Object[9999];的时候,如果内存不够了,JVM就好抛出OutOfMemory的异常,而不会回收object的内存。所以一个强引用的内存肯定是有效的,所以java并不像c++,需要担心野指针的问题。</p>
+<p>当然,当退出function之后,object和array就都已经不存在了,所以它们所指向的内存就可以被回收了。</p>
+<p>当一个对象使用完,不会再被用到的时候,我们可以将所有指向它的强引用都赋为null。这样JVM会在合适的时机去回收它。</p>
+<h1 id="软引用"><a href="#软引用" class="headerlink" title="软引用"></a>软引用</h1><p>软引用所管理的对象在内存不足的时候,如果没有其他强引用与之管理,就会被回收。用SoftReference来表示软引用,使用方法如下:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">DemoActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    <span class="type">SoftReference</span>&lt;<span class="type">String</span>&gt; mStr = <span class="keyword">new</span> <span class="type">SoftReference</span>&lt;&gt;(<span class="keyword">new</span> <span class="type">String</span>(<span class="string">"hello world"</span>));</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_layout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void onClick(<span class="type">View</span> view) &#123;</span><br><span class="line">        <span class="type">Log</span>.d(<span class="string">"SoftReference"</span>, <span class="string">"mStr = "</span> + mStr.get());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意的是这里不能直接new SoftReference&lt;&gt;(“hello world”);因为JVM内建字符串池机制的存在会导致字符串池强引用的存在，因此不会被垃圾回收。</p>
+<p>str.get()就可以获取到管理的对象,如果对象已经被回收就会返回null。</p>
+<p>我们可以用Android Studio的Monitors强制gc,释放内存,然后这个时候就能看到它返回的是null了。</p>
+<img src="/Android温故而知新-Java的四种引用/1.png">
+
+<p>值得注意的是“SoftReference所管理的对象被回收”并不代表SoftReference的内存被回收, SoftReference此时依然是一个可以使用的对象,但它已经没有使用价值了。我们需要在合适的时候将SoftReference赋值为null,释放掉它所占用的内存,避免大量无用的SoftReference存在导致内存泄漏。</p>
+<p>SoftReference也可以和ReferenceQueue一起使用。构造SoftReference的时候将ReferenceQueue传入SoftReference的构造方法。当SoftReference所管理的对象被回收的时候SoftReference就会被放到ReferenceQueue中。</p>
+<figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoActivity</span> <span class="keyword"><span class="keyword">extends</span> <span class="type">AppCompatActivity</span></span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    ReferenceQueue&lt;<span class="keyword">String</span>&gt; mReferenceQueue = <span class="keyword">new</span> <span class="type">ReferenceQueue</span>&lt;&gt;();</span><br><span class="line">    SoftReference&lt;<span class="keyword">String</span>&gt; mStr = <span class="keyword">new</span> <span class="type">SoftReference</span>&lt;&gt;(<span class="keyword">new</span> <span class="type">String</span>(<span class="string">"hello world"</span>), mReferenceQueue);</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(Bundle savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_layout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> void onClick(View view) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mStr.<span class="keyword">get</span>() == <span class="literal">null</span>) &#123;</span><br><span class="line">            Log.d(<span class="string">"SoftReference"</span>, <span class="string">"mStr = "</span> + mStr);</span><br><span class="line"></span><br><span class="line">            mStr = <span class="literal">null</span>;</span><br><span class="line">            SoftReference&lt;<span class="keyword">String</span>&gt; ref;</span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                ref = (SoftReference&lt;<span class="keyword">String</span>&gt;) mReferenceQueue.poll();</span><br><span class="line">                Log.d(<span class="string">"SoftReference"</span>, <span class="string">"ref = "</span> + ref);</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">while</span> (ref != <span class="literal">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>软引用的特性使得它很适合用来实现数据缓存,如图片缓存,网页缓存等。在内存紧张的时候如果没有其他的强引用关联,即该资源仅仅是放在缓存中而没有被使用,就会被释放。而当内存不紧张的时候,即使没有其他强引用与之关联,JVM的垃圾回收机制也是不会回收软引用所管理的资源的。</p>
+<p>当需要使用的时候判断获取的是不是null,如果是的话证明之前内存被回收了,直接重新加载就好了。</p>
+<h1 id="弱引用"><a href="#弱引用" class="headerlink" title="弱引用"></a>弱引用</h1><p>弱引用所管理的对象在JVM进行垃圾回收的时候,只要没有其他强引用与之关联。不管内存是否充足,都会被回收。它用WeakReference来表示。</p>
+<p>弱引用可以用在回调函数中防止内存泄漏。我们来看个典型的例子,也是一个很多人都会犯的错误:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">DemoActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="meta">@Nullable</span> <span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_layout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可能会引入内存泄漏</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Handler</span> mHandler = <span class="keyword">new</span> <span class="type">Handler</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        public void handleMessage(<span class="type">Message</span> msg) &#123;</span><br><span class="line">            <span class="keyword">super</span>.handleMessage(msg);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不知道大家有没有看过我之前写的一篇<a href="http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/" target="_blank" rel="noopener">关于Handler的博客</a>,如果没有没有看过,而对Handler又不太熟悉的同学可以去看一下。</p>
+<p>我们知道Handler是和Looper还有MessageQueue一起工作的。当安卓应用启动之后,系统会在主线程创建一个Looper和MessageQueue,它们的生命周期贯穿整个应用的生命周期。</p>
+<p>Handler在发送Message的时候会将Message传到MessageQueue里面去,而Message里面保存着Handler的引用。这样的话如果Message还没有被处理,Handler也不会被回收。</p>
+<p>而这里的Handler是DemoActivity的一个内部类。在java中,非晶体内部匿名类会持有外部类的一个隐式引用,这样就有可能导致外部类无法被垃圾回收。</p>
+<p>如果我们代码中这样写:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">DemoActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> static <span class="keyword">final</span> int <span class="type">MSG_DO_SOMETHING</span> = <span class="number">1</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 可能会引入内存泄漏</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Handler</span> mHandler = <span class="keyword">new</span> <span class="type">Handler</span>() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        public void handleMessage(<span class="type">Message</span> msg) &#123;</span><br><span class="line">        	...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="meta">@Nullable</span> <span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_layout);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 延迟十分钟发送消息</span></span><br><span class="line">        mHandler.sendEmptyMessageDelayed(<span class="type">MSG_DO_SOMETHING</span>, <span class="number">1000</span> * <span class="number">60</span> * <span class="number">10</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即使退出了DemoActivity,在消息没有被处理之前, DemoActivity的内存也是不会被回收的。</p>
+<p>那要怎样解决它呢？</p>
+<p>我们可以使用静态内部类加虚引用的方式:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">DemoActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> static <span class="keyword">final</span> int <span class="type">MSG_DO_SOMETHING</span> = <span class="number">1</span>;</span><br><span class="line">    <span class="comment">// 可能会引入内存泄漏</span></span><br><span class="line">    <span class="keyword">private</span> static <span class="class"><span class="keyword">class</span> <span class="title">InnerHandler</span> <span class="keyword">extends</span> <span class="title">Handler</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">WeakReference</span>&lt;<span class="type">DemoActivity</span>&gt; mActivity;</span><br><span class="line"></span><br><span class="line">        <span class="type">InnerHandler</span>(<span class="type">DemoActivity</span> activity) &#123;</span><br><span class="line">            mActivity = <span class="keyword">new</span> <span class="type">WeakReference</span>&lt;&gt;(activity);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        public void handleMessage(<span class="type">Message</span> msg) &#123;</span><br><span class="line">            <span class="type">DemoActivity</span> activity = mActivity.get();</span><br><span class="line">            <span class="keyword">if</span> (activity != <span class="literal">null</span>) &#123;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Handler</span> mHandler = <span class="keyword">new</span> <span class="type">InnerHandler</span>(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> void onCreate(<span class="meta">@Nullable</span> <span class="type">Bundle</span> savedInstanceState) &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(<span class="type">R</span>.layout.activity_layout);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 延迟十分钟发送消息</span></span><br><span class="line">        mHandler.sendEmptyMessageDelayed(<span class="type">MSG_DO_SOMETHING</span>, <span class="number">1000</span> * <span class="number">60</span> * <span class="number">10</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于静态内部类不持有外部类的引用,所以现在只有虚引用关联了DemoActivity,在垃圾回收的时候,不管是否内存不足,DemoActivity都会被回收。</p>
+<p>十分钟之后当handleMessage方法被调用的时候,用WeakReference的get方法获取DemoActivity,如果返回null的话证明DemoActivity已经被回收,就不应该再做什么处理了。</p>
+<p>WeakReference同样可以在构造方法中传入ReferenceQueue。如果它所管理的对象被JVM回收，这个WeakReference就会被加入到ReferenceQueue。</p>
+<h1 id="虚引用"><a href="#虚引用" class="headerlink" title="虚引用"></a>虚引用</h1><p>虚引用或者叫做幽灵引用在java中用PhantomReference表示。它和前面的应用都不一样,它不影响对象的生命周期,当一个对象只有虚引用与之关联的时候,就和没有任何引用一样。</p>
+<p>而且它必须与ReferenceQueue一起使用,它只有一个构造函数:</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">PhantomReference</span><span class="params">(T referent, ReferenceQueue&lt;? <span class="keyword">super</span> T&gt; q)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">super</span>(referent, q);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而且它的get方法永远返回null:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> T <span class="keyword">get</span>() &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果PhantomReference管理的对象只有PhantomReference与之关联,系统就会在这个时候或者一段时间之后将PhantomReference放到ReferenceQueue中。而不用等到垃圾回收的时候(参考<a href="https://docs.oracle.com/javase/7/docs/api/java/lang/ref/PhantomReference.html" target="_blank" rel="noopener">PhantomReference的文档</a>):</p>
+<blockquote>
+<p>If the garbage collector determines at a certain point in time that the referent of a phantom reference is phantom reachable, then at that time or at some later time it will enqueue the reference.</p>
+</blockquote>
+<p><a href="http://www.milletblog.com/2016/09/J2SE%E8%BF%99%E6%89%8D%E6%98%AFjava%E8%99%9A%E5%BC%95%E7%94%A8PhantomReference-4/" target="_blank" rel="noopener">这篇文章</a>对虚引用做了一个详细的介绍,其中对这一点他是这样解释的:</p>
+<blockquote>
+<p>当一个虚引用被认为是一定会被垃圾回收器回收的时候，这个虚引用才会被注册到引用队列，而不会像软引用和弱引用必须等到垃圾回收器回收之后才会被注册到引用队列</p>
+</blockquote>
+<p>对这个虚引用我其实理解的还不是很深入,查了很多的资料对它的讲解也是很模糊的。按我的理解,它应该就是单纯的用来判断一个对象是否被回收了。如果是,就进行一些清理操作。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/07/02/Android温故而知新-Handler/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/08/01/安卓皮肤包机制的原理/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

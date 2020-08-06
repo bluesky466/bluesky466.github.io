@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>lua面向对象编程 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,lua,">
+  
+
+  <meta name="description" content="lua也支持面向对象编程的,嗯对,就是用table和元表。lua可以在某种程度上实现面向对象的封装、继承和多态三大基本特性。 封装lua实现封装的最简单方法就是将属性和方法放到table之中。首先我们声明一个类table,用来定义一些该类的类方法，其中的new方法就类似其他面向对象语言的new关键字,用来创建一个新的实例出来。同时为了模块化，将它放在一个单独的Position.lua文件中: 12">
+<meta name="keywords" content="技术相关,lua">
+<meta property="og:type" content="article">
+<meta property="og:title" content="lua面向对象编程">
+<meta property="og:url" content="http://139.199.4.241/2016/11/16/lua面向对象编程/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="lua也支持面向对象编程的,嗯对,就是用table和元表。lua可以在某种程度上实现面向对象的封装、继承和多态三大基本特性。 封装lua实现封装的最简单方法就是将属性和方法放到table之中。首先我们声明一个类table,用来定义一些该类的类方法，其中的new方法就类似其他面向对象语言的new关键字,用来创建一个新的实例出来。同时为了模块化，将它放在一个单独的Position.lua文件中: 12">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.268Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="lua面向对象编程">
+<meta name="twitter:description" content="lua也支持面向对象编程的,嗯对,就是用table和元表。lua可以在某种程度上实现面向对象的封装、继承和多态三大基本特性。 封装lua实现封装的最简单方法就是将属性和方法放到table之中。首先我们声明一个类table,用来定义一些该类的类方法，其中的new方法就类似其他面向对象语言的new关键字,用来创建一个新的实例出来。同时为了模块化，将它放在一个单独的Position.lua文件中: 12">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#封装"><span class="toc-text">封装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#继承与多态"><span class="toc-text">继承与多态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#多继承"><span class="toc-text">多继承</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-lua面向对象编程" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">lua面向对象编程</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2016.11.16</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>lua也支持面向对象编程的,嗯对,就是用table和元表。lua可以在某种程度上实现面向对象的封装、继承和多态三大基本特性。</p>
+<h2 id="封装"><a href="#封装" class="headerlink" title="封装"></a>封装</h2><p>lua实现封装的最简单方法就是将属性和方法放到table之中。首先我们声明一个类table,用来定义一些该类的类方法，其中的new方法就类似其他面向对象语言的new关键字,用来创建一个新的实例出来。同时为了模块化，将它放在一个单独的Position.lua文件中:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Position = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position.new</span><span class="params">(x,y)</span></span></span><br><span class="line">	<span class="keyword">local</span> instance = &#123;x=x, y=y&#125;</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position.getLength</span><span class="params">(instance)</span></span></span><br><span class="line">	<span class="keyword">return</span> (instance.x^<span class="number">2</span>+instance.y^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> Position</span><br></pre></td></tr></table></figure>
+
+<p>这样就可以这样使用它:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Position = <span class="built_in">require</span>(<span class="string">"Position"</span>)</span><br><span class="line"><span class="keyword">local</span> pos1 = Position.new(<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span>(Position.getLength(pos1))</span><br></pre></td></tr></table></figure>
+
+<p>输出如下:</p>
+<blockquote>
+<p>1.4142135623731</p>
+</blockquote>
+<p>看看这个方法的定义:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position.getLength</span><span class="params">(instance)</span></span></span><br><span class="line">	<span class="keyword">return</span> (instance.x^<span class="number">2</span>+instance.y^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>它其实是一种语法糖,上面的写法和下面的写法是一样的</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Position.getLength = <span class="function"><span class="keyword">function</span><span class="params">(instance)</span></span></span><br><span class="line">	<span class="keyword">return</span> (instance.x^<span class="number">2</span>+instance.y^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>但是这样的写法是不是感觉很奇怪,和一般的面向对象的写法和用法都不一样？我们可以把Position.lua改成下面的这个样子:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Position = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position.new</span><span class="params">(x,y)</span></span></span><br><span class="line">	<span class="keyword">local</span> instance = &#123;x=x, y=y&#125;</span><br><span class="line">	<span class="built_in">setmetatable</span>(instance, &#123;<span class="built_in">__index</span>=Position&#125;)</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position.getLength</span><span class="params">(instance)</span></span></span><br><span class="line">	<span class="keyword">return</span> (instance.x^<span class="number">2</span>+instance.y^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> Position</span><br></pre></td></tr></table></figure>
+
+<p>于是用法就有点接近我们熟悉的面向对象语法了</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Position = <span class="built_in">require</span>(<span class="string">"Position"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> pos1 = Position.new(<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span>(pos1.getLength(pos1))</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> pos2 = Position.new(<span class="number">3</span>,<span class="number">4</span>)</span><br><span class="line"><span class="built_in">print</span>(pos2.getLength(pos2))</span><br></pre></td></tr></table></figure>
+
+<p>输出如下:</p>
+<blockquote>
+<p>1.4142135623731<br>5</p>
+</blockquote>
+<p>但是每次调用类方法都需要把实例显示的当作参数传入,这样既麻烦又容易出错。有没有办法让lua解释器自动传入类实例呢？答案当然是有的,这就要看另一种语法糖了:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Position = <span class="built_in">require</span>(<span class="string">"Position"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> pos1 = Position.new(<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span>(pos1:getLength())</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> pos2 = Position.new(<span class="number">3</span>,<span class="number">4</span>)</span><br><span class="line"><span class="built_in">print</span>(pos2:getLength())</span><br></pre></td></tr></table></figure>
+
+<p>对的，下面的两种写法是等价的:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pos1.getLength(pos1)</span><br><span class="line">pos1:getLength()</span><br></pre></td></tr></table></figure>
+
+<p>类似的,在Position.lua中也能这么写：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> Position = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position.new</span><span class="params">(x,y)</span></span></span><br><span class="line">	<span class="keyword">local</span> instance = &#123;x=x, y=y&#125;</span><br><span class="line">	<span class="built_in">setmetatable</span>(instance, &#123;<span class="built_in">__index</span>=Position&#125;)</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position:getLength</span><span class="params">()</span></span></span><br><span class="line">	<span class="keyword">return</span> (self.x^<span class="number">2</span>+self.y^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> Position</span><br></pre></td></tr></table></figure>
+
+<p>下面两种写法也是等价的:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position.getLength</span><span class="params">(self)</span></span></span><br><span class="line">	<span class="keyword">return</span> (self.x^<span class="number">2</span>+self.y^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position:getLength</span><span class="params">()</span></span></span><br><span class="line">	<span class="keyword">return</span> (self.x^<span class="number">2</span>+self.y^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>这里的self就相当于c++的this</p>
+<p>我们还可以把new方法抽象出来,作为公共方法,而不用为每个类都写一个new方法:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- function.lua</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">class</span><span class="params">(className)</span></span></span><br><span class="line">	<span class="keyword">local</span> cls = &#123;&#125;</span><br><span class="line">	cls.__cname = className</span><br><span class="line">	cls.new = <span class="function"><span class="keyword">function</span><span class="params">(...)</span></span></span><br><span class="line">		<span class="keyword">local</span> instance = &#123;&#125;</span><br><span class="line">		<span class="built_in">setmetatable</span>(instance, &#123;<span class="built_in">__index</span>=cls&#125;)</span><br><span class="line">		<span class="keyword">if</span> cls.ctor <span class="keyword">then</span> cls:ctor(...) <span class="keyword">end</span></span><br><span class="line">		<span class="keyword">return</span> instance</span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line">	<span class="keyword">return</span> cls</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>这个new方法将类名保存了下来,方便运行时获取类的类型,同时如果这个类有定义构造函数(ctor)的话,它还会自动的调用类的构造函数。</p>
+<p>这个时候类的定义就可以变成下面这个样子了:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Position.lua</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> Position = class(<span class="string">"Position"</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position:ctor</span><span class="params">(x,y)</span></span></span><br><span class="line">	self.x = x</span><br><span class="line">	self.y = y</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position:getLength</span><span class="params">()</span></span></span><br><span class="line">	<span class="keyword">return</span> (self.x^<span class="number">2</span>+self.y^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> Position</span><br></pre></td></tr></table></figure>
+
+<p>已经和一般的面向对象语言很接近了。当然,这个class方法我们必须在程序的一开始就加载进来作为全局方法使用。我们来看看main.lua是怎么使用它们的吧:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span>(<span class="string">"function"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> Position = <span class="built_in">require</span>(<span class="string">"Position"</span>)</span><br><span class="line"><span class="built_in">print</span>(Position.__cname)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> pos1 = Position.new(<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span>(pos1:getLength())</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> pos2 = Position.new(<span class="number">3</span>,<span class="number">4</span>)</span><br><span class="line"><span class="built_in">print</span>(pos2:getLength())</span><br></pre></td></tr></table></figure>
+
+<p>输出如下:</p>
+<blockquote>
+<p>Position<br>1.4142135623731<br>5</p>
+</blockquote>
+<h2 id="继承与多态"><a href="#继承与多态" class="headerlink" title="继承与多态"></a>继承与多态</h2><p>lua的继承机制在上一篇博客《lua元表》中已经有提到了一些,原理就是使用元表机制,将子类元表的__index字段设置为父类。所以我们可以这样拓展我们的new方法:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- function.lua</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">class</span><span class="params">(className, super)</span></span></span><br><span class="line">	<span class="keyword">local</span> cls = &#123;&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> super <span class="keyword">then</span> </span><br><span class="line">		cls.super = super</span><br><span class="line">		<span class="built_in">setmetatable</span>(cls, &#123;<span class="built_in">__index</span>=super&#125;)</span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line">	</span><br><span class="line">	cls.__cname = className</span><br><span class="line"></span><br><span class="line">	cls.new = <span class="function"><span class="keyword">function</span><span class="params">(...)</span></span></span><br><span class="line">		<span class="keyword">local</span> instance = &#123;&#125;</span><br><span class="line">		<span class="built_in">setmetatable</span>(instance, &#123;<span class="built_in">__index</span>=cls&#125;)</span><br><span class="line">		<span class="keyword">if</span> cls.ctor <span class="keyword">then</span> cls:ctor(...) <span class="keyword">end</span></span><br><span class="line">		<span class="keyword">return</span> instance</span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> cls</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>这里我们将父类保存到子类的元表的__index字段中,同时为类添加了super字段用于保存父类</p>
+<p>于是基于new方法,我们可以定义Position的子类Position3D:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Position3D.lua</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> Position3D = class(<span class="string">"Position3D"</span>, <span class="built_in">require</span>(<span class="string">"Position"</span>))</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position3D:ctor</span><span class="params">(x,y,z)</span></span></span><br><span class="line">	self.super:ctor(x, y)</span><br><span class="line">	self.z = z</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Position3D:getLength</span><span class="params">()</span></span></span><br><span class="line">	<span class="keyword">return</span> (self.x^<span class="number">2</span>+self.y^<span class="number">2</span>+self.z^<span class="number">2</span>)^<span class="number">0.5</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> Position3D</span><br></pre></td></tr></table></figure>
+
+<p>子类Position3D重写了Position的ctor方法和getLength方法。如果需要用父类的被重写的方法,就要用super字段显示调用,就如ctor方法中做的一样。</p>
+<p>来看看main.lua吧：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">require</span>(<span class="string">"function"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> Position3D = <span class="built_in">require</span>(<span class="string">"Position3D"</span>)</span><br><span class="line"><span class="built_in">print</span>(Position3D.__cname)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> pos1 = Position3D.new(<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span>(pos1:getLength())</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> pos2 = Position3D.new(<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>)</span><br><span class="line"><span class="built_in">print</span>(pos2:getLength())</span><br></pre></td></tr></table></figure>
+
+<p>输出如下:</p>
+<blockquote>
+<p>Position3D<br>1.7320508075689<br>7.0710678118655</p>
+</blockquote>
+<h2 id="多继承"><a href="#多继承" class="headerlink" title="多继承"></a>多继承</h2><p>lua同样可以实现多继承。由于一个多继承的子类有多个父类,所以我们不能简单的把父类设为元表的__index属性。但是我们可以将该类的父类保存在一个table里面,然后用一个函数去搜索父类的方法。这时,只有将这个函数赋值个于元表的__index就好了。</p>
+<p>于是我们可以将class函数拓展成下面的样子</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">class</span><span class="params">(className, ...)</span></span></span><br><span class="line">	<span class="keyword">local</span> cls = &#123;__cname = className&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">local</span> supers = &#123;...&#125;</span><br><span class="line">	<span class="keyword">for</span> i,super <span class="keyword">in</span> <span class="built_in">ipairs</span>(supers) <span class="keyword">do</span></span><br><span class="line">        cls.__supers = cls.__supers <span class="keyword">or</span> &#123;&#125;</span><br><span class="line">        <span class="built_in">table</span>.<span class="built_in">insert</span>(cls.__supers, super)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> cls.super==<span class="literal">nil</span> <span class="keyword">then</span></span><br><span class="line">            cls.super=super</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> cls.__supers==<span class="literal">nil</span> <span class="keyword">or</span>  #cls.__supers==<span class="number">1</span> <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">setmetatable</span>(cls, &#123;<span class="built_in">__index</span>=cls.super&#125;)</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		<span class="keyword">local</span> index = <span class="function"><span class="keyword">function</span><span class="params">(t,k)</span></span></span><br><span class="line">			<span class="keyword">for</span> i,v <span class="keyword">in</span> <span class="built_in">ipairs</span>(cls.__supers) <span class="keyword">do</span></span><br><span class="line">				<span class="keyword">if</span> v[k] <span class="keyword">then</span> <span class="keyword">return</span> v[k] <span class="keyword">end</span></span><br><span class="line">			<span class="keyword">end</span></span><br><span class="line">		<span class="keyword">end</span></span><br><span class="line">        <span class="built_in">setmetatable</span>(cls, &#123;<span class="built_in">__index</span>=index&#125;)</span><br><span class="line">	<span class="keyword">end</span>	</span><br><span class="line"></span><br><span class="line">	cls.new = <span class="function"><span class="keyword">function</span><span class="params">(...)</span></span></span><br><span class="line">	    <span class="keyword">local</span> instance = &#123;&#125;</span><br><span class="line">		<span class="built_in">setmetatable</span>(instance, &#123;<span class="built_in">__index</span>=cls&#125;)</span><br><span class="line">		<span class="keyword">if</span> cls.ctor <span class="keyword">then</span> cls:ctor(...) <span class="keyword">end</span></span><br><span class="line">		<span class="keyword">return</span> instance</span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> cls</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>之后我们就能这样去使用多继承机制了:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--ClassA.lua</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> ClassA = class(<span class="string">"ClassA"</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">ClassA:ctor</span><span class="params">()</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">ClassA:methodA</span><span class="params">()</span></span></span><br><span class="line">	<span class="built_in">print</span>(<span class="string">"ClassA:methodA"</span>)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> ClassA</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--ClassB.lua</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> ClassB = class(<span class="string">"ClassB"</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">ClassB:ctor</span><span class="params">()</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">ClassB:methodB</span><span class="params">()</span></span></span><br><span class="line">	<span class="built_in">print</span>(<span class="string">"ClassB:methodB"</span>)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> ClassB</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--ClassC.lua</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> ClassC = class(<span class="string">"ClassC"</span>, <span class="built_in">require</span>(<span class="string">"ClassA"</span>), <span class="built_in">require</span>(<span class="string">"ClassB"</span>))</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">ClassC:ctor</span><span class="params">()</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> ClassC</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--main.lua</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">require</span>(<span class="string">"function"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> c = <span class="built_in">require</span>(<span class="string">"ClassC"</span>).new()</span><br><span class="line">c:methodA()</span><br><span class="line">c:methodB()</span><br></pre></td></tr></table></figure>
+
+<p>执行结果如下:</p>
+<blockquote>
+<p>ClassA:methodA<br>ClassB:methodB</p>
+</blockquote>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2016/10/28/lua元表/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2016/11/18/责任链模式/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

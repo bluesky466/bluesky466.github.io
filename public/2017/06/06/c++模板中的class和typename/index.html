@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>c++模板中的class和typename | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,C/C++,">
+  
+
+  <meta name="description" content="借来的《Effective STL》已经放在书架上很久了,想想这段时间不是在写lua做业务,就是在学安卓准备做业务,已经很久没有看过c++这个老伙计了。为了不把老本行丢了,也为了赶紧把书还回去给更多的人阅读。于是下定决心重头开始把它读完。 模板中使用class和typename的区别还没翻几页,当看到这段代码的时候就楞了一下。印象中上次也是看到这里一下子没弄懂,还特地搜索过的。结果再来一遍的时候还">
+<meta name="keywords" content="技术相关,C&#x2F;C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="c++模板中的class和typename">
+<meta property="og:url" content="http://139.199.4.241/2017/06/06/c++模板中的class和typename/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="借来的《Effective STL》已经放在书架上很久了,想想这段时间不是在写lua做业务,就是在学安卓准备做业务,已经很久没有看过c++这个老伙计了。为了不把老本行丢了,也为了赶紧把书还回去给更多的人阅读。于是下定决心重头开始把它读完。 模板中使用class和typename的区别还没翻几页,当看到这段代码的时候就楞了一下。印象中上次也是看到这里一下子没弄懂,还特地搜索过的。结果再来一遍的时候还">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.267Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="c++模板中的class和typename">
+<meta name="twitter:description" content="借来的《Effective STL》已经放在书架上很久了,想想这段时间不是在写lua做业务,就是在学安卓准备做业务,已经很久没有看过c++这个老伙计了。为了不把老本行丢了,也为了赶紧把书还回去给更多的人阅读。于是下定决心重头开始把它读完。 模板中使用class和typename的区别还没翻几页,当看到这段代码的时候就楞了一下。印象中上次也是看到这里一下子没弄懂,还特地搜索过的。结果再来一遍的时候还">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#模板中使用class和typename的区别"><span class="toc-text">模板中使用class和typename的区别</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#为什么出现从属类型时需要用typename"><span class="toc-text">为什么出现从属类型时需要用typename</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#出现从属类型时不需要用typename的特例"><span class="toc-text">出现从属类型时不需要用typename的特例</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-c++模板中的class和typename" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">c++模板中的class和typename</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.06.06</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>借来的《Effective STL》已经放在书架上很久了,想想这段时间不是在写lua做业务,就是在学安卓准备做业务,已经很久没有看过c++这个老伙计了。为了不把老本行丢了,也为了赶紧把书还回去给更多的人阅读。于是下定决心重头开始把它读完。</p>
+<h1 id="模板中使用class和typename的区别"><a href="#模板中使用class和typename的区别" class="headerlink" title="模板中使用class和typename的区别"></a>模板中使用class和typename的区别</h1><p>还没翻几页,当看到这段代码的时候就楞了一下。印象中上次也是看到这里一下子没弄懂,还特地搜索过的。结果再来一遍的时候还是忘了。果然好记性不如烂笔头,赶紧写篇博客mark一下。</p>
+<p>这里讲的是作者在声明模板的时候使用typename而不是class。一般情况下,使用typename或者class只是编码风格的问题。但是在遇到从属类型(dependent type)的时候,为了避免潜在的预防解析二义性,必须用typename而不能用class。</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> C&gt;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">lastGreaterThanFirst</span><span class="params">(<span class="keyword">const</span> C&amp; container)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(container.empty()) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">typename</span> C::<span class="function">const_iterator <span class="title">begin</span><span class="params">(container.<span class="built_in">begin</span>())</span></span>;</span><br><span class="line">    <span class="keyword">typename</span> C::<span class="function">const_iterator <span class="title">end</span><span class="params">(container.<span class="built_in">end</span>())</span></span>;</span><br><span class="line">    <span class="keyword">return</span> *--<span class="built_in">end</span> &gt; *<span class="built_in">begin</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的重点是这两行:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typename</span> C::<span class="function">const_iterator <span class="title">begin</span><span class="params">(container.<span class="built_in">begin</span>())</span></span>;</span><br><span class="line"><span class="keyword">typename</span> C::<span class="function">const_iterator <span class="title">end</span><span class="params">(container.<span class="built_in">end</span>())</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>如果没有用typename关键字</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> C&gt;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">lastGreaterThanFirst</span><span class="params">(<span class="keyword">const</span> C&amp; container)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(container.empty()) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    C::<span class="function">const_iterator <span class="title">begin</span><span class="params">(container.<span class="built_in">begin</span>())</span></span>;</span><br><span class="line">    C::<span class="function">const_iterator <span class="title">end</span><span class="params">(container.<span class="built_in">end</span>())</span></span>;</span><br><span class="line">    <span class="keyword">return</span> *--<span class="built_in">end</span> &gt; *<span class="built_in">begin</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>就会报错(《Effective STL》中指出有些编译器错误的接受了没有typename的代码,但这样的代码是不可移植的):</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">test.cpp:6:2: error: missing <span class="string">'typename'</span> prior <span class="keyword">to</span> dependent<span class="built_in"> type </span>name <span class="string">'C::const_iterator'</span></span><br><span class="line">        C::const_iterator begin(container.begin());</span><br><span class="line">        ^~~~~~~~~~~~~~~~~</span><br><span class="line">        typename</span><br><span class="line">test.cpp:7:2: error: missing <span class="string">'typename'</span> prior <span class="keyword">to</span> dependent<span class="built_in"> type </span>name <span class="string">'C::const_iterator'</span></span><br><span class="line">        C::const_iterator end(container.end());</span><br><span class="line">        ^~~~~~~~~~~~~~~~~</span><br><span class="line">        typename</span><br><span class="line">2 errors generated.</span><br></pre></td></tr></table></figure>
+
+<p>如果你在这里使用的是class而不是typename就会报错:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">test.cpp:8:11: error: elaborated<span class="built_in"> type </span>refers <span class="keyword">to</span> a typedef</span><br><span class="line">        class C::const_iterator begin(container.begin());</span><br><span class="line">                 ^</span><br><span class="line">test.cpp:15:2: note: <span class="keyword">in</span> instantiation of function template specialization <span class="string">'lastGreaterThanFirst&lt;std::__1::vector&lt;int, std::__1::allocator&lt;int&gt; &gt; &gt;'</span> requested here</span><br><span class="line">        lastGreaterThanFirst(vec);</span><br><span class="line">        ^</span><br><span class="line">/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/<span class="built_in">..</span>/include/c++/v1/vector:476:54: note: declared here</span><br><span class="line">    typedef __wrap_iter&lt;const_pointer&gt;               const_iterator;</span><br><span class="line">                                                     ^</span><br><span class="line">1 <span class="builtin-name">error</span> generated.</span><br></pre></td></tr></table></figure>
+
+<h1 id="为什么出现从属类型时需要用typename"><a href="#为什么出现从属类型时需要用typename" class="headerlink" title="为什么出现从属类型时需要用typename"></a>为什么出现从属类型时需要用typename</h1><p>我们一步一步来解析。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ClassA::foo</span><br></pre></td></tr></table></figure>
+
+<p>当你看到上面的代码的时候,你会觉得foo是什么？第一反应应该是ClassA的一个静态成员变量对吧？</p>
+<p>那当你继续往后看,看到下面的代码的时候,想想a是什么？</p>
+<figure class="highlight mizar"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ClassA<span class="comment">::foo a;</span></span><br></pre></td></tr></table></figure>
+
+<p>a是一个ClassA::foo类型的变量,ClassA::foo是一个内部类:</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ClassA</span> </span>&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">foo</span> </span>&#123;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>或者ClassA内部的一个typedef:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ClassA</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">int</span> foo;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>当foo是ClassA的内部类或者是内部的一个typedef的时候,foo就是一个从属类型。</p>
+<p>而对于C::const_iterator,const_iterator可能是C的一个静态成员变量或者是C的一个从属类型,编译器默认是将它解析为一个变量的,所以需要用typename告诉编译器这是一个类型:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typename</span> C::<span class="function">const_iterator <span class="title">begin</span><span class="params">(container.<span class="built_in">begin</span>())</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h1 id="出现从属类型时不需要用typename的特例"><a href="#出现从属类型时不需要用typename的特例" class="headerlink" title="出现从属类型时不需要用typename的特例"></a>出现从属类型时不需要用typename的特例</h1><p>在遇到从属类型出现在类模板定义中的基类列表的时候,是不需要用typename关键字指明这是一个类型的:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ClassA</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">foo</span> &#123;</span></span><br><span class="line">    &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> C&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ClassB</span> :</span> <span class="keyword">public</span> C::foo &#123;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>因为基类列表中的肯定是一个类型。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/06/03/在Android中使用注解生成Java代码-AbstractProcessor/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/06/30/Android温故而知新-launchMode/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>

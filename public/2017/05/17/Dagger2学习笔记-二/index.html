@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Dagger2学习笔记(二) | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="在上一篇文章我们讲了用于搜索的SearchActivity的实现，这一篇文章我们继续以剩下的两个Activity的实现为例，讲一下Dagger2的其他特性。这两个Activity分别是用了展示SearchActivity搜索的用户的头像和用户名的UserInfoActivity和点击用户头像跳转到的展示用户followers的FollowerActivity。 在我们的Demo中有个叫做UserI">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dagger2学习笔记(二)">
+<meta property="og:url" content="http://139.199.4.241/2017/05/17/Dagger2学习笔记-二/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="在上一篇文章我们讲了用于搜索的SearchActivity的实现，这一篇文章我们继续以剩下的两个Activity的实现为例，讲一下Dagger2的其他特性。这两个Activity分别是用了展示SearchActivity搜索的用户的头像和用户名的UserInfoActivity和点击用户头像跳转到的展示用户followers的FollowerActivity。 在我们的Demo中有个叫做UserI">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-10-14T14:06:52.261Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dagger2学习笔记(二)">
+<meta name="twitter:description" content="在上一篇文章我们讲了用于搜索的SearchActivity的实现，这一篇文章我们继续以剩下的两个Activity的实现为例，讲一下Dagger2的其他特性。这两个Activity分别是用了展示SearchActivity搜索的用户的头像和用户名的UserInfoActivity和点击用户头像跳转到的展示用户followers的FollowerActivity。 在我们的Demo中有个叫做UserI">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Module复用"><span class="toc-text">Module复用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#共用Module"><span class="toc-text">共用Module</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用dependencies"><span class="toc-text">使用dependencies</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用Subcomponent"><span class="toc-text">使用Subcomponent</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Scope"><span class="toc-text">Scope</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Demo地址"><span class="toc-text">Demo地址</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Dagger2学习笔记-二" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Dagger2学习笔记(二)</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2017.05.17</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>在上一篇<a href="http://blog.islinjw.cn/2017/05/13/Dagger2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%B8%80/" target="_blank" rel="noopener">文章</a>我们讲了用于搜索的SearchActivity的实现，这一篇文章我们继续以剩下的两个Activity的实现为例，讲一下Dagger2的其他特性。这两个Activity分别是用了展示SearchActivity搜索的用户的头像和用户名的UserInfoActivity和点击用户头像跳转到的展示用户followers的FollowerActivity。</p>
+<p>在我们的Demo中有个叫做UserInfoLoader的类，它是用来向github服务器请求用户信息和follower信息的，会在多个actiity中被使用，例如在FollowerPresenter和UserInfoPresenter中都需要注入UserInfoLoader。最简单的方式是我们可以直接使用@Inject注解标注它的构造方法，使得Dagger2可以直接创建它的实例去注入FollowerPresenter和UserInfoPresenter中。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserInfoLoader</span> &#123;</span></span><br><span class="line">	...</span><br><span class="line">	@Inject</span><br><span class="line">	UserInfoLoader() &#123;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Module复用"><a href="#Module复用" class="headerlink" title="Module复用"></a>Module复用</h1><p>当然我们也能用复用Module的方式，这种方式虽然比直接用@Inject注解构造方法复杂，但是它还有其他十分有用的功能，接下来我会慢慢分析。</p>
+<p>首先我们把它的Module单独抽出来，放到AppModule中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AppModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">	<span class="function">UserInfoLoader <span class="title">provideUserInfoLoader</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> UserInfoLoader();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="共用Module"><a href="#共用Module" class="headerlink" title="共用Module"></a>共用Module</h2><p>我们复用这个Module的方式有几种，一是同时放在FollowerComponent和UserInfoComponent的modules中:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Component(modules = &#123;AppModule.<span class="keyword">class</span>, FollowerPresenterModule.<span class="keyword">class</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> FollowerComponent &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(FollowerPresenter presenter);</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(FollowerActivity activity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Component(modules = &#123;AppModule.<span class="keyword">class</span>, UserInfoPresenterModule.<span class="keyword">class</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> UserInfoComponent &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(UserInfoPresenter presenter);</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(UserInfoActivity activity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用dependencies"><a href="#使用dependencies" class="headerlink" title="使用dependencies"></a>使用dependencies</h2><p>第二种方式是使用dependencies，首先我们需要声明多一个AppComponent接口</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component(modules = &#123;AppModule.class&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AppComponent</span> </span>&#123;</span><br><span class="line">    UserInfoLoader provideUserInfoLoader();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个接口的provideUserInfoLoader()方法就是提供出来给子依赖获取UserInfoLoader的，因为dependencies子依赖是获取不了父依赖的modules里面的Provides的。</p>
+<p>之后声明FollowerComponent和UserInfoComponent:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Component(<span class="keyword">dependencies</span> = AppComponent.<span class="keyword">class</span>, modules = &#123;UserInfoPresenterModule.<span class="keyword">class</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> UserInfoComponent &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(UserInfoPresenter presenter);</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(UserInfoActivity activity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Component(<span class="keyword">dependencies</span> = AppComponent.<span class="keyword">class</span>, modules = &#123;FollowerPresenterModule.<span class="keyword">class</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> FollowerComponent &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(FollowerPresenter presenter);</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(FollowerActivity activity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后就再去实现注入:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">FollowerComponent component = DaggerFollowerComponent.builder()</span><br><span class="line">	.appComponent(getAppComponent())</span><br><span class="line">    .followerPresenterModule(<span class="keyword">new</span> FollowerPresenterModule(<span class="keyword">this</span>))</span><br><span class="line">    .build();</span><br><span class="line">component.<span class="keyword">inject</span>(<span class="keyword">this</span>);</span><br><span class="line">component.<span class="keyword">inject</span>(mPresenter);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">UserInfoComponent component = DaggerUserInfoComponent.builder()</span><br><span class="line">    .appComponent(getAppComponent())</span><br><span class="line">    .userInfoPresenterModule(<span class="keyword">new</span> UserInfoPresenterModule(<span class="keyword">this</span>))</span><br><span class="line">    .build();</span><br><span class="line">component.<span class="keyword">inject</span>(<span class="keyword">this</span>);</span><br><span class="line">component.<span class="keyword">inject</span>(mPresenter);</span><br></pre></td></tr></table></figure>
+
+<p>这里的AppComponent是公用的，所以我们放到Application中:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public <span class="class"><span class="keyword">class</span> <span class="title">AppApplication</span> <span class="keyword">extends</span> <span class="title">Application</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">AppComponent</span> mAppComponent;</span><br><span class="line"></span><br><span class="line">	public <span class="type">AppApplication</span>() &#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line"></span><br><span class="line">        mAppComponent = <span class="type">DaggerAppComponent</span>.create();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	public <span class="type">AppComponent</span> getAppComponent() &#123;</span><br><span class="line">        <span class="keyword">return</span> mAppComponent;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后在Activity中这样获取AppComponent:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">AppComponent</span> <span class="selector-tag">getAppComponent</span>() &#123;</span><br><span class="line">    <span class="selector-tag">return</span> ((AppApplication)getApplication())<span class="selector-class">.getAppComponent</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们尝试注释掉AppComponent.provideUserInfoLoader，rebuild一下，发现居然没有报错，这是怎么回事？其实是因为UserInfoLoader的构造方法使用@Inject注解标注了，所以可以直接通过构造方法创建UserInfoLoader来注入FollowerPresenter和FollowerActivity。</p>
+<p>我们再把UserInfoLoader的构造方法的@Inject注解注释掉，这时候再rebuild就可以发现报错了。</p>
+<p>然后再取消掉AppComponent.provideUserInfoLoader的注释，就能顺利编过了。因为我们的AppModule.provideUserInfoLoader是通过new 一个UserInfoLoader出来的，所以可以不依赖构造方法的@Inject注解。</p>
+<h2 id="使用Subcomponent"><a href="#使用Subcomponent" class="headerlink" title="使用Subcomponent"></a>使用Subcomponent</h2><p>最后一种方法就是使用@Subcomponent注解，这中方法和使用dependencies有点像，他们的区别在于使用@Subcomponent方法AppComponent不需要提供一个provideUserInfoLoader方法，子依赖可以直接使用AppComponent中的modules。首先我们要这样声明AppComponent:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Component(modules = &#123;AppModule<span class="class">.<span class="keyword">class</span>&#125;)</span></span><br><span class="line">public interface AppComponent &#123;</span><br><span class="line">    FollowerComponent plus(FollowerPresenterModule <span class="class"><span class="keyword">module</span>);</span></span><br><span class="line">    UserInfoComponent plus(UserInfoPresenterModule <span class="class"><span class="keyword">module</span>);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后FollowerComponent和UserInfoComponent的定义如下:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Subcomponent(modules = &#123;FollowerPresenterModule.<span class="keyword">class</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> FollowerComponent &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(FollowerPresenter presenter);</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(FollowerActivity activity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Subcomponent(modules = &#123;UserInfoPresenterModule.<span class="keyword">class</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> UserInfoComponent &#123;</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(UserInfoPresenter presenter);</span><br><span class="line">    <span class="keyword">void</span> <span class="keyword">inject</span>(UserInfoActivity activity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注入的实现代码如下:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">FollowerComponent component = getAppComponent().<span class="keyword">plus</span>(<span class="keyword">new</span> FollowerPresenterModule(<span class="keyword">this</span>));</span><br><span class="line"></span><br><span class="line">component.<span class="keyword">inject</span>(<span class="keyword">this</span>);</span><br><span class="line">component.<span class="keyword">inject</span>(mPresenter);</span><br></pre></td></tr></table></figure>
+
+<h1 id="Scope"><a href="#Scope" class="headerlink" title="Scope"></a>Scope</h1><p>现在还有一个问题，现在FollowerComponent和UserInfoComponent虽然都往Presenter注入了UserInfoLoader，但他们是不同的实例:</p>
+<blockquote>
+<p>D/UserInfoPresenter: mUserInfoLoader : com.example.linjw.dagger2demo.model.UserInfoLoader@31e117c<br>D/FollowerPresenter: mUserInfoLoader : com.example.linjw.dagger2demo.model.UserInfoLoader@c9ad63b</p>
+</blockquote>
+<p>如果我想他们使用的就是同一个UserInfoLoader实例呢？需要怎么做？</p>
+<p>Dagger2中有作用域的概念，可以规定几个Component在同一个作用域，在同一个作用域注入的依赖就是同一个实例。</p>
+<p>首先需要声明我们的Scope:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Scope</span></span><br><span class="line"><span class="variable">@Retention</span>(RUNTIME)</span><br><span class="line">public <span class="variable">@interface</span> AppScope &#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后就只需要将Module的Provides方法和Component用同一个Scope注解标注一下，就能让他们处于同一个作用域了。</p>
+<p>比如我们需要在AppModule.provideUserInfoLoader标注:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Module</span></span><br><span class="line">public class AppModule &#123;</span><br><span class="line">    <span class="variable">@AppScope</span></span><br><span class="line">    <span class="variable">@Provides</span></span><br><span class="line">	UserInfoLoader provideUserInfoLoader() &#123;</span><br><span class="line">        <span class="selector-tag">return</span> <span class="selector-tag">new</span> <span class="selector-tag">UserInfoLoader</span>();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>像我们使用Subcomponent去实现依赖继承，我们就只需要在AppComponent中标注就好了，这样他们的子依赖也会处于AppScope中:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@AppScope</span></span><br><span class="line"><span class="variable">@Component</span>(modules = &#123;AppModule.class&#125;)</span><br><span class="line">public interface AppComponent &#123;</span><br><span class="line">    <span class="selector-tag">FollowerComponent</span> <span class="selector-tag">plus</span>(FollowerPresenterModule module);</span><br><span class="line">    <span class="selector-tag">UserInfoComponent</span> <span class="selector-tag">plus</span>(UserInfoPresenterModule module);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>D/UserInfoPresenter: mUserInfoLoader : com.example.linjw.dagger2demo.model.UserInfoLoader@31e117c<br>D/FollowerPresenter: mUserInfoLoader : com.example.linjw.dagger2demo.model.UserInfoLoader@31e117c</p>
+</blockquote>
+<h1 id="Demo地址"><a href="#Demo地址" class="headerlink" title="Demo地址"></a>Demo地址</h1><p>可以在<a href="https://github.com/bluesky466/Dagger2Demo" target="_blank" rel="noopener">这里</a>查看完整代码</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2017/05/13/Dagger2学习笔记-一/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2017/06/03/在Android中使用注解生成Java代码-AbstractProcessor/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 | <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>
