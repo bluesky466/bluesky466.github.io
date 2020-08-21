@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Git是怎么工作的 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Git,">
+  
+
+  <meta name="description" content="相信大部分的程序员都会使用Git，可能使用IDE集成的可视化界面，也可能是直接用的命令行。但是可能很多人对Git的一些原理性的概念并没有什么了解，这篇博客就从Git的原理出发，讲解Git的一些命令操作的底层意义，可能会让大家使用Git的时候更加得心应手。 PS: 这篇博客是对部门技术分享的整理，绝大多数知识点可以在Pro Git这本书里面找到，也有部分篇幅摘抄自这本书，我也强推大家去通读一遍这本书">
+<meta name="keywords" content="技术相关,Git">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git是怎么工作的">
+<meta property="og:url" content="http://139.199.4.241/2020/08/21/Git是怎么工作的/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="相信大部分的程序员都会使用Git，可能使用IDE集成的可视化界面，也可能是直接用的命令行。但是可能很多人对Git的一些原理性的概念并没有什么了解，这篇博客就从Git的原理出发，讲解Git的一些命令操作的底层意义，可能会让大家使用Git的时候更加得心应手。 PS: 这篇博客是对部门技术分享的整理，绝大多数知识点可以在Pro Git这本书里面找到，也有部分篇幅摘抄自这本书，我也强推大家去通读一遍这本书">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/deltas.png">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/snapshots.png">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/1.png">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/2.png">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/3.png">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/4.png">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/5.png">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/remote-branches-3.png">
+<meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/6.png">
+<meta property="og:updated_time" content="2020-08-21T12:56:41.236Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Git是怎么工作的">
+<meta name="twitter:description" content="相信大部分的程序员都会使用Git，可能使用IDE集成的可视化界面，也可能是直接用的命令行。但是可能很多人对Git的一些原理性的概念并没有什么了解，这篇博客就从Git的原理出发，讲解Git的一些命令操作的底层意义，可能会让大家使用Git的时候更加得心应手。 PS: 这篇博客是对部门技术分享的整理，绝大多数知识点可以在Pro Git这本书里面找到，也有部分篇幅摘抄自这本书，我也强推大家去通读一遍这本书">
+<meta name="twitter:image" content="http://139.199.4.241/Git是怎么工作的/deltas.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Git与其它版本控制系统的差异"><span class="toc-text">Git与其它版本控制系统的差异</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#object-对象"><span class="toc-text">object(对象)</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#对象树"><span class="toc-text">对象树</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#引用"><span class="toc-text">引用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#HEAD引用"><span class="toc-text">HEAD引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#reflog"><span class="toc-text">reflog</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#远程分支"><span class="toc-text">远程分支</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#pack机制"><span class="toc-text">pack机制</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Git是怎么工作的" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Git是怎么工作的</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2020.08.21</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>相信大部分的程序员都会使用Git，可能使用IDE集成的可视化界面，也可能是直接用的命令行。但是可能很多人对Git的一些原理性的概念并没有什么了解，这篇博客就从Git的原理出发，讲解Git的一些命令操作的底层意义，可能会让大家使用Git的时候更加得心应手。</p>
+<p>PS: 这篇博客是对部门技术分享的整理，绝大多数知识点可以在<a href="https://www.progit.cn/" target="_blank" rel="noopener"><em>Pro</em> <em>Git</em></a>这本书里面找到，也有部分篇幅摘抄自这本书，我也强推大家去通读一遍这本书。</p>
+<h1 id="Git与其它版本控制系统的差异"><a href="#Git与其它版本控制系统的差异" class="headerlink" title="Git与其它版本控制系统的差异"></a>Git与其它版本控制系统的差异</h1><p>Git 和其它版本控制系统（包括 Subversion 和近似工具）的主要差别在于 Git 对待数据的方法。 概念上来区分，其它大部分系统以文件变更列表的方式存储信息。 这类系统（CVS、Subversion、Perforce、Bazaar 等等）将它们保存的信息看作是一组基本文件和每个文件随时间逐步累积的差异。</p>
+<img src="/Git是怎么工作的/deltas.png">
+
+<p>Git 不按照以上方式对待或保存数据。 反之，Git 更像是把数据看作是对小型文件系统的一组快照。 每次你提交更新，或在 Git 中保存项目状态时，它主要对当时的全部文件制作一个快照并保存这个快照的索引。 为了高效，如果文件没有修改，Git 不再重新存储该文件，而是只保留一个链接指向之前存储的文件。 Git 对待数据更像是一个 <strong>快照流</strong></p>
+<img src="/Git是怎么工作的/snapshots.png">
+
+<p>也就是说Git实际是实现了一个小型的文件系统，把需要托管的文件的所有版本都备份到了这个系统里面，然后在需要的时候找到对应的版本拿出来使用。</p>
+<p>大家都知道Git是Linus开发的，写操作系统内核的人思路的确就是和其他人的不一样，直接搞了个文件系统，而且还继承了Linux一切皆文件的思想。</p>
+<h1 id="object-对象"><a href="#object-对象" class="headerlink" title="object(对象)"></a>object(对象)</h1><p>这个文件系统其实就在.git/objects目录里面，git把所有的提交文件、tag、提交历史等都保存成一个object保存到这个目录里面。</p>
+<p>当clone了一个空的项目的时候.git/objects目录里面会有几个子目录，但是并没有实际的文件:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tree .git/objects</span><br><span class="line">.git/objects</span><br><span class="line">├── info</span><br><span class="line">└── pack</span><br></pre></td></tr></table></figure>
+
+<p>当我们做了添加了一些目录和文件:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">tree .</span><br><span class="line">.</span><br><span class="line">├── dir_a</span><br><span class="line">│   └── file_1</span><br><span class="line">└── dir_b</span><br><span class="line">    └── file_2</span><br></pre></td></tr></table></figure>
+
+<p>然后将它们提交到Git之后，Git就会对这些目录和文件原内容加上特定头部信息一起做SHA-1散列得到一个校验和，并且将它们保存到objects目录。散列值前两字符用于命名子目录，余下的38个字符则用作文件名，这个文件就是Git的存储对象(obejct):</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">tree .git/objects</span><br><span class="line">.git/objects</span><br><span class="line">├── 26</span><br><span class="line">│   └── f76fe87ba045f5a6b40d93598ca96e5a1fab39</span><br><span class="line">├── 31</span><br><span class="line">│   └── 2f01ad223d5eb1e959122ac2829744b59fd7f2</span><br><span class="line">├── 75</span><br><span class="line">│   └── 8902e9f92ad80673cb0f1da4b8d34fbfe47544</span><br><span class="line">├── 8a</span><br><span class="line">│   └── 776b73f34c3b546a66fe6173dfa0a53a142b9b</span><br><span class="line">├── b8</span><br><span class="line">│   └── 947b77094228836f18792dc5fac15dfa9de11e</span><br><span class="line">├── c5</span><br><span class="line">│   └── 0a174948973a2dbe8a43fd9282d24a7a6074c4</span><br><span class="line">├── info</span><br><span class="line">└── pack</span><br></pre></td></tr></table></figure>
+
+<p>这些文件都是压缩过的，我们可以用<code>git cat-file</code>名去查看内容，由于这些文件都是有不同类型区分的，所以可以用-p参数自动识别文件类型，例如我们查看26f76fe87ba045f5a6b40d93598ca96e5a1fab39这个object:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git cat-file -p 26f76fe87ba045f5a6b40d93598ca96e5a1fab39</span><br><span class="line">040000 tree 758902e9f92ad80673cb0f1da4b8d34fbfe47544    dir_a</span><br><span class="line">040000 tree 8a776b73f34c3b546a66fe6173dfa0a53a142b9b    dir_b</span><br></pre></td></tr></table></figure>
+
+<p>它是就是我们的根目录，可以看到有两个tree类型的object，分别对应子目录dir_a和dir_b，我们进去dir_a看看:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git cat-file -p 758902e9f92ad80673cb0f1da4b8d34fbfe47544</span><br><span class="line">100644 blob c50a174948973a2dbe8a43fd9282d24a7a6074c4    file_1</span><br></pre></td></tr></table></figure>
+
+<p>这里有个blob类型的object file_1，blob类型的object就用来文件快照，可以看到它保存了file_1的所有内容:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git cat-file -p c50a174948973a2dbe8a43fd9282d24a7a6074c4</span><br><span class="line">file 1 content</span><br></pre></td></tr></table></figure>
+
+<p>除了这些目录、文件的object之外我们的commit也是会被保存成一个obejct:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">git cat-file -p 312f01ad223d5eb1e959122ac2829744b59fd7f2</span><br><span class="line">tree 26f76fe87ba045f5a6b40d93598ca96e5a1fab39</span><br><span class="line">author linjw &lt;bluesky466@qq.com&gt; 1597981085 +0800</span><br><span class="line">committer linjw &lt;bluesky466@qq.com&gt; 1597981085 +0800</span><br><span class="line"></span><br><span class="line">first commit</span><br></pre></td></tr></table></figure>
+
+<p>可以看到它有个tree字段指向了根目录的object(26f76fe87ba045f5a6b40d93598ca96e5a1fab39)</p>
+<p>这个commit的object的校验和其实就是commit id:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">commit 312f01ad223d5eb1e959122ac2829744b59fd7f2 (HEAD -&gt; master)</span><br><span class="line">Author: linjw &lt;bluesky466@qq.com&gt;</span><br><span class="line">Date:   Fri Aug 21 11:38:05 2020 +0800</span><br><span class="line"></span><br><span class="line">    first commit</span><br></pre></td></tr></table></figure>
+
+<p>所以通过这个commit我们就能构建起整个目录:</p>
+<img src="/Git是怎么工作的/1.png">
+
+<h2 id="对象树"><a href="#对象树" class="headerlink" title="对象树"></a>对象树</h2><p>然后我们再修改下file_1，提交个commit，commit id 是da64cc3756675914aab6df4c01b81539ae6ef39f，我们查看它的内容，发现它对比第一个commit多了个parent指向第一个commit:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">git cat-file -p da64cc3756675914aab6df4c01b81539ae6ef39f</span><br><span class="line">tree 8cbab3b672a04bc8bf5fa63af6e06b0d92bd4126</span><br><span class="line">parent 312f01ad223d5eb1e959122ac2829744b59fd7f2</span><br><span class="line">author linjw &lt;bluesky466@qq.com&gt; 1597982034 +0800</span><br><span class="line">committer linjw &lt;bluesky466@qq.com&gt; 1597982034 +0800</span><br><span class="line"></span><br><span class="line">modifying file_1</span><br></pre></td></tr></table></figure>
+
+<p>然后现在整个objects目录是这样的:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">tree .git/objects</span><br><span class="line">.git/objects</span><br><span class="line">├── 1e</span><br><span class="line">│   └── a40765c24dc3a9109c06d2e2c1408ea40568be</span><br><span class="line">├── 26</span><br><span class="line">│   └── f76fe87ba045f5a6b40d93598ca96e5a1fab39</span><br><span class="line">├── 31</span><br><span class="line">│   └── 2f01ad223d5eb1e959122ac2829744b59fd7f2</span><br><span class="line">├── 70</span><br><span class="line">│   └── d733623d440ad95d53272528ae900295855665</span><br><span class="line">├── 75</span><br><span class="line">│   └── 8902e9f92ad80673cb0f1da4b8d34fbfe47544</span><br><span class="line">├── 8a</span><br><span class="line">│   └── 776b73f34c3b546a66fe6173dfa0a53a142b9b</span><br><span class="line">├── 8c</span><br><span class="line">│   └── bab3b672a04bc8bf5fa63af6e06b0d92bd4126</span><br><span class="line">├── b8</span><br><span class="line">│   └── 947b77094228836f18792dc5fac15dfa9de11e</span><br><span class="line">├── c5</span><br><span class="line">│   └── 0a174948973a2dbe8a43fd9282d24a7a6074c4</span><br><span class="line">├── da</span><br><span class="line">│   └── 64cc3756675914aab6df4c01b81539ae6ef39f</span><br><span class="line">├── info</span><br><span class="line">└── pack</span><br></pre></td></tr></table></figure>
+
+<p>我们用下面这张图表示各个object 的关系:</p>
+<img src="/Git是怎么工作的/2.png">
+
+<p>这些object是以树形结构组织起来的，而且每个commit都能遍历找到那个版本的所有文件，所以当使用reset命令的时候只需要找到commit的object然后遍历对象树将object里面的内容解压出来替换工作区的文件就可以了。</p>
+<h1 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h1><p>在理解了commit本质上其实是一个object之后，我们就能很容易理解引用这个概念了。</p>
+<p>引用在Git里面其实本质也是一个文件，它们存放在.git/refs/下的子目录里面，例如本地引用的路径在.git/refs/heads目录里面:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tree .git/refs/heads</span><br><span class="line">.git/refs/heads</span><br><span class="line">└── master</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到现在里面只有个master文件，原因是我们只有一个master分支。让我们打印一下这个master文件的内容:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat .git/refs/heads/master</span><br><span class="line">da64cc3756675914aab6df4c01b81539ae6ef39f</span><br></pre></td></tr></table></figure>
+
+<p>它的内容其实就是object的检验和。让我们创建多一个develop分支，可以看到这个目录就多了个develop文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tree .git/refs/heads</span><br><span class="line">.git/refs/heads</span><br><span class="line">├── develop</span><br><span class="line">└── master</span><br></pre></td></tr></table></figure>
+
+<p>它的内容和master的一样:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat .git/refs/heads/develop</span><br><span class="line">da64cc3756675914aab6df4c01b81539ae6ef39f</span><br></pre></td></tr></table></figure>
+
+<p>让我们回滚这个分支到第一个提交，可以发现它的内容就变成了第一个commit的校验和:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat .git/refs/heads/develop</span><br><span class="line">312f01ad223d5eb1e959122ac2829744b59fd7f2</span><br></pre></td></tr></table></figure>
+
+<p>其实除了分支之外，我们打的tag也是一样的原理，例如我们此时在develop上一个v1.0的tag，就会发现.git/refs/tags/目录下多了一个v1.0的文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tree .git/refs/tags</span><br><span class="line">.git/refs/tags</span><br><span class="line">└── v1.0</span><br></pre></td></tr></table></figure>
+
+<p>它的内容也是第一个commit:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat .git/refs/tags/v1.0</span><br><span class="line">312f01ad223d5eb1e959122ac2829744b59fd7f2</span><br></pre></td></tr></table></figure>
+
+<p>现在引用的情况如下图:</p>
+<img src="/Git是怎么工作的/3.png">
+
+<p>所以我们的分支也好，tag也好，其实都是一个引用，它们本质上是一个文件，里面的内容就是指向的object的校验和，而我们的回滚代码，其实就是将各个分支的引用指向了不同的commit而已，如果我们在master分支将代码reset到commit 312f01，就会发现master的引用指向了这个commit。</p>
+<h2 id="HEAD引用"><a href="#HEAD引用" class="headerlink" title="HEAD引用"></a>HEAD引用</h2><p>那Git又是如何知道我们当前是在哪个分支的呢？</p>
+<p>其实在Git里面还有个特殊的引用HEAD引用，它就在.git目录下面。我们可以打印下它的内容:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat HEAD</span><br><span class="line">ref: refs/heads/develop</span><br></pre></td></tr></table></figure>
+
+<p>可以发现它指向了我们的develop引用， 这就表示我们当前正在develop分支。</p>
+<p>Git就是靠这个HEAD引用找到我们当前位于哪个commit:</p>
+<img src="/Git是怎么工作的/4.png">
+
+<p>当然HEAD的内容也可能直接指向某个commit号，例如我们checkout到某个tag的时候:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat .git/HEAD</span><br><span class="line">312f01ad223d5eb1e959122ac2829744b59fd7f2</span><br></pre></td></tr></table></figure>
+
+<img src="/Git是怎么工作的/5.png">
+
+<p>这是因为tag是固定的，我们并不能直接修改tag指向的commit。</p>
+<h2 id="reflog"><a href="#reflog" class="headerlink" title="reflog"></a>reflog</h2><p>我们都知道可以用<code>git log</code>去查看commit的日志，其实类似的我们可以用<code>git reflog</code>去查看引用的操作日志，它会的打印如下:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">3cb383a (HEAD -&gt; develop) HEAD@&#123;0&#125;: commit: difying file_2</span><br><span class="line">312f01a (tag: v1.0) HEAD@&#123;1&#125;: checkout: moving from 312f01ad223d5eb1e959122ac2829744b59fd7f2 to develop</span><br><span class="line">312f01a (tag: v1.0) HEAD@&#123;2&#125;: checkout: moving from develop to v1.0</span><br><span class="line">312f01a (tag: v1.0) HEAD@&#123;3&#125;: reset: moving to 312f01ad223d5eb1e959122ac2829744b59fd7f2</span><br><span class="line">da64cc3 (master) HEAD@&#123;4&#125;: checkout: moving from master to develop</span><br><span class="line">da64cc3 (master) HEAD@&#123;5&#125;: commit: modifying file_1</span><br><span class="line">312f01a (tag: v1.0) HEAD@&#123;6&#125;: commit (initial): first commit</span><br></pre></td></tr></table></figure>
+
+<p>这个东西有什么用呢？举个例子，假设我现在在develop修改了file_2提交了一个commit，没有推到服务器上，然后就reset –hard回到了上一个commit。这个时候突然反悔了想找到之前那个commit要怎么办？</p>
+<p>对的，就是用reflog:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">312f01a (HEAD -&gt; develop, tag: v1.0) HEAD@&#123;0&#125;: reset: moving to 312f01ad223d5eb1e959122ac2829744b59fd7f2</span><br><span class="line">3cb383a HEAD@&#123;1&#125;: commit: difying file_2</span><br><span class="line">312f01a (HEAD -&gt; develop, tag: v1.0) HEAD@&#123;2&#125;: checkout: moving from 312f01ad223d5eb1e959122ac2829744b59fd7f2 to develop</span><br><span class="line">312f01a (HEAD -&gt; develop, tag: v1.0) HEAD@&#123;3&#125;: checkout: moving from develop to v1.0</span><br><span class="line">312f01a (HEAD -&gt; develop, tag: v1.0) HEAD@&#123;4&#125;: reset: moving to 312f01ad223d5eb1e959122ac2829744b59fd7f2</span><br><span class="line">da64cc3 (master) HEAD@&#123;5&#125;: checkout: moving from master to develop</span><br><span class="line">da64cc3 (master) HEAD@&#123;6&#125;: commit: modifying file_1</span><br><span class="line">312f01a (HEAD -&gt; develop, tag: v1.0) HEAD@&#123;7&#125;: commit (initial): first commit</span><br></pre></td></tr></table></figure>
+
+<p>从下往上,可以看到HEAD引用的操作历史:</p>
+<p>提交了第一个commit(312f01a) </p>
+<p>—&gt; 提交了第二个commit(da64cc3) </p>
+<p>—&gt; 从master切换到了develop分支，当前所处的commit号依然是da64cc3 </p>
+<p>—&gt; 移动回了commit 312f01a  </p>
+<p>—&gt; 从develop分支切换 到了v1.0这个tag，当前所处的commit号依然是312f01a</p>
+<p>—&gt; 切换回了develop分支，当前所处的commit号依然是312f01a</p>
+<p>—&gt;  修改了file_2提交了commit 3cb383a</p>
+<p>—-&gt; reset 回到了commit 312f01a</p>
+<p>所以我们就能找到丢失了的commit 3cb383a，此时只需要用reset –hard 3cb383a就能回到那个commit了。</p>
+<h1 id="远程分支"><a href="#远程分支" class="headerlink" title="远程分支"></a>远程分支</h1><p>远程引用是对远程仓库的引用。我们从服务器拉取代码的时候就会将服务器的分支引用拉到本地，它们的文件在.git/refs/remotes/目录下的远程仓库对应的子目录里。例如我们在<code>git clone</code>的时候，Git会默认帮我们将远程仓库命名为origin，所以它的分支引用文件就在.git/refs/remotes/origin/目录下面。</p>
+<p>这些远程分支以&lt;remote&gt;/&lt;branch&gt;的形式命名，例如origin仓库的master分支的名字就叫origin/master，所以我们可以用checkout命令直接切到远程分支:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git checkout origin/master</span><br></pre></td></tr></table></figure>
+
+<p>当有其他人往服务器推代码之后，我们需要用<code>git fetch</code>命令来抓取远程仓库有，而本地没有的数据:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git fetch origin</span><br></pre></td></tr></table></figure>
+
+<p>抓取完之后远程分支就更新了:</p>
+<img src="/Git是怎么工作的/remote-branches-3.png">
+
+<p>这个时候就可以用<code>git merge</code>命令将远程分支的代码合并到本地:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git merge origin/master</span><br></pre></td></tr></table></figure>
+
+<p>而我们工作中常用的<code>git pull</code> 在大多数情况下它的含义是一个 <code>git fetch</code> 紧接着一个 <code>git merge</code> 命令</p>
+<p>顺便一讲，之前我们讲到commit是有parent概念的，而第一个commit由于之前已经没有提交了，所以它没有parent，普通的commit会有一个parent。</p>
+<p>而<code>git merge</code>命令由于需要合并两个分支的修改，所以它会生成一个新的commit，它有两个parent:</p>
+<img src="/Git是怎么工作的/6.png">
+
+<p>例如我们上面的C6这commit就有两个parent C4和从C5</p>
+<h1 id="pack机制"><a href="#pack机制" class="headerlink" title="pack机制"></a>pack机制</h1><p>从上面我们可以看到Git向磁盘中存储对象使用松散对象格式，一个文件、目录、commit等对应一个文件，这样的操作可能会比较简单，但是其实是比较浪费磁盘空间的。而且在需要推送到远程仓库的时候需要一个个文件上传效率也比较低。所以Git会时不时将这些文件打包在一起以节省空间提高网络传输效率。</p>
+<p>我们可以收到调用<code>git gc</code>命令让Git进行打包并清理一些不需要的对象。打包完成之后.git/objects里面的文件就会变小，并且在.git/objects/pack下面多出打包文件:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tree .git/objects/pack</span><br><span class="line">.git/objects/pack</span><br><span class="line">├── pack-20f597c6ab0c05f5c907023edf4e282be00ad6fe.idx</span><br><span class="line">└── pack-20f597c6ab0c05f5c907023edf4e282be00ad6fe.pack</span><br></pre></td></tr></table></figure>
+
+<p>.idx文件是索引文件，而.pack就是将object对象打包成的二进制包，我们可以用<code>git verify-pack -v</code>命令查看包里的信息:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">git verify-pack -v .git/objects/pack/pack-20f597c6ab0c05f5c907023edf4e282be00ad6fe.idx</span><br><span class="line">1dcac3d26ede1fe64eddd3511a74d99a96ef97e2 commit 202 144 12</span><br><span class="line">3fbc341a1b669518f3ef7aa038d71f2f7d68a5f0 commit 207 150 156</span><br><span class="line">34ffe485561f71337d0b64fca8dc9c8d57d86027 commit 78 88 306 1 3fbc341a1b669518f3ef7aa038d71f2f7d68a5f0</span><br><span class="line">58d65a51d2e0288b577c73a660f467bd548033f8 commit 231 166 394</span><br><span class="line">ace7ce09e72571eb0474221f8e52b1767cebb0db commit 269 190 560</span><br><span class="line">feafba560a569ff272319bb98dba0869aa2b242c commit 48 59 750 1 ace7ce09e72571eb0474221f8e52b1767cebb0db</span><br><span class="line">9aaa265d2221fd96e5d3dd420fe9d93e7b99726f commit 13 24 809 1 58d65a51d2e0288b577c73a660f467bd548033f8</span><br><span class="line">2cb88bd69545620211e77a7865b9e9990d9a0c20 commit 212 150 833</span><br><span class="line">9750080a17990f284f5045e4eef885605f2eb6d8 commit 80 91 983 1 2cb88bd69545620211e77a7865b9e9990d9a0c20</span><br><span class="line">69f9a2ec2f55ceed476a68190d32f543d89c2f78 commit 70 82 1074 1 3fbc341a1b669518f3ef7aa038d71f2f7d68a5f0</span><br><span class="line">da5e1a12ab4c5fdca2a808e4b85c1c54dc780642 commit 81 91 1156 1 3fbc341a1b669518f3ef7aa038d71f2f7d68a5f0</span><br><span class="line">c756597a8071fbf0b26fda95f0cd99edb68f7759 commit 79 90 1247 1 2cb88bd69545620211e77a7865b9e9990d9a0c20</span><br><span class="line">3cb383a390cbd7cbf4872412b828987e0cdc1b13 commit 213 153 1337</span><br><span class="line">da64cc3756675914aab6df4c01b81539ae6ef39f commit 64 76 1490 1 58d65a51d2e0288b577c73a660f467bd548033f8</span><br><span class="line">312f01ad223d5eb1e959122ac2829744b59fd7f2 commit 163 119 1566</span><br><span class="line">e4e3854198486f045f95c16d886a7ecec076799d tree   64 67 1685</span><br><span class="line">758902e9f92ad80673cb0f1da4b8d34fbfe47544 tree   34 45 1752</span><br><span class="line">593e3181013a603a1f273034ad4d2b30ebed201a tree   34 45 1797</span><br><span class="line">70d733623d440ad95d53272528ae900295855665 tree   34 45 1842</span><br><span class="line">cfb98c1ce98de4290f310e81cf0b9128749df334 tree   130 129 1887</span><br><span class="line">08df14d61d050a7235a5bab256e63432d422ab61 tree   64 67 2016</span><br><span class="line">67ed7f289e73c67217c5bcdbe18f8f55c2d3699f tree   34 45 2083</span><br><span class="line">8205fc9052e9544796e762459e48909f661145dc tree   64 67 2128</span><br><span class="line">4c1ae63f5abfcb9107241f03a86df80aafbc6780 tree   34 45 2195</span><br><span class="line">a8c1a9640eb8e53987cd5684535769a9f86622cf tree   64 67 2240</span><br><span class="line">b7391b72f9c25ce53cf9a3679f9157d19897fd5c tree   34 45 2307</span><br><span class="line">022d4f657214d39e3d540d214aa7affdd44cf489 tree   96 100 2352</span><br><span class="line">69f3e7095dc70df5693bb6c213bdc77d3665be3d tree   96 100 2452</span><br><span class="line">8a776b73f34c3b546a66fe6173dfa0a53a142b9b tree   34 45 2552</span><br><span class="line">26f76fe87ba045f5a6b40d93598ca96e5a1fab39 tree   64 67 2597</span><br><span class="line">c50a174948973a2dbe8a43fd9282d24a7a6074c4 blob   15 24 2664</span><br><span class="line">9d791ce077105e227ffae01975a81e980a06a9a2 blob   24 34 2688</span><br><span class="line">6d1f7671b90551cb98157a48a7b26b1183dfb821 tree   27 40 2722 1 cfb98c1ce98de4290f310e81cf0b9128749df334</span><br><span class="line">1ea40765c24dc3a9109c06d2e2c1408ea40568be blob   25 35 2762</span><br><span class="line">e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 blob   0 9 2797</span><br><span class="line">d00491fd7e5bb6fa28c517a0bb32b8b506539d4d blob   2 11 2806</span><br><span class="line">41ba6a00583e910f220ecd34021d4d29de0feeda blob   3 12 2817</span><br><span class="line">896691a3909edace46e4b587e1f1496af22f36d7 tree   4 15 2829 1 022d4f657214d39e3d540d214aa7affdd44cf489</span><br><span class="line">ce7499ae1967bd055f42c5458a60be5131f85da2 blob   21 31 2844</span><br><span class="line">258be8efcad31cc0c6c8dc6bc7d15a2c6910cd1a blob   22 32 2875</span><br><span class="line">840bbdd49116cbffa896bb7f5ab011f2ddf8d446 blob   19 29 2907</span><br><span class="line">b8947b77094228836f18792dc5fac15dfa9de11e blob   15 24 2936</span><br><span class="line">8cbab3b672a04bc8bf5fa63af6e06b0d92bd4126 tree   4 15 2960 1 69f3e7095dc70df5693bb6c213bdc77d3665be3d</span><br><span class="line">非 delta：32 个对象</span><br><span class="line">链长 = 1: 11 对象</span><br><span class="line">.git/objects/pack/pack-20f597c6ab0c05f5c907023edf4e282be00ad6fe.pack: ok</span><br></pre></td></tr></table></figure>
+
+<p>同样的.git/refs/下面的引用文件也会被打包，这里可以看到该目录已经清空了:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tree .git<span class="regexp">/refs/</span>heads</span><br><span class="line">.git<span class="regexp">/refs/</span>heads</span><br><span class="line"></span><br><span class="line"><span class="number">0</span> directories, <span class="number">0</span> files</span><br></pre></td></tr></table></figure>
+
+<p>它们会被打包到.git/packed-refs文件中,可以直接用<code>cat</code>命令查看:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cat .git/packed-refs</span><br><span class="line"><span class="meta">#</span><span class="bash"> pack-refs with: peeled fully-peeled sorted</span></span><br><span class="line">3cb383a390cbd7cbf4872412b828987e0cdc1b13 refs/heads/develop</span><br><span class="line">3cb383a390cbd7cbf4872412b828987e0cdc1b13 refs/heads/master</span><br><span class="line">312f01ad223d5eb1e959122ac2829744b59fd7f2 refs/tags/v1.0</span><br></pre></td></tr></table></figure>
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2020/07/22/深挖view绘制流程-二/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>
