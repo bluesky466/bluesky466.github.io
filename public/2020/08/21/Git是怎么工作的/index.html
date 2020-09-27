@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/5.png">
 <meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/remote-branches-3.png">
 <meta property="og:image" content="http://139.199.4.241/Git是怎么工作的/6.png">
-<meta property="og:updated_time" content="2020-08-21T12:56:41.236Z">
+<meta property="og:updated_time" content="2020-08-22T03:43:57.122Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Git是怎么工作的">
 <meta name="twitter:description" content="相信大部分的程序员都会使用Git，可能使用IDE集成的可视化界面，也可能是直接用的命令行。但是可能很多人对Git的一些原理性的概念并没有什么了解，这篇博客就从Git的原理出发，讲解Git的一些命令操作的底层意义，可能会让大家使用Git的时候更加得心应手。 PS: 这篇博客是对部门技术分享的整理，绝大多数知识点可以在Pro Git这本书里面找到，也有部分篇幅摘抄自这本书，我也强推大家去通读一遍这本书">
@@ -215,7 +215,7 @@
 
 <p>也就是说Git实际是实现了一个小型的文件系统，把需要托管的文件的所有版本都备份到了这个系统里面，然后在需要的时候找到对应的版本拿出来使用。</p>
 <p>大家都知道Git是Linus开发的，写操作系统内核的人思路的确就是和其他人的不一样，直接搞了个文件系统，而且还继承了Linux一切皆文件的思想。</p>
-<h1 id="object-对象"><a href="#object-对象" class="headerlink" title="object(对象)"></a>object(对象)</h1><p>这个文件系统其实就在.git/objects目录里面，git把所有的提交文件、tag、提交历史等都保存成一个object保存到这个目录里面。</p>
+<h1 id="object-对象"><a href="#object-对象" class="headerlink" title="object(对象)"></a>object(对象)</h1><p>这个文件系统其实就在.git/objects目录里面，git把所有的提交文件、提交历史等都保存成一个object保存到这个目录里面。</p>
 <p>当clone了一个空的项目的时候.git/objects目录里面会有几个子目录，但是并没有实际的文件:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tree .git/objects</span><br><span class="line">.git/objects</span><br><span class="line">├── info</span><br><span class="line">└── pack</span><br></pre></td></tr></table></figure>
 
@@ -354,7 +354,7 @@
     <a class="show pull-left" href="/2020/07/22/深挖view绘制流程-二/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2020/09/27/JNI编译错误-符号未定义/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>
