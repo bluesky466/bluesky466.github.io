@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>python与c/c++相互调用 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,C/C++,python,">
+  
+
+  <meta name="description" content="最近的项目使用python语言，其中一个功能需要对接c++的sdk。于是学习了下python与c/c++的相互调用方法，这里做下笔记，方便以后查找。 python里面调用c/c++代码基本上有三种方式: ctypes库、cffi库和c/c++拓展模块。这篇笔记主要讲的是拓展模块，不过ctypes和cffi也会稍微介绍一下: ctypes使用ctypes模块十分简单，这里直接上demo。我们的c代码">
+<meta name="keywords" content="技术相关,C&#x2F;C++,python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="python与c&#x2F;c++相互调用">
+<meta property="og:url" content="http://139.199.4.241/2020/10/30/python与c-c-相互调用/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="最近的项目使用python语言，其中一个功能需要对接c++的sdk。于是学习了下python与c/c++的相互调用方法，这里做下笔记，方便以后查找。 python里面调用c/c++代码基本上有三种方式: ctypes库、cffi库和c/c++拓展模块。这篇笔记主要讲的是拓展模块，不过ctypes和cffi也会稍微介绍一下: ctypes使用ctypes模块十分简单，这里直接上demo。我们的c代码">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-10-30T15:54:06.538Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="python与c&#x2F;c++相互调用">
+<meta name="twitter:description" content="最近的项目使用python语言，其中一个功能需要对接c++的sdk。于是学习了下python与c/c++的相互调用方法，这里做下笔记，方便以后查找。 python里面调用c/c++代码基本上有三种方式: ctypes库、cffi库和c/c++拓展模块。这篇笔记主要讲的是拓展模块，不过ctypes和cffi也会稍微介绍一下: ctypes使用ctypes模块十分简单，这里直接上demo。我们的c代码">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#ctypes"><span class="toc-text">ctypes</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#cffi"><span class="toc-text">cffi</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#c-c-拓展模块"><span class="toc-text">c/c++拓展模块</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#METH-NOARGS"><span class="toc-text">METH_NOARGS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#METH-VARARGS"><span class="toc-text">METH_VARARGS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#METH-KEYWORDS"><span class="toc-text">METH_KEYWORDS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#c-c-回调python"><span class="toc-text">c/c++回调python</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#完整demo"><span class="toc-text">完整demo</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-python与c-c-相互调用" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">python与c/c++相互调用</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2020.10.30</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近的项目使用python语言，其中一个功能需要对接c++的sdk。于是学习了下python与c/c++的相互调用方法，这里做下笔记，方便以后查找。</p>
+<p>python里面调用c/c++代码基本上有三种方式: ctypes库、cffi库和c/c++拓展模块。这篇笔记主要讲的是拓展模块，不过ctypes和cffi也会稍微介绍一下:</p>
+<h1 id="ctypes"><a href="#ctypes" class="headerlink" title="ctypes"></a>ctypes</h1><p>使用ctypes模块十分简单，这里直接上demo。我们的c代码如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// demo.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a + b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用下面命令编译demo.so</p>
+<blockquote>
+<p>gcc demo.c -shared -fPIC -o demo.so</p>
+</blockquote>
+<p>然后python里面只需要用ctypes.cdll.LoadLibrary方法加载so库，就可以通过方法名去调用c的函数了:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> ctypes</span><br><span class="line">lib = ctypes.cdll.LoadLibrary(<span class="string">"./demo.so"</span>)</span><br><span class="line">print(lib.add(<span class="number">1</span>, <span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+
+<p>基本上不需要过多的介绍，不过有个坑是如果写的是c++，那么需要用extern “C”包裹下给python调用的函数:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Utils</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> a + b;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> <span class="string">"C"</span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> a, <span class="keyword">int</span> b)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Utils::add(a, b);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这么做的原因在于c++编译之后会修改函数的名字，add函数在编译之后变成了__ZN5Utils3addEii，而且不同编译器的修改规则还不一样，所以在python里面用add找不到对应的函数。</p>
+<p>加上extern “C”包裹之后能让编译器按照c的方式去编译这个函数，不对函数名做额外的修改，这样python里面才能通过函数名去调用它。</p>
+<h1 id="cffi"><a href="#cffi" class="headerlink" title="cffi"></a>cffi</h1><p>cffi和ctypes类似，但是稍微复杂一些。</p>
+<p>cffi的功能其实是在python里面写c代码，我们可以通过python里面写的c代码去调用第三库的c代码。</p>
+<p>这么说可能有点抽象，我举个例子大家可能就好理解了:</p>
+<p>我们在c里面实现了一个foo方法，它的作用是打印传入的字符串，并且返回字符串的长度:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">foo</span><span class="params">(<span class="keyword">char</span>* str)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, str);</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">strlen</span>(str);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们将上面的c代码编译成ffidemo.so，然后用下面的python代码去调用这个foo方法:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> cffi <span class="keyword">import</span> FFI</span><br><span class="line"></span><br><span class="line">ffi = FFI()</span><br><span class="line">lib = ffi.dlopen(<span class="string">"./ffidemo.so"</span>)           <span class="comment"># 导入so</span></span><br><span class="line">ffi.cdef(<span class="string">"int foo(char* str);"</span>)            <span class="comment"># 声明foo方法</span></span><br><span class="line">param = ffi.new(<span class="string">"char[]"</span>, <span class="string">b"hello world!"</span>) <span class="comment"># 创建char数组</span></span><br><span class="line">print(lib.foo(param))                      <span class="comment"># 调用之前声明的foo方法,它的实现在ffidemo.so</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="c-c-拓展模块"><a href="#c-c-拓展模块" class="headerlink" title="c/c++拓展模块"></a>c/c++拓展模块</h1><p>使用ctypes的方式虽然简便，但是在使用上能明显的感觉出来是在调用so库的代码。</p>
+<p>更不用说使用cffi会在python代码里面嵌入c的语句，总有种莫名的不协调感。</p>
+<p>而且c/c++编码规范里一般方法名会用驼峰，但是python编码规范里建议方法名用下划线分割单词，上面的两种方法都会造成python里面调用so和python脚本的方法有两种命名规范，逼死强迫症。</p>
+<p>有没有一种方法可能让python无感调用c/c++代码，就像调用普通的python代码一样呢？</p>
+<p>答案就是使用c/c++为Python编写扩展模块。虽然有<a href="https://docs.python.org/zh-cn/3/extending/extending.html" target="_blank" rel="noopener">官方文档</a>可以参考，但这个文档其实讲的不是很全，当初也遇到了不少问题，这里也整理下。</p>
+<p>我们希望Python里面像这样去调用c/c++:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> demo</span><br><span class="line">demo.foo()</span><br></pre></td></tr></table></figure>
+
+<p>c/c++的完整代码如下:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PY_SSIZE_T_CLEAN</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;Python.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="function">PyObject* <span class="title">Foo</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"Foo"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">""</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> PyMethodDef g_moduleMethods[] = &#123;</span><br><span class="line">        &#123;<span class="string">"foo"</span>, Foo, METH_NOARGS, <span class="string">"function Foo"</span>&#125;,</span><br><span class="line">        &#123;<span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="number">0</span>, <span class="literal">NULL</span>&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> PyModuleDef g_moduleDef = &#123;</span><br><span class="line">        PyModuleDef_HEAD_INIT,</span><br><span class="line">        <span class="string">"ExtendedDemo"</span>,                <span class="comment">/* name of module */</span></span><br><span class="line">        <span class="string">"C/C++ Python extension demo"</span>, <span class="comment">/* module documentation, may be NULL */</span></span><br><span class="line">        <span class="number">-1</span>,                            <span class="comment">/* size of per-interpreter state of the module, or -1 </span></span><br><span class="line"><span class="comment">                                          if the module keeps state in global variables. */</span></span><br><span class="line">        g_moduleMethods</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">PyMODINIT_FUNC <span class="title">PyInit_demo</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> PyModule_Create(&amp;g_moduleDef);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们用下面命令将这个代码编译成demo.so (mac系统下):</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ demo.cpp -shared -fPIC -o demo.so -I /usr/local/Frameworks/Python.framework/Versions/3.7/include/python3.7m -L /usr/local/Frameworks/Python.framework/Versions/3.7/lib -lpython3.7m</span><br></pre></td></tr></table></figure>
+
+<p>python的import demo语句就会去动态链接这个demo.so，并且调用PyInit_demo方法。也就是说<strong>so的名字要和PyInit_XXX这个方法名对应</strong>，要不然python里面会报找不到init方法的异常。</p>
+<p>这个init方法很简单，就是创建了一个module。这个module的定义在g_moduleDef这个全局变量里面，它定义了module的name、documentation等，这里的name可以和so的名字不一样，它在python里module的__name__、__doc__里面体现:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> demo</span><br><span class="line">print(demo.__name__)  <span class="comment"># ExtendedDemo</span></span><br><span class="line">print(demo.__doc__)   <span class="comment"># C/C++ Python extension demo</span></span><br></pre></td></tr></table></figure>
+
+<p>g_moduleDef里面最重要的是最后一个成员g_moduleMethods，它定义的module里面的方法。这货是个PyMethodDef结构体数组，定义了方法名字，方法的指针，参数类型，和文档描述：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">PyMethodDef</span> &#123;</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>  *ml_name;   <span class="comment">/* The name of the built-in function/method */</span></span><br><span class="line">    PyCFunction ml_meth;    <span class="comment">/* The C function that implements it */</span></span><br><span class="line">    <span class="keyword">int</span>         ml_flags;   <span class="comment">/* Combination of METH_xxx flags, which mostly</span></span><br><span class="line"><span class="comment">                               describe the args expected by the C func */</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>  *ml_doc;    <span class="comment">/* The __doc__ attribute, or NULL */</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">PyMethodDef</span> <span class="title">PyMethodDef</span>;</span></span><br></pre></td></tr></table></figure>
+
+<p>ml_name、ml_meth和ml_doc都很好理解，ml_flags有点小坑。它可以是下面几种类型:</p>
+<ul>
+<li>METH_NOARGS 没有参数</li>
+<li>METH_VARARGS 可变参数</li>
+<li>METH_VARARGS | METH_KEYWORDS 可变参数+关键字参数</li>
+</ul>
+<h2 id="METH-NOARGS"><a href="#METH-NOARGS" class="headerlink" title="METH_NOARGS"></a>METH_NOARGS</h2><p>我们上面的demo里foo方法就是没有参数的，这里可能有同学会说怎么就没有参数了？明明它有两个参数:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">PyObject* <span class="title">Foo</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"Foo"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">""</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>是的，虽然在c/c++这里的声明它是有两个参数的，但是由于我们在g_moduleMethods里面给它的声明是METH_NOARGS，在python里面如果给它传参就会出现异常:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> demo</span><br><span class="line">demo.foo(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 出现异常</span></span><br><span class="line"><span class="comment"># Traceback (most recent call last):</span></span><br><span class="line"><span class="comment">#   File "test.py", line 2, in &lt;module&gt;</span></span><br><span class="line"><span class="comment">#     demo.foo(1)</span></span><br><span class="line"><span class="comment">#  TypeError: foo() takes no arguments (1 given)</span></span><br></pre></td></tr></table></figure>
+
+<p>所以对于METH_NOARGS类型的方法来说，c/c++里面的args参数其实是没有意义的，它总是NULL。</p>
+<p>而 <em>self</em> 参数，对模块级函数指向模块对象，对于对象实例则指向方法。</p>
+<h2 id="METH-VARARGS"><a href="#METH-VARARGS" class="headerlink" title="METH_VARARGS"></a>METH_VARARGS</h2><p>当我们将一个方法声明成METH_VARARGS，这个函数的args就会变成一个元组，我们可以通过PyArg_Parse方法解析出里面的值，例如下面的add方法:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">PyObject* <span class="title">Add</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a,b;</span><br><span class="line">    PyArg_Parse(args, <span class="string">"(ii)"</span>, &amp;a, &amp;b);</span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">"i"</span>, a+b);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> PyMethodDef g_moduleMethods[] = &#123;</span><br><span class="line">        ...</span><br><span class="line">        &#123;<span class="string">"add"</span>, Add, METH_VARARGS, <span class="string">"function Add"</span>&#125;,</span><br><span class="line">        ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个方法接收两个int的参数，然后返回a+b的值:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> demo</span><br><span class="line">print(demo.add(<span class="number">1</span>,<span class="number">2</span>)) <span class="comment"># 3</span></span><br></pre></td></tr></table></figure>
+
+<p>我们看到PyArg_Parse和Py_BuildValue都有个字符串去配置数据类型，它们很相似，只不过一个是解析PyObejct*一个是生成PyObejct*，这里用Py_BuildValue举例(左侧是调用，右侧是Python值结果):</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Py_BuildValue(<span class="string">""</span>)                        None</span><br><span class="line">Py_BuildValue(<span class="string">"i"</span>, <span class="number">123</span>)                  <span class="number">123</span></span><br><span class="line">Py_BuildValue(<span class="string">"iii"</span>, <span class="number">123</span>, <span class="number">456</span>, <span class="number">789</span>)      (<span class="number">123</span>, <span class="number">456</span>, <span class="number">789</span>)</span><br><span class="line">Py_BuildValue("s", "hello")              'hello'</span><br><span class="line">Py_BuildValue(<span class="string">"y"</span>, <span class="string">"hello"</span>)              b<span class="number">'</span>hello<span class="number">'</span></span><br><span class="line">Py_BuildValue("ss", "hello", "world")    ('hello', 'world')</span><br><span class="line">Py_BuildValue("s#", "hello", 4)          'hell'</span><br><span class="line">Py_BuildValue(<span class="string">"y#"</span>, <span class="string">"hello"</span>, <span class="number">4</span>)          b<span class="number">'</span>hell<span class="number">'</span></span><br><span class="line">Py_BuildValue(<span class="string">"()"</span>)                      ()</span><br><span class="line">Py_BuildValue(<span class="string">"(i)"</span>, <span class="number">123</span>)                (<span class="number">123</span>,)</span><br><span class="line">Py_BuildValue(<span class="string">"(ii)"</span>, <span class="number">123</span>, <span class="number">456</span>)          (<span class="number">123</span>, <span class="number">456</span>)</span><br><span class="line">Py_BuildValue(<span class="string">"(i,i)"</span>, <span class="number">123</span>, <span class="number">456</span>)         (<span class="number">123</span>, <span class="number">456</span>)</span><br><span class="line">Py_BuildValue(<span class="string">"[i,i]"</span>, <span class="number">123</span>, <span class="number">456</span>)         [<span class="number">123</span>, <span class="number">456</span>]</span><br><span class="line">Py_BuildValue(<span class="string">"&#123;s:i,s:i&#125;"</span>,</span><br><span class="line">              "abc", 123, "def", 456)    &#123;'abc': 123, 'def': 456&#125;</span><br><span class="line">Py_BuildValue(<span class="string">"((ii)(ii)) (ii)"</span>,</span><br><span class="line">              <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>)          (((<span class="number">1</span>, <span class="number">2</span>), (<span class="number">3</span>, <span class="number">4</span>)), (<span class="number">5</span>, <span class="number">6</span>))</span><br></pre></td></tr></table></figure>
+
+<p>不过需要注意的是，<strong>虽然Py_BuildValue不用加括号也能自动解析成元组，但是如果要用PyArg_Parse解析元组的话必须加上括号</strong>,当然你也可以直接用PyArg_ParseTuple去元组，这样的话就不需要带括号。</p>
+<h2 id="METH-KEYWORDS"><a href="#METH-KEYWORDS" class="headerlink" title="METH_KEYWORDS"></a>METH_KEYWORDS</h2><p>关于METH_KEYWORDS，文档里面有这样一句话(好像漏了METH_NOARGS，我测试验证这个也是可以用的):</p>
+<blockquote>
+<p>这个标志指定会使用C的调用惯例。可选值有 <code>METH_VARARGS</code> 、 <code>METH_VARARGS | METH_KEYWORDS</code> </p>
+</blockquote>
+<p>也就是说METH_KEYWORDS是不能单独使用的，必须要和METH_VARARGS一起。我一开始没有注意，单独使用之后一直报错。</p>
+<p>这样配置的方法参数类似python里面的func(<em>args, *</em>kwargs)，而c/c++里面的函数声明和METH_NOARGS、METH_VARARGS不一样，有三个参数。可以看下下面的demo:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">PyObject* <span class="title">Subtract</span><span class="params">(PyObject* self, PyObject* args, PyObject* keywds)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a,b;</span><br><span class="line">    <span class="keyword">char</span> *kwlist[] = &#123;<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line">    PyArg_ParseTupleAndKeywords(args, keywds, <span class="string">"ii"</span>, kwlist, &amp;a, &amp;b);</span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">"i"</span>, a-b);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">static</span> PyMethodDef g_moduleMethods[] = &#123;</span><br><span class="line">        ...</span><br><span class="line">        &#123;<span class="string">"subtract"</span>, (PyCFunction)(<span class="keyword">void</span>(*)(<span class="keyword">void</span>))Subtract, METH_VARARGS|METH_KEYWORDS, <span class="string">"function Subtract"</span>&#125;,</span><br><span class="line">        ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>python里面就能用可变参数和关键字参数的方式传参:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> demo</span><br><span class="line">print(demo.subtract(<span class="number">1</span>, <span class="number">2</span>))     <span class="comment"># -1</span></span><br><span class="line">print(demo.subtract(<span class="number">1</span>, b=<span class="number">2</span>))   <span class="comment"># -1</span></span><br><span class="line">print(demo.subtract(b=<span class="number">1</span>, a=<span class="number">2</span>)) <span class="comment"># 1</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="c-c-回调python"><a href="#c-c-回调python" class="headerlink" title="c/c++回调python"></a>c/c++回调python</h2><p>通过上面的讲解我们可以轻松实现python对c/c++函数的调用。但是我们的项目还出现了python往c/c++里面设置回调函数的需求，我们接下来就来看看这个需求要怎么实现。</p>
+<p>下面是c++部分的代码，它注册了个方法，参数是一个PyObject*，实际上它是个回调函数，我把可以用PyEval_CallObject去调用它计算两个字符串的字符总数，得到一个PyObject*的返回值。我们可以用PyLong_AsLong将它解析成c的long类型:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">PyObject* <span class="title">SetCountCallback</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    PyObject* callback;</span><br><span class="line">    PyArg_Parse(args, <span class="string">"(O)"</span>, &amp;callback);</span><br><span class="line"></span><br><span class="line">    PyGILState_STATE state = PyGILState_Ensure();</span><br><span class="line">    PyObject* callbackArgs = Py_BuildValue(<span class="string">"(ss)"</span>, <span class="string">"hello "</span>, <span class="string">"world"</span>);</span><br><span class="line">    PyObject* result = PyEval_CallObject(callback, callbackArgs);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"count result : "</span>&lt;&lt;PyLong_AsLong(result)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    Py_DECREF(callbackArgs);</span><br><span class="line">    PyGILState_Release(state);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">""</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> PyMethodDef g_moduleMethods[] = &#123;</span><br><span class="line">        ...</span><br><span class="line">        &#123;<span class="string">"setCountCallback"</span>, SetCountCallback, METH_VARARGS, <span class="string">"function SetCountCallback"</span>&#125;,</span><br><span class="line">        ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>python的代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> demo</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">count</span><span class="params">(str1, str2)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> len(str1) + len(str2)</span><br><span class="line">demo.setCountCallback(count) <span class="comment"># c++会打印count result : 11</span></span><br></pre></td></tr></table></figure>
+
+<p>类似的我们可以用PyFloat_AsDouble从PyObject*解析出double类型的数据。但是如果是字符串类型的话解析比较麻烦需要先转换成bytes类型的数据再转成char*，可以用下面这个方法转换:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="built_in">string</span> <span class="title">GetStringFromPyObject</span><span class="params">(PyObject* pObject)</span> </span>&#123;</span><br><span class="line">    PyObject* bytes = PyUnicode_AsUTF8String(pObject);</span><br><span class="line">    <span class="built_in">string</span> str = PyBytes_AsString(bytes);</span><br><span class="line">    Py_DECREF(bytes);</span><br><span class="line">    <span class="keyword">return</span> str;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果是返回的元组的话可以用遍历的方法去读取，用PyTuple_Size读取数量然后用PyTuple_GetItem读取item，然后再用上面的转换方法转换:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">PyObject* <span class="title">SetSplicingAndCountCallback</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    PyObject* callback;</span><br><span class="line">    PyArg_Parse(args, <span class="string">"(O)"</span>, &amp;callback);</span><br><span class="line"></span><br><span class="line">    PyGILState_STATE state = PyGILState_Ensure();</span><br><span class="line">    PyObject* callbackArgs = Py_BuildValue(<span class="string">"(ss)"</span>, <span class="string">"hello "</span>, <span class="string">"world"</span>);</span><br><span class="line">    PyObject* result = PyEval_CallObject(callback, callbackArgs);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"result size : "</span>&lt;&lt;PyTuple_Size(result)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"item0 : "</span>&lt;&lt;GetStringFromPyObject(PyTuple_GetItem(result, <span class="number">0</span>))&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"item1 : "</span>&lt;&lt;PyLong_AsLong(PyTuple_GetItem(result, <span class="number">1</span>))&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    Py_DECREF(callbackArgs);</span><br><span class="line">    PyGILState_Release(state);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">""</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Python里面这么调用:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> demo</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">splicing_and_count</span><span class="params">(str1, str2)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> str1+str2, len(str1)+len(str2)</span><br><span class="line">    </span><br><span class="line">demo.setSplicingAndCountCallback(splicing_and_count)</span><br></pre></td></tr></table></figure>
+
+<p>不过实际调试的时候使用PyArg_Parse也能解析出返回值元组的数据，但是这个方法的名字用在解析返回值这里总感觉怪怪的，说不好有什么坑，这块文档里面也没有讲。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span>* s;</span><br><span class="line"><span class="keyword">int</span> i;</span><br><span class="line">PyArg_Parse(result, <span class="string">"(si)"</span>, &amp;s, &amp;i);</span><br></pre></td></tr></table></figure>
+
+<h1 id="完整demo"><a href="#完整demo" class="headerlink" title="完整demo"></a>完整demo</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PY_SSIZE_T_CLEAN</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;Python.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="function">PyObject* <span class="title">Foo</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;self&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;args&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"Foo"</span>&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">""</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">PyObject* <span class="title">Add</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a,b;</span><br><span class="line">    PyArg_Parse(args, <span class="string">"(ii)"</span>, &amp;a, &amp;b);</span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">"i"</span>, a+b);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">PyObject* <span class="title">Subtract</span><span class="params">(PyObject* self, PyObject* args, PyObject* keywds)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a,b;</span><br><span class="line">    <span class="keyword">char</span> *kwlist[] = &#123;<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line">    PyArg_ParseTupleAndKeywords(args, keywds, <span class="string">"ii"</span>, kwlist, &amp;a, &amp;b);</span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">"i"</span>, a-b);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">PyObject* <span class="title">SetCountCallback</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    PyObject* callback;</span><br><span class="line">    PyArg_Parse(args, <span class="string">"(O)"</span>, &amp;callback);</span><br><span class="line"></span><br><span class="line">    PyGILState_STATE state = PyGILState_Ensure();</span><br><span class="line">    PyObject* callbackArgs = Py_BuildValue(<span class="string">"(ss)"</span>, <span class="string">"hello "</span>, <span class="string">"world"</span>);</span><br><span class="line">    PyObject* result = PyEval_CallObject(callback, callbackArgs);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"count result : "</span>&lt;&lt;PyLong_AsLong(result)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    Py_DECREF(callbackArgs);</span><br><span class="line">    PyGILState_Release(state);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">""</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="built_in">string</span> <span class="title">GetStringFromPyObject</span><span class="params">(PyObject* pObject)</span> </span>&#123;</span><br><span class="line">    PyObject* bytes = PyUnicode_AsUTF8String(pObject);</span><br><span class="line">    <span class="built_in">string</span> str = PyBytes_AsString(bytes);</span><br><span class="line">    Py_DECREF(bytes);</span><br><span class="line">    <span class="keyword">return</span> str;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">PyObject* <span class="title">SetSplicingCallback</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    PyObject* callback;</span><br><span class="line">    PyArg_Parse(args, <span class="string">"(O)"</span>, &amp;callback);</span><br><span class="line"></span><br><span class="line">    PyGILState_STATE state = PyGILState_Ensure();</span><br><span class="line">    PyObject* callbackArgs = Py_BuildValue(<span class="string">"(ss)"</span>, <span class="string">"hello "</span>, <span class="string">"world"</span>);</span><br><span class="line">    PyObject* result = PyEval_CallObject(callback, callbackArgs);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"splicing result : "</span>&lt;&lt;GetStringFromPyObject(result)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    Py_DECREF(callbackArgs);</span><br><span class="line">    PyGILState_Release(state);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">""</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">PyObject* <span class="title">SetSplicingAndCountCallback</span><span class="params">(PyObject* self, PyObject* args)</span> </span>&#123;</span><br><span class="line">    PyObject* callback;</span><br><span class="line">    PyArg_Parse(args, <span class="string">"(O)"</span>, &amp;callback);</span><br><span class="line"></span><br><span class="line">    PyGILState_STATE state = PyGILState_Ensure();</span><br><span class="line">    PyObject* callbackArgs = Py_BuildValue(<span class="string">"(ss)"</span>, <span class="string">"hello "</span>, <span class="string">"world"</span>);</span><br><span class="line">    PyObject* result = PyEval_CallObject(callback, callbackArgs);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"result size : "</span>&lt;&lt;PyTuple_Size(result)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"item0 : "</span>&lt;&lt;GetStringFromPyObject(PyTuple_GetItem(result, <span class="number">0</span>))&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"item1 : "</span>&lt;&lt;PyLong_AsLong(PyTuple_GetItem(result, <span class="number">1</span>))&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span>* s;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    PyArg_Parse(result, <span class="string">"(si)"</span>, &amp;s, &amp;i);</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"s="</span>&lt;&lt;s&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt;<span class="string">"i="</span>&lt;&lt;i&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    Py_DECREF(callbackArgs);</span><br><span class="line">    PyGILState_Release(state);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Py_BuildValue(<span class="string">""</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> PyMethodDef g_moduleMethods[] = &#123;</span><br><span class="line">        &#123;<span class="string">"foo"</span>, Foo, METH_NOARGS, <span class="string">"function Foo"</span>&#125;,</span><br><span class="line">        &#123;<span class="string">"add"</span>, Add, METH_VARARGS, <span class="string">"function Add"</span>&#125;,</span><br><span class="line">        &#123;<span class="string">"subtract"</span>, (PyCFunction)(<span class="keyword">void</span>(*)(<span class="keyword">void</span>))Subtract, METH_VARARGS|METH_KEYWORDS, <span class="string">"function Subtract"</span>&#125;,</span><br><span class="line">        &#123;<span class="string">"setCountCallback"</span>, SetCountCallback, METH_VARARGS, <span class="string">"function SetCountCallback"</span>&#125;,</span><br><span class="line">        &#123;<span class="string">"setSplicingCallback"</span>, SetSplicingCallback, METH_VARARGS, <span class="string">"function SetSplicingCallback"</span>&#125;,</span><br><span class="line">        &#123;<span class="string">"setSplicingAndCountCallback"</span>, SetSplicingAndCountCallback, METH_VARARGS, <span class="string">"function SetSplicingAndCountCallback"</span>&#125;,</span><br><span class="line">        &#123;<span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="number">0</span>, <span class="literal">NULL</span>&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> PyModuleDef g_moduleDef = &#123;</span><br><span class="line">        PyModuleDef_HEAD_INIT,</span><br><span class="line">        <span class="string">"ExtendedDemo"</span>,</span><br><span class="line">        <span class="string">"C/C++ Python extension demo"</span>,</span><br><span class="line">        <span class="number">-1</span>,</span><br><span class="line">        g_moduleMethods</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">PyMODINIT_FUNC <span class="title">PyInit_demo</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> PyModule_Create(&amp;g_moduleDef);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> demo</span><br><span class="line"></span><br><span class="line">print(demo.__name__)</span><br><span class="line">print(demo.__doc__)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">print(demo.add.__name__)</span><br><span class="line">print(demo.add.__doc__)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">splicing</span><span class="params">(str1, str2)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> str1+str2</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">count</span><span class="params">(str1, str2)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> len(str1) + len(str2)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">splicing_and_count</span><span class="params">(str1, str2)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> splicing(str1, str2), count(str1, str2)</span><br><span class="line"></span><br><span class="line">demo.foo()</span><br><span class="line">print(demo.add(<span class="number">1</span>,<span class="number">2</span>))</span><br><span class="line">print(demo.subtract(<span class="number">1</span>, <span class="number">2</span>))</span><br><span class="line">print(demo.subtract(<span class="number">1</span>, b=<span class="number">2</span>))</span><br><span class="line">print(demo.subtract(b=<span class="number">1</span>, a=<span class="number">2</span>))</span><br><span class="line"></span><br><span class="line">demo.setCountCallback(count)</span><br><span class="line">demo.setSplicingCallback(splicing)</span><br><span class="line">demo.setSplicingAndCountCallback(splicing_and_count)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">foo</span><span class="params">(a,b)</span>:</span></span><br><span class="line">    <span class="keyword">return</span> a-b</span><br></pre></td></tr></table></figure>
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2020/09/27/JNI编译错误-符号未定义/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>
