@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>JNI运行错误-符号未定义 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,C/C++,">
+  
+
+  <meta name="description" content="最近在弄ndk的时候遇到了个比较坑的问题，虽然最后发现原因挺低级的，但是的确花了我不少时间去查找，中间的分析手法可能不熟悉c/c++的同学会比较陌生，如果遇到的同样问题的话会无从下手。这里把整个分析的流程记录下来，希望有用。 背景项目分两个部分，自己编写的c库工程，和安卓工程，将它们分离的原因是这个c库的功能可能在其他的地方也能使用到。 由于项目只是初始阶段，为了验证流程，我先搭了个简单的demo">
+<meta name="keywords" content="技术相关,Android,C&#x2F;C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JNI运行错误-符号未定义">
+<meta property="og:url" content="http://139.199.4.241/2020/11/24/JNI运行错误-符号未定义/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="最近在弄ndk的时候遇到了个比较坑的问题，虽然最后发现原因挺低级的，但是的确花了我不少时间去查找，中间的分析手法可能不熟悉c/c++的同学会比较陌生，如果遇到的同样问题的话会无从下手。这里把整个分析的流程记录下来，希望有用。 背景项目分两个部分，自己编写的c库工程，和安卓工程，将它们分离的原因是这个c库的功能可能在其他的地方也能使用到。 由于项目只是初始阶段，为了验证流程，我先搭了个简单的demo">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-11-24T12:24:20.949Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JNI运行错误-符号未定义">
+<meta name="twitter:description" content="最近在弄ndk的时候遇到了个比较坑的问题，虽然最后发现原因挺低级的，但是的确花了我不少时间去查找，中间的分析手法可能不熟悉c/c++的同学会比较陌生，如果遇到的同样问题的话会无从下手。这里把整个分析的流程记录下来，希望有用。 背景项目分两个部分，自己编写的c库工程，和安卓工程，将它们分离的原因是这个c库的功能可能在其他的地方也能使用到。 由于项目只是初始阶段，为了验证流程，我先搭了个简单的demo">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#问题还原"><span class="toc-text">问题还原</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#问题分析"><span class="toc-text">问题分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#疑点一-so仍未导入apk"><span class="toc-text">疑点一: so仍未导入apk</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#疑点二-so里面没有这个符号"><span class="toc-text">疑点二: so里面没有这个符号</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#疑点三-诡异的so依赖"><span class="toc-text">疑点三: 诡异的so依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#疑点四-诡异的SONAME"><span class="toc-text">疑点四: 诡异的SONAME</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#so的几个名字"><span class="toc-text">so的几个名字</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#realname"><span class="toc-text">realname</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#linkname"><span class="toc-text">linkname</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#soname"><span class="toc-text">soname</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#问题原因"><span class="toc-text">问题原因</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-JNI运行错误-符号未定义" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">JNI运行错误-符号未定义</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2020.11.24</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近在弄ndk的时候遇到了个比较坑的问题，虽然最后发现原因挺低级的，但是的确花了我不少时间去查找，中间的分析手法可能不熟悉c/c++的同学会比较陌生，如果遇到的同样问题的话会无从下手。这里把整个分析的流程记录下来，希望有用。</p>
+<p>背景项目分两个部分，自己编写的c库工程，和安卓工程，将它们分离的原因是这个c库的功能可能在其他的地方也能使用到。</p>
+<p>由于项目只是初始阶段，为了验证流程，我先搭了个简单的demo框架，用c库工程编译出so之后导入到安卓工程。虽然整个代码比较简单，但是运行的时候直接就崩溃了，报找不到符号的异常。</p>
+<h1 id="问题还原"><a href="#问题还原" class="headerlink" title="问题还原"></a>问题还原</h1><p>这里用个简单的demo还原下问题，JNI部分调用c库里面的getString函数返回字符串:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">const</span> <span class="keyword">char</span> *<span class="title">getString</span><span class="params">()</span></span>; <span class="comment">// 这个函数的定义在c库工程编译出来的so库里面</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> <span class="string">"C"</span> JNIEXPORT jstring JNICALL</span><br><span class="line">Java_com_cvte_tv_ndkdemo_MainActivity_stringFromJNI(</span><br><span class="line">        JNIEnv *env,</span><br><span class="line">        jobject <span class="comment">/* this */</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> env-&gt;NewStringUTF(getString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>c库的代码也很简单，就返回字符串，我们会将它编译成libdemo.so:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">const</span> <span class="keyword">char</span>* <span class="title">getString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"Hello world!\n"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>cmake配置也很简单，我们的jni编译了一个libnative-lib.so依赖libdemo.so，java层通过这个libnative-lib.so去调用到libdemo.so里面的getString:</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">cmake_minimum_required</span>(VERSION <span class="number">3.4</span>.<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">add_library</span>(native-lib SHARED native-lib.cpp)</span><br><span class="line"></span><br><span class="line"><span class="keyword">add_library</span>(demo SHARED IMPORTED)</span><br><span class="line"></span><br><span class="line"><span class="keyword">set_target_properties</span>(demo PROPERTIES IMPORTED_LOCATION <span class="variable">$&#123;CMAKE_SOURCE_DIR&#125;</span>/jniLibs/<span class="variable">$&#123;ANDROID_ABI&#125;</span>/libdemo.so)</span><br><span class="line"></span><br><span class="line"><span class="keyword">target_link_libraries</span>(native-lib  demo)</span><br></pre></td></tr></table></figure>
+
+<p>运行之后报的问题看起来也很简单:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "_Z9getStringv" referenced by "/data/app/com.cvte.tv.ndkdemo-xD9KLsO5Wmh_YGDKRKL5lA==/lib/arm64/libnative-lib.so"...</span><br></pre></td></tr></table></figure>
+
+<p>这样奔溃其实挺常见的，因为编译的时候已经通过了，证明编译的时候是可以找到这个符号的，但是运行的时候没有找到，无非是so没有导入到apk里面，解压apk发现的确如此:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">~/workspace/NDKDemo/app/build/outputs/apk/debug/app-debug/lib  tree</span><br><span class="line">.</span><br><span class="line">└── arm64-v8a</span><br><span class="line">    └── libnative-lib.so</span><br><span class="line"></span><br><span class="line">1 directory, 1 file</span><br></pre></td></tr></table></figure>
+
+<p>这种问题的原因在于jniLibs.srcDirs没有配置，我的so是放在app/src/main/cpp/jniLibs目录里面的，所以在build.gradle里面添加下面配置即可:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">android &#123;</span><br><span class="line">    ...</span><br><span class="line">    sourceSets &#123;</span><br><span class="line">        main &#123;</span><br><span class="line">            jniLibs.srcDirs = [<span class="string">'src/main/cpp/jniLibs'</span>]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>修改完之后满心欢喜的重新编译运行，立马啪啪打脸，依然找不到_Z9getStringv</p>
+<h1 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h1><h2 id="疑点一-so仍未导入apk"><a href="#疑点一-so仍未导入apk" class="headerlink" title="疑点一: so仍未导入apk"></a>疑点一: so仍未导入apk</h2><p>难道是gradle配置没有起作用?解压apk之后发现libdemo.so是有导入的:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">~/workspace/NDKDemo/app/build/outputs/apk/debug/app-debug/lib  tree .</span><br><span class="line">.</span><br><span class="line">└── arm64-v8a</span><br><span class="line">    ├── libdemo.so</span><br><span class="line">    └── libnative-lib.so</span><br><span class="line"></span><br><span class="line">1 directory, 2 files</span><br></pre></td></tr></table></figure>
+
+<h2 id="疑点二-so里面没有这个符号"><a href="#疑点二-so里面没有这个符号" class="headerlink" title="疑点二: so里面没有这个符号"></a>疑点二: so里面没有这个符号</h2><p>难道是libdemo.so里面的确没有这个符号?我们可以用nm工具去查看so里面的符号。这个nm命令可以在ndk里面找到，最好找到对应cpu架构的目录下的工具。我编译的是arm64-v8a的so，可以用aarch64-linux-android下面的nm工具:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">~/Library/Android/sdk/ndk/20.0.5594570  ./toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64/aarch64-linux-android/bin/nm  ~/workspace/NDKDemo/app/src/main/cpp/jniLibs/arm64-v8a/libdemo.so | grep getString</span><br><span class="line">0000000000000538 T _Z9getStringv</span><br></pre></td></tr></table></figure>
+
+<p>输出显示没毛病，so里面的确是有_Z9getStringv这个符号的。</p>
+<h2 id="疑点三-诡异的so依赖"><a href="#疑点三-诡异的so依赖" class="headerlink" title="疑点三: 诡异的so依赖"></a>疑点三: 诡异的so依赖</h2><p>其实之后我就在这里卡了很久，感觉哪里都对就结果不对。后面到处搜索也没有找到有人遇到类似的情况。后面是在用readelf分析发现它的依赖有些诡异:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">~/Library/Android/sdk/ndk/20.0.5594570  ./toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64/aarch64-linux-android/bin/readelf -d ~/workspace/NDKDemo/app/build/outputs/apk/debug/app-debug/lib/arm64-v8a/libnative-lib.so</span><br><span class="line"></span><br><span class="line">Dynamic section at offset 0xdd8 contains 26 entries:</span><br><span class="line">  Tag        Type                         Name/Value</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libnative-lib.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libm.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libdl.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libc.so]</span><br><span class="line"> 0x000000000000000e (SONAME)             Library soname: [libnative-lib.so]</span><br><span class="line"> ...</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到libnative-lib.so这个库它不但没有依赖libdemo.so，而且还依赖了它自己。</p>
+<p>当时我就震惊了，还能有这种操作？</p>
+<p>反复查看cmake配置的依赖配置，没有发现问题:</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">cmake_minimum_required</span>(VERSION <span class="number">3.4</span>.<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">add_library</span>(native-lib SHARED native-lib.cpp)</span><br><span class="line"></span><br><span class="line"><span class="keyword">add_library</span>(demo SHARED IMPORTED)</span><br><span class="line"></span><br><span class="line"><span class="keyword">set_target_properties</span>(demo PROPERTIES IMPORTED_LOCATION <span class="variable">$&#123;CMAKE_SOURCE_DIR&#125;</span>/jniLibs/<span class="variable">$&#123;ANDROID_ABI&#125;</span>/libdemo.so)</span><br><span class="line"></span><br><span class="line"><span class="keyword">target_link_libraries</span>(native-lib  demo)</span><br></pre></td></tr></table></figure>
+
+<h2 id="疑点四-诡异的SONAME"><a href="#疑点四-诡异的SONAME" class="headerlink" title="疑点四: 诡异的SONAME"></a>疑点四: 诡异的SONAME</h2><p>我也卡了很久一直在cmake里面找原因，以为是编译libnative-lib.so的时候出了问题。后面实在没有头绪，无意中用readelf看了下libdemo.so:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">~/Library/Android/sdk/ndk/20.0.5594570  ./toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64/aarch64-linux-android/bin/readelf -d ~/workspace/NDKDemo/app/build/outputs/apk/debug/app-debug/lib/arm64-v8a/libdemo.so</span><br><span class="line"></span><br><span class="line">Dynamic section at offset 0xdf8 contains 25 entries:</span><br><span class="line">  Tag        Type                         Name/Value</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libm.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libdl.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libc.so]</span><br><span class="line"> 0x000000000000000e (SONAME)             Library soname: [libnative-lib.so]</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>它的SONAME居然是libnative-lib.so，问题肯定就是出在这里了…</p>
+<h1 id="so的几个名字"><a href="#so的几个名字" class="headerlink" title="so的几个名字"></a>so的几个名字</h1><p>到了这一步，我们已经找到了问题的原因所在。但是要去解决它的话，我们还需要了解一些基础知识，这里也顺便普及下。so库的名字其实分三种realname、linkname和soname。</p>
+<h2 id="realname"><a href="#realname" class="headerlink" title="realname"></a>realname</h2><p>realname实际上就是so的文件名，一般格式为lib$(name).so.$(major).$(minor).$(revision)例如libcurl.so.4.5.0，我们可以在编译的时候用-o参数指定:</p>
+<blockquote>
+<p>gcc -shared -o $(realname) …</p>
+</blockquote>
+<h2 id="linkname"><a href="#linkname" class="headerlink" title="linkname"></a>linkname</h2><p>linkname是在链接时使用的,用-l参数指定例如下面的foo就是linkname。我们在这里不需要填so文件的名字，gcc会自动为linkname补上lib和.so，去链接lib$(name).so</p>
+<blockquote>
+<p>gcc main.c -L. -lfoo</p>
+</blockquote>
+<h2 id="soname"><a href="#soname" class="headerlink" title="soname"></a>soname</h2><p>soname顾名思义就是so的名字，它可以在编译的时候用−Wl,−soname,$(soname)指定，-Wl,表示后面的参数将传给link程序ld。如果不指定的话soname默认为realname:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -shared -fPIC -Wl,-soname,libfoo.so.0 -o libfoo.so.0.0.0 foo.c</span><br></pre></td></tr></table></figure>
+
+<p>Soname会被记录在so的二进制数据中，我们可以用readelf命令查看:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">readelf  -d libfoo.so.0.0.0</span><br><span class="line"></span><br><span class="line">Dynamic section at offset 0xf18 contains 25 entries:</span><br><span class="line">  标记        类型                         名称/值</span><br><span class="line"> 0x00000001 (NEEDED)                     共享库：[libc.so.6]</span><br><span class="line"> 0x0000000e (SONAME)                     Library soname: [libfoo.so.0]</span><br><span class="line"> ...</span><br></pre></td></tr></table></figure>
+
+<p>那它有什么作用呢，我们可以做个试验:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> gcc -shared -fPIC -Wl,-soname,libfoo.so.0 -o libfoo.so.0.0.0 foo.c</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> ln -s libfoo.so.0.0.0 libfoo.so</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> gcc main.c -L. -lfoo -o demo</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> ldd demo</span></span><br><span class="line">        linux-vdso.so.1 (0xbece4000)</span><br><span class="line">        /usr/lib/arm-linux-gnueabihf/libarmmem-$&#123;PLATFORM&#125;.so =&gt; /usr/lib/arm-linux-gnueabihf/libarmmem-v7l.so (0xb6ef5000)</span><br><span class="line">        libfoo.so.0 =&gt; not found</span><br><span class="line">        libc.so.6 =&gt; /lib/arm-linux-gnueabihf/libc.so.6 (0xb6d8f000)</span><br><span class="line">        /lib/ld-linux-armhf.so.3 (0xb6f0a000)</span><br></pre></td></tr></table></figure>
+
+<p>我们先编译了一个realname为libfoo.so.0.0.0，soname为libfoo.so.0的so库，然后创建一个软连接libfoo.so指向它，接着用foo这个linkname指定这个软链接去编译demo。</p>
+<p>最后使用ldd查看demo的依赖，发现它依赖的是libfoo.so.0这个soname而不是编译的时候使用的libfoo.so。用readelf查看demo也能看到:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> readelf -d demo</span></span><br><span class="line"></span><br><span class="line">Dynamic section at offset 0xf10 contains 25 entries:</span><br><span class="line">  标记        类型                         名称/值</span><br><span class="line"> 0x00000001 (NEEDED)                     共享库：[libfoo.so.0]</span><br><span class="line"> 0x00000001 (NEEDED)                     共享库：[libc.so.6]</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>也就是说在编译demo这个程序的时候，会通过linkname找到libfoo.so，它是个软链接实际指向libfoo.so.0.0.0，然后gcc会从libfoo.so.0.0.0里面读取soname写入demo的二进制信息。于是如果这个时候执行demo的话就会报找不到libfoo.so.0的问题:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> ./demo</span></span><br><span class="line">./demo: error while loading shared libraries: libfoo.so.0: cannot open shared object file: No such file or directory</span><br></pre></td></tr></table></figure>
+
+<h1 id="问题原因"><a href="#问题原因" class="headerlink" title="问题原因"></a>问题原因</h1><p>好了，现在回到我们的问题。最后我们分析到libdemo.so的soname居然是libnative-lib.so，那么原因很容易猜到就是−Wl,−soname指定错了。</p>
+<p>查看编译记录的确是这个问题：由于新版本的ndk已经放弃gcc转向clang，我前段时间刚好换了电脑下载的是比较新的ndk，里面找不到熟悉的gcc了而我之前又没有用过clang。所以编译的指令是从android studio编译libnative-lib.so的日志里面拷贝修改的。它有很大一坨，又由于粗心，只改了-o 参数和.c文件，没有修改soname，然后问题就出现了。</p>
+<p>然后这里还有一个坑，我一开始是直接报−Wl,−soname,libnative-lib.so这段给删掉了，因为使用gcc的时候如果没有指定，会自动把realname当做soname，但是clang不会。这个时候编译出来的so里面没有SONAME字段:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> readelf -d libdemo.so</span></span><br><span class="line"></span><br><span class="line">Dynamic section at offset 0xe08 contains 24 entries:</span><br><span class="line">  Tag        Type                         Name/Value</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libm.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libdl.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libc.so]</span><br><span class="line"> 0x000000000000001a (FINI_ARRAY)         0x10df8</span><br></pre></td></tr></table></figure>
+
+<p>于是在运行的时候又会报找不到libdemo.so。也就是说在运行的时候查找依赖的原理是:从libnative-lib.so读到依赖libdemo.so，找到libdemo.so之后还会验证它的soname对不对，如果你只是realname为libdemo.so，soname不匹配也是不会去链接的。</p>
+<p>最后将−Wl,−soname,libdemo.so加回上去问题解决。</p>
+<p>事后回想了下，其实这种问题遇到的几率还是比较小的。因为如果c部分是我们自己写的，一般也就放到android stduio里面合成一个so。而如果需要导入外部的so一般也是用的第三方的，他们也很难出这种低级问题。就算像我这样的需求自己写个外部的so导入，干这活的一般也是个成熟的c/c++的程序员。也就我这种半桶水还啥都要自己干的苦逼会遇到。</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2020/10/30/python与c-c-相互调用/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>
