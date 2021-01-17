@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Dagger2 AndroidInjector原理探究 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="AndroidInjector在实际的项目中已经频繁使用了，但是其底层的原理一直没有关注，只是简单的使用。这篇笔记就来探究下它的实现原理。 我们要先从Component的依赖开始讲起，然后一步一步往AndroidInjector的原理靠近。 在Dagger2里面@Component.dependencies和@Subcomponent都可以实现Component依赖，而@Subcomponent又">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dagger2 AndroidInjector原理探究">
+<meta property="og:url" content="http://139.199.4.241/2021/01/17/Dagger2AndroidInjector原理探究/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="AndroidInjector在实际的项目中已经频繁使用了，但是其底层的原理一直没有关注，只是简单的使用。这篇笔记就来探究下它的实现原理。 我们要先从Component的依赖开始讲起，然后一步一步往AndroidInjector的原理靠近。 在Dagger2里面@Component.dependencies和@Subcomponent都可以实现Component依赖，而@Subcomponent又">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-01-17T05:19:06.503Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dagger2 AndroidInjector原理探究">
+<meta name="twitter:description" content="AndroidInjector在实际的项目中已经频繁使用了，但是其底层的原理一直没有关注，只是简单的使用。这篇笔记就来探究下它的实现原理。 我们要先从Component的依赖开始讲起，然后一步一步往AndroidInjector的原理靠近。 在Dagger2里面@Component.dependencies和@Subcomponent都可以实现Component依赖，而@Subcomponent又">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Component-dependencies实现依赖"><span class="toc-text">@Component.dependencies实现依赖</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Subcomponent实现依赖"><span class="toc-text">@Subcomponent实现依赖</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Module-subcomponents实现依赖"><span class="toc-text">@Module.subcomponents实现依赖</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Module-subcomponents实现多绑定"><span class="toc-text">@Module.subcomponents实现多绑定</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#AndroidInjector的原理"><span class="toc-text">AndroidInjector的原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#ContributesAndroidInjector"><span class="toc-text">ContributesAndroidInjector</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考文章"><span class="toc-text">参考文章</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Dagger2AndroidInjector原理探究" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Dagger2 AndroidInjector原理探究</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.01.17</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>AndroidInjector在实际的项目中已经频繁使用了，但是其底层的原理一直没有关注，只是简单的使用。这篇笔记就来探究下它的实现原理。</p>
+<p>我们要先从Component的依赖开始讲起，然后一步一步往AndroidInjector的原理靠近。</p>
+<p>在Dagger2里面@Component.dependencies和@Subcomponent都可以实现Component依赖，而@Subcomponent又可以分成使用和不使用@Module.subcomponents去声明依赖两种。所以算下来应该是三种实现依赖的方式。今天主要想介绍的是@Module.subcomponents的方式，但是其他两种我也先过一下。</p>
+<h1 id="Component-dependencies实现依赖"><a href="#Component-dependencies实现依赖" class="headerlink" title="@Component.dependencies实现依赖"></a>@Component.dependencies实现依赖</h1><p>@Component.dependencies是一种比较简单的方式，举个简单的例子，MainActivityComponent是子Component，它需要给MainActivity注入AppCommonData和MainActivityData。</p>
+<p>但MainActivityModule只提供了MainActivityData，AppCommonData由dependencies指定的AppComponent提供注入:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component(modules = [MainActivityModule::class], dependencies = [AppComponent::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">MainActivityComponent</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">inject</span><span class="params">(activity: <span class="type">MainActivity</span>)</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivityModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">providerMainActivityData</span><span class="params">()</span></span>: MainActivityData &#123;</span><br><span class="line">        <span class="keyword">return</span> MainActivityData()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> appCommonData: AppCommonData</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityData: MainActivityData</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于使用了dependencies的方式，AppComponent需要将AppCommonData暴露出来给MainActivityComponent使用，如果不去暴露的话MainActivityComponent是拿不到的:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component(modules = [AppModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">AppComponent</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">provideAppCommonData</span><span class="params">()</span></span>: AppCommonData</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AppModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">provideAppCommonData</span><span class="params">()</span></span>: AppCommonData &#123;</span><br><span class="line">        <span class="keyword">return</span> AppCommonData()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当使用dependencies方式的适合会生成DaggerMainActivityComponent，我们需要先创建父Component，然后在创建MainActivityComponent的时候将父Component传入实现依赖的注册:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DemoApplication</span> : <span class="type">Application</span></span>() &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">lateinit</span> <span class="keyword">var</span> appComponent: AppComponent</span><br><span class="line"></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityComponent: MainActivityComponent</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">set</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate()</span><br><span class="line"></span><br><span class="line">        appComponent = DaggerAppComponent.builder().build()</span><br><span class="line"></span><br><span class="line">        mainActivityComponent = DaggerMainActivityComponent.builder()</span><br><span class="line">            .appComponent(appComponent)</span><br><span class="line">            .build()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注入的时候需要找到MainActivityComponent去注入:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        (applicationContext <span class="keyword">as</span> DemoApplication)</span><br><span class="line">            .mainActivityComponent</span><br><span class="line">            .inject(<span class="keyword">this</span>)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种方式的优点是父Component不需要知道子Component的存在，缺点是父Component需要显示提供子Component需要注入的对象，一旦需要提供的注入对象比较多的时候写起来就很啰嗦。</p>
+<p><a href="https://github.com/bluesky466/DaggerSubcomponentDemo/tree/feature_dependencies" target="_blank" rel="noopener">Demo代码</a></p>
+<h1 id="Subcomponent实现依赖"><a href="#Subcomponent实现依赖" class="headerlink" title="@Subcomponent实现依赖"></a>@Subcomponent实现依赖</h1><p>我们可以使用@Subcomponent去实现依赖，将子Component的注解改成@Subcomponent，dependencies去掉其他不变:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Subcomponent(modules = [MainActivityModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">MainActivityComponent</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">inject</span><span class="params">(activity: <span class="type">MainActivity</span>)</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivityModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">providerMainActivityData</span><span class="params">()</span></span>: MainActivityData &#123;</span><br><span class="line">        <span class="keyword">return</span> MainActivityData()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> appCommonData: AppCommonData</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityData: MainActivityData</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AppComponent不需要直接提供AppCommonData，但是由于使用了Subcomponent之后是不会生成DaggerMainActivityComponent的，它需要AppCommonData去负责创建，所以AppCommonData需要添加DaggerMainActivityComponent的创建方法。这里的主要目的是为了明确依赖关系，因为dagger2不可能知道你想要的依赖关系是怎样的:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component(modules = [AppModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">AppComponent</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">addMainActivityComponent</span><span class="params">()</span></span>: MainActivityComponent</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AppModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">provideAppCommonData</span><span class="params">()</span></span>: AppCommonData &#123;</span><br><span class="line">        <span class="keyword">return</span> AppCommonData()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DemoApplication</span> : <span class="type">Application</span></span>() &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">lateinit</span> <span class="keyword">var</span> appComponent: AppComponent</span><br><span class="line"></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityComponent: MainActivityComponent</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">set</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate()</span><br><span class="line"></span><br><span class="line">        appComponent = DaggerAppComponent.builder().build()</span><br><span class="line">        mainActivityComponent = appComponent.addMainActivityComponent()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>MainActivity在使用注入的时候代码是一样的，我这里就不贴了。这种方式的好处是Subcomponent可以直接使用父类提供的所有注入对象，但是每增加一个Subcomponent，父Component都需要新增一个创建方法。</p>
+<p><a href="https://github.com/bluesky466/DaggerSubcomponentDemo/tree/feature_subcomponent" target="_blank" rel="noopener">Demo代码</a></p>
+<h1 id="Module-subcomponents实现依赖"><a href="#Module-subcomponents实现依赖" class="headerlink" title="@Module.subcomponents实现依赖"></a>@Module.subcomponents实现依赖</h1><p>除了在父Component添加Subcomponent的创建方法之外，我们还可以在父Component的Module里面去声明依赖关系:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module(subcomponents = [MainActivityComponent::class])</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AppModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">provideAppCommonData</span><span class="params">()</span></span>: AppCommonData &#123;</span><br><span class="line">        <span class="keyword">return</span> AppCommonData()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的@Module.subcomponents相当于Module添加了Subcomponent.Builder的注入能力，我们可以将Subcomponent.Builder注入到任意对象。这里我们注入到DemoApplication，所以AppComponent如下:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component(modules = [AppModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">AppComponent</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">inject</span><span class="params">(app: <span class="type">DemoApplication</span>)</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>既然是注入Subcomponent.Builder，那么就要求我们的Subcomponent要声明Builder:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Subcomponent(modules = [MainActivityModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">MainActivityComponent</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">inject</span><span class="params">(activity: <span class="type">MainActivity</span>)</span></span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Subcomponent</span>.Builder</span><br><span class="line">    <span class="class"><span class="keyword">interface</span> <span class="title">Builder</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">fun</span> <span class="title">build</span><span class="params">()</span></span>: MainActivityComponent</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivityModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">providerMainActivityData</span><span class="params">()</span></span>: MainActivityData &#123;</span><br><span class="line">        <span class="keyword">return</span> MainActivityData()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个时候创建MainActivityComponent就分成了两步，先创建MainActivityComponent.Builder，再创建MainActivityComponent:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DemoApplication</span> : <span class="type">Application</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityComponentBuilder: MainActivityComponent.Builder</span><br><span class="line"></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityComponent: MainActivityComponent</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate()</span><br><span class="line"></span><br><span class="line">        DaggerAppComponent.builder()</span><br><span class="line">            .build()</span><br><span class="line">            .inject(<span class="keyword">this</span>)</span><br><span class="line">        mainActivityComponent = mainActivityComponentBuilder.builder()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然<strong>上面的Subcomponent.Builder改成Subcomponent.Factory</strong>也是可以的。</p>
+<p><a href="https://github.com/bluesky466/DaggerSubcomponentDemo/tree/feature_module_subcomponents" target="_blank" rel="noopener">Demo代码</a></p>
+<h1 id="Module-subcomponents实现多绑定"><a href="#Module-subcomponents实现多绑定" class="headerlink" title="@Module.subcomponents实现多绑定"></a>@Module.subcomponents实现多绑定</h1><p>这种方式看上去是麻烦了一些，但是由于Subcomponent.Builder也是dagger2注入的，所以可以用这个特性去让我们的依赖注入做的更加彻底一点。</p>
+<p>我们可以看到目前我们的MainActivity实际上是需要知道自己是用哪个Component去注入的，也就是说我们破坏了”一个对象不应该知道它是如何被注入的”这个原则:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> appCommonData: AppCommonData</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityData: MainActivityData</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        (applicationContext <span class="keyword">as</span> DemoApplication)</span><br><span class="line">            .mainActivityComponent</span><br><span class="line">            .inject(<span class="keyword">this</span>)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然我们使用重载的方式将Component的选择挪到Application中，但是这样依然是在Dagger2框架之外去决定依赖关系。那可不可以做的更彻底些，将MainActivity和Component的依赖关系也使用Dagger2框架去决定呢?当然是可以的，就是使用@Module.subcomponents。</p>
+<p>首先我们定义一个BaseComponent作为基类，然后MainActivityComponent和SecondActivityComponent都继承它</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">BaseComponent</span>&lt;<span class="type">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">inject</span><span class="params">(target: <span class="type">T</span>)</span></span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">interface</span> <span class="title">Builder</span>&lt;<span class="type">T</span>&gt; </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">fun</span> <span class="title">build</span><span class="params">()</span></span>: BaseComponent&lt;T&gt;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Subcomponent(modules = [MainActivityModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">MainActivityComponent</span> : <span class="type">BaseComponent</span>&lt;<span class="type">MainActivity</span>&gt; </span>&#123;</span><br><span class="line">    <span class="meta">@Subcomponent</span>.Builder</span><br><span class="line">    <span class="class"><span class="keyword">interface</span> <span class="title">Builder</span> : <span class="type">BaseComponent.Builder</span>&lt;<span class="type">MainActivity</span>&gt;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Subcomponent(modules = [SecondActivityModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">SecondActivityComponent</span> : <span class="type">BaseComponent</span>&lt;<span class="type">SecondActivity</span>&gt; </span>&#123;</span><br><span class="line">    <span class="meta">@Subcomponent</span>.Builder</span><br><span class="line">    <span class="class"><span class="keyword">interface</span> <span class="title">Builder</span> : <span class="type">BaseComponent.Builder</span>&lt;<span class="type">SecondActivity</span>&gt;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义Activity与Subcomponent.Builder之间的关联:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module(subcomponents = [MainActivityComponent::class, SecondActivityComponent::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">ComponentBindingModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Binds</span></span><br><span class="line">    <span class="meta">@IntoMap</span></span><br><span class="line">    <span class="meta">@ClassKey(MainActivity::class)</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">mainActivityComponentBuilder</span><span class="params">(builder: <span class="type">MainActivityComponent</span>.<span class="type">Builder</span>)</span></span>: BaseComponent.Builder&lt;*&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Binds</span></span><br><span class="line">    <span class="meta">@IntoMap</span></span><br><span class="line">    <span class="meta">@ClassKey(SecondActivity::class)</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">secondActivityComponentBuilder</span><span class="params">(builder: <span class="type">SecondActivityComponent</span>.<span class="type">Builder</span>)</span></span>: BaseComponent.Builder&lt;*&gt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Component(modules = [AppModule::class, ComponentBindingModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">AppComponent</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">inject</span><span class="params">(app: <span class="type">DemoApplication</span>)</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ComponentBindingModule将MainActivityComponent.Builder和SecondActivityComponent.Builder用对应的Activity的class为key放入Map中，所以Activity在需要注入的时候可以用自己的class为key获取到Subcomponent.Builder然后进行注入:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DemoApplication</span> : <span class="type">Application</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> componentMap: MutableMap&lt;Class&lt;*&gt;, BaseComponent.Builder&lt;*&gt;&gt;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> secondActivityComponentBuilder: SecondActivityComponent.Builder</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate()</span><br><span class="line">        DaggerAppComponent.builder()</span><br><span class="line">            .build()</span><br><span class="line">            .inject(<span class="keyword">this</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T : Any&gt;</span> <span class="title">inject</span><span class="params">(target: <span class="type">T</span>)</span></span> &#123;</span><br><span class="line">        (componentMap[target.javaClass]?.build() <span class="keyword">as</span> BaseComponent&lt;T&gt;).inject(target)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>于是乎Activity的注入就变得很简单了:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> appCommonData: AppCommonData</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityData: MainActivityData</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        (applicationContext <span class="keyword">as</span> DemoApplication).inject(<span class="keyword">this</span>)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SecondActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> appCommonData: AppCommonData</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> secondActivityData: SecondActivityData</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        (applicationContext <span class="keyword">as</span> DemoApplication).inject(<span class="keyword">this</span>)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们还可以为其编写BaseActivity去进行注入。</p>
+<p><a href="https://github.com/bluesky466/DaggerSubcomponentDemo/tree/master" target="_blank" rel="noopener">Demo代码</a></p>
+<h1 id="AndroidInjector的原理"><a href="#AndroidInjector的原理" class="headerlink" title="AndroidInjector的原理"></a>AndroidInjector的原理</h1><p><a href="https://dagger.dev/dev-guide/android" target="_blank" rel="noopener">AndroidInjector</a>的就是基于上面的技术实现的。我们可以看到DaggerApplication里面注入了一个DispatchingAndroidInjector&lt;Object&gt;，Activity在onCreate的时候就可以拿到这个东西去进行注入:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">DaggerApplication</span> <span class="title">extends</span> <span class="title">Application</span> <span class="title">implements</span> <span class="title">HasAndroidInjector</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Inject</span> <span class="keyword">volatile</span> DispatchingAndroidInjector&lt;Object&gt; androidInjector;</span><br><span class="line">  ...</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> AndroidInjector&lt;Object&gt; androidInjector() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> androidInjector;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那我们来看看DispatchingAndroidInjector其实内部类似的也有两个Map用于获取不同的类对应的AndroidInjector.Factory:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">DispatchingAndroidInjector</span>&lt;<span class="type">T</span>&gt; <span class="title">implements</span> <span class="title">AndroidInjector</span>&lt;<span class="type">T</span>&gt; </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Provider&lt;AndroidInjector.Factory&lt;?&gt;&gt;&gt; injectorFactories;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    DispatchingAndroidInjector(</span><br><span class="line">        Map&lt;Class&lt;?&gt;, Provider&lt;AndroidInjector.Factory&lt;?&gt;&gt;&gt; injectorFactoriesWithClassKeys,</span><br><span class="line">        Map&lt;String, Provider&lt;AndroidInjector.Factory&lt;?&gt;&gt;&gt; injectorFactoriesWithStringKeys) &#123;</span><br><span class="line">      <span class="keyword">this</span>.injectorFactories = merge(injectorFactoriesWithClassKeys, injectorFactoriesWithStringKeys);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> void inject(T instance) &#123;</span><br><span class="line">        boolean wasInjected = maybeInject(instance);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">public</span> boolean maybeInject(T instance) &#123;</span><br><span class="line">        Provider&lt;AndroidInjector.Factory&lt;?&gt;&gt; factoryProvider = injectorFactories.<span class="keyword">get</span>(instance.getClass().getName());</span><br><span class="line">        ...</span><br><span class="line">        AndroidInjector.Factory&lt;T&gt; factory = (AndroidInjector.Factory&lt;T&gt;) factoryProvider.<span class="keyword">get</span>();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">              AndroidInjector&lt;T&gt; injector = checkNotNull(factory.create(instance), <span class="string">"%s.create(I) should not return null."</span>, factory.getClass());</span><br><span class="line">              injector.inject(instance);</span><br><span class="line">              <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125; </span><br><span class="line">        ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>于是乎在inject的时候就能通过类名找到这个AndroidInjector.Factory进而创建AndroidInjector去进行注入。</p>
+<p> Map&lt;Class&lt;?&gt;, Provider&lt;AndroidInjector.Factory&lt;?&gt;&gt;&gt; 和Map&lt;String, Provider&lt;AndroidInjector.Factory&lt;?&gt;&gt;&gt;是通过AndroidInjectionModule注入的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AndroidInjectionModule</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Multibinds</span></span><br><span class="line">  <span class="keyword">abstract</span> Map&lt;Class&lt;?&gt;, AndroidInjector.Factory&lt;?&gt;&gt; classKeyedInjectorFactories();</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Multibinds</span></span><br><span class="line">  <span class="keyword">abstract</span> Map&lt;String, AndroidInjector.Factory&lt;?&gt;&gt; stringKeyedInjectorFactories();</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="title">AndroidInjectionModule</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以AppComponent里面需要添加这个module依赖:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component(modules = [AndroidInjectionModule::class, AppModule::class, ComponentBindingModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">AppComponent</span> : <span class="type">AndroidInjector</span>&lt;<span class="type">DemoApplication</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>而Map里面找到的都是AndroidInjector.Factory，所以我们的Subcomponent也应该继承AndroidInjector:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Subcomponent(modules = [MainActivityModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">MainActivityComponent</span> : <span class="type">AndroidInjector</span>&lt;<span class="type">MainActivity</span>&gt; </span>&#123;</span><br><span class="line">    <span class="meta">@Subcomponent</span>.Factory</span><br><span class="line">    <span class="class"><span class="keyword">interface</span> <span class="title">Factory</span> : <span class="type">AndroidInjector.Factory</span>&lt;<span class="type">MainActivity</span>&gt;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Subcomponent(modules = [SecondActivityModule::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">SecondActivityComponent</span> : <span class="type">AndroidInjector</span>&lt;<span class="type">SecondActivity</span>&gt; </span>&#123;</span><br><span class="line">    <span class="meta">@Subcomponent</span>.Factory</span><br><span class="line">    <span class="class"><span class="keyword">interface</span> <span class="title">Factory</span> : <span class="type">AndroidInjector.Factory</span>&lt;<span class="type">SecondActivity</span>&gt;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ComponentBindingModule里面依然是将AndroidInjector.Factory用对应的Activity的class为key放入Map中:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module(subcomponents = [MainActivityComponent::class, SecondActivityComponent::class])</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">ComponentBindingModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Binds</span></span><br><span class="line">    <span class="meta">@IntoMap</span></span><br><span class="line">    <span class="meta">@ClassKey(MainActivity::class)</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">mainActivityComponentFactory</span><span class="params">(factory: <span class="type">MainActivityComponent</span>.<span class="type">Factory</span>)</span></span>: AndroidInjector.Factory&lt;*&gt;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Binds</span></span><br><span class="line">    <span class="meta">@IntoMap</span></span><br><span class="line">    <span class="meta">@ClassKey(SecondActivity::class)</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">secondActivityComponentFactory</span><span class="params">(factory: <span class="type">SecondActivityComponent</span>.<span class="type">Factory</span>)</span></span>: AndroidInjector.Factory&lt;*&gt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Activity在注入的时候只需要使用AndroidInjection.inject(this)即可:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> appCommonData: AppCommonData</span><br><span class="line">    <span class="meta">@Inject</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> mainActivityData: MainActivityData</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        AndroidInjection.inject(<span class="keyword">this</span>)</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><a href="https://github.com/bluesky466/DaggerSubcomponentDemo/tree/feature_android_injection_principle" target="_blank" rel="noopener">Demo代码</a></p>
+<h2 id="ContributesAndroidInjector"><a href="#ContributesAndroidInjector" class="headerlink" title="ContributesAndroidInjector"></a>ContributesAndroidInjector</h2><p>上面的MainActivityComponent、SecondActivityComponent的代码还有IntoMap的代码其实比较呆板，我们可以通过ContributesAndroidInjector去优化。所以ComponentBindingModule可以改成下面这个样子,然后:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ComponentBindingModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@ContributesAndroidInjector(modules = [MainActivityModule::class])</span></span><br><span class="line">    <span class="keyword">abstract</span> <span class="function"><span class="keyword">fun</span> <span class="title">contributesMainActivity</span><span class="params">()</span></span>: MainActivity</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它会帮我们生成Subcomponent、IntoMap代码:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//下面的代码可以省略，被ContributesAndroidInjector代替了</span></span><br><span class="line"><span class="meta">@Module</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivityModule</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Provides</span></span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">providerMainActivityData</span><span class="params">()</span></span>: MainActivityData &#123;</span><br><span class="line">        <span class="keyword">return</span> MainActivityData()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Binds</span></span><br><span class="line"><span class="meta">@IntoMap</span></span><br><span class="line"><span class="meta">@ClassKey(MainActivity::class)</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">mainActivityComponentFactory</span><span class="params">(factory: <span class="type">MainActivityComponent</span>.<span class="type">Factory</span>)</span></span>: AndroidInjector.Factory&lt;*&gt;</span><br></pre></td></tr></table></figure>
+
+<p><a href="https://github.com/bluesky466/DaggerSubcomponentDemo/tree/feature_android_injection" target="_blank" rel="noopener">Demo代码</a></p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a href="https://dagger.dev/dev-guide/android" target="_blank" rel="noopener">Dagger &amp; Android</a></p>
+<p><a href="https://dagger.dev/dev-guide/multibindings" target="_blank" rel="noopener">Multibindings</a></p>
+<p><a href="https://www.cnblogs.com/tiantianbyconan/p/6266442.html" target="_blank" rel="noopener">在Dagger 2中Activities和Subcomponents的多绑定</a></p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2020/11/24/JNI运行错误-符号未定义/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>
