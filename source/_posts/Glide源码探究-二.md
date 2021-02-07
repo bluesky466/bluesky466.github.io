@@ -320,6 +320,39 @@ synchronized void deactivate(Key key) {
 
 这里它将原本写在Engine的弱引用Map封装成了ActiveResources。
 
+那为啥顺序不是一开始就是先查弱引用缓存呢?原因可能是[一开始的代码](https://github.com/bumptech/glide/blob/fe7154fc88d47c779aec395af7020a69d61f6392/library/src/com/bumptech/glide/load/engine/Engine.java)内存缓存就没有弱引用缓存:
+
+```
+public <T, Z> LoadStatus load(String id, int width, int height, ResourceDecoder<InputStream, Z> cacheDecoder,
+        ResourceFetcher<T> fetcher, ResourceDecoder<T, Z> decoder,  Transformation<Z> transformation,
+        ResourceEncoder<Z> encoder, Priority priority, ResourceCallback cb) {
+
+    Key key = keyFactory.buildKey(id, width, height, cacheDecoder, decoder, transformation, encoder);
+
+    Resource cached = cache.get(key);
+    if (cached != null) {
+        cached.acquire(1);
+        cb.onResourceReady(cached);
+        return null;
+    }
+
+    ResourceRunner current = runners.get(key);
+    if (current != null) {
+        EngineJob job = current.getJob();
+        job.addCallback(cb);
+        return new LoadStatus(cb, job);
+    }
+
+    ResourceRunner<Z> runner = factory.build(key, width, height, cacheDecoder, fetcher, decoder, transformation,
+            encoder, priority, this);
+    runner.getJob().addCallback(cb);
+    runners.put(key, runner);
+    runner.queue();
+    return new LoadStatus(cb, runner.getJob());
+}
+```
+可能是作者在后面优化添加这个弱引用缓存的时候就顺手放到了原有逻辑的后面。
+
 其实仔细想想内存缓存的架构，我觉得这个顺序其实并不重要，谁先谁后都不会有什么问题，无非是说流程是从lru cache拿出来放到弱引用缓存的，查询的时候先查弱引用缓存会比较符合一般人的思路。
 
 我们回想下两个缓存存放的资源，简化到Activity的场景。弱引用缓存放的都是当前activity正在使用的图片，lru cache是activity退出之后回收的图片。如果先查弱引用缓存，意味着当上下不停滑动recyclerview的时候效率高一丢丢。如果先查lru cahe，意味着反复进出同一个activity的时候效率高一丢丢。很难说哪个顺序性能比较高。而且这一丢丢性能在现代设备中的确真的是毫无影响，所以让人好理解是最重要的，先查弱引用缓存没毛病。
