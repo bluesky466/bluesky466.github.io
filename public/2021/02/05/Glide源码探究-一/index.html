@@ -15,18 +15,18 @@
     <meta name="keywords" content="技术相关,Android,">
   
 
-  <meta name="description" content="蛮久之前囫囵吞枣地瞄过Glide部分源码，最近由于某个契机又心血来潮比较系统的过了一遍它的源码，发现它的蛮多设计还是比较有意思的。 首先Glide的使用十分简单，只需要三行代码就能完成图片的下载、缓存和显示: 123Glide.with(this)    .load(url)    .into(img)  但为了我们可以方便的使用，实际上每一行代码的背后都帮我们做了不少脏活累活。 Glide.wi">
+  <meta name="description" content="蛮久之前囫囵吞枣地瞄过Glide部分源码，最近由于某个契机又心血来潮比较系统的过了一遍它的源码，发现它的蛮多设计还是比较有意思的(该系列笔记基于Glide 4.12.0这个版本进行分析)。 首先Glide的使用十分简单，只需要三行代码就能完成图片的下载、缓存和显示: 123Glide.with(this)    .load(url)    .into(img)  但为了我们可以方便的使用，实际上每">
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Glide源码探究(一)">
 <meta property="og:url" content="http://139.199.4.241/2021/02/05/Glide源码探究-一/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="蛮久之前囫囵吞枣地瞄过Glide部分源码，最近由于某个契机又心血来潮比较系统的过了一遍它的源码，发现它的蛮多设计还是比较有意思的。 首先Glide的使用十分简单，只需要三行代码就能完成图片的下载、缓存和显示: 123Glide.with(this)    .load(url)    .into(img)  但为了我们可以方便的使用，实际上每一行代码的背后都帮我们做了不少脏活累活。 Glide.wi">
+<meta property="og:description" content="蛮久之前囫囵吞枣地瞄过Glide部分源码，最近由于某个契机又心血来潮比较系统的过了一遍它的源码，发现它的蛮多设计还是比较有意思的(该系列笔记基于Glide 4.12.0这个版本进行分析)。 首先Glide的使用十分简单，只需要三行代码就能完成图片的下载、缓存和显示: 123Glide.with(this)    .load(url)    .into(img)  但为了我们可以方便的使用，实际上每">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2021-02-05T13:04:51.649Z">
+<meta property="og:updated_time" content="2021-02-07T16:06:58.806Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Glide源码探究(一)">
-<meta name="twitter:description" content="蛮久之前囫囵吞枣地瞄过Glide部分源码，最近由于某个契机又心血来潮比较系统的过了一遍它的源码，发现它的蛮多设计还是比较有意思的。 首先Glide的使用十分简单，只需要三行代码就能完成图片的下载、缓存和显示: 123Glide.with(this)    .load(url)    .into(img)  但为了我们可以方便的使用，实际上每一行代码的背后都帮我们做了不少脏活累活。 Glide.wi">
+<meta name="twitter:description" content="蛮久之前囫囵吞枣地瞄过Glide部分源码，最近由于某个契机又心血来潮比较系统的过了一遍它的源码，发现它的蛮多设计还是比较有意思的(该系列笔记基于Glide 4.12.0这个版本进行分析)。 首先Glide的使用十分简单，只需要三行代码就能完成图片的下载、缓存和显示: 123Glide.with(this)    .load(url)    .into(img)  但为了我们可以方便的使用，实际上每">
 
   
 
@@ -195,7 +195,7 @@
 
   <div class="article-content">
     
-      <p>蛮久之前囫囵吞枣地瞄过Glide部分源码，最近由于某个契机又心血来潮比较系统的过了一遍它的源码，发现它的蛮多设计还是比较有意思的。</p>
+      <p>蛮久之前囫囵吞枣地瞄过Glide部分源码，最近由于某个契机又心血来潮比较系统的过了一遍它的源码，发现它的蛮多设计还是比较有意思的(该系列笔记基于Glide 4.12.0这个版本进行分析)。</p>
 <p>首先Glide的使用十分简单，只需要三行代码就能完成图片的下载、缓存和显示:</p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Glide.with(<span class="keyword">this</span>)</span><br><span class="line">    .load(url)</span><br><span class="line">    .into(img)</span><br></pre></td></tr></table></figure>
 
@@ -263,7 +263,7 @@
     <a class="show pull-left" href="/2021/01/17/Dagger2AndroidInjector原理探究/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2021/02/08/Glide源码探究-二/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>
