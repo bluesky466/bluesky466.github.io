@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://139.199.4.241/Glide源码探究二/2.png">
 <meta property="og:image" content="http://139.199.4.241/Glide源码探究二/3.png">
 <meta property="og:image" content="http://139.199.4.241/Glide源码探究二/4.png">
-<meta property="og:updated_time" content="2021-02-07T16:13:35.727Z">
+<meta property="og:updated_time" content="2021-02-07T16:44:45.230Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Glide源码探究(二)">
 <meta name="twitter:description" content="让我们接着上一篇笔记继续讲Engine的load方法，这里面就是Glide的资源加载流程。 1234567891011121314151617public &amp;lt;R&amp;gt; LoadStatus load(...) &amp;#123;    long startTime = VERBOSE_IS_LOGGABLE ? LogTime.getLogTime() : 0;    EngineKey key">
@@ -274,6 +274,10 @@
 <img src="/Glide源码探究二/4.png">
 
 <p>这里它将原本写在Engine的弱引用Map封装成了ActiveResources。</p>
+<p>那为啥顺序不是一开始就是先查弱引用缓存呢?原因可能是<a href="https://github.com/bumptech/glide/blob/fe7154fc88d47c779aec395af7020a69d61f6392/library/src/com/bumptech/glide/load/engine/Engine.java" target="_blank" rel="noopener">一开始的代码</a>内存缓存就没有弱引用缓存:</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T, Z&gt; LoadStatus load(<span class="keyword">String</span> id, <span class="built_in">int</span> <span class="built_in">width</span>, <span class="built_in">int</span> <span class="built_in">height</span>, ResourceDecoder&lt;InputStream, Z&gt; cacheDecoder,</span><br><span class="line">        ResourceFetcher&lt;T&gt; fetcher, ResourceDecoder&lt;T, Z&gt; decoder,  Transformation&lt;Z&gt; transformation,</span><br><span class="line">        ResourceEncoder&lt;Z&gt; encoder, Priority priority, ResourceCallback cb) &#123;</span><br><span class="line"></span><br><span class="line">    Key <span class="built_in">key</span> = keyFactory.buildKey(id, <span class="built_in">width</span>, <span class="built_in">height</span>, cacheDecoder, decoder, transformation, encoder);</span><br><span class="line"></span><br><span class="line">    Resource cached = cache.<span class="built_in">get</span>(<span class="built_in">key</span>);</span><br><span class="line">    <span class="keyword">if</span> (cached != <span class="keyword">null</span>) &#123;</span><br><span class="line">        cached.acquire(<span class="number">1</span>);</span><br><span class="line">        cb.onResourceReady(cached);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ResourceRunner current = runners.<span class="built_in">get</span>(<span class="built_in">key</span>);</span><br><span class="line">    <span class="keyword">if</span> (current != <span class="keyword">null</span>) &#123;</span><br><span class="line">        EngineJob job = current.getJob();</span><br><span class="line">        job.addCallback(cb);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> LoadStatus(cb, job);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ResourceRunner&lt;Z&gt; runner = factory.build(<span class="built_in">key</span>, <span class="built_in">width</span>, <span class="built_in">height</span>, cacheDecoder, fetcher, decoder, transformation,</span><br><span class="line">            encoder, priority, <span class="keyword">this</span>);</span><br><span class="line">    runner.getJob().addCallback(cb);</span><br><span class="line">    runners.put(<span class="built_in">key</span>, runner);</span><br><span class="line">    runner.queue();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> LoadStatus(cb, runner.getJob());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可能是作者在后面优化添加这个弱引用缓存的时候就顺手放到了原有逻辑的后面。</p>
 <p>其实仔细想想内存缓存的架构，我觉得这个顺序其实并不重要，谁先谁后都不会有什么问题，无非是说流程是从lru cache拿出来放到弱引用缓存的，查询的时候先查弱引用缓存会比较符合一般人的思路。</p>
 <p>我们回想下两个缓存存放的资源，简化到Activity的场景。弱引用缓存放的都是当前activity正在使用的图片，lru cache是activity退出之后回收的图片。如果先查弱引用缓存，意味着当上下不停滑动recyclerview的时候效率高一丢丢。如果先查lru cahe，意味着反复进出同一个activity的时候效率高一丢丢。很难说哪个顺序性能比较高。而且这一丢丢性能在现代设备中的确真的是毫无影响，所以让人好理解是最重要的，先查弱引用缓存没毛病。</p>
 
@@ -289,7 +293,7 @@
     <a class="show pull-left" href="/2021/02/05/Glide源码探究-一/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2021/02/09/树莓派外挂MCP2515模块爬坑记录/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>

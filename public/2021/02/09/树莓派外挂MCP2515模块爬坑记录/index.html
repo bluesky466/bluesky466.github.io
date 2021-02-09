@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>树莓派外挂MCP2515模块爬坑记录 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,树莓派,嵌入式,">
+  
+
+  <meta name="description" content="最近由于接近放假，协调不到调板哥，于是兼职下调板的工作。虽然之前也业余玩过树莓派和arduino，但是由于没有stm32的开发经验和硬件知识的匮乏，还是遇到了很多坑。 这个can总线模块就卡了我两三天，由于涉及到树莓派的配置知识，觉得有必要记录一下。 can驱动配置目前的这个项目涉及到了树莓派和stm32的通信，使用的是can总线。由于树莓派本身不提供can总线功能，需要外挂一个MCP2515芯片">
+<meta name="keywords" content="技术相关,树莓派,嵌入式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="树莓派外挂MCP2515模块爬坑记录">
+<meta property="og:url" content="http://139.199.4.241/2021/02/09/树莓派外挂MCP2515模块爬坑记录/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="最近由于接近放假，协调不到调板哥，于是兼职下调板的工作。虽然之前也业余玩过树莓派和arduino，但是由于没有stm32的开发经验和硬件知识的匮乏，还是遇到了很多坑。 这个can总线模块就卡了我两三天，由于涉及到树莓派的配置知识，觉得有必要记录一下。 can驱动配置目前的这个项目涉及到了树莓派和stm32的通信，使用的是can总线。由于树莓派本身不提供can总线功能，需要外挂一个MCP2515芯片">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-02-09T09:25:39.413Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="树莓派外挂MCP2515模块爬坑记录">
+<meta name="twitter:description" content="最近由于接近放假，协调不到调板哥，于是兼职下调板的工作。虽然之前也业余玩过树莓派和arduino，但是由于没有stm32的开发经验和硬件知识的匮乏，还是遇到了很多坑。 这个can总线模块就卡了我两三天，由于涉及到树莓派的配置知识，觉得有必要记录一下。 can驱动配置目前的这个项目涉及到了树莓派和stm32的通信，使用的是can总线。由于树莓派本身不提供can总线功能，需要外挂一个MCP2515芯片">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#can驱动配置"><span class="toc-text">can驱动配置</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#can驱动启动失败"><span class="toc-text">can驱动启动失败</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#解决措施"><span class="toc-text">解决措施</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-树莓派外挂MCP2515模块爬坑记录" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">树莓派外挂MCP2515模块爬坑记录</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.02.09</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近由于接近放假，协调不到调板哥，于是兼职下调板的工作。虽然之前也业余玩过树莓派和arduino，但是由于没有stm32的开发经验和硬件知识的匮乏，还是遇到了很多坑。</p>
+<p>这个can总线模块就卡了我两三天，由于涉及到树莓派的配置知识，觉得有必要记录一下。</p>
+<h1 id="can驱动配置"><a href="#can驱动配置" class="headerlink" title="can驱动配置"></a>can驱动配置</h1><p>目前的这个项目涉及到了树莓派和stm32的通信，使用的是can总线。由于树莓派本身不提供can总线功能，需要外挂一个MCP2515芯片。</p>
+<p>网上搜索树莓派的can总线配置，可以找到不少的资料，其中感觉最详细的是<a href="https://zhuanlan.zhihu.com/p/173648955" target="_blank" rel="noopener">这一篇</a>。但是里面有个小bug，我等下再说。</p>
+<p>首先网上的接线多数都是这样的:</p>
+<figure class="highlight brainfuck"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">RPi</span> <span class="comment">Pin</span>    <span class="comment">RPi</span> <span class="comment">Label</span>     <span class="comment">CAN</span> <span class="comment">Module</span></span><br><span class="line"><span class="comment">02</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">5V</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">VCC</span></span><br><span class="line"><span class="comment">06</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">GND</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">GND</span></span><br><span class="line"><span class="comment">19</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">GPIO10</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">MOSI</span> <span class="comment">(SI)</span></span><br><span class="line"><span class="comment">21</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">GPIO9</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">MISO</span> <span class="comment">(SO)</span></span><br><span class="line"><span class="comment">22</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">GPIO25</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">INT</span></span><br><span class="line"><span class="comment">23</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">GPIO11</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">SCK</span></span><br><span class="line"><span class="comment">24</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">GPIO8</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">CS</span></span><br></pre></td></tr></table></figure>
+
+<p>然后修改文件<strong>/boot/config.txt</strong>激活MCP2515驱动:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 打开spi总线，树莓派与MCP2515之前通过spi通信，然后再转成can协议</span></span><br><span class="line"><span class="attr">dtparam</span>=spi=<span class="literal">on</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 在spi0.0上配置MCP2515 CAN控制器,CAN控制器的晶振频率是16MHz,INT脚接到了gpio25</span></span><br><span class="line"><span class="attr">dtoverlay</span>=mcp2515-can0,oscillator=<span class="number">16000000</span>,interrupt=<span class="number">25</span> </span><br><span class="line"></span><br><span class="line"><span class="comment"># SPI0只使用一个CS引脚，把spi0.0的cs脚配置到gpio8。实际上不配置这个也没有影响</span></span><br><span class="line"><span class="attr">dtoverlay</span>=spi0-<span class="number">1</span>cs,cs0_pin=<span class="number">8</span></span><br></pre></td></tr></table></figure>
+
+<p>这些dtoverlay配置项的说明可以查看<strong>/boot/overlays/README</strong>:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">..</span>.</span><br><span class="line">Name:   mcp2515-can0</span><br><span class="line">Info:   Configures the MCP2515 CAN controller on spi0.0</span><br><span class="line">Load:   <span class="attribute">dtoverlay</span>=mcp2515-can0,&lt;param&gt;=&lt;val&gt;</span><br><span class="line">Params: oscillator             <span class="built_in"> Clock </span>frequency <span class="keyword">for</span> the CAN controller (Hz)</span><br><span class="line"></span><br><span class="line">        spimaxfrequency         Maximum SPI frequence (Hz)</span><br><span class="line"></span><br><span class="line">        interrupt               GPIO <span class="keyword">for</span> interrupt signal</span><br><span class="line">        </span><br><span class="line">Name:   mcp2515-can1</span><br><span class="line">Info:   Configures the MCP2515 CAN controller on spi0.1</span><br><span class="line">Load:   <span class="attribute">dtoverlay</span>=mcp2515-can1,&lt;param&gt;=&lt;val&gt;</span><br><span class="line">Params: oscillator             <span class="built_in"> Clock </span>frequency <span class="keyword">for</span> the CAN controller (Hz)</span><br><span class="line"></span><br><span class="line">        spimaxfrequency         Maximum SPI frequence (Hz)</span><br><span class="line"></span><br><span class="line">        interrupt               GPIO <span class="keyword">for</span> interrupt signal</span><br><span class="line"><span class="built_in">..</span>.</span><br><span class="line"></span><br><span class="line">Name:   spi0-1cs</span><br><span class="line">Info:   Only use one CS pin <span class="keyword">for</span> SPI0</span><br><span class="line">Load:   <span class="attribute">dtoverlay</span>=spi0-1cs,&lt;param&gt;=&lt;val&gt;</span><br><span class="line">Params: cs0_pin                 GPIO pin <span class="keyword">for</span> CS0 (default 8)</span><br><span class="line">        no_miso                 Don<span class="string">'t claim and use the MISO pin (9), freeing</span></span><br><span class="line"><span class="string">                                it for other uses.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Name:   spi0-2cs</span></span><br><span class="line"><span class="string">Info:   Change the CS pins for SPI0</span></span><br><span class="line"><span class="string">Load:   dtoverlay=spi0-2cs,&lt;param&gt;=&lt;val&gt;</span></span><br><span class="line"><span class="string">Params: cs0_pin                 GPIO pin for CS0 (default 8)</span></span><br><span class="line"><span class="string">        cs1_pin                 GPIO pin for CS1 (default 7)</span></span><br><span class="line"><span class="string">        no_miso                 Don'</span>t claim <span class="keyword">and</span> use the MISO pin (9), freeing</span><br><span class="line">                                it <span class="keyword">for</span> other uses.</span><br><span class="line"><span class="built_in">..</span>.</span><br></pre></td></tr></table></figure>
+
+<p><strong>所以以后需要打开什么功能，都可以到这文档里面查看配置方法</strong>。</p>
+<p>首先由于我们把MCP2515 CAN控制器配到了spi0.0，所以我们需要配置spi0.0的cs脚(当然如果你也可以配置mcp2515-can1将它配置到spi0.1，这样的话就需要改spi0.1的cs脚)。</p>
+<p>这个cs脚使是用来选择设备的，当有多个设备挂到spi总线上的时候可以用这个脚去选择指定设备。由于我们只有一个设备，所以可以使用spi0-1cs指定spi0只有一个cs脚，当然你也可以配置两个cs脚(spi0-2cs)留空一个不用。然后无论是spi0-1cs还是spi0-2cs，cs0默认都是gpio8，所以我们配不配都没有关系，下面几种配置方法都是对的:</p>
+<ol>
+<li>dtoverlay=spi0-1cs,cs0_pin=8</li>
+<li>dtoverlay=spi0-1cs</li>
+<li>dtoverlay=spi0-2cs,cs0_pin=8</li>
+<li>dtoverlay=spi0-2cs</li>
+<li>#不配置，留空</li>
+</ol>
+<p>之前我说的<a href="https://zhuanlan.zhihu.com/p/173648955" target="_blank" rel="noopener">这一篇</a>博客的小bug就是它配了dtoverlay=spi1-1cs，实际上是配置了spi1的cs脚，对我们的配置在spi0的can控制器没有影响</p>
+<p>我们的接法和网上的不一样，INT脚接gpio17，CS脚接gpio22。根据文档修改下配置就好:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">dtoverlay</span>=mcp2515-can0,oscillator=<span class="number">16000000</span>,interrupt=<span class="number">17</span></span><br><span class="line"><span class="attr">dtoverlay</span>=spi0-<span class="number">1</span>cs,cs0_pin=<span class="number">22</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="can驱动启动失败"><a href="#can驱动启动失败" class="headerlink" title="can驱动启动失败"></a>can驱动启动失败</h1><p>事情到这里其实还算一帆风顺，我也没有花多少时间。但是当重启树莓派发现并没有/sys/bus/spi/devices/spi0.0/net/can0这个设备，使用dmesg命令查看开机日志会发现这样的一个错误，mcp2515驱动启动失败了:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[    <span class="number">7.653601</span>] mcp<span class="number">251</span><span class="keyword">x</span> sp<span class="keyword">i0</span>.<span class="number">0</span>: MCP<span class="number">251</span><span class="keyword">x</span> didn't enter in conf mode after reset</span><br><span class="line">[    <span class="number">7.653654</span>] mcp<span class="number">251</span><span class="keyword">x</span> sp<span class="keyword">i0</span>.<span class="number">0</span>: Probe failed, err=<span class="number">16</span></span><br><span class="line">[    <span class="number">7.653738</span>] mcp<span class="number">251</span><span class="keyword">x</span>: probe of sp<span class="keyword">i0</span>.<span class="number">0</span> failed with error <span class="number">-16</span></span><br></pre></td></tr></table></figure>
+
+<p>然后我就懵逼了，网上搜索这个错误找到了很多遇到这种情况的人，但是他们的回答都是加上dtoverlay=spi0-1cs配置，让我一度怀疑自己的英语阅读水平以为自己文档看劈叉了(虽然水平的确也不怎样)。</p>
+<p>由于我们的接线和网上的不一样，所以试了很多种配置都没有用。然后我们只能不断做尝试</p>
+<ol>
+<li><p>让硬件帮忙跳线，跳到和网上的一样，然后用网上的配置 — 失败。</p>
+</li>
+<li><p>由于网上的例子都是用4.x的树莓派内核，而我们用的是5.x的内核。所以又猜测是系统版本原因，网上找了个旧的树莓派镜像验证 — 失败。</p>
+</li>
+<li><p>见到<a href="https://blog.csdn.net/qq_33440634/article/details/109111384" target="_blank" rel="noopener">这篇博客</a>说是电压问题，但是我用万用表量电压是5.17V，接近他所说的5.2伏 — 无用</p>
+</li>
+<li><p>找来示波器测量，发现cs脚在开机的时候的确有被拉低又拉高 – 排除树莓派gpio引脚的硬件问题</p>
+</li>
+</ol>
+<h1 id="解决措施"><a href="#解决措施" class="headerlink" title="解决措施"></a>解决措施</h1><p>就这样卡了两天，没有办法了在某宝上买了个<a href="https://item.taobao.com/item.htm?id=586333809106" target="_blank" rel="noopener">用到mcp2515的模块</a>回来验证(我们的板子是自己做的)，发现买回来的是成功的。</p>
+<p>那基本定位是硬件问题，于是交给硬件对比差异。经过修改引脚、晶振、最后定位到的确是电压问题，但是我们这边需要将电压改到3.3v才能用…</p>
+<p>最后感慨几句。这段时间虽然遇到的大部分问题最终都定位到是硬件的问题。但是由于芯片都是买的，相当于一个黑盒，硬件修改也比较麻烦，所以需要软件先调试分析给出大概的定位。由于嵌入式经验不足，i2c、spi、can、i2s等各种硬件协议都只能现学现卖。嵌入式的api又由于需要考虑性能问题和应用层api侧重易用性的思路不一样，一堆配置和前置条件比较难用。每天都处于对自己能力的怀疑当中，不确定是否能做好，但所幸大部分问题都找到解决或者规避措施。也算去计算机的硬件底层瞄了几眼，开了不少眼界，算是给不平凡的鼠年画上了个特别的句号。希望明年还能继续保持对学习热情，有趣的东西那么多，为什么不去学呢？</p>
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2021/02/08/Glide源码探究-二/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2020  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备16021035号</a></footer>
+</body>
+</html>
