@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="LinJW">
 <meta property="og:description" content="最近由于接近放假，协调不到调板哥，于是兼职下调板的工作。虽然之前也业余玩过树莓派和arduino，但是由于没有stm32的开发经验和硬件知识的匮乏，还是遇到了很多坑。 这个can总线模块就卡了我两三天，由于涉及到树莓派的配置知识，觉得有必要记录一下。 can驱动配置目前的这个项目涉及到了树莓派和stm32的通信，使用的是can总线。由于树莓派本身不提供can总线功能，需要外挂一个MCP2515芯片">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2021-02-09T09:25:39.413Z">
+<meta property="og:updated_time" content="2021-02-09T09:32:32.662Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="树莓派外挂MCP2515模块爬坑记录">
 <meta name="twitter:description" content="最近由于接近放假，协调不到调板哥，于是兼职下调板的工作。虽然之前也业余玩过树莓派和arduino，但是由于没有stm32的开发经验和硬件知识的匮乏，还是遇到了很多坑。 这个can总线模块就卡了我两三天，由于涉及到树莓派的配置知识，觉得有必要记录一下。 can驱动配置目前的这个项目涉及到了树莓派和stm32的通信，使用的是can总线。由于树莓派本身不提供can总线功能，需要外挂一个MCP2515芯片">
@@ -216,7 +216,7 @@
 <li>dtoverlay=spi0-1cs</li>
 <li>dtoverlay=spi0-2cs,cs0_pin=8</li>
 <li>dtoverlay=spi0-2cs</li>
-<li>#不配置，留空</li>
+<li># 不配置，留空</li>
 </ol>
 <p>之前我说的<a href="https://zhuanlan.zhihu.com/p/173648955" target="_blank" rel="noopener">这一篇</a>博客的小bug就是它配了dtoverlay=spi1-1cs，实际上是配置了spi1的cs脚，对我们的配置在spi0的can控制器没有影响</p>
 <p>我们的接法和网上的不一样，INT脚接gpio17，CS脚接gpio22。根据文档修改下配置就好:</p>
