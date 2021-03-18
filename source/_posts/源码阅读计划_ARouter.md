@@ -13,7 +13,7 @@ ARouter的源码相对来讲还是比较简单易懂的，我们先从初始化�
 ARouter.init(this)
 ```
 
-我们最追进去可以看到它将实际的初始化逻辑委托给_ARouter这个类去处理:
+我们最追进去可以看到它将实际的初始化逻辑委托给\_ARouter这个类去处理:
 
 ```java
 public static void init(Application application) {
@@ -29,7 +29,7 @@ public static void init(Application application) {
 }
 ```
 
-继续看_ARouter.init又会发现它又将初始化的逻辑放到LogisticsCenter.init:
+继续看\_ARouter.init又会发现它又将初始化的逻辑放到LogisticsCenter.init:
 
 ```java
 protected static synchronized boolean init(Application application) {
@@ -91,9 +91,9 @@ for (String className : routerMap) {
 
 上面是我删除多余注释之后的代码，可以看到其实它的流程并不复杂。先判断是否为debug模式或者版本是否有更新，如果是就使用ClassUtils.getFileNameByPackageName查找下面这些类:
 
-- com.alibaba.android.arouter.routes.ARouter$$Root$$XXX
-- com.alibaba.android.arouter.routes.ARouter$$Interceptors$$XXX
-- com.alibaba.android.arouter.routes.ARouter$$Providers$$XXX
+- com.alibaba.android.arouter.routes.ARouter\$\$Root\$\$XXX
+- com.alibaba.android.arouter.routes.ARouter\$\$Interceptors\$\$XXX
+- com.alibaba.android.arouter.routes.ARouter\$\$Providers\$\$XXX
 
 查找到的话将他们保存搭配sp中，避免每次启动都需要查找，下一次直接从sp中读取即可。
 
@@ -232,7 +232,7 @@ class MainActivity : BaseActivity() {
 
 {% img /源码阅读计划_ARouter/2.png %}
 
-像ARouter$$Root$$app这个分组类就注册了我们的页面路由，而ARouter$$Root$$provider这个分组类就注册了我们的provider路由:
+像ARouter\$\$Root\$\$app这个分组类就注册了我们的页面路由，而ARouter\$\$Root\$\$provider这个分组类就注册了我们的provider路由:
 
 ```java
 public class ARouter$$Root$$app implements IRouteRoot {
@@ -263,7 +263,7 @@ public class ARouter$$Group$$provider implements IRouteGroup {
 }
 ```
 
-ARouter$$Root$$app的后缀"app"字符串是由gradle里面配置的AROUTER\_MODULE\_NAME决定的,一般我们设置成module的名字，这样不同module生成的类就不会重名:
+ARouter\$\$Root\$\$app的后缀"app"字符串是由gradle里面配置的AROUTER\_MODULE\_NAME决定的,一般我们设置成module的名字，这样不同module生成的类就不会重名:
 
 ```groovy
 javaCompileOptions {
@@ -279,7 +279,7 @@ javaCompileOptions {
 
 ## 路由分组
 
-我们从上面的截图可以看到ARouter$$Group$$activity、ARouter$$Group$$provider这样的类，它就是activity和provider这两个分组的路由表注册逻辑。由于路由表可能会比较大，一次全部加载可能影响启动耗时，所以ARouter设计了路由分组的概念，在需要的时候才去加载。默认path的第一级就是分组，例如下面的activity:
+我们从上面的截图可以看到ARouter\$\$Group\$\$activity、ARouter\$\$Group\$\$provider这样的类，它就是activity和provider这两个分组的路由表注册逻辑。由于路由表可能会比较大，一次全部加载可能影响启动耗时，所以ARouter设计了路由分组的概念，在需要的时候才去加载。默认path的第一级就是分组，例如下面的activity:
 
 ```kotlin
 @Route(path = "/activity/home")
@@ -297,11 +297,11 @@ class MainActivity : BaseActivity() {
 }
 ```
 
-于是@Router注解就会生成ARouter$$Group$$xxx这样的类去管理该分组下的路由表的加载。
+于是@Router注解就会生成ARouter\$\$Group\$\$xxx这样的类去管理该分组下的路由表的加载。
 
 ## 拦截器初始化
 
-由于拦截器不需要我们等主动去获取，在navigation的时候就会自动调用，所以ARouter在初始化的时候就会顺便将拦截器给初始化了。在ARouter.init的后面会调用_ARouter.afterInit去初始化拦截器
+由于拦截器不需要我们等主动去获取，在navigation的时候就会自动调用，所以ARouter在初始化的时候就会顺便将拦截器给初始化了。在ARouter.init的后面会调用\_ARouter.afterInit去初始化拦截器
 
 ```java
 //ARouter.java
@@ -390,7 +390,7 @@ ARouter.getInstance()
       .navigation()
 ```
 
-当然navigation不一定是跳转页面，也可能直接返回查找到的IProvider等组件，下面我们就来看看具体的实现逻辑。由于navigation最后面是跑到_ARouter.navigation里面的，我们直接从这个方法开始分析:
+当然navigation不一定是跳转页面，也可能直接返回查找到的IProvider等组件，下面我们就来看看具体的实现逻辑。由于navigation最后面是跑到\_ARouter.navigation里面的，我们直接从这个方法开始分析:
 
 ```java
 protected Object navigation(final Context context, final Postcard postcard, final int requestCode, final NavigationCallback callback) {
@@ -423,7 +423,7 @@ protected Object navigation(final Context context, final Postcard postcard, fina
 
 1. 使用LogisticsCenter.completion去查找路由表，将查找到的信息填充到postcard里面
 2. 如果postcard不走绿色通道，就调用拦截器逻辑
-3. 走绿色通道或者拦截器处理完成之后调用_navigation进行实际的页面跳转或者返回查找到的组件
+3. 走绿色通道或者拦截器处理完成之后调用\_navigation进行实际的页面跳转或者返回查找到的组件
 
 ## 路由表查找
 
@@ -543,7 +543,7 @@ private static void _execute(final int index, final CancelableCountDownLatch cou
 }
 ```
 
-_execute里面的逻辑也比较容易看懂，根据传入的index参数从拦截器数组获取拦截器，并且调用拦截器的process方法，这个方法就是我们使用拦截器需要实现的接口，在内部可能会开子线程或者去到主线程弹出对话框让用户选择。当拦截逻辑处理完之后就必现要回调callback的onContinue方法或者onInterrupt，让它去到下一个拦截器或者取消整个路由流程。__所以我们这自定义拦截器的时候不要忘了调用onContinue或者onInterrupt。__
+\_execute里面的逻辑也比较容易看懂，根据传入的index参数从拦截器数组获取拦截器，并且调用拦截器的process方法，这个方法就是我们使用拦截器需要实现的接口，在内部可能会开子线程或者去到主线程弹出对话框让用户选择。当拦截逻辑处理完之后就必现要回调callback的onContinue方法或者onInterrupt，让它去到下一个拦截器或者取消整个路由流程。__所以我们这自定义拦截器的时候不要忘了调用onContinue或者onInterrupt。__
 
 整个拦截器的流程如下:
 
@@ -553,9 +553,9 @@ _execute里面的逻辑也比较容易看懂，根据传入的index参数从拦�
 
 所以我们在navigation的时候如果不是绿色通道，需要走到拦截器的话并不会立马跳转，而是会开启子线程等待拦截器处理，也就是说__拦截器是运行在子线程里面的。__
 
-## _navigation
+## \_navigation
 
-走完拦截器就去到了_navigation方法。这个方法比较简单，就是判断类型进行页面跳转或者创建返回:
+走完拦截器就去到了\_navigation方法。这个方法比较简单，就是判断类型进行页面跳转或者创建返回:
 
 ```java
     private Object _navigation(final Context context, final Postcard postcard, final int requestCode, final NavigationCallback callback) {
@@ -648,7 +648,7 @@ public static Postcard buildProvider(String serviceName) {
 }
 ```
 
-是我们在ARouter$$Provider$$xxx里面注册的:
+是我们在ARouter\$\$Provider\$\$xxx里面注册的:
 
 {% img /源码阅读计划_ARouter/5.png %}
 
