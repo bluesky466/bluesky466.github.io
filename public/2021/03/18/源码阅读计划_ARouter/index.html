@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>源码阅读计划 - ARouter | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="初始化ARouter的源码相对来讲还是比较简单易懂的，我们先从初始化部分的逻辑开始看。它的初始化代码只有一行，一般放在Application.onCreate()中: 1ARouter.init(this)  我们最追进去可以看到它将实际的初始化逻辑委托给_ARouter这个类去处理: 1234567891011public static void init(Application applica">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="源码阅读计划 - ARouter">
+<meta property="og:url" content="http://139.199.4.241/2021/03/18/源码阅读计划_ARouter/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="初始化ARouter的源码相对来讲还是比较简单易懂的，我们先从初始化部分的逻辑开始看。它的初始化代码只有一行，一般放在Application.onCreate()中: 1ARouter.init(this)  我们最追进去可以看到它将实际的初始化逻辑委托给_ARouter这个类去处理: 1234567891011public static void init(Application applica">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/源码阅读计划_ARouter/1.png">
+<meta property="og:image" content="http://139.199.4.241/源码阅读计划_ARouter/2.png">
+<meta property="og:image" content="http://139.199.4.241/源码阅读计划_ARouter/3.png">
+<meta property="og:image" content="http://139.199.4.241/源码阅读计划_ARouter/4.png">
+<meta property="og:image" content="http://139.199.4.241/源码阅读计划_ARouter/5.png">
+<meta property="og:updated_time" content="2021-03-18T15:11:46.993Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="源码阅读计划 - ARouter">
+<meta name="twitter:description" content="初始化ARouter的源码相对来讲还是比较简单易懂的，我们先从初始化部分的逻辑开始看。它的初始化代码只有一行，一般放在Application.onCreate()中: 1ARouter.init(this)  我们最追进去可以看到它将实际的初始化逻辑委托给_ARouter这个类去处理: 1234567891011public static void init(Application applica">
+<meta name="twitter:image" content="http://139.199.4.241/源码阅读计划_ARouter/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cbe6" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  
+
+  
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+</head>
+</html>
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#初始化"><span class="toc-text">初始化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#arouter-register"><span class="toc-text">arouter-register</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#路由的注册"><span class="toc-text">路由的注册</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#路由分组"><span class="toc-text">路由分组</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#拦截器初始化"><span class="toc-text">拦截器初始化</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#navigation"><span class="toc-text">navigation</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#路由表查找"><span class="toc-text">路由表查找</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#拦截器调用原理"><span class="toc-text">拦截器调用原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#navigation-1"><span class="toc-text">_navigation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Provider类型查找"><span class="toc-text">Provider类型查找</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Autowired自动注入原理"><span class="toc-text">@Autowired自动注入原理</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-源码阅读计划_ARouter" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">源码阅读计划 - ARouter</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.03.18</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h1><p>ARouter的源码相对来讲还是比较简单易懂的，我们先从初始化部分的逻辑开始看。它的初始化代码只有一行，一般放在Application.onCreate()中:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ARouter.init(<span class="keyword">this</span>)</span><br></pre></td></tr></table></figure>
+
+<p>我们最追进去可以看到它将实际的初始化逻辑委托给_ARouter这个类去处理:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(Application application)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!hasInit) &#123;</span><br><span class="line">        ...</span><br><span class="line">        hasInit = _ARouter.init(application);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (hasInit) &#123;</span><br><span class="line">            _ARouter.afterInit();</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>继续看_ARouter.init又会发现它又将初始化的逻辑放到LogisticsCenter.init:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> <span class="keyword">boolean</span> <span class="title">init</span><span class="params">(Application application)</span> </span>&#123;</span><br><span class="line">        mContext = application;</span><br><span class="line">        LogisticsCenter.init(mContext, executor);</span><br><span class="line">        logger.info(Consts.TAG, <span class="string">"ARouter init success!"</span>);</span><br><span class="line">        hasInit = <span class="keyword">true</span>;</span><br><span class="line">        mHandler = <span class="keyword">new</span> Handler(Looper.getMainLooper());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后来的LogisticsCenter.init就能看的真正的初始化逻辑:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(Context context, ThreadPoolExecutor tpe)</span> <span class="keyword">throws</span> HandlerException </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    loadRouterMap();</span><br><span class="line">    <span class="keyword">if</span> (registerByPlugin) &#123;</span><br><span class="line">        logger.info(TAG, <span class="string">"Load router map by arouter-auto-register plugin."</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 从dex中加载路由表,耗时操作</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一般情况下我们都会使用gradle插件去生成注册代码以加快启动速度，loadRouterMap()方法里面就是这些生成的代码，注册完成之后registerByPlugin被设置成true，不会跑到下面的耗时操作中。这里我想先讲讲这个耗时操作到底有多耗时:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">Set&lt;String&gt; routerMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (ARouter.debuggable() || PackageUtils.isNewVersion(context)) &#123;</span><br><span class="line">    routerMap = ClassUtils.getFileNameByPackageName(mContext, ROUTE_ROOT_PAKCAGE);</span><br><span class="line">    <span class="keyword">if</span> (!routerMap.isEmpty()) &#123;</span><br><span class="line">        context.getSharedPreferences(AROUTER_SP_CACHE_KEY, Context.MODE_PRIVATE)</span><br><span class="line">                .edit()</span><br><span class="line">                .putStringSet(AROUTER_SP_KEY_MAP, routerMap)</span><br><span class="line">                .apply();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    PackageUtils.updateVersion(context);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    routerMap = <span class="keyword">new</span> HashSet&lt;&gt;(context.getSharedPreferences(AROUTER_SP_CACHE_KEY, Context.MODE_PRIVATE)</span><br><span class="line">                        .getStringSet(AROUTER_SP_KEY_MAP, <span class="keyword">new</span> HashSet&lt;String&gt;()));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (String className : routerMap) &#123;</span><br><span class="line">    <span class="keyword">if</span> (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_ROOT)) &#123;</span><br><span class="line">        ((IRouteRoot) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.groupsIndex);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_INTERCEPTORS)) &#123;</span><br><span class="line">        ((IInterceptorGroup) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.interceptorsIndex);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (className.startsWith(ROUTE_ROOT_PAKCAGE + DOT + SDK_NAME + SEPARATOR + SUFFIX_PROVIDERS)) &#123;</span><br><span class="line">        ((IProviderGroup) (Class.forName(className).getConstructor().newInstance())).loadInto(Warehouse.providersIndex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面是我删除多余注释之后的代码，可以看到其实它的流程并不复杂。先判断是否为debug模式或者版本是否有更新，如果是就使用ClassUtils.getFileNameByPackageName查找下面这些类:</p>
+<ul>
+<li>com.alibaba.android.arouter.routes.ARouter$$Root$$XXX</li>
+<li>com.alibaba.android.arouter.routes.ARouter$$Interceptors$$XXX</li>
+<li>com.alibaba.android.arouter.routes.ARouter$$Providers$$XXX</li>
+</ul>
+<p>查找到的话将他们保存搭配sp中，避免每次启动都需要查找，下一次直接从sp中读取即可。</p>
+<p>然后就会利用反射机制创建这些类的实例并且调用loadInto方法，将路由加载到Warehouse的对应map中。</p>
+<p>ClassUtils.getFileNameByPackageName很暴力，直接开启线程去读取dex文件进行类的遍历:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Set&lt;String&gt; <span class="title">getFileNameByPackageName</span><span class="params">(Context context, <span class="keyword">final</span> String packageName)</span> <span class="keyword">throws</span> PackageManager.NameNotFoundException, IOException, InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> Set&lt;String&gt; classNames = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    List&lt;String&gt; paths = getSourcePaths(context);</span><br><span class="line">    <span class="keyword">final</span> CountDownLatch parserCtl = <span class="keyword">new</span> CountDownLatch(paths.size());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">final</span> String path : paths) &#123;</span><br><span class="line">        DefaultPoolExecutor.getInstance().execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                ...</span><br><span class="line">                <span class="keyword">if</span> (path.endsWith(EXTRACTED_SUFFIX)) &#123;</span><br><span class="line">                    dexfile = DexFile.loadDex(path, path + <span class="string">".tmp"</span>, <span class="number">0</span>);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    dexfile = <span class="keyword">new</span> DexFile(path);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                Enumeration&lt;String&gt; dexEntries = dexfile.entries();</span><br><span class="line">                <span class="keyword">while</span> (dexEntries.hasMoreElements()) &#123;</span><br><span class="line">                    String className = dexEntries.nextElement();</span><br><span class="line">                    <span class="keyword">if</span> (className.startsWith(packageName)) &#123;</span><br><span class="line">                        classNames.add(className);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                ...</span><br><span class="line">                parserCtl.countDown();</span><br><span class="line">                </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    parserCtl.await();</span><br><span class="line">    <span class="keyword">return</span> classNames;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>getSourcePaths方法是查找这个app的所有dex文件的路径，我就不展开了。可以看出来这个流程需要遍历该app的所有dex的所有类去匹配类名，的确十分耗时。</p>
+<h2 id="arouter-register"><a href="#arouter-register" class="headerlink" title="arouter-register"></a>arouter-register</h2><p>于是乎arouter提供了arouter-register用于优化初始化速度:</p>
+<ol>
+<li>在根目录的build.gradle加上插件的classpath</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">buildscript &#123;</span><br><span class="line">    dependencies &#123;</span><br><span class="line">        classpath <span class="string">"com.alibaba:arouter-register:1.0.2"</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>在app目录下的build.gradle使用插件</li>
+</ol>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apply <span class="string">plugin:</span> <span class="string">'com.alibaba.arouter'</span></span><br></pre></td></tr></table></figure>
+
+<p>这个插件会在编译的时候使用用ASM向loadRouterMap方法插入注册代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">loadRouterMap</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  registerByPlugin = <span class="keyword">false</span>;</span><br><span class="line">  <span class="comment">//auto generate register code by gradle plugin: arouter-auto-register</span></span><br><span class="line">  <span class="comment">// looks like below:</span></span><br><span class="line">  <span class="comment">// registerRouteRoot(new ARouter..Root..modulejava());</span></span><br><span class="line">  <span class="comment">// registerRouteRoot(new ARouter..Root..modulekotlin());</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以使用jadx反编译生成的apk看到插入的代码:</p>
+<img src="/源码阅读计划_ARouter/1.png">
+
+<p>register方法会根据类型调用不同的注册方法，但是它们都会使用markRegisteredByPlugin方法将registerByPlugin设置成true，以跳过dex的遍历:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">register</span><span class="params">(String className)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    Class&lt;?&gt; clazz = Class.forName(className);</span><br><span class="line">    Object obj = clazz.getConstructor().newInstance();</span><br><span class="line">    <span class="keyword">if</span> (obj <span class="keyword">instanceof</span> IRouteRoot) &#123;</span><br><span class="line">        registerRouteRoot((IRouteRoot) obj);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (obj <span class="keyword">instanceof</span> IProviderGroup) &#123;</span><br><span class="line">        registerProvider((IProviderGroup) obj);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (obj <span class="keyword">instanceof</span> IInterceptorGroup) &#123;</span><br><span class="line">        registerInterceptor((IInterceptorGroup) obj);</span><br><span class="line">    &#125; </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">registerRouteRoot</span><span class="params">(IRouteRoot routeRoot)</span> </span>&#123;</span><br><span class="line">    markRegisteredByPlugin();</span><br><span class="line">    <span class="keyword">if</span> (routeRoot != <span class="keyword">null</span>) &#123;</span><br><span class="line">        routeRoot.loadInto(Warehouse.groupsIndex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">registerProvider</span><span class="params">(IProviderGroup providerGroup)</span> </span>&#123;</span><br><span class="line">    markRegisteredByPlugin();</span><br><span class="line">    <span class="keyword">if</span> (providerGroup != <span class="keyword">null</span>) &#123;</span><br><span class="line">        providerGroup.loadInto(Warehouse.providersIndex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">registerInterceptor</span><span class="params">(IInterceptorGroup interceptorGroup)</span> </span>&#123;</span><br><span class="line">    markRegisteredByPlugin();</span><br><span class="line">    <span class="keyword">if</span> (interceptorGroup != <span class="keyword">null</span>) &#123;</span><br><span class="line">        interceptorGroup.loadInto(Warehouse.interceptorsIndex);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">markRegisteredByPlugin</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!registerByPlugin) &#123;</span><br><span class="line">        registerByPlugin = <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="路由的注册"><a href="#路由的注册" class="headerlink" title="路由的注册"></a>路由的注册</h2><p>在上面的代码中我们知道ARouter在初始化的时候会调用IRouteRoot、IProviderGroup、IInterceptorGroup的loadInto方法将路由加载到Warehouse中。那这些类又是怎么知道我们代码里面用@Router注册的路径的?例如下面的MainActivity:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Route(path = <span class="meta-string">"/activity/home"</span>)</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">BaseActivity</span></span>() &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实这些类都是由ARouter在编译的时候生成的:</p>
+<img src="/源码阅读计划_ARouter/2.png">
+
+<p>像ARouter$$Root$$app这个分组类就注册了我们的页面路由，而ARouter$$Root$$provider这个分组类就注册了我们的provider路由:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ARouter</span>$$<span class="title">Root</span>$$<span class="title">app</span> <span class="keyword">implements</span> <span class="title">IRouteRoot</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadInto</span><span class="params">(Map&lt;String, Class&lt;? extends IRouteGroup&gt;&gt; routes)</span> </span>&#123;</span><br><span class="line">    routes.put(<span class="string">"activity"</span>, ARouter$$Group$$activity<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">    routes.put(<span class="string">"provider"</span>, ARouter$$Group$$provider<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ARouter</span>$$<span class="title">Group</span>$$<span class="title">activity</span> <span class="keyword">implements</span> <span class="title">IRouteGroup</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadInto</span><span class="params">(Map&lt;String, RouteMeta&gt; atlas)</span> </span>&#123;</span><br><span class="line">    atlas.put("/activity/date", RouteMeta.build(RouteType.ACTIVITY, DateActivity.class, "/activity/date", "activity", null, -1, -2147483648));</span><br><span class="line">    atlas.put("/activity/edit", RouteMeta.build(RouteType.ACTIVITY, EditActivity.class, "/activity/edit", "activity", new java.util.HashMap&lt;String, Integer&gt;()&#123;&#123;put("taskGroupId", 4); &#125;&#125;, -1, -2147483648));</span><br><span class="line">    atlas.put("/activity/home", RouteMeta.build(RouteType.ACTIVITY, MainActivity.class, "/activity/home", "activity", null, -1, -2147483648));</span><br><span class="line">    atlas.put("/activity/login", RouteMeta.build(RouteType.ACTIVITY, LoginActivity.class, "/activity/login", "activity", null, -1, -2147483648));</span><br><span class="line">    atlas.put("/activity/register", RouteMeta.build(RouteType.ACTIVITY, RegisterActivity.class, "/activity/register", "activity", null, -1, -2147483648));</span><br><span class="line">    atlas.put("/activity/welcome", RouteMeta.build(RouteType.ACTIVITY, WelcomeActivity.class, "/activity/welcome", "activity", null, -1, -2147483648));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ARouter</span>$$<span class="title">Group</span>$$<span class="title">provider</span> <span class="keyword">implements</span> <span class="title">IRouteGroup</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadInto</span><span class="params">(Map&lt;String, RouteMeta&gt; atlas)</span> </span>&#123;</span><br><span class="line">    atlas.put("/provider/demoProvider", RouteMeta.build(RouteType.PROVIDER, DemoProvider.class, "/provider/demoprovider", "provider", null, -1, -2147483648));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ARouter$$Root$$app的后缀”app”字符串是由gradle里面配置的AROUTER_MODULE_NAME决定的,一般我们设置成module的名字，这样不同module生成的类就不会重名:</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">javaCompileOptions &#123;</span><br><span class="line">    annotationProcessorOptions &#123;</span><br><span class="line">        arguments = [</span><br><span class="line">                <span class="string">AROUTER_MODULE_NAME  :</span> project.getName(),</span><br><span class="line">        ]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面可以看到IRouteRoot并不会直接将所有的路由信息直接加载进去，而是加载分组信息IRouteGroup。IRouteGroup会在navigation查找的时候再去加载对应分组的路由表。</p>
+<h2 id="路由分组"><a href="#路由分组" class="headerlink" title="路由分组"></a>路由分组</h2><p>我们从上面的截图可以看到ARouter$$Group$$activity、ARouter$$Group$$provider这样的类，它就是activity和provider这两个分组的路由表注册逻辑。由于路由表可能会比较大，一次全部加载可能影响启动耗时，所以ARouter设计了路由分组的概念，在需要的时候才去加载。默认path的第一级就是分组，例如下面的activity:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Route(path = <span class="meta-string">"/activity/home"</span>)</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">BaseActivity</span></span>() &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然你也可以主动指定分组:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Route(path = Router.ActivityHome.PATH, group = <span class="meta-string">"xxx"</span>)</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">BaseActivity</span></span>() &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>于是@Router注解就会生成ARouter$$Group$$xxx这样的类去管理该分组下的路由表的加载。</p>
+<h2 id="拦截器初始化"><a href="#拦截器初始化" class="headerlink" title="拦截器初始化"></a>拦截器初始化</h2><p>由于拦截器不需要我们等主动去获取，在navigation的时候就会自动调用，所以ARouter在初始化的时候就会顺便将拦截器给初始化了。在ARouter.init的后面会调用_ARouter.afterInit去初始化拦截器</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//ARouter.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(Application application)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!hasInit) &#123;</span><br><span class="line">        ...</span><br><span class="line">        hasInit = _ARouter.init(application);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (hasInit) &#123;</span><br><span class="line">            _ARouter.afterInit();</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//_ARouter.java</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">afterInit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    interceptorService = (InterceptorService) ARouter.getInstance().build(<span class="string">"/arouter/service/interceptor"</span>).navigation();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在afterInit里面会去创建InterceptorServiceImpl，它是一个IProvider，会在它的init方法里实例化拦截器并且添加到Warehouse.interceptors列表里面提供页面路由的时候调用:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Route</span>(path = <span class="string">"/arouter/service/interceptor"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InterceptorServiceImpl</span> <span class="keyword">implements</span> <span class="title">InterceptorService</span> </span>&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">(<span class="keyword">final</span> Context context)</span> </span>&#123;</span><br><span class="line">        LogisticsCenter.executor.execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="comment">//...</span></span><br><span class="line">                <span class="keyword">for</span> (Map.Entry&lt;Integer, Class&lt;? extends IInterceptor&gt;&gt; entry : Warehouse.interceptorsIndex.entrySet()) &#123;</span><br><span class="line">                    Class&lt;? extends IInterceptor&gt; interceptorClass = entry.getValue();</span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        IInterceptor iInterceptor = interceptorClass.getConstructor().newInstance();</span><br><span class="line">                        iInterceptor.init(context);</span><br><span class="line">                        Warehouse.interceptors.add(iInterceptor);</span><br><span class="line">                    &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> HandlerException(TAG + <span class="string">"ARouter init interceptor error! name = ["</span> + interceptorClass.getName() + <span class="string">"], reason = ["</span> + ex.getMessage() + <span class="string">"]"</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//...</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Warehouse.interceptorsIndex是一个UniqueKeyTreeMap，它在前面被扫描dex或者生成代码注册。key为拦截器的优先级，所以拦截器的优先级是不能有相同的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Warehouse.java</span></span><br><span class="line"><span class="keyword">static</span> Map&lt;Integer, Class&lt;? extends IInterceptor&gt;&gt; interceptorsIndex = <span class="keyword">new</span> UniqueKeyTreeMap&lt;&gt;(<span class="string">"More than one interceptors use same priority [%s]"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//UniqueKeyTreeMap.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UniqueKeyTreeMap</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; <span class="keyword">extends</span> <span class="title">TreeMap</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String tipText;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">UniqueKeyTreeMap</span><span class="params">(String exceptionText)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line"></span><br><span class="line">        tipText = exceptionText;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (containsKey(key)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(String.format(tipText, key));</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">super</span>.put(key, value);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="navigation"><a href="#navigation" class="headerlink" title="navigation"></a>navigation</h1><p>使用ARouter进行页面跳转只需要下面的简单代码，build方法会分析路径，查找分组信息创建Postcard对象，然后使用Postcard对象的navigation进行跳转:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ARouter.getInstance()</span><br><span class="line">      .build(<span class="string">"/activity/home"</span>)</span><br><span class="line">      .navigation()</span><br></pre></td></tr></table></figure>
+
+<p>当然navigation不一定是跳转页面，也可能直接返回查找到的IProvider等组件，下面我们就来看看具体的实现逻辑。由于navigation最后面是跑到_ARouter.navigation里面的，我们直接从这个方法开始分析:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">navigation</span><span class="params">(<span class="keyword">final</span> Context context, <span class="keyword">final</span> Postcard postcard, <span class="keyword">final</span> <span class="keyword">int</span> requestCode, <span class="keyword">final</span> NavigationCallback callback)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    LogisticsCenter.completion(postcard);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (!postcard.isGreenChannel()) &#123;</span><br><span class="line">        interceptorService.doInterceptions(postcard, <span class="keyword">new</span> InterceptorCallback() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onContinue</span><span class="params">(Postcard postcard)</span> </span>&#123;</span><br><span class="line">                _navigation(context, postcard, requestCode, callback);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onInterrupt</span><span class="params">(Throwable exception)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="keyword">null</span> != callback) &#123;</span><br><span class="line">                    callback.onInterrupt(postcard);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> _navigation(context, postcard, requestCode, callback);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里面的逻辑分三部分:</p>
+<ol>
+<li>使用LogisticsCenter.completion去查找路由表，将查找到的信息填充到postcard里面</li>
+<li>如果postcard不走绿色通道，就调用拦截器逻辑</li>
+<li>走绿色通道或者拦截器处理完成之后调用_navigation进行实际的页面跳转或者返回查找到的组件</li>
+</ol>
+<h2 id="路由表查找"><a href="#路由表查找" class="headerlink" title="路由表查找"></a>路由表查找</h2><p>我们先看看completion查找路由表的逻辑:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">completion</span><span class="params">(Postcard postcard)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    RouteMeta routeMeta = Warehouse.routes.get(postcard.getPath());</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> == routeMeta) &#123;    <span class="comment">// Maybe its does't exist, or didn't load.</span></span><br><span class="line">        Class&lt;? extends IRouteGroup&gt; groupMeta = Warehouse.groupsIndex.get(postcard.getGroup());  <span class="comment">// Load route meta.</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> == groupMeta) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NoRouteFoundException(TAG + <span class="string">"There is no route match the path ["</span> + postcard.getPath() + <span class="string">"], in group ["</span> + postcard.getGroup() + <span class="string">"]"</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ...</span><br><span class="line">            IRouteGroup iGroupInstance = groupMeta.getConstructor().newInstance();</span><br><span class="line">            iGroupInstance.loadInto(Warehouse.routes);</span><br><span class="line">            Warehouse.groupsIndex.remove(postcard.getGroup());</span><br><span class="line">            ...</span><br><span class="line">            completion(postcard);   <span class="comment">// Reload</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        postcard.setDestination(routeMeta.getDestination());</span><br><span class="line">        postcard.setType(routeMeta.getType());</span><br><span class="line">        postcard.setPriority(routeMeta.getPriority());</span><br><span class="line">        postcard.setExtra(routeMeta.getExtra());</span><br><span class="line"></span><br><span class="line">        Uri rawUri = postcard.getUri();</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> != rawUri) &#123;   <span class="comment">// Try to set params into bundle.</span></span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (routeMeta.getType()) &#123;</span><br><span class="line">            <span class="keyword">case</span> PROVIDER:</span><br><span class="line">                Class&lt;? extends IProvider&gt; providerMeta = (Class&lt;? extends IProvider&gt;) routeMeta.getDestination();</span><br><span class="line">                IProvider instance = Warehouse.providers.get(providerMeta);</span><br><span class="line">                <span class="keyword">if</span> (<span class="keyword">null</span> == instance) &#123; <span class="comment">// There's no instance of this provider</span></span><br><span class="line">                    ...</span><br><span class="line">                    provider = providerMeta.getConstructor().newInstance();</span><br><span class="line">                    provider.init(mContext);</span><br><span class="line">                    Warehouse.providers.put(providerMeta, provider);</span><br><span class="line">                    instance = provider;</span><br><span class="line">                    ...</span><br><span class="line">                &#125;</span><br><span class="line">                postcard.setProvider(instance);</span><br><span class="line">                postcard.greenChannel();    <span class="comment">// Provider should skip all of interceptors</span></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> FRAGMENT:</span><br><span class="line">                postcard.greenChannel();    <span class="comment">// Fragment needn't interceptors</span></span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它会先查找Warehouse.routes这个缓存，如果找不到就先去查找分组并加载该分组的路由表到Warehouse.routes，然后递归调用自己重新查找Warehouse.routes。这次就能查找到路由信息了，于是将该path对应的组件的信息填充到postcard。</p>
+<p>而且我们可以看到如果是Provider或者Fragment，就会走绿色通道，因为它们是不会被拦截器拦截的。</p>
+<p>整体流程如下:</p>
+<img src="/源码阅读计划_ARouter/3.png">
+
+<h2 id="拦截器调用原理"><a href="#拦截器调用原理" class="headerlink" title="拦截器调用原理"></a>拦截器调用原理</h2><p>查找路由表成功填充信息之后如果不走绿色通道的话就会先去调用interceptorService.doInterceptions走拦截器的流程:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doInterceptions</span><span class="params">(<span class="keyword">final</span> Postcard postcard, <span class="keyword">final</span> InterceptorCallback callback)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    LogisticsCenter.executor.execute(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            CancelableCountDownLatch interceptorCounter = <span class="keyword">new</span> CancelableCountDownLatch(Warehouse.interceptors.size());</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                _execute(<span class="number">0</span>, interceptorCounter, postcard);</span><br><span class="line">                interceptorCounter.await(postcard.getTimeout(), TimeUnit.SECONDS);</span><br><span class="line">                <span class="keyword">if</span> (interceptorCounter.getCount() &gt; <span class="number">0</span>) &#123;    <span class="comment">// Cancel the navigation this time, if it hasn't return anythings.</span></span><br><span class="line">                    callback.onInterrupt(<span class="keyword">new</span> HandlerException(<span class="string">"The interceptor processing timed out."</span>));</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">null</span> != postcard.getTag()) &#123;    <span class="comment">// Maybe some exception in the tag.</span></span><br><span class="line">                    callback.onInterrupt(<span class="keyword">new</span> HandlerException(postcard.getTag().toString()));</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    callback.onContinue(postcard);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                callback.onInterrupt(e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先看doInterceptions的逻辑我们可以知道它创建了一个子线程去使用_execute方法调用拦截器，并且使用CancelableCountDownLatch等待所有拦截器执行完毕。也就是说_execute里面可能也是存在子线程的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">_execute</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> index, <span class="keyword">final</span> CancelableCountDownLatch counter, <span class="keyword">final</span> Postcard postcard)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (index &lt; Warehouse.interceptors.size()) &#123;</span><br><span class="line">        IInterceptor iInterceptor = Warehouse.interceptors.get(index);</span><br><span class="line">        iInterceptor.process(postcard, <span class="keyword">new</span> InterceptorCallback() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onContinue</span><span class="params">(Postcard postcard)</span> </span>&#123;</span><br><span class="line">                counter.countDown();</span><br><span class="line">                _execute(index + <span class="number">1</span>, counter, postcard);  </span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onInterrupt</span><span class="params">(Throwable exception)</span> </span>&#123;</span><br><span class="line">                postcard.setTag(<span class="keyword">null</span> == exception ? <span class="keyword">new</span> HandlerException(<span class="string">"No message."</span>) : exception.getMessage());    </span><br><span class="line">                counter.cancel();</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><em>execute里面的逻辑也比较容易看懂，根据传入的index参数从拦截器数组获取拦截器，并且调用拦截器的process方法，这个方法就是我们使用拦截器需要实现的接口，在内部可能会开子线程或者去到主线程弹出对话框让用户选择。当拦截逻辑处理完之后就必现要回调callback的onContinue方法或者onInterrupt，让它去到下一个拦截器或者取消整个路由流程。<em>_所以我们这自定义拦截器的时候不要忘了调用onContinue或者onInterrupt。</em></em></p>
+<p>整个拦截器的流程如下:</p>
+<img src="/源码阅读计划_ARouter/4.png">
+
+<p>总结下就是doInterceptions里面开启子线程，设置CancelableCountDownLatch为拦截器数组大小，然后调用第一个拦截器，接着线程等待CountDown取消或者为0。拦截器调用onContinue让CountDown减一和继续调用下一个拦截器直到遍历完所有拦截器或者有拦截器调用onInterrupt。</p>
+<p>所以我们在navigation的时候如果不是绿色通道，需要走到拦截器的话并不会立马跳转，而是会开启子线程等待拦截器处理，也就是说<strong>拦截器是运行在子线程里面的。</strong></p>
+<h2 id="navigation-1"><a href="#navigation-1" class="headerlink" title="_navigation"></a>_navigation</h2><p>走完拦截器就去到了_navigation方法。这个方法比较简单，就是判断类型进行页面跳转或者创建返回:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Object <span class="title">_navigation</span><span class="params">(<span class="keyword">final</span> Context context, <span class="keyword">final</span> Postcard postcard, <span class="keyword">final</span> <span class="keyword">int</span> requestCode, <span class="keyword">final</span> NavigationCallback callback)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> Context currentContext = <span class="keyword">null</span> == context ? mContext : context;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (postcard.getType()) &#123;</span><br><span class="line">        <span class="keyword">case</span> ACTIVITY:</span><br><span class="line">            <span class="keyword">final</span> Intent intent = <span class="keyword">new</span> Intent(currentContext, postcard.getDestination());</span><br><span class="line">            intent.putExtras(postcard.getExtras());</span><br><span class="line">            <span class="keyword">int</span> flags = postcard.getFlags();</span><br><span class="line">            <span class="keyword">if</span> (-<span class="number">1</span> != flags) &#123;</span><br><span class="line">                intent.setFlags(flags);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!(currentContext <span class="keyword">instanceof</span> Activity)) &#123;    <span class="comment">// Non activity, need less one flag.</span></span><br><span class="line">                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);</span><br><span class="line">            &#125;</span><br><span class="line">            String action = postcard.getAction();</span><br><span class="line">            <span class="keyword">if</span> (!TextUtils.isEmpty(action)) &#123;</span><br><span class="line">                intent.setAction(action);</span><br><span class="line">            &#125;</span><br><span class="line">            runInMainThread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    startActivity(requestCode, currentContext, intent, postcard, callback);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> PROVIDER:</span><br><span class="line">            <span class="keyword">return</span> postcard.getProvider();</span><br><span class="line">        <span class="keyword">case</span> BOARDCAST:</span><br><span class="line">        <span class="keyword">case</span> CONTENT_PROVIDER:</span><br><span class="line">        <span class="keyword">case</span> FRAGMENT:</span><br><span class="line">            Class fragmentMeta = postcard.getDestination();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Object instance = fragmentMeta.getConstructor().newInstance();</span><br><span class="line">                <span class="keyword">if</span> (instance <span class="keyword">instanceof</span> Fragment) &#123;</span><br><span class="line">                    ((Fragment) instance).setArguments(postcard.getExtras());</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (instance <span class="keyword">instanceof</span> android.support.v4.app.Fragment) &#123;</span><br><span class="line">                    ((android.support.v4.app.Fragment) instance).setArguments(postcard.getExtras());</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> instance;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">                logger.error(Consts.TAG, <span class="string">"Fetch fragment instance error, "</span> + TextUtils.formatStackTrace(ex.getStackTrace()));</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">case</span> METHOD:</span><br><span class="line">        <span class="keyword">case</span> SERVICE:</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Provider类型查找"><a href="#Provider类型查找" class="headerlink" title="Provider类型查找"></a>Provider类型查找</h2><p>除了使用路径去查找Provider之外，我们还可以用Provider的类型去查找:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> provider = ARouter.getInstance().navigation(DemoProvider::<span class="class"><span class="keyword">class</span>.<span class="title">java</span>)</span></span><br></pre></td></tr></table></figure>
+
+<p>这里是通过类的Name或者SimpleName从providersIndex去查找的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function">T <span class="title">navigation</span><span class="params">(Class&lt;? extends T&gt; service)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Postcard postcard = LogisticsCenter.buildProvider(service.getName());</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> == postcard) &#123;</span><br><span class="line">            postcard = LogisticsCenter.buildProvider(service.getSimpleName());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> == postcard) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        LogisticsCenter.completion(postcard);</span><br><span class="line">        <span class="keyword">return</span> (T) postcard.getProvider();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoRouteFoundException ex) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Postcard <span class="title">buildProvider</span><span class="params">(String serviceName)</span> </span>&#123;</span><br><span class="line">    RouteMeta meta = Warehouse.providersIndex.get(serviceName);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> == meta) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Postcard(meta.getPath(), meta.getGroup());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>是我们在ARouter$$Provider$$xxx里面注册的:</p>
+<img src="/源码阅读计划_ARouter/5.png">
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ARouter</span>$$<span class="title">Providers</span>$$<span class="title">app</span> <span class="keyword">implements</span> <span class="title">IProviderGroup</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadInto</span><span class="params">(Map&lt;String, RouteMeta&gt; providers)</span> </span>&#123;</span><br><span class="line">    providers.put("me.linjw.checklist.DemoProvider", RouteMeta.build(RouteType.PROVIDER, DemoProvider.class, "/provider/demoProvider", "provider", null, -1, -2147483648));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Autowired自动注入原理"><a href="#Autowired自动注入原理" class="headerlink" title="@Autowired自动注入原理"></a>@Autowired自动注入原理</h1><p>最后我们来讲讲@Autowired自动注入。它的使用也很方便，使用@Autowired修饰想要注入的数据，然后再使用ARouter.getInstance().inject(this)进行自动注入将intent携带的数据注入:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Route(path = Router.ActivityHome.PATH)</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">BaseActivity</span></span>() &#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">lateinit</span> <span class="keyword">var</span> <span class="keyword">data</span> : String</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState)</span><br><span class="line">        ARouter.getInstance().inject(<span class="keyword">this</span>)</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>inject最后会根据类名查找到对应的ISyringe，并且调用它的inject实现注入:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// _Arouter.java</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">inject</span><span class="params">(Object thiz)</span> </span>&#123;</span><br><span class="line">    AutowiredService autowiredService = ((AutowiredService) ARouter.getInstance().build(<span class="string">"/arouter/service/autowired"</span>).navigation());</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> != autowiredService) &#123;</span><br><span class="line">        autowiredService.autowire(thiz);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// AutowiredServiceImpl.java</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">autowire</span><span class="params">(Object instance)</span> </span>&#123;</span><br><span class="line">    doInject(instance, <span class="keyword">null</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doInject</span><span class="params">(Object instance, Class&lt;?&gt; parent)</span> </span>&#123;</span><br><span class="line">    Class&lt;?&gt; clazz = <span class="keyword">null</span> == parent ? instance.getClass() : parent;</span><br><span class="line"></span><br><span class="line">    ISyringe syringe = getSyringe(clazz);</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">null</span> != syringe) &#123;</span><br><span class="line">        syringe.inject(instance);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个ISyringe也是ARouter自动生成的，它不需要使用反射而是直接设置，所以<strong>@Autowired修饰的数据不能是private的</strong>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span>$$<span class="title">ARouter</span>$$<span class="title">Autowired</span> <span class="keyword">implements</span> <span class="title">ISyringe</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> SerializationService serializationService;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">inject</span><span class="params">(Object target)</span> </span>&#123;</span><br><span class="line">    serializationService = ARouter.getInstance().navigation(SerializationService<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">    MainActivity substitute = (MainActivity)target;</span><br><span class="line">    substitute.data = substitute.getIntent().getStringExtra(<span class="string">"data"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+
+   
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2021/02/26/stm32-can总线学习笔记/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+
+<footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
