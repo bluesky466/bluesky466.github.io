@@ -28,10 +28,8 @@
     }
   }
   strong {
+    font-weight: normal;
     color: $title-color;
-  }
-  a strong {
-    color: $site-color;
   }
   p {
     font-size: $article-font-size;

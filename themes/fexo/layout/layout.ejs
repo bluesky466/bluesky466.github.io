@@ -1,9 +1,8 @@
 <%- partial('_partial/head') %>
 <body>
 
-
-  <% if(theme.toolbox && theme.toolbox.isShow == true && page.base !== '') { %>
-    <span id="toolbox-mobile" class="toolbox-mobile"><%=  theme.toolbox.text %></span>
+  <% if (page.base !== '') { %>
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
   <% } %>
 
   <%- body %>
@@ -18,8 +17,7 @@
   <% } %>
 
   <%- partial('_partial/load-script') %>
-
-<footer style="flex: 0 0 auto;text-align: center;">
+  <footer style="flex: 0 0 auto;text-align: center;">
 <a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
 </body>
 </html>
