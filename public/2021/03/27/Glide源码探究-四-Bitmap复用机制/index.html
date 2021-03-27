@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Glide源码探究(四) - Bitmap复用机制 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="系列文章:  Glide源码探究(一) - 生命周期绑定与Request创建  Glide源码探究(二) - 内存缓存  Glide源码探究(三) - 网络资源加载  Glide源码探究(四) - Bitmap复用机制   现在的app界面越做越复杂，图片也越来越多，每次切换或者滑动页面就会有旧图片的释放与新图片的加载。如果我们不做特殊的优化，只是简单的释放和创建bitmap，那么除了内存资源申请">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Glide源码探究(四) - Bitmap复用机制">
+<meta property="og:url" content="http://139.199.4.241/2021/03/27/Glide源码探究-四-Bitmap复用机制/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="系列文章:  Glide源码探究(一) - 生命周期绑定与Request创建  Glide源码探究(二) - 内存缓存  Glide源码探究(三) - 网络资源加载  Glide源码探究(四) - Bitmap复用机制   现在的app界面越做越复杂，图片也越来越多，每次切换或者滑动页面就会有旧图片的释放与新图片的加载。如果我们不做特殊的优化，只是简单的释放和创建bitmap，那么除了内存资源申请">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/Glide源码探究四/1.jpeg">
+<meta property="og:updated_time" content="2021-03-27T03:50:38.834Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Glide源码探究(四) - Bitmap复用机制">
+<meta name="twitter:description" content="系列文章:  Glide源码探究(一) - 生命周期绑定与Request创建  Glide源码探究(二) - 内存缓存  Glide源码探究(三) - 网络资源加载  Glide源码探究(四) - Bitmap复用机制   现在的app界面越做越复杂，图片也越来越多，每次切换或者滑动页面就会有旧图片的释放与新图片的加载。如果我们不做特殊的优化，只是简单的释放和创建bitmap，那么除了内存资源申请">
+<meta name="twitter:image" content="http://139.199.4.241/Glide源码探究四/1.jpeg">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#BitmapPoolAdapter"><span class="toc-text">BitmapPoolAdapter</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#LruBitmapPool"><span class="toc-text">LruBitmapPool</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#AttributeStrategy"><span class="toc-text">AttributeStrategy</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#KeyPool"><span class="toc-text">KeyPool</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SizeConfigStrategy"><span class="toc-text">SizeConfigStrategy</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Glide源码探究-四-Bitmap复用机制" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Glide源码探究(四) - Bitmap复用机制</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.03.27</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ul>
+<li><p><a href="https://blog.islinjw.cn/2021/02/05/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%B8%80-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%BB%91%E5%AE%9A%E4%B8%8ERequest%E5%88%9B%E5%BB%BA/" target="_blank" rel="noopener">Glide源码探究(一) - 生命周期绑定与Request创建</a></p>
+</li>
+<li><p><a href="https://blog.islinjw.cn/2021/02/08/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%BA%8C-%E5%86%85%E5%AD%98%E7%BC%93%E5%AD%98/" target="_blank" rel="noopener">Glide源码探究(二) - 内存缓存</a></p>
+</li>
+<li><p><a href="https://blog.islinjw.cn/2021/02/10/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%B8%89-%E7%BD%91%E7%BB%9C%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD/" target="_blank" rel="noopener">Glide源码探究(三) - 网络资源加载</a></p>
+</li>
+<li><p><a href="https://blog.islinjw.cn/2021/03/27/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E5%9B%9B-Bitmap%E5%A4%8D%E7%94%A8%E6%9C%BA%E5%88%B6/" target="_blank" rel="noopener">Glide源码探究(四) - Bitmap复用机制</a></p>
+</li>
+</ul>
+<p>现在的app界面越做越复杂，图片也越来越多，每次切换或者滑动页面就会有旧图片的释放与新图片的加载。如果我们不做特殊的优化，只是简单的释放和创建bitmap，那么除了内存资源申请的耗时，由于内存的不断申请与释放造成的内存抖动会很容易引发GC耗时。卡上加卡，越来越卡……</p>
+<p>其实内存抖动问题已经有非常常规的解决策略了，那就是复用池技术。直接的做法就是我们可以拿旧图片的bitmap给新图片去循环利用。</p>
+<p>你说巧不巧，Glide里面就是这么做的……</p>
+<img src="/Glide源码探究四/1.jpeg">
+
+<p>Glide的Bitmap复用是通过BitmapPool实现的，它在Glide在初始化的时候创建:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Glide <span class="title">build</span><span class="params">(@NonNull Context context)</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">if</span> (bitmapPool == <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">int</span> size = memorySizeCalculator.getBitmapPoolSize();</span><br><span class="line">    <span class="keyword">if</span> (size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      bitmapPool = <span class="keyword">new</span> LruBitmapPool(size);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      bitmapPool = <span class="keyword">new</span> BitmapPoolAdapter();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Glide会通过安卓版本、内存大小、屏幕尺寸等参数计算复用池的大小去创建复用池。如果大小是0的话代表不是用复用池，Glide就会用BitmapPoolAdapter去做一个简单的适配。</p>
+<h1 id="BitmapPoolAdapter"><a href="#BitmapPoolAdapter" class="headerlink" title="BitmapPoolAdapter"></a>BitmapPoolAdapter</h1><p>简单到基本啥也不做，就只是普通的创建和销毁Bitmap，完全没有复用:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BitmapPoolAdapter</span> <span class="keyword">implements</span> <span class="title">BitmapPool</span> </span>&#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getMaxSize</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSizeMultiplier</span><span class="params">(<span class="keyword">float</span> sizeMultiplier)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Do nothing.</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(Bitmap bitmap)</span> </span>&#123;</span><br><span class="line">    bitmap.recycle();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@NonNull</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Bitmap <span class="title">get</span><span class="params">(<span class="keyword">int</span> width, <span class="keyword">int</span> height, Bitmap.Config config)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Bitmap.createBitmap(width, height, config);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@NonNull</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Bitmap <span class="title">getDirty</span><span class="params">(<span class="keyword">int</span> width, <span class="keyword">int</span> height, Bitmap.Config config)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> get(width, height, config);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clearMemory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Do nothing.</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">trimMemory</span><span class="params">(<span class="keyword">int</span> level)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Do nothing.</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="LruBitmapPool"><a href="#LruBitmapPool" class="headerlink" title="LruBitmapPool"></a>LruBitmapPool</h1><p>所以我们的这篇博客的重点就在LruBitmapPool了。我们在<a href="https://blog.islinjw.cn/2021/02/08/Glide源码探究-二-内存缓存/" target="_blank" rel="noopener">Glide源码探究(二) - 内存缓存</a>里面讲过图片资源引用计数被清零的时候就会从弱引用缓存中删除，加入lru cache中。而如果这个时候lru cache满了的话就会对最近最久未使用的图片资源进行回收。简单来讲就是使用BitmapPool.put方法将它丢到复用池:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BitmapResource</span> <span class="keyword">implements</span> <span class="title">Resource</span>&lt;<span class="title">Bitmap</span>&gt;, <span class="title">Initializable</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">recycle</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    bitmapPool.put(bitmap);</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而我们的LruBitmapPool就会将它放到strategy中:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> LruPoolStrategy <span class="title">getDefaultStrategy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> LruPoolStrategy strategy;</span><br><span class="line">  <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.KITKAT) &#123;</span><br><span class="line">    strategy = <span class="keyword">new</span> SizeConfigStrategy();</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    strategy = <span class="keyword">new</span> AttributeStrategy();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> strategy;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(Bitmap bitmap)</span> </span>&#123;</span><br><span class="line">  ... <span class="comment">// 判断该bitmap是否可被回收</span></span><br><span class="line">  strategy.put(bitmap);</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从源码可以看出这个strategy在KITKAT以下的版本使用的是AttributeStrategy，在KITKAT以上的版本使用的是SizeConfigStrategy，它们两者同样都是LRU Cache。</p>
+<h2 id="AttributeStrategy"><a href="#AttributeStrategy" class="headerlink" title="AttributeStrategy"></a>AttributeStrategy</h2><p>这样区分的原因是安卓4.4对Bitmap的复用做了优化，在4.4以前只有宽高和Config一致的时候才能复用一个bitmap:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AttributeStrategy</span> <span class="keyword">implements</span> <span class="title">LruPoolStrategy</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> KeyPool keyPool = <span class="keyword">new</span> KeyPool();</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> GroupedLinkedMap&lt;Key, Bitmap&gt; groupedMap = <span class="keyword">new</span> GroupedLinkedMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(Bitmap bitmap)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> Key key = keyPool.get(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());</span><br><span class="line"></span><br><span class="line">    groupedMap.put(key, bitmap);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Bitmap <span class="title">get</span><span class="params">(<span class="keyword">int</span> width, <span class="keyword">int</span> height, Bitmap.Config config)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> Key key = keyPool.get(width, height, config);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> groupedMap.get(key);</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="KeyPool"><a href="#KeyPool" class="headerlink" title="KeyPool"></a>KeyPool</h2><p>这里的Key是通过图片的大小和config去创建的，由于查询的频率比较高，为了防止这个Key的多次创建，这里也用了池化技术:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">KeyPool</span> <span class="keyword">extends</span> <span class="title">BaseKeyPool</span>&lt;<span class="title">Key</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Key <span class="title">get</span><span class="params">(<span class="keyword">int</span> size, Bitmap.Config config)</span> </span>&#123;</span><br><span class="line">    Key result = get();</span><br><span class="line">    result.init(size, config);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">protected</span> Key <span class="title">create</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Key(<span class="keyword">this</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">BaseKeyPool</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Poolable</span>&gt; </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MAX_SIZE = <span class="number">20</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Queue&lt;T&gt; keyPool = Util.createQueue(MAX_SIZE);</span><br><span class="line"></span><br><span class="line">  <span class="function">T <span class="title">get</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    T result = keyPool.poll();</span><br><span class="line">    <span class="keyword">if</span> (result == <span class="keyword">null</span>) &#123;</span><br><span class="line">      result = create();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span><span class="params">(T key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (keyPool.size() &lt; MAX_SIZE) &#123;</span><br><span class="line">      keyPool.offer(key);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">abstract</span> T <span class="title">create</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="SizeConfigStrategy"><a href="#SizeConfigStrategy" class="headerlink" title="SizeConfigStrategy"></a>SizeConfigStrategy</h2><p>而由于实际开发的时候两张图片资源尺寸完全一样的情况不多(尤其在不同页面)，会导致复用的命中率比较低。而安卓4.4之后如果config相同只需要旧图片Bitmap的内存大小大于新图片需要的内存大小就能拿来复用了，这样就能提高复用的命中率:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SizeConfigStrategy</span> <span class="keyword">implements</span> <span class="title">LruPoolStrategy</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> GroupedLinkedMap&lt;Key, Bitmap&gt; groupedMap = <span class="keyword">new</span> GroupedLinkedMap&lt;&gt;();</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Bitmap.Config, NavigableMap&lt;Integer, Integer&gt;&gt; sortedSizes = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">  ...</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(Bitmap bitmap)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> size = Util.getBitmapByteSize(bitmap);</span><br><span class="line">    Key key = keyPool.get(size, bitmap.getConfig());</span><br><span class="line"></span><br><span class="line">    groupedMap.put(key, bitmap); <span class="comment">// 缓存bitmap</span></span><br><span class="line"></span><br><span class="line">    NavigableMap&lt;Integer, Integer&gt; sizes = getSizesForConfig(bitmap.getConfig());</span><br><span class="line">    Integer current = sizes.get(key.size);</span><br><span class="line">    sizes.put(key.size, current == <span class="keyword">null</span> ? <span class="number">1</span> : current + <span class="number">1</span>); <span class="comment">// size这个大小的bitmap数量加一</span></span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function"><span class="keyword">private</span> NavigableMap&lt;Integer, Integer&gt; <span class="title">getSizesForConfig</span><span class="params">(Bitmap.Config config)</span> </span>&#123;</span><br><span class="line">    NavigableMap&lt;Integer, Integer&gt; sizes = sortedSizes.get(config);</span><br><span class="line">    <span class="keyword">if</span> (sizes == <span class="keyword">null</span>) &#123;</span><br><span class="line">      sizes = <span class="keyword">new</span> TreeMap&lt;&gt;();</span><br><span class="line">      sortedSizes.put(config, sizes);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sizes;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到SizeConfigStrategy在回收的时候除了将bitmap放到groupedMap之外，还会用sortedSizes记录每种config的不同尺寸缓存bitmap缓存的数量。</p>
+<p>于是在get的时候只需要在缓存的bitmap里面找到能够满足新的图片内存需求的去复用即可:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Bitmap <span class="title">get</span><span class="params">(<span class="keyword">int</span> width, <span class="keyword">int</span> height, Bitmap.Config config)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> size = Util.getBitmapByteSize(width, height, config);</span><br><span class="line">  Key bestKey = findBestKey(size, config); <span class="comment">// 从缓存的bitmap中找到内存比新图片需要的内存大的</span></span><br><span class="line"></span><br><span class="line">  Bitmap result = groupedMap.get(bestKey);</span><br><span class="line">  <span class="keyword">if</span> (result != <span class="keyword">null</span>) &#123;</span><br><span class="line">    decrementBitmapOfSize(bestKey.size, result); <span class="comment">// 减少sortedSizes中可以复用的bitmap</span></span><br><span class="line">    result.reconfigure(width, height, config); <span class="comment">// 修改尺寸实现复用</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>查找的核心代码在findBestKey:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Key <span class="title">findBestKey</span><span class="params">(<span class="keyword">int</span> size, Bitmap.Config config)</span> </span>&#123;</span><br><span class="line">  Key result = keyPool.get(size, config);</span><br><span class="line">  <span class="keyword">for</span> (Bitmap.Config possibleConfig : getInConfigs(config)) &#123;</span><br><span class="line">    NavigableMap&lt;Integer, Integer&gt; sizesForPossibleConfig = getSizesForConfig(possibleConfig); <span class="comment">// 通过config获取可用的bitmap尺寸</span></span><br><span class="line">    Integer possibleSize = sizesForPossibleConfig.ceilingKey(size); <span class="comment">// 找到大于size的最小可用尺寸</span></span><br><span class="line">    <span class="keyword">if</span> (possibleSize != <span class="keyword">null</span> &amp;&amp; possibleSize &lt;= size * MAX_SIZE_MULTIPLE) &#123;</span><br><span class="line">      <span class="keyword">if</span> (possibleSize != size</span><br><span class="line">          || (possibleConfig == <span class="keyword">null</span> ? config != <span class="keyword">null</span> : !possibleConfig.equals(config))) &#123;</span><br><span class="line">        <span class="comment">// 如果满足复用条件，就将原本的key回收，通过复用的bitmap尺寸创建复用的key</span></span><br><span class="line">        keyPool.offer(result);</span><br><span class="line">        result = keyPool.get(possibleSize, possibleConfig);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里是先通过config获取到缓存的bitmap尺寸，然后通过NavigableMap.ceilingKey方法查找到大于需要尺寸的最小可用尺寸。如果可以找到就能用这个尺寸去groupedMap里面查找Bitmap复用了。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

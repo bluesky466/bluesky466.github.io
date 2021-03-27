@@ -8,8 +8,12 @@ tags:
 系列文章:
 
 - [Glide源码探究(一) - 生命周期绑定与Request创建](https://blog.islinjw.cn/2021/02/05/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%B8%80-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%BB%91%E5%AE%9A%E4%B8%8ERequest%E5%88%9B%E5%BB%BA/)
+
 - [Glide源码探究(二) - 内存缓存](https://blog.islinjw.cn/2021/02/08/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%BA%8C-%E5%86%85%E5%AD%98%E7%BC%93%E5%AD%98/)
+
 - [Glide源码探究(三) - 网络资源加载](https://blog.islinjw.cn/2021/02/10/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%B8%89-%E7%BD%91%E7%BB%9C%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD/)
+
+- [Glide源码探究(四) - Bitmap复用机制](https://blog.islinjw.cn/2021/03/27/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E5%9B%9B-Bitmap%E5%A4%8D%E7%94%A8%E6%9C%BA%E5%88%B6/)
 
 
 
