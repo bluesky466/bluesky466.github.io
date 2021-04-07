@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android签名与渠道包制作-V2/V3签名原理 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="系列文章:  Android签名与渠道包制作-V1版本 Android签名与渠道包制作-V2/V3签名原理  正如上一篇文章说的,V1版本的签名机制漏洞在于它没有给整个apk包做校验，而且校验的时候需要解压。V2版本的签名机制就是为了解决这两个问题而出现的。 zip包文件格式为了了解V2版本的签名原理，我们需要更加深入的了解下zip包的文件格式。由于zip的解析是从后往前的，大体格式如下:   e">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android签名与渠道包制作-V2&#x2F;V3签名原理">
+<meta property="og:url" content="http://139.199.4.241/2021/04/07/Android签名与渠道包制作-V2-V3签名原理/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="系列文章:  Android签名与渠道包制作-V1版本 Android签名与渠道包制作-V2/V3签名原理  正如上一篇文章说的,V1版本的签名机制漏洞在于它没有给整个apk包做校验，而且校验的时候需要解压。V2版本的签名机制就是为了解决这两个问题而出现的。 zip包文件格式为了了解V2版本的签名原理，我们需要更加深入的了解下zip包的文件格式。由于zip的解析是从后往前的，大体格式如下:   e">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/1.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/2.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/3.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/4.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/5.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/6.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/7.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/8.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/9.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/10.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/11.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/12.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/13.png">
+<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/14.png">
+<meta property="og:updated_time" content="2021-04-07T12:14:56.760Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android签名与渠道包制作-V2&#x2F;V3签名原理">
+<meta name="twitter:description" content="系列文章:  Android签名与渠道包制作-V1版本 Android签名与渠道包制作-V2/V3签名原理  正如上一篇文章说的,V1版本的签名机制漏洞在于它没有给整个apk包做校验，而且校验的时候需要解压。V2版本的签名机制就是为了解决这两个问题而出现的。 zip包文件格式为了了解V2版本的签名原理，我们需要更加深入的了解下zip包的文件格式。由于zip的解析是从后往前的，大体格式如下:   e">
+<meta name="twitter:image" content="http://139.199.4.241/Android签名与渠道包制作V2V3签名原理/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#zip包文件格式"><span class="toc-text">zip包文件格式</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#central-directory"><span class="toc-text">central directory</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Local-file-header"><span class="toc-text">Local file header</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#V2签名原理"><span class="toc-text">V2签名原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#摘要计算"><span class="toc-text">摘要计算</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#摘要签名"><span class="toc-text">摘要签名</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#防回滚保护"><span class="toc-text">防回滚保护</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#V3签名原理"><span class="toc-text">V3签名原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#V3版本校验流程"><span class="toc-text">V3版本校验流程</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android签名与渠道包制作-V2-V3签名原理" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android签名与渠道包制作-V2/V3签名原理</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.04.07</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ul>
+<li><a href="https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V1%E7%89%88%E6%9C%AC/" target="_blank" rel="noopener">Android签名与渠道包制作-V1版本</a></li>
+<li><a href="https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V2-V3%E7%AD%BE%E5%90%8D%E5%8E%9F%E7%90%86/" target="_blank" rel="noopener">Android签名与渠道包制作-V2/V3签名原理</a></li>
+</ul>
+<p>正如<a href="https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V1%E7%89%88%E6%9C%AC/" target="_blank" rel="noopener">上一篇文章</a>说的,V1版本的签名机制漏洞在于它没有给整个apk包做校验，而且校验的时候需要解压。V2版本的签名机制就是为了解决这两个问题而出现的。</p>
+<h1 id="zip包文件格式"><a href="#zip包文件格式" class="headerlink" title="zip包文件格式"></a>zip包文件格式</h1><p>为了了解V2版本的签名原理，我们需要更加深入的了解下zip包的文件格式。由于zip的解析是从后往前的，大体格式如下:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/1.png">
+
+<p>eocd的倒数第三部分[offset of start of central directory with respect to the starting disk number]标记了central directory的偏移:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">End</span> <span class="keyword">of</span> central <span class="keyword">directory</span> <span class="built_in">record</span>:</span><br><span class="line"></span><br><span class="line">        <span class="keyword">end</span> <span class="keyword">of</span> central dir signature    <span class="number">4</span> <span class="keyword">bytes</span>  (<span class="number">0x06054b50</span>)</span><br><span class="line">        <span class="built_in">number</span> <span class="keyword">of</span> this disk             <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        <span class="built_in">number</span> <span class="keyword">of</span> the disk <span class="keyword">with</span> the</span><br><span class="line">        <span class="keyword">start</span> <span class="keyword">of</span> the central <span class="keyword">directory</span>  <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        total <span class="built_in">number</span> <span class="keyword">of</span> entries <span class="keyword">in</span> the</span><br><span class="line">        central <span class="keyword">directory</span> <span class="keyword">on</span> this disk  <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        total <span class="built_in">number</span> <span class="keyword">of</span> entries <span class="keyword">in</span></span><br><span class="line">        the central <span class="keyword">directory</span>           <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        <span class="keyword">size</span> <span class="keyword">of</span> the central <span class="keyword">directory</span>   <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">        <span class="keyword">offset</span> <span class="keyword">of</span> <span class="keyword">start</span> <span class="keyword">of</span> central</span><br><span class="line">        <span class="keyword">directory</span> <span class="keyword">with</span> <span class="keyword">respect</span> <span class="keyword">to</span></span><br><span class="line">        the <span class="keyword">starting</span> disk <span class="built_in">number</span>        <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">        .ZIP <span class="keyword">file</span> <span class="keyword">comment</span> <span class="keyword">length</span>        <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        .ZIP <span class="keyword">file</span> <span class="keyword">comment</span>       (<span class="keyword">variable</span> <span class="keyword">size</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="central-directory"><a href="#central-directory" class="headerlink" title="central directory"></a>central directory</h2><p>我们直接以一个例子来说明:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/2.png">
+
+<p>由于zip包是小端序号,所以实际的值应该是0x00149928，这个地址就代表着central directory的起始地址，我们对比central directory的文件结构:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">Central <span class="built_in">directory</span> structure:</span><br><span class="line"></span><br><span class="line">   [<span class="built_in">file</span> header <span class="number">1</span>]</span><br><span class="line">   .</span><br><span class="line">   .</span><br><span class="line">   . </span><br><span class="line">   [<span class="built_in">file</span> header n]</span><br><span class="line">   [digital signature] </span><br><span class="line"></span><br><span class="line">   File header:</span><br><span class="line"></span><br><span class="line">     central <span class="built_in">file</span> header signature   <span class="number">4</span> <span class="keyword">bytes</span>  (<span class="number">0x02014b50</span>)</span><br><span class="line">     <span class="built_in">version</span> made <span class="keyword">by</span>                 <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     <span class="built_in">version</span> needed <span class="built_in">to</span> extract       <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     general purpose bit flag        <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     compression method              <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     <span class="keyword">last</span> <span class="keyword">mod</span> <span class="built_in">file</span> <span class="built_in">time</span>              <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     <span class="keyword">last</span> <span class="keyword">mod</span> <span class="built_in">file</span> <span class="built_in">date</span>              <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     crc<span class="number">-32</span>                          <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">     compressed size                 <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">     uncompressed size               <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">     <span class="built_in">file</span> name <span class="built_in">length</span>                <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     extra field <span class="built_in">length</span>              <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     <span class="built_in">file</span> comment <span class="built_in">length</span>             <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     disk <span class="built_in">number</span> <span class="built_in">start</span>               <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     internal <span class="built_in">file</span> attributes        <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     external <span class="built_in">file</span> attributes        <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">     <span class="built_in">relative</span> <span class="built_in">offset</span> <span class="keyword">of</span> <span class="built_in">local</span> header <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line"></span><br><span class="line">     <span class="built_in">file</span> name (<span class="built_in">variable</span> size)</span><br><span class="line">     extra field (<span class="built_in">variable</span> size)</span><br><span class="line">     <span class="built_in">file</span> comment (<span class="built_in">variable</span> size)</span><br><span class="line"></span><br><span class="line">   Digital signature:</span><br><span class="line"></span><br><span class="line">     header signature                <span class="number">4</span> <span class="keyword">bytes</span>  (<span class="number">0x05054b50</span>)</span><br><span class="line">     size <span class="keyword">of</span> data                    <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">     signature data (<span class="built_in">variable</span> size)</span><br></pre></td></tr></table></figure>
+
+<p>一堆的文件头，和一个签名。我们在zip包中找到0x00149928这个位置:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/3.png">
+
+<p>根据上面的格式定义将对应的数据列举出来:</p>
+<table>
+<thead>
+<tr>
+<th>地址</th>
+<th>长度</th>
+<th>内容</th>
+<th>值</th>
+<th>小端序实际值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x00149928</td>
+<td>4 bytes</td>
+<td>central file header signature(0x02014b50)</td>
+<td>0x504B0102</td>
+<td>0x02014B50</td>
+</tr>
+<tr>
+<td>0x0014992C</td>
+<td>2 bytes</td>
+<td>version made by</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x0014992E</td>
+<td>2 bytes</td>
+<td>version needed to extract</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x00149930</td>
+<td>2 bytes</td>
+<td>general purpose bit flag</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x00149932</td>
+<td>2 bytes</td>
+<td>compression method</td>
+<td>0x0800</td>
+<td>0x0008</td>
+</tr>
+<tr>
+<td>0x00149934</td>
+<td>2 bytes</td>
+<td>last mod file time</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x00149936</td>
+<td>2 bytes</td>
+<td>last mod file date</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x00149938</td>
+<td>4 bytes</td>
+<td>crc-32</td>
+<td>0x39B6CD57</td>
+<td>0x57CDB639</td>
+</tr>
+<tr>
+<td>0x0014993C</td>
+<td>4 bytes</td>
+<td>compressed size</td>
+<td>0x12030000</td>
+<td>0x00000312</td>
+</tr>
+<tr>
+<td>0x00149940</td>
+<td>4 bytes</td>
+<td>uncompressed size</td>
+<td>0x98080000</td>
+<td>0x00000898</td>
+</tr>
+<tr>
+<td>0x00149944</td>
+<td>2 bytes</td>
+<td>file name length</td>
+<td>0x1300</td>
+<td>0x0013</td>
+</tr>
+<tr>
+<td>0x00149946</td>
+<td>2 bytes</td>
+<td>extra field length</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x00149948</td>
+<td>2 bytes</td>
+<td>file comment length</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x0014994A</td>
+<td>2 bytes</td>
+<td>disk number start</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x0014994C</td>
+<td>2 bytes</td>
+<td>internal file attributes</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x0014994E</td>
+<td>4 bytes</td>
+<td>external file attributes</td>
+<td>0x00000000</td>
+<td>0x00000000</td>
+</tr>
+<tr>
+<td>0x00149952</td>
+<td>4 bytes</td>
+<td>relative offset of local header</td>
+<td>0x00000000</td>
+<td>0x00000000</td>
+</tr>
+<tr>
+<td>0x00149956</td>
+<td>variable size<br>(0x0013==19)</td>
+<td>file name</td>
+<td>0x41 0x6E 0x64 0x72 0x6F 0x69 0x64 0x4D 0x61 0x6E 0x69 0x66 0x65 0x73 0x74 0x2E 0x78 0x6D 0x6C</td>
+<td>ASCII码的值为：AndroidManifest.xml</td>
+</tr>
+<tr>
+<td>-</td>
+<td>variable size(0)</td>
+<td>extra field</td>
+<td>(空)</td>
+<td>(空)</td>
+</tr>
+<tr>
+<td>-</td>
+<td>variable size(0)</td>
+<td>file comment</td>
+<td>(空)</td>
+<td>(空)</td>
+</tr>
+</tbody></table>
+<p>所以我们找到第一个文件AndroidManifest.xml的[relative offset of local header]为0x00000000，即local file header 1的地址是0x00000000。</p>
+<h2 id="Local-file-header"><a href="#Local-file-header" class="headerlink" title="Local file header"></a>Local file header</h2><p>0x00000000的内容如下:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/4.png">
+
+<p>Local file header的格式如下:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Local <span class="built_in">file</span> header:</span><br><span class="line"></span><br><span class="line">        <span class="built_in">local</span> <span class="built_in">file</span> header signature     <span class="number">4</span> <span class="keyword">bytes</span>  (<span class="number">0x04034b50</span>)</span><br><span class="line">        <span class="built_in">version</span> needed <span class="built_in">to</span> extract       <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        general purpose bit flag        <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        compression method              <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        <span class="keyword">last</span> <span class="keyword">mod</span> <span class="built_in">file</span> <span class="built_in">time</span>              <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        <span class="keyword">last</span> <span class="keyword">mod</span> <span class="built_in">file</span> <span class="built_in">date</span>              <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        crc<span class="number">-32</span>                          <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">        compressed size                 <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">        uncompressed size               <span class="number">4</span> <span class="keyword">bytes</span></span><br><span class="line">        <span class="built_in">file</span> name <span class="built_in">length</span>                <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line">        extra field <span class="built_in">length</span>              <span class="number">2</span> <span class="keyword">bytes</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">file</span> name (<span class="built_in">variable</span> size)</span><br><span class="line">        extra field (<span class="built_in">variable</span> size)</span><br></pre></td></tr></table></figure>
+
+<p>根据上面的格式定义将对应的数据列举出来:</p>
+<table>
+<thead>
+<tr>
+<th>地址</th>
+<th>长度</th>
+<th>内容</th>
+<th>值</th>
+<th>小端序实际值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x00000000</td>
+<td>4 bytes</td>
+<td>local file header signature(0x04034b50)</td>
+<td>0x504B0304</td>
+<td>0x04034B50</td>
+</tr>
+<tr>
+<td>0x00000004</td>
+<td>2 bytes</td>
+<td>version needed to extract</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x00000006</td>
+<td>2 bytes</td>
+<td>general purpose bit flag</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x00000008</td>
+<td>2 bytes</td>
+<td>compression method</td>
+<td>0x0800</td>
+<td>0x0008</td>
+</tr>
+<tr>
+<td>0x0000000A</td>
+<td>2 bytes</td>
+<td>last mod file time</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x0000000C</td>
+<td>2 bytes</td>
+<td>last mod file date</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x0000001E</td>
+<td>4 bytes</td>
+<td>crc-32</td>
+<td>0x39B6CD57</td>
+<td>0x57CDB639</td>
+</tr>
+<tr>
+<td>0x00000012</td>
+<td>4 bytes</td>
+<td>compressed size</td>
+<td>0x12030000</td>
+<td>0x00000312</td>
+</tr>
+<tr>
+<td>0x00000016</td>
+<td>4 bytes</td>
+<td>uncompressed size</td>
+<td>0x98080000</td>
+<td>0x00000898</td>
+</tr>
+<tr>
+<td>0x0000001A</td>
+<td>2 bytes</td>
+<td>file name length</td>
+<td>0x1300</td>
+<td>0x0013</td>
+</tr>
+<tr>
+<td>0x0000001C</td>
+<td>2 bytes</td>
+<td>extra field length</td>
+<td>0x0000</td>
+<td>0x0000</td>
+</tr>
+<tr>
+<td>0x0000001E</td>
+<td>variable size<br>(0x0013==19)</td>
+<td>file name</td>
+<td>0x41 0x6E 0x64 0x72 0x6F 0x69 0x64 0x4D 0x61 0x6E 0x69 0x66 0x65 0x73 0x74 0x2E 0x78 0x6D 0x6C</td>
+<td>ASCII码的值为：AndroidManifest.xml</td>
+</tr>
+<tr>
+<td>-</td>
+<td>variable size(0)</td>
+<td>extra field</td>
+<td>(空)</td>
+<td>(空)</td>
+</tr>
+</tbody></table>
+<p>Local file header后面跟着的就是压缩后的文件数据，这块我们就不再深入了解了。从上面的解析我们可以了解到，zip包的解析其实是从后往前的。</p>
+<h1 id="V2签名原理"><a href="#V2签名原理" class="headerlink" title="V2签名原理"></a>V2签名原理</h1><p>了解完zip包的格式之后，就很容易理解V2签名的原理了。V2签名实际上是在apk的[central directory]前面插入一个apk签名块:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/5.png">
+
+<p>也就是说在eocd读取[offset of start of central directory with respect to the starting disk number]这个地址往前读就是APK签名块了。</p>
+<p>我们来看看这个APK签名块的格式:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/6.png">
+
+<p>由于是往前读，所以结尾16字节是一个用于识别的魔数(字符串”APK Sig Block 42”),再往前是签名块的长度,继续往前是一系列的带长度前缀的id-value键值对,最前面又是签名块的长度。</p>
+<p>我们直接找一个V2签名的apk来分析下:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/7.png">
+
+<p>同样先找到central directory的地址偏移0x00142174:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/8.png">
+
+<p>同样在该地址可以看到0x02014B50这个Central directory的魔数，而往前的16个字节就是字符串”APK Sig Block 42“的ASCII码。继续往前的8个字节则是APK签名块的长度0xFF8。我们用于是我们可以计算出第一个部分的地址:</p>
+<figure class="highlight lsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0x00142174</span> - <span class="number">0xFF8</span> - <span class="number">0x8</span> = <span class="number">0x00141174</span></span><br></pre></td></tr></table></figure>
+
+<p>再减去8个字节是因为APK签名块长度不包括第一个部分自身的8个字节。然后我们找到这个地址可以看到值是0x00000000 00000FF8:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/9.png">
+
+<p>根据APK签名块的格式我们知道往后便是第一个id-value键值对。他的长度是0x00000000 0000005F3,而id是0x7109871A。这个id的键值对被命名为”APK 签名方案 v2 分块”，里面保存的就是签名的校验数据。</p>
+<h2 id="摘要计算"><a href="#摘要计算" class="headerlink" title="摘要计算"></a>摘要计算</h2><p>校验数据的话首先要考虑的就是摘要算法，例如V1版本将每个原始文件用sha算法算出摘要之后用MANIFEST.MF一个个保存起来。而V2版本考虑了整个apk的校验，所以它并不去计算每个原始文件的摘要，而是计算整个apk的摘要。</p>
+<p>为了加速运算，首先将apk按1m大小分割成若干块，分别计算这些块的摘要，再将这些摘要组合起来计算一次摘要，就得到了整个apk的摘要。并将其放入id为0x7109871A的”APK 签名方案 v2 分块”中:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/10.png">
+
+<p>光讲和看图可能理解还不是特别深入，我们直接干<a href="https://android.googlesource.com/platform/build/+/dd910c5/tools/signapk/src/com/android/signapk/ApkSignerV2.java" target="_blank" rel="noopener">ApkSignerV2</a>的源码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> CONTENT_DIGESTED_CHUNK_MAX_SIZE_BYTES = <span class="number">1024</span> * <span class="number">1024</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Map&lt;Integer, <span class="keyword">byte</span>[]&gt; computeContentDigests(Set&lt;Integer&gt; digestAlgorithms, ByteBuffer[] contents) <span class="keyword">throws</span> DigestException &#123;</span><br><span class="line">  <span class="comment">// 按1M大小分块,计算分块数量</span></span><br><span class="line">  <span class="keyword">int</span> chunkCount = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span> (ByteBuffer input : contents) &#123;</span><br><span class="line">      chunkCount += getChunkCount(input.remaining(), CONTENT_DIGESTED_CHUNK_MAX_SIZE_BYTES);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 可能使用多种算法进行摘要计算</span></span><br><span class="line">  <span class="comment">// 每种算法都会计算所有分块的摘要然后组合起来,再计算一次摘要</span></span><br><span class="line">  <span class="comment">// 这里先创建用于组合的buffer</span></span><br><span class="line">  <span class="keyword">final</span> Map&lt;Integer, <span class="keyword">byte</span>[]&gt; digestsOfChunks = <span class="keyword">new</span> HashMap&lt;&gt;(digestAlgorithms.size());</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> digestAlgorithm : digestAlgorithms) &#123;</span><br><span class="line">      <span class="comment">// 获取摘要算法计算结果的大小</span></span><br><span class="line">      <span class="keyword">int</span> digestOutputSizeBytes = getContentDigestAlgorithmOutputSizeBytes(digestAlgorithm);</span><br><span class="line">      <span class="comment">// 前5个字节是0x5a和4个字节的块数量,后面是各个块的摘要直接连接组合</span></span><br><span class="line">      <span class="keyword">byte</span>[] concatenationOfChunkCountAndChunkDigests = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">5</span> + chunkCount * digestOutputSizeBytes];</span><br><span class="line">      <span class="comment">// 设置第0个字节为0x5a</span></span><br><span class="line">      concatenationOfChunkCountAndChunkDigests[<span class="number">0</span>] = <span class="number">0x5a</span>;</span><br><span class="line">      <span class="comment">// 设置第1个字节开始的四个字节为块数量</span></span><br><span class="line">      setUnsignedInt32LittleEngian(chunkCount, concatenationOfChunkCountAndChunkDigests, <span class="number">1</span>);</span><br><span class="line">      <span class="comment">// 将buffer放入map中</span></span><br><span class="line">      digestsOfChunks.put(digestAlgorithm, concatenationOfChunkCountAndChunkDigests);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 各个分块的摘要计算也是类似的</span></span><br><span class="line">  <span class="comment">// 需要在摘要前面添加五个字节: 0x5a + 块长度</span></span><br><span class="line">  <span class="keyword">int</span> chunkIndex = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">byte</span>[] chunkContentPrefix = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">5</span>];</span><br><span class="line">  chunkContentPrefix[<span class="number">0</span>] = (<span class="keyword">byte</span>) <span class="number">0xa5</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (ByteBuffer input : contents) &#123;</span><br><span class="line">      <span class="keyword">while</span> (input.hasRemaining()) &#123;</span><br><span class="line">          <span class="comment">// 读取分块</span></span><br><span class="line">          <span class="keyword">int</span> chunkSize = Math.min(input.remaining(), CONTENT_DIGESTED_CHUNK_MAX_SIZE_BYTES);</span><br><span class="line">          <span class="keyword">final</span> ByteBuffer chunk = getByteBuffer(input, chunkSize);</span><br><span class="line"></span><br><span class="line">          <span class="comment">// 使用各种算法计算分块的摘要</span></span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> digestAlgorithm : digestAlgorithms) &#123;</span><br><span class="line">              <span class="comment">//创建摘要算法实例</span></span><br><span class="line">              String jcaAlgorithmName =</span><br><span class="line">                      getContentDigestAlgorithmJcaDigestAlgorithm(digestAlgorithm);</span><br><span class="line">              MessageDigest md;</span><br><span class="line">              <span class="keyword">try</span> &#123;</span><br><span class="line">                  md = MessageDigest.getInstance(jcaAlgorithmName);</span><br><span class="line">              &#125; <span class="keyword">catch</span> (NoSuchAlgorithmException e) &#123;</span><br><span class="line">                  <span class="keyword">throw</span> <span class="keyword">new</span> DigestException(</span><br><span class="line">                          jcaAlgorithmName + <span class="string">" MessageDigest not supported"</span>, e);</span><br><span class="line">              &#125;</span><br><span class="line">              <span class="comment">// 这个clear并不会将内容清空,仅仅只是是将内部的指针回到position 0</span></span><br><span class="line">              chunk.clear();</span><br><span class="line"></span><br><span class="line">              <span class="comment">//在0x5a后面放入块的大小</span></span><br><span class="line">              setUnsignedInt32LittleEngian(chunk.remaining(), chunkContentPrefix, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">              <span class="comment">//计算块的摘要</span></span><br><span class="line">              md.update(chunkContentPrefix);</span><br><span class="line">              md.update(chunk);</span><br><span class="line"></span><br><span class="line">              <span class="comment">// 将计算到的分块摘要放入前面为每种算法创建的buffer中组合起来</span></span><br><span class="line">              <span class="keyword">byte</span>[] concatenationOfChunkCountAndChunkDigests =</span><br><span class="line">                      digestsOfChunks.get(digestAlgorithm);</span><br><span class="line">              <span class="keyword">int</span> expectedDigestSizeBytes =</span><br><span class="line">                      getContentDigestAlgorithmOutputSizeBytes(digestAlgorithm);</span><br><span class="line">              <span class="keyword">int</span> actualDigestSizeBytes =</span><br><span class="line">                      md.digest(</span><br><span class="line">                              concatenationOfChunkCountAndChunkDigests,</span><br><span class="line">                              <span class="number">5</span> + chunkIndex * expectedDigestSizeBytes,</span><br><span class="line">                              expectedDigestSizeBytes);</span><br><span class="line">              <span class="keyword">if</span> (actualDigestSizeBytes != expectedDigestSizeBytes) &#123;</span><br><span class="line">                  <span class="keyword">throw</span> <span class="keyword">new</span> DigestException(</span><br><span class="line">                          <span class="string">"Unexpected output size of "</span> + md.getAlgorithm()</span><br><span class="line">                                  + <span class="string">" digest: "</span> + actualDigestSizeBytes);</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line">          chunkIndex++;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 遍历算法,计算分块摘要组合起来之后的总摘要</span></span><br><span class="line">  Map&lt;Integer, <span class="keyword">byte</span>[]&gt; result = <span class="keyword">new</span> HashMap&lt;&gt;(digestAlgorithms.size());</span><br><span class="line">  <span class="keyword">for</span> (Map.Entry&lt;Integer, <span class="keyword">byte</span>[]&gt; entry : digestsOfChunks.entrySet()) &#123;</span><br><span class="line">      <span class="keyword">int</span> digestAlgorithm = entry.getKey();</span><br><span class="line">      <span class="keyword">byte</span>[] concatenationOfChunkCountAndChunkDigests = entry.getValue();</span><br><span class="line">      String jcaAlgorithmName = getContentDigestAlgorithmJcaDigestAlgorithm(digestAlgorithm);</span><br><span class="line">      MessageDigest md;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">          md = MessageDigest.getInstance(jcaAlgorithmName);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (NoSuchAlgorithmException e) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> DigestException(jcaAlgorithmName + <span class="string">" MessageDigest not supported"</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line">      result.put(digestAlgorithm, md.digest(concatenationOfChunkCountAndChunkDigests));</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以从源码看到计算的流程大概有三步:</p>
+<ol>
+<li>将整个apk按1M大小分块</li>
+<li>用多个摘要算法去计算 “0x5a + 分块长度 + 分块内容” 的摘要</li>
+<li>用多个摘要算法计算 “0x5a + 分块数量 + 各个分块摘要” 的总摘要</li>
+</ol>
+<p>虽然在签名的时候没有使用并行计算，但是实际上各个分块的摘要是独立的，在需要的时候完全可以使用并发计算去加速优化。</p>
+<h2 id="摘要签名"><a href="#摘要签名" class="headerlink" title="摘要签名"></a>摘要签名</h2><p>为了防止攻击者在修改apk之后同步修改摘要，V2签名还会使用签名私钥对上面计算出来的摘要进行签名:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">byte</span>[] generateSignerBlock(</span><br><span class="line">      SignerConfig signerConfig,</span><br><span class="line">      Map&lt;Integer, <span class="keyword">byte</span>[]&gt; contentDigests) <span class="keyword">throws</span> InvalidKeyException, SignatureException &#123;</span><br><span class="line">  <span class="keyword">if</span> (signerConfig.certificates.isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> SignatureException(<span class="string">"No certificates configured for signer"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 先将公钥保存下来用于</span></span><br><span class="line">  <span class="comment">// 1. 签名之后的验证</span></span><br><span class="line">  <span class="comment">// 2. 写入"APK 签名方案 v2 分块"用于安装时候验证签名</span></span><br><span class="line">  PublicKey publicKey = signerConfig.certificates.get(<span class="number">0</span>).getPublicKey();</span><br><span class="line">  <span class="keyword">byte</span>[] encodedPublicKey = encodePublicKey(publicKey);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 初始化签名数据</span></span><br><span class="line">  <span class="comment">// 主要是创建&lt;摘要算法id,apk摘要&gt;键值对的列表</span></span><br><span class="line">  V2SignatureSchemeBlock.SignedData signedData = <span class="keyword">new</span> V2SignatureSchemeBlock.SignedData();</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">      signedData.certificates = encodeCertificates(signerConfig.certificates);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (CertificateEncodingException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> SignatureException(<span class="string">"Failed to encode certificates"</span>, e);</span><br><span class="line">  &#125;</span><br><span class="line">  List&lt;Pair&lt;Integer, <span class="keyword">byte</span>[]&gt;&gt; digests =</span><br><span class="line">          <span class="keyword">new</span> ArrayList&lt;&gt;(signerConfig.signatureAlgorithms.size());</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> signatureAlgorithm : signerConfig.signatureAlgorithms) &#123;</span><br><span class="line">      <span class="keyword">int</span> contentDigestAlgorithm =</span><br><span class="line">              getSignatureAlgorithmContentDigestAlgorithm(signatureAlgorithm);</span><br><span class="line">      <span class="keyword">byte</span>[] contentDigest = contentDigests.get(contentDigestAlgorithm);</span><br><span class="line">      <span class="keyword">if</span> (contentDigest == <span class="keyword">null</span>) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(</span><br><span class="line">                  getContentDigestAlgorithmJcaDigestAlgorithm(contentDigestAlgorithm)</span><br><span class="line">                  + <span class="string">" content digest for "</span></span><br><span class="line">                  + getSignatureAlgorithmJcaSignatureAlgorithm(signatureAlgorithm)</span><br><span class="line">                  + <span class="string">" not computed"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      digests.add(Pair.create(signatureAlgorithm, contentDigest));</span><br><span class="line">  &#125;</span><br><span class="line">  signedData.digests = digests;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 将上面得到的signedData放入signer中用于计算签名</span></span><br><span class="line">  V2SignatureSchemeBlock.Signer signer = <span class="keyword">new</span> V2SignatureSchemeBlock.Signer();</span><br><span class="line">  <span class="comment">// FORMAT:</span></span><br><span class="line">  <span class="comment">// * length-prefixed sequence of length-prefixed digests:</span></span><br><span class="line">  <span class="comment">//   * uint32: signature algorithm ID</span></span><br><span class="line">  <span class="comment">//   * length-prefixed bytes: digest of contents</span></span><br><span class="line">  <span class="comment">// * length-prefixed sequence of certificates:</span></span><br><span class="line">  <span class="comment">//   * length-prefixed bytes: X.509 certificate (ASN.1 DER encoded).</span></span><br><span class="line">  <span class="comment">// * length-prefixed sequence of length-prefixed additional attributes:</span></span><br><span class="line">  <span class="comment">//   * uint32: ID</span></span><br><span class="line">  <span class="comment">//   * (length - 4) bytes: value</span></span><br><span class="line">  signer.signedData = encodeAsSequenceOfLengthPrefixedElements(<span class="keyword">new</span> <span class="keyword">byte</span>[][] &#123;</span><br><span class="line">      encodeAsSequenceOfLengthPrefixedPairsOfIntAndLengthPrefixedBytes(signedData.digests),</span><br><span class="line">      encodeAsSequenceOfLengthPrefixedElements(signedData.certificates),</span><br><span class="line">      <span class="comment">// additional attributes</span></span><br><span class="line">      <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">0</span>],</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 保存公钥</span></span><br><span class="line">  signer.publicKey = encodedPublicKey;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 计算各个摘要算法获取的摘要的签名</span></span><br><span class="line">  signer.signatures = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int</span> signatureAlgorithm : signerConfig.signatureAlgorithms) &#123;</span><br><span class="line">      Pair&lt;String, ? extends AlgorithmParameterSpec&gt; signatureParams =</span><br><span class="line">              getSignatureAlgorithmJcaSignatureAlgorithm(signatureAlgorithm);</span><br><span class="line">      String jcaSignatureAlgorithm = signatureParams.getFirst();</span><br><span class="line">      AlgorithmParameterSpec jcaSignatureAlgorithmParams = signatureParams.getSecond();</span><br><span class="line">      <span class="keyword">byte</span>[] signatureBytes;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 获取签名算法使用私钥进行签名</span></span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">          Signature signature = Signature.getInstance(jcaSignatureAlgorithm);</span><br><span class="line">          signature.initSign(signerConfig.privateKey);</span><br><span class="line">          <span class="keyword">if</span> (jcaSignatureAlgorithmParams != <span class="keyword">null</span>) &#123;</span><br><span class="line">              signature.setParameter(jcaSignatureAlgorithmParams);</span><br><span class="line">          &#125;</span><br><span class="line">          signature.update(signer.signedData);</span><br><span class="line">          signatureBytes = signature.sign();</span><br><span class="line">      &#125; <span class="keyword">catch</span> (InvalidKeyException e) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> InvalidKeyException(<span class="string">"Failed sign using "</span> + jcaSignatureAlgorithm, e);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (NoSuchAlgorithmException | InvalidAlgorithmParameterException</span><br><span class="line">              | SignatureException e) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> SignatureException(<span class="string">"Failed sign using "</span> + jcaSignatureAlgorithm, e);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 使用公钥尝试是否能够正确验证签名</span></span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">          Signature signature = Signature.getInstance(jcaSignatureAlgorithm);</span><br><span class="line">          signature.initVerify(publicKey);</span><br><span class="line">          <span class="keyword">if</span> (jcaSignatureAlgorithmParams != <span class="keyword">null</span>) &#123;</span><br><span class="line">              signature.setParameter(jcaSignatureAlgorithmParams);</span><br><span class="line">          &#125;</span><br><span class="line">          signature.update(signer.signedData);</span><br><span class="line">          <span class="keyword">if</span> (!signature.verify(signatureBytes)) &#123;</span><br><span class="line">              <span class="keyword">throw</span> <span class="keyword">new</span> SignatureException(<span class="string">"Signature did not verify"</span>);</span><br><span class="line">          &#125;</span><br><span class="line">      &#125; <span class="keyword">catch</span> (InvalidKeyException e) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> InvalidKeyException(<span class="string">"Failed to verify generated "</span> + jcaSignatureAlgorithm</span><br><span class="line">                  + <span class="string">" signature using public key from certificate"</span>, e);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (NoSuchAlgorithmException | InvalidAlgorithmParameterException</span><br><span class="line">              | SignatureException e) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> SignatureException(<span class="string">"Failed to verify generated "</span> + jcaSignatureAlgorithm</span><br><span class="line">                  + <span class="string">" signature using public key from certificate"</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 将签名加入签名数据</span></span><br><span class="line">      signer.signatures.add(Pair.create(signatureAlgorithm, signatureBytes));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 生成签名二进制数据</span></span><br><span class="line">  <span class="comment">// FORMAT:</span></span><br><span class="line">  <span class="comment">// * length-prefixed signed data</span></span><br><span class="line">  <span class="comment">// * length-prefixed sequence of length-prefixed signatures:</span></span><br><span class="line">  <span class="comment">//   * uint32: signature algorithm ID</span></span><br><span class="line">  <span class="comment">//   * length-prefixed bytes: signature of signed data</span></span><br><span class="line">  <span class="comment">// * length-prefixed bytes: public key (X.509 SubjectPublicKeyInfo, ASN.1 DER encoded)</span></span><br><span class="line">  <span class="keyword">return</span> encodeAsSequenceOfLengthPrefixedElements(</span><br><span class="line">          <span class="keyword">new</span> <span class="keyword">byte</span>[][] &#123;</span><br><span class="line">              signer.signedData,</span><br><span class="line">              encodeAsSequenceOfLengthPrefixedPairsOfIntAndLengthPrefixedBytes(</span><br><span class="line">                      signer.signatures),</span><br><span class="line">              signer.publicKey,</span><br><span class="line">          &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后会将计算得到的摘要、摘要签名、公钥、算法信息等数据写入刚刚说的的id为0x7109871A的”APK 签名方案 v2 分块”中，于是在安装apk的时候就能使用这些数据去检查apk是否被修改了:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/11.png">
+
+<h2 id="防回滚保护"><a href="#防回滚保护" class="headerlink" title="防回滚保护"></a>防回滚保护</h2><p>由于需要在Android 7.0之后才支持V2版本的签名，为了兼容低版本的安卓机器，一般情况下我们会同时使用V1和V2版本的签名。但由于V2版本插入apk中间的”APK签名块”是独立于zip格式存在的，攻击者其实可以直接将其直接删掉，使得apk降级回V1。</p>
+<p>而高版本的安卓系统为了兼容旧的apk，也会在找不到Apk签名块的情况下使用V1签名去验证。</p>
+<p>谷歌为了防止这种恶意操作规定:</p>
+<p>同时包含V1和V2签名的CERT.SF文件会加入这样一个属性:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">X-Android-APK-Signed:</span> <span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+<p>在Android 7.0之后读取到这个属性的时候就会强制使用V2版本的签名检查机制而不走V1版本的。</p>
+<h1 id="V3签名原理"><a href="#V3签名原理" class="headerlink" title="V3签名原理"></a>V3签名原理</h1><p>由于生成签名的时，可以指定一个有效时间，这个时间默认为 25 年，如果过了这个时间可能会出现签名失效不能再安装的情况。</p>
+<p>说可能是因为网上<a href="https://blog.fengsq.com/post/ApkSignature.html" target="_blank" rel="noopener">有人</a>实际验证过,有些机器是没有做这个检查的:</p>
+<blockquote>
+<p>==但是，我实际测试了下官方模拟器、小米、vivo、华为荣耀，签名已失效依然可以正常安装。== 网上千篇一律都说失效签名无法安装，不知道他们有没有实际测过。咨询了厂商的开发者，目前只收到了vivo的回复，说是因为手机时间可以随意调，所以这个检验没有任何意义，他们废弃掉了，其他厂商不知道是不是也出于这个原因。</p>
+</blockquote>
+<p>但是为了防止的确有公司被收购等这样那样的原因需要更换签名，安卓9.0之后提供了V3版本的签名机制。</p>
+<p>V3版本的机制原理是在APK签名块里面新增了一个id为0xF05368C0的键值对，它的格式也和V2版本id为0x7109871A的”APK 签名方案 v2 分块”基本相同，只不过增加了attr块，里面保存了多个level的证书信息。(由于它们的id不一样，所以在V2+V3同时签名的情况下，APK签名块会同时有这两个id的键值对)</p>
+<p>我从这位博主的<a href="https://blog.csdn.net/bobby_fu/article/details/103843038" target="_blank" rel="noopener">文章</a>中看到了这附两幅图，能够很形象的解释V2和V3签名间的差异:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/12.png">
+
+<p>在安装的时候会使用旧的证书去验证新证书是否有效。如果当前已经安装的apk的证书在level证书链上，就能逐步完后验证更新的证书的有效性</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/13.png">
+
+<p> 证书链验证的核心代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/base/core/java/android/util/apk/ApkSignatureSchemeV3Verifier.java</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> VerifiedProofOfRotation <span class="title">verifyProofOfRotationStruct</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        ByteBuffer porBuf,</span></span></span><br><span class="line"><span class="function"><span class="params">        CertificateFactory certFactory)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> SecurityException, IOException </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> levelCount = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> lastSigAlgorithm = -<span class="number">1</span>;</span><br><span class="line">    X509Certificate lastCert = <span class="keyword">null</span>;</span><br><span class="line">    List&lt;X509Certificate&gt; certs = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    List&lt;Integer&gt; flagsList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Proof-of-rotation struct:</span></span><br><span class="line">    <span class="comment">// A uint32 version code followed by basically a singly linked list of nodes, called levels</span></span><br><span class="line">    <span class="comment">// here, each of which have the following structure:</span></span><br><span class="line">    <span class="comment">// * length-prefix for the entire level</span></span><br><span class="line">    <span class="comment">//     - length-prefixed signed data (if previous level exists)</span></span><br><span class="line">    <span class="comment">//         * length-prefixed X509 Certificate</span></span><br><span class="line">    <span class="comment">//         * uint32 signature algorithm ID describing how this signed data was signed</span></span><br><span class="line">    <span class="comment">//     - uint32 flags describing how to treat the cert contained in this level</span></span><br><span class="line">    <span class="comment">//     - uint32 signature algorithm ID to use to verify the signature of the next level. The</span></span><br><span class="line">    <span class="comment">//         algorithm here must match the one in the signed data section of the next level.</span></span><br><span class="line">    <span class="comment">//     - length-prefixed signature over the signed data in this level.  The signature here</span></span><br><span class="line">    <span class="comment">//         is verified using the certificate from the previous level.</span></span><br><span class="line">    <span class="comment">// The linking is provided by the certificate of each level signing the one of the next.</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// get the version code, but don't do anything with it: creator knew about all our flags</span></span><br><span class="line">        porBuf.getInt();</span><br><span class="line">        HashSet&lt;X509Certificate&gt; certHistorySet = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line">        <span class="keyword">while</span> (porBuf.hasRemaining()) &#123;</span><br><span class="line">            levelCount++;</span><br><span class="line">            ByteBuffer level = getLengthPrefixedSlice(porBuf);</span><br><span class="line">            ByteBuffer signedData = getLengthPrefixedSlice(level); <span class="comment">// 获取当前level证书的信息</span></span><br><span class="line">            <span class="keyword">int</span> flags = level.getInt();</span><br><span class="line">            <span class="keyword">int</span> sigAlgorithm = level.getInt();</span><br><span class="line">            <span class="keyword">byte</span>[] signature = readLengthPrefixedByteArray(level); <span class="comment">// 获取上一level证书为当前level证书生成的签名</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// 使用上一个level的证书去验证下一个level的证书</span></span><br><span class="line">            <span class="keyword">if</span> (lastCert != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// 获取上一个证书的数据</span></span><br><span class="line">                Pair&lt;String, ? extends AlgorithmParameterSpec&gt; sigAlgParams =</span><br><span class="line">                        getSignatureAlgorithmJcaSignatureAlgorithm(lastSigAlgorithm);</span><br><span class="line">                <span class="comment">// 获取上一个证书的公钥</span></span><br><span class="line">                PublicKey publicKey = lastCert.getPublicKey();</span><br><span class="line">                <span class="comment">// 初始化签名信息</span></span><br><span class="line">                Signature sig = Signature.getInstance(sigAlgParams.first);</span><br><span class="line">                sig.initVerify(publicKey);</span><br><span class="line">                <span class="keyword">if</span> (sigAlgParams.second != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    sig.setParameter(sigAlgParams.second);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">// 设置当前level证书的数据</span></span><br><span class="line">                sig.update(signedData);</span><br><span class="line">                <span class="comment">// 使用上一level证书为当前level证书生成的签名去验证当前level证书是否有效</span></span><br><span class="line">                <span class="keyword">if</span> (!sig.verify(signature)) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(<span class="string">"Unable to verify signature of certificate #"</span></span><br><span class="line">                            + levelCount + <span class="string">" using "</span> + sigAlgParams.first + <span class="string">" when verifying"</span></span><br><span class="line">                            + <span class="string">" Proof-of-rotation record"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">                        </span><br><span class="line">            <span class="comment">// 使用证书信息去创建证书，将其赋值给lastCert并将其丢入certs队列</span></span><br><span class="line">            signedData.rewind();</span><br><span class="line">            <span class="keyword">byte</span>[] encodedCert = readLengthPrefixedByteArray(signedData);</span><br><span class="line">            <span class="keyword">int</span> signedSigAlgorithm = signedData.getInt();</span><br><span class="line">            <span class="keyword">if</span> (lastCert != <span class="keyword">null</span> &amp;&amp; lastSigAlgorithm != signedSigAlgorithm) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(<span class="string">"Signing algorithm ID mismatch for certificate #"</span></span><br><span class="line">                        + levelCount + <span class="string">" when verifying Proof-of-rotation record"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            lastCert = (X509Certificate)</span><br><span class="line">                    certFactory.generateCertificate(<span class="keyword">new</span> ByteArrayInputStream(encodedCert));</span><br><span class="line">            lastCert = <span class="keyword">new</span> VerbatimX509Certificate(lastCert, encodedCert);</span><br><span class="line"></span><br><span class="line">            lastSigAlgorithm = sigAlgorithm;</span><br><span class="line">            <span class="keyword">if</span> (certHistorySet.contains(lastCert)) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(<span class="string">"Encountered duplicate entries in "</span></span><br><span class="line">                        + <span class="string">"Proof-of-rotation record at certificate #"</span> + levelCount + <span class="string">".  All "</span></span><br><span class="line">                        + <span class="string">"signing certificates should be unique"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            certHistorySet.add(lastCert);</span><br><span class="line">            certs.add(lastCert);</span><br><span class="line">            flagsList.add(flags);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException | BufferUnderflowException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"Failed to parse Proof-of-rotation record"</span>, e);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoSuchAlgorithmException | InvalidKeyException</span><br><span class="line">            | InvalidAlgorithmParameterException | SignatureException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(</span><br><span class="line">                <span class="string">"Failed to verify signature over signed data for certificate #"</span></span><br><span class="line">                        + levelCount + <span class="string">" when verifying Proof-of-rotation record"</span>, e);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (CertificateException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(<span class="string">"Failed to decode certificate #"</span> + levelCount</span><br><span class="line">                + <span class="string">" when verifying Proof-of-rotation record"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> VerifiedProofOfRotation(certs, flagsList);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="V3版本校验流程"><a href="#V3版本校验流程" class="headerlink" title="V3版本校验流程"></a>V3版本校验流程</h2><p>实际上校验的时候并不需要从证书链中解析出最后的公钥，因为和V2的格式一样，直接可以在签名块中读取到公钥进行校验。所以他的流程前面的部分其实和v2版本是一致的，只不过在校验完成之后会再去验证证书链:</p>
+<ol>
+<li>用PublicKey和Signature验证SignerData</li>
+<li>用SignerData验证apk</li>
+<li>验证当前安装的应用证书是否在证书链中</li>
+<li>继续安装</li>
+</ol>
+<p>而证书链最新的证书公钥其实就是APK签名块里的PublicKey:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> VerifiedSigner <span class="title">verifyAdditionalAttributes</span><span class="params">(ByteBuffer attrs,</span></span></span><br><span class="line"><span class="function"><span class="params">        List&lt;X509Certificate&gt; certs, CertificateFactory certFactory)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    X509Certificate[] certChain = certs.toArray(<span class="keyword">new</span> X509Certificate[certs.size()]);</span><br><span class="line">    VerifiedProofOfRotation por = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (attrs.hasRemaining()) &#123;</span><br><span class="line">        ByteBuffer attr = getLengthPrefixedSlice(attrs);</span><br><span class="line">        <span class="keyword">if</span> (attr.remaining() &lt; <span class="number">4</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"Remaining buffer too short to contain additional attribute "</span></span><br><span class="line">                    + <span class="string">"ID. Remaining: "</span> + attr.remaining());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> id = attr.getInt();</span><br><span class="line">        <span class="keyword">switch</span>(id) &#123;</span><br><span class="line">            <span class="keyword">case</span> PROOF_OF_ROTATION_ATTR_ID:</span><br><span class="line">                <span class="keyword">if</span> (por != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(<span class="string">"Encountered multiple Proof-of-rotation records"</span></span><br><span class="line">                            + <span class="string">" when verifying APK Signature Scheme v3 signature"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                por = verifyProofOfRotationStruct(attr, certFactory);</span><br><span class="line">                <span class="comment">// 确认证书链最后一个证书的公钥与APK签名块的公钥相等</span></span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (por.certs.size() &gt; <span class="number">0</span></span><br><span class="line">                            &amp;&amp; !Arrays.equals(por.certs.get(por.certs.size() - <span class="number">1</span>).getEncoded(),</span><br><span class="line">                                    certChain[<span class="number">0</span>].getEncoded())) &#123;</span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(<span class="string">"Terminal certificate in Proof-of-rotation"</span></span><br><span class="line">                                + <span class="string">" record does not match APK signing certificate"</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (CertificateEncodingException e) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> SecurityException(<span class="string">"Failed to encode certificate when comparing"</span></span><br><span class="line">                            + <span class="string">" Proof-of-rotation record and signing certificate"</span>, e);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="comment">// not the droid we're looking for, move along, move along.</span></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> VerifiedSigner(certChain, por);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最终用[最新的证书的公钥]+[摘要的签名]去验证[摘要]的有效性，从而验证apk的有效性:</p>
+<img src="/Android签名与渠道包制作V2V3签名原理/14.png">
+
+<p>这篇讲述了V2、V3签名机制的原理，由于章节已经很长了，渠道包的制作就放到下一篇。</p>
+<p>参考:</p>
+<p><a href="https://github.com/Tencent/VasDolly/wiki/VasDolly%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86" target="_blank" rel="noopener">VasDolly实现原理</a></p>
+<p><a href="https://www.jianshu.com/p/dc320629bf9d" target="_blank" rel="noopener">Android V2签名机制以及ApkSignerV2签名源码解析</a></p>
+<p><a href="https://cloud.tencent.com/developer/article/1006237" target="_blank" rel="noopener">分析 Android V2 新签名打包机制</a></p>
+<p><a href="https://blog.csdn.net/bobby_fu/article/details/103843038" target="_blank" rel="noopener">Android P v3签名新特性</a></p>
+<p><a href="https://blog.fengsq.com/post/ApkSignature.html" target="_blank" rel="noopener">一次让你搞懂Android应用签名</a></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
