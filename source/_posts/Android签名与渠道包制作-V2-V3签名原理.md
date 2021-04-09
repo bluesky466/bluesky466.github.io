@@ -6,8 +6,10 @@ tags:
 ---
 系列文章:
 
+
 - [Android签名与渠道包制作-V1版本](https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V1%E7%89%88%E6%9C%AC/)
 - [Android签名与渠道包制作-V2/V3签名原理](https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V2-V3%E7%AD%BE%E5%90%8D%E5%8E%9F%E7%90%86/)
+- [Android签名与渠道包制作-V2/V3渠道包原理](https://blog.islinjw.cn/2021/04/09/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V2-V3%E6%B8%A0%E9%81%93%E5%8C%85%E5%8E%9F%E7%90%86/)
 
 
 
