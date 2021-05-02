@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Kotlin带接收者的lambda表达式 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="在学习kotlin协程原理的时候发现了一个比较有意思的东西: 1234567public fun CoroutineScope.launch(    context: CoroutineContext = EmptyCoroutineContext,    start: CoroutineStart = CoroutineStart.DEFAULT,    block: suspend Corou">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin带接收者的lambda表达式">
+<meta property="og:url" content="http://139.199.4.241/2021/05/02/Kotlin带接收者的lambda表达式/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="在学习kotlin协程原理的时候发现了一个比较有意思的东西: 1234567public fun CoroutineScope.launch(    context: CoroutineContext = EmptyCoroutineContext,    start: CoroutineStart = CoroutineStart.DEFAULT,    block: suspend Corou">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-05-02T02:16:50.152Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kotlin带接收者的lambda表达式">
+<meta name="twitter:description" content="在学习kotlin协程原理的时候发现了一个比较有意思的东西: 1234567public fun CoroutineScope.launch(    context: CoroutineContext = EmptyCoroutineContext,    start: CoroutineStart = CoroutineStart.DEFAULT,    block: suspend Corou">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#kotlin-with方法的原理"><span class="toc-text">kotlin with方法的原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#kotlin-apply方法的原理"><span class="toc-text">kotlin apply方法的原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#anko原理"><span class="toc-text">anko原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#kotlin-DSL设计"><span class="toc-text">kotlin DSL设计</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Kotlin带接收者的lambda表达式" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Kotlin带接收者的lambda表达式</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.05.02</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>在学习kotlin协程原理的时候发现了一个比较有意思的东西:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">fun</span> CoroutineScope.<span class="title">launch</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    context: <span class="type">CoroutineContext</span> = EmptyCoroutineContext,</span></span></span><br><span class="line"><span class="function"><span class="params">    start: <span class="type">CoroutineStart</span> = CoroutineStart.DEFAULT,</span></span></span><br><span class="line"><span class="function"><span class="params">    block: <span class="type">suspend</span> <span class="type">CoroutineScope</span>.() -&gt; <span class="type">Unit</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>: Job &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个block参数的类型是:</p>
+<blockquote>
+<p>suspend CoroutineScope.() -&gt; Unit</p>
+</blockquote>
+<p>suspend是一个关键字，在协程里面用于声明挂起函数，我们先忽略。看后面的<strong>CoroutineScope.() -&gt; Unit</strong>看起来像是个函数类型，但是比起一般的函数类型又多了前面的”<strong>CoroutineScope.</strong>“前缀。</p>
+<p>这玩意学名叫做<a href="https://www.kotlincn.net/docs/reference/lambdas.html#%E5%B8%A6%E6%9C%89%E6%8E%A5%E6%94%B6%E8%80%85%E7%9A%84%E5%87%BD%E6%95%B0%E5%AD%97%E9%9D%A2%E5%80%BC" target="_blank" rel="noopener">带有接收者的函数类型</a>，通过文档我们可以知道它和<a href="https://www.kotlincn.net/docs/reference/extensions.html" target="_blank" rel="noopener">扩展函数</a>类似，允许在函数体内部访问接收者对象的成员。也就是说在lambda内部，传给调用的接收者对象成为隐式的this，我们可以用this去访问它的成员变量。这个时候invoke的第一个参数就是接收者也就是this的值:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">data</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="keyword">var</span> name: String, <span class="keyword">var</span> age: <span class="built_in">Int</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">with</span><span class="params">(person: <span class="type">Person</span>, block: <span class="type">Person</span>.() -&gt; <span class="type">R</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">return</span> block.invoke(person)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">with(person) &#123;</span><br><span class="line">    println(<span class="string">"my name is <span class="subst">$&#123;this.name&#125;</span>, <span class="subst">$&#123;this.age&#125;</span> years old."</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后this也可以省略：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">with(person) &#123;</span><br><span class="line">    println(<span class="string">"my name is <span class="subst">$&#123;name&#125;</span>, <span class="subst">$&#123;age&#125;</span> years old."</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="kotlin-with方法的原理"><a href="#kotlin-with方法的原理" class="headerlink" title="kotlin with方法的原理"></a>kotlin with方法的原理</h1><p>通过kotlin的语法糖我们可以将invoke省略，将with方法写成下面的形式:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">with</span><span class="params">(person: <span class="type">Person</span>, block: <span class="type">Person</span>.() -&gt; <span class="type">Unit</span>)</span></span> &#123;</span><br><span class="line">    block(person)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">with(person) &#123;</span><br><span class="line">    println(<span class="string">"my name is <span class="subst">$&#123;name&#125;</span>, <span class="subst">$&#123;age&#125;</span> years old."</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于block的接收者是Person类型的，通过”Person.()-&gt;Unit”这个类型声明，其实我们可以将它看成Person的拓展函数，通过person这个传入的对象去调用，也就是说我们可以将with方法再改成这样的形式:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">with</span><span class="params">(person: <span class="type">Person</span>, block: <span class="type">Person</span>.() -&gt; <span class="type">Unit</span>)</span></span> &#123;</span><br><span class="line">    person.block()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对kotlin熟悉的同学可能想到了，如果将特定的Person类型改成泛型，然后再将block的返回值返回，就是我们常用的with函数的实现原理:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T, R&gt;</span> <span class="title">with</span><span class="params">(receiver: <span class="type">T</span>, block: <span class="type">T</span>.() -&gt; <span class="type">R</span>)</span></span>: R &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> receiver.block()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="kotlin-apply方法的原理"><a href="#kotlin-apply方法的原理" class="headerlink" title="kotlin apply方法的原理"></a>kotlin apply方法的原理</h1><p>如果with方法是Person的成员方法，那么输入的person接收者就是this，可以不用特地在方法参数指定。也就是说可以把它去掉写成下面的形式:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">data</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="keyword">var</span> name: String, <span class="keyword">var</span> age: <span class="built_in">Int</span>) &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">with</span><span class="params">(block: <span class="type">Person</span>.() -&gt; <span class="type">Unit</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">this</span>.block()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">with(person) &#123;</span><br><span class="line">    println(<span class="string">"my name is <span class="subst">$&#123;name&#125;</span>, <span class="subst">$&#123;age&#125;</span> years old"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个时候就更像给Person类创建了一个拓展方法。接收者是this，这个this就是我们传入的person变量。然后this同样可以省略，写成下面的形式:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">data</span> <span class="class"><span class="keyword">class</span> <span class="title">Person</span></span>(<span class="keyword">var</span> name: String, <span class="keyword">var</span> age: <span class="built_in">Int</span>) &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">with</span><span class="params">(block: <span class="type">Person</span>.() -&gt; <span class="type">Unit</span>)</span></span> &#123;</span><br><span class="line">        block()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">with(person) &#123;</span><br><span class="line">    println(<span class="string">"my name is <span class="subst">$&#123;name&#125;</span>, <span class="subst">$&#123;age&#125;</span> years old"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果我们使用泛型去替代这个特定的Person类，然后将this再返回，就是apply方法的实现原理了:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">inline</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;T&gt;</span> T.<span class="title">apply</span><span class="params">(block: <span class="type">T</span>.() -&gt; <span class="type">Unit</span>)</span></span>: T &#123;</span><br><span class="line">    ...</span><br><span class="line">    block()</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="anko原理"><a href="#anko原理" class="headerlink" title="anko原理"></a>anko原理</h1><p>很多的kotlin DSL就是用上面的带有接收者的lambda函数去实现的，例如anko。我们可以先给ViewGroup声明一个拓展方法textView用于创建TextView添加成子view，然后TextView作为接收者去调用lambda方法block:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> ViewGroup.<span class="title">textView</span><span class="params">(block: <span class="type">TextView</span>.() -&gt; <span class="type">Unit</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> textView = TextView(context)</span><br><span class="line">    addView(textView)</span><br><span class="line">    block(textView)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后再声明一个Activity的拓展方法verticalLinearLayout用于创建垂直布局的LinearLayout，然后将这个创建的LinearLayout作为接收者去调用lambda方法block:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> Activity.<span class="title">verticalLinearLayout</span><span class="params">(block: <span class="type">LinearLayout</span>.() -&gt; <span class="type">Unit</span>)</span></span>: LinearLayout &#123;</span><br><span class="line">    <span class="keyword">val</span> layout = LinearLayout(<span class="keyword">this</span>)</span><br><span class="line">    layout.orientation = LinearLayout.VERTICAL</span><br><span class="line">    block(layout)</span><br><span class="line">    <span class="keyword">return</span> layout</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以就有了下面这样的写法，创建一个垂直布局的LinearLayout里面包含两个TextView:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> : <span class="type">AppCompatActivity</span></span>() &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCreate</span><span class="params">(savedInstanceState: <span class="type">Bundle</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState)</span><br><span class="line">        <span class="keyword">val</span> content = verticalLinearLayout &#123;</span><br><span class="line">            textView &#123;</span><br><span class="line">                text = <span class="string">"aaa"</span></span><br><span class="line">                setBackgroundColor(Color.RED)</span><br><span class="line">            &#125;</span><br><span class="line">            textView &#123;</span><br><span class="line">                text = <span class="string">"bbb"</span></span><br><span class="line">                setBackgroundColor(Color.GREEN)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        setContentView(content)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们对这个dsl进行详细的解析，第一步它调用了Activity的拓展方法verticalLinearLayout，它的接收者是Activity，内部创建了一个LinearLayout返回。并且用它做接收者调用lambda函数，在lambda函数内部调用的textView方法是ViewGroup的拓展函数，它内部创建了一个TextView加入到LinearLayout的子view。并用这个TextView做接收者调再用lambda函数，所以可以直接设置TextView的setText方法和setBackgroundColor方法。</p>
+<h1 id="kotlin-DSL设计"><a href="#kotlin-DSL设计" class="headerlink" title="kotlin DSL设计"></a>kotlin DSL设计</h1><p>除了上面kotlin内置的with、apply方法和anko的实现之外，<a href="https://www.kotlincn.net/docs/reference/lambdas.html#%E5%B8%A6%E6%9C%89%E6%8E%A5%E6%94%B6%E8%80%85%E7%9A%84%E5%87%BD%E6%95%B0%E5%AD%97%E9%9D%A2%E5%80%BC" target="_blank" rel="noopener">官方文档</a>也提供了一个比较典型的例子:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HTML</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">body</span><span class="params">()</span></span> &#123; …… &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">html</span><span class="params">(<span class="keyword">init</span>: <span class="type">HTML</span>.() -&gt; <span class="type">Unit</span>)</span></span>: HTML &#123;</span><br><span class="line">    <span class="keyword">val</span> html = HTML()  <span class="comment">// 创建接收者对象</span></span><br><span class="line">    html.<span class="keyword">init</span>()        <span class="comment">// 将该接收者对象传给该 lambda</span></span><br><span class="line">    <span class="keyword">return</span> html</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">html &#123;       <span class="comment">// 带接收者的 lambda 由此开始</span></span><br><span class="line">    body()   <span class="comment">// 调用该接收者对象的一个方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>html方法接收一个带HTML类型接收者的lambda函数，它在内部自己创建一个HTML的实例去调用这个lambda函数，于是可以在这个lambda函数里面调用HTML的body方法。</p>
+<p>通过上面的几个例子，我们已经了解了带接收者的lambda函数的使用方法，我们可以通过这些典型的用法去设计我们自己的DSL使得我们设计的框架更加易用。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
