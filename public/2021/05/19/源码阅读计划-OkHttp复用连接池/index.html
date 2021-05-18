@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>源码阅读计划 - OkHttp复用连接池 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="蛮久之前写过一篇博客OkHttp源码解析，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。 其实这个库的其他设计也是蛮有意思的，这篇笔记我们就来看看它的Http连接是怎么实现的。 这部分的代码我们从ConnectInterceptor这个拦截器看起，它主要就是负责http的连接。新版本的OkHttp已经用kotlin重写了，所以下面的代码都是kotlin的:">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="源码阅读计划 - OkHttp复用连接池">
+<meta property="og:url" content="http://139.199.4.241/2021/05/19/源码阅读计划-OkHttp复用连接池/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="蛮久之前写过一篇博客OkHttp源码解析，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。 其实这个库的其他设计也是蛮有意思的，这篇笔记我们就来看看它的Http连接是怎么实现的。 这部分的代码我们从ConnectInterceptor这个拦截器看起，它主要就是负责http的连接。新版本的OkHttp已经用kotlin重写了，所以下面的代码都是kotlin的:">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/OkHttp复用连接池/1.png">
+<meta property="og:updated_time" content="2021-05-18T17:05:15.711Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="源码阅读计划 - OkHttp复用连接池">
+<meta name="twitter:description" content="蛮久之前写过一篇博客OkHttp源码解析，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。 其实这个库的其他设计也是蛮有意思的，这篇笔记我们就来看看它的Http连接是怎么实现的。 这部分的代码我们从ConnectInterceptor这个拦截器看起，它主要就是负责http的连接。新版本的OkHttp已经用kotlin重写了，所以下面的代码都是kotlin的:">
+<meta name="twitter:image" content="http://139.199.4.241/OkHttp复用连接池/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Connect缓存"><span class="toc-text">Connect缓存</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#请求计数"><span class="toc-text">请求计数</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#请求限制"><span class="toc-text">请求限制</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#连接的断开"><span class="toc-text">连接的断开</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#低版本的清理流程"><span class="toc-text">低版本的清理流程</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-源码阅读计划-OkHttp复用连接池" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">源码阅读计划 - OkHttp复用连接池</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.05.19</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>蛮久之前写过一篇博客<a href="https://blog.islinjw.cn/2017/12/30/OkHttp%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" target="_blank" rel="noopener">OkHttp源码解析</a>，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。</p>
+<p>其实这个库的其他设计也是蛮有意思的，这篇笔记我们就来看看它的Http连接是怎么实现的。</p>
+<p>这部分的代码我们从ConnectInterceptor这个拦截器看起，它主要就是负责http的连接。新版本的OkHttp已经用kotlin重写了，所以下面的代码都是kotlin的:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">object</span> ConnectInterceptor : Interceptor &#123;</span><br><span class="line">  <span class="meta">@Throws(IOException::class)</span></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">intercept</span><span class="params">(chain: <span class="type">Interceptor</span>.<span class="type">Chain</span>)</span></span>: Response &#123;</span><br><span class="line">    <span class="keyword">val</span> realChain = chain <span class="keyword">as</span> RealInterceptorChain</span><br><span class="line">    <span class="keyword">val</span> exchange = realChain.call.initExchange(chain)</span><br><span class="line">    <span class="keyword">val</span> connectedChain = realChain.copy(exchange = exchange)</span><br><span class="line">    <span class="keyword">return</span> connectedChain.proceed(realChain.request)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RealCall</span></span>(...) : Call &#123;</span><br><span class="line">	<span class="keyword">internal</span> <span class="function"><span class="keyword">fun</span> <span class="title">initExchange</span><span class="params">(chain: <span class="type">RealInterceptorChain</span>)</span></span>: Exchange &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">val</span> codec = exchangeFinder.find(client, chain)</span><br><span class="line">		<span class="keyword">val</span> result = Exchange(<span class="keyword">this</span>, eventListener, exchangeFinder, codec)</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">return</span> result</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ConnectInterceptor的代码很简单，主要的功能就是初始化RealCall的Exchange。这个Exchange的功能就是基于http的Connection进行数据交换。</p>
+<h1 id="Connect缓存"><a href="#Connect缓存" class="headerlink" title="Connect缓存"></a>Connect缓存</h1><p>在代码里面我们可以看到这个Exchange的codec是find出来的，codec的功能就算http报文的编解码。一般来讲用find的话就意味着它可能存在缓存:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExchangeFinder</span></span>(</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> connectionPool: RealConnectionPool,</span><br><span class="line">  <span class="keyword">internal</span> <span class="keyword">val</span> address: Address,</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> call: RealCall,</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> eventListener: EventListener</span><br><span class="line">) &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="function"><span class="keyword">fun</span> <span class="title">find</span><span class="params">(client: <span class="type">OkHttpClient</span>, chain: <span class="type">RealInterceptorChain</span> )</span></span>: ExchangeCodec &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">val</span> resultConnection = findHealthyConnection(...)</span><br><span class="line">		<span class="keyword">return</span> resultConnection.newCodec(client, chain)</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">findHealthyConnection</span><span class="params">(...)</span></span>: RealConnection &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">val</span> candidate = findConnection(...)</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">findConnection</span><span class="params">(...)</span></span>: RealConnection &#123;</span><br><span class="line">		...</span><br><span class="line">    <span class="comment">// 从连接池里面查找可用连接</span></span><br><span class="line">		<span class="keyword">if</span> (connectionPool.callAcquirePooledConnection(address, call, <span class="literal">null</span>, <span class="literal">false</span>)) &#123;</span><br><span class="line">			<span class="keyword">val</span> result = call.connection!!</span><br><span class="line">			eventListener.connectionAcquired(call, result)</span><br><span class="line">			<span class="keyword">return</span> result</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">    <span class="comment">// 找不到的话创建新的连接</span></span><br><span class="line">		<span class="keyword">val</span> newConnection = RealConnection(connectionPool, route)</span><br><span class="line">		...</span><br><span class="line">    <span class="comment">// 连接socket</span></span><br><span class="line">		newConnection.connect(...）</span><br><span class="line">		...</span><br><span class="line">    <span class="comment">// 将新连接丢到连接池</span></span><br><span class="line">		connectionPool.put(newConnection)</span><br><span class="line">    <span class="comment">// 绑定RealCall和连接</span></span><br><span class="line">		call.acquireConnectionNoEvents(newConnection)</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">return</span> newConnection</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RealCall</span></span>(...) : Call &#123;</span><br><span class="line">	<span class="function"><span class="keyword">fun</span> <span class="title">acquireConnectionNoEvents</span><span class="params">(connection: <span class="type">RealConnection</span>)</span></span> &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">this</span>.connection = connection</span><br><span class="line">		connection.calls.add(CallReference(<span class="keyword">this</span>, callStackTrace))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的代码我们可以看出来，实际上并不是codec有缓存，而是http的Connection有缓存。codec是通过这个缓存的Connection创建出来的。</p>
+<p>Connection实际上就维护着一条socket连接，我们可以看newConnection.connect的具体实现:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">connect</span><span class="params">(...)</span></span> &#123;</span><br><span class="line">	...</span><br><span class="line">	connectSocket(connectTimeout, readTimeout, call, eventListener)</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">connectSocket</span><span class="params">(...)</span></span> &#123;</span><br><span class="line">	<span class="keyword">val</span> proxy = route.proxy</span><br><span class="line">	<span class="keyword">val</span> address = route.address</span><br><span class="line"></span><br><span class="line">	<span class="keyword">val</span> rawSocket = <span class="keyword">when</span> (proxy.type()) &#123;</span><br><span class="line">		Proxy.Type.DIRECT, Proxy.Type.HTTP -&gt; address.socketFactory.createSocket()!!</span><br><span class="line">		<span class="keyword">else</span> -&gt; Socket(proxy)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	Platform.<span class="keyword">get</span>().connectSocket(rawSocket, route.socketAddress, connectTimeout)</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是并不是每次请求都会创建一条新的socket连接:</p>
+<img src="/OkHttp复用连接池/1.png">
+
+<h1 id="请求计数"><a href="#请求计数" class="headerlink" title="请求计数"></a>请求计数</h1><p>HTTP/1.0中，每次http请求都要创建一个tcp连接，而tcp连接的创建会消耗时间和资源(需要三次握手)。HTTP/1.1中引入了重用连接的机制，就是在http请求头中加入<code>Connection: keep-alive</code>来告诉对方这个请求响应完成后不要关闭，下次请求可以继续使用这条链接。</p>
+<p>HTTP 1.X中一条连接同时只能进行一次请求，也就是说必须一个将上次Request的Response完全读取之后才能发送下一次Request，而HTTP 2中添加了链路复用的机制同时可以发送多个Request。</p>
+<p>于是这里就存在了请求计数和请求数量计算的问题，那么OkHttp是如何实现的呢?</p>
+<p>前面章节中创建或者复用Connect的时候都会调用到RealCall.acquireConnectionNoEvents，将RealCall的弱引用丢到connection.calls里面，于是就完成了请求的计数:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RealCall</span></span>(...) : Call &#123;</span><br><span class="line">	<span class="function"><span class="keyword">fun</span> <span class="title">acquireConnectionNoEvents</span><span class="params">(connection: <span class="type">RealConnection</span>)</span></span> &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">this</span>.connection = connection</span><br><span class="line">		connection.calls.add(CallReference(<span class="keyword">this</span>, callStackTrace))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">internal</span> <span class="class"><span class="keyword">class</span> <span class="title">CallReference</span></span>(...) : WeakReference&lt;RealCall&gt;(referent)</span><br></pre></td></tr></table></figure>
+
+<p>有add就有remove，正如我们上面所说，一次请求实际上就是发送一个Request并将它的Response完全读取。我们用Response.string举例，它最终是通过Exchange使用socket从服务端读取的数据:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ResponseBody</span> : <span class="type">Closeable &#123;</span></span></span><br><span class="line">	<span class="meta">@Throws(IOException::class)</span></span><br><span class="line">	<span class="function"><span class="keyword">fun</span> <span class="title">string</span><span class="params">()</span></span>: String = source().use &#123; source -&gt;</span><br><span class="line">		source.readString(charset = source.readBomAsCharset(charset()))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Exchange</span></span>(...) &#123;</span><br><span class="line">	<span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">read</span><span class="params">(sink: <span class="type">Buffer</span>, byteCount: <span class="type">Long</span>)</span></span>: <span class="built_in">Long</span> &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">val</span> read = delegate.read(sink, byteCount)</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">if</span> (read == -<span class="number">1L</span>) &#123;</span><br><span class="line">			complete(<span class="literal">null</span>)</span><br><span class="line">			<span class="keyword">return</span> -<span class="number">1L</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">val</span> newBytesReceived = bytesReceived + read</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">if</span> (newBytesReceived == contentLength) &#123;</span><br><span class="line">			complete(<span class="literal">null</span>)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> read</span><br><span class="line">		...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>中间的过程过于曲折我就不一步步跟踪了，大家只要知道最终会调到Exchange.read方法。里面有两种情况读取到-1代表与服务器已经断开连接，读取的长度等于Response header里面的Content-Length字段，代表本次Response的全部数据已经读取完成。</p>
+<p>这两者都代表这这次请求已经完成，会调用complete方法，最终调到RealCall.releaseConnectionNoEvents将它从connection.calls里面删掉:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Exchange</span></span>(...) &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="function"><span class="keyword">fun</span> <span class="type">&lt;E : IOException?&gt;</span> <span class="title">complete</span><span class="params">(e: <span class="type">E</span>)</span></span>: E &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">return</span> bodyComplete(bytesReceived, responseDone = <span class="literal">true</span>, requestDone = <span class="literal">false</span>, e = e)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="function"><span class="keyword">fun</span> <span class="type">&lt;E : IOException?&gt;</span> <span class="title">bodyComplete</span><span class="params">(...)</span></span>: E &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">return</span> call.messageDone(<span class="keyword">this</span>, requestDone, responseDone, e)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RealCall</span></span>(...) : Call &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">internal</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;E : IOException?&gt;</span> <span class="title">messageDone</span><span class="params">(...)</span></span>: E &#123;</span><br><span class="line">		<span class="keyword">return</span> callDone(e)</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="type">&lt;E : IOException?&gt;</span> <span class="title">callDone</span><span class="params">(e: <span class="type">E</span>)</span></span>: E &#123;</span><br><span class="line">		releaseConnectionNoEvents()</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">internal</span> <span class="function"><span class="keyword">fun</span> <span class="title">releaseConnectionNoEvents</span><span class="params">()</span></span>: Socket? &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">val</span> calls = connection.calls</span><br><span class="line">		<span class="keyword">val</span> index = calls.indexOfFirst &#123; it.<span class="keyword">get</span>() == <span class="keyword">this</span><span class="symbol">@RealCall</span> &#125;</span><br><span class="line">		...</span><br><span class="line">		calls.removeAt(index)</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">if</span> (calls.isEmpty()) &#123;</span><br><span class="line">			connection.idleAtNs = System.nanoTime()</span><br><span class="line">			...</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里就涉及到两个使用OkHttp容易不小心出现的错误:</p>
+<ol>
+<li>Response.string只能调用一次</li>
+<li>Response必须被读取</li>
+</ol>
+<p>由于Response.string读取完成之后这次请求其实就已经结束了，而且OkHttp并没有对这个结果做缓存，所以下次再读取就会出现java.lang.IllegalStateException: closed异常。</p>
+<p>而我们从上面的流程知道，connection.calls的remove要Response读取完成后执行，如果我们得到一个Response之后一直不去读取的话实际上它会一直占中这这个Connect，下次HTTP 1.X的请求就不能复用这套链接，要新建一条Connect。</p>
+<h1 id="请求限制"><a href="#请求限制" class="headerlink" title="请求限制"></a>请求限制</h1><p>通过connection.calls我们能知道当前有多少个请求在占用这条connection，所以在连接池里面就能对次数进行限制。</p>
+<p>从前面篇幅我们知道ExchangeFinder是通过RealConnectionPool.callAcquirePooledConnection从连接缓存池查找的Connection:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">callAcquirePooledConnection</span><span class="params">(...)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">	<span class="keyword">for</span> (connection <span class="keyword">in</span> connections) &#123;</span><br><span class="line">		synchronized(connection) &#123;</span><br><span class="line">			<span class="keyword">if</span> (requireMultiplexed &amp;&amp; !connection.isMultiplexed) <span class="keyword">return</span><span class="symbol">@synchronized</span></span><br><span class="line">			<span class="keyword">if</span> (!connection.isEligible(address, routes)) <span class="keyword">return</span><span class="symbol">@synchronized</span></span><br><span class="line">			call.acquireConnectionNoEvents(connection)</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>connection.isEligible里面除了判断address是否相等之外还会判断请求数量是否已满:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">internal</span> <span class="function"><span class="keyword">fun</span> <span class="title">isEligible</span><span class="params">(address: <span class="type">Address</span>, routes: <span class="type">List</span>&lt;<span class="type">Route</span>&gt;?)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">// 连接次数是否已满,在HTTP 1.X的情况下allocationLimit总是为1</span></span><br><span class="line">	<span class="keyword">if</span> (calls.size &gt;= allocationLimit || noNewExchanges) <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 判断地址是否线条</span></span><br><span class="line">	<span class="keyword">if</span> (!<span class="keyword">this</span>.route.address.equalsNonHost(address)) <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 判断host是否相同</span></span><br><span class="line">	<span class="keyword">if</span> (address.url.host == <span class="keyword">this</span>.route().address.url.host) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span> <span class="comment">// This connection is a perfect match.</span></span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>allocationLimit在HTTP 1.X的情况下allocationLimit总是为1就保证了HTTP 1.X的情况下每次只能跑一个请求。</p>
+<h1 id="连接的断开"><a href="#连接的断开" class="headerlink" title="连接的断开"></a>连接的断开</h1><p>从上面的流从我们看到，连接在请求完成之后是不会断开的，等待下次请求复用。如果一直不去断开的话，就会有一个资源占用的问题。那么OkHttp是在什么时候断开连接的呢?</p>
+<p>其实RealConnectionPool内部会有个cleanupTask专门用于连接的清理</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> cleanupTask = <span class="keyword">object</span> : Task(<span class="string">"<span class="variable">$okHttpName</span> ConnectionPool"</span>) &#123;</span><br><span class="line">	<span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">runOnce</span><span class="params">()</span></span> = cleanup(System.nanoTime())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它会在RealConnectionPool的put(加入新连接)、connectionBecameIdle(有连接空闲)里面被调用:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">put</span><span class="params">(connection: <span class="type">RealConnection</span>)</span></span> &#123;</span><br><span class="line">    connection.assertThreadHoldsLock()</span><br><span class="line"></span><br><span class="line">    connections.add(connection)</span><br><span class="line">    cleanupQueue.schedule(cleanupTask)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">connectionBecameIdle</span><span class="params">(connection: <span class="type">RealConnection</span>)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">  connection.assertThreadHoldsLock()</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">if</span> (connection.noNewExchanges || maxIdleConnections == <span class="number">0</span>) &#123;</span><br><span class="line">    connection.noNewExchanges = <span class="literal">true</span></span><br><span class="line">    connections.remove(connection)</span><br><span class="line">    <span class="keyword">if</span> (connections.isEmpty()) cleanupQueue.cancelAll()</span><br><span class="line">    <span class="literal">true</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    cleanupQueue.schedule(cleanupTask)</span><br><span class="line">    <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>cleanupQueue会根据Task.runOnce的返回值等待一段时间再次调用runOnce:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Task</span></span>(...) &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">/** Returns the delay in nanoseconds until the next execution, or -1L to not reschedule. */</span></span><br><span class="line">  <span class="keyword">abstract</span> <span class="function"><span class="keyword">fun</span> <span class="title">runOnce</span><span class="params">()</span></span>: <span class="built_in">Long</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的runOnce实际就是cleanup方法，我们看看里面干了啥:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">cleanup</span><span class="params">(now: <span class="type">Long</span>)</span></span>: <span class="built_in">Long</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> inUseConnectionCount = <span class="number">0</span></span><br><span class="line">    <span class="keyword">var</span> idleConnectionCount = <span class="number">0</span></span><br><span class="line">    <span class="keyword">var</span> longestIdleConnection: RealConnection? = <span class="literal">null</span></span><br><span class="line">    <span class="keyword">var</span> longestIdleDurationNs = <span class="built_in">Long</span>.MIN_VALUE</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 找到下一次空闲连接超时的时间</span></span><br><span class="line">    <span class="keyword">for</span> (connection <span class="keyword">in</span> connections) &#123;</span><br><span class="line">      synchronized(connection) &#123;</span><br><span class="line">        <span class="comment">// 如果这个connection还在使用(Response还没有读完)，就计数然后继续搜索</span></span><br><span class="line">        <span class="keyword">if</span> (pruneAndGetAllocationCount(connection, now) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">          inUseConnectionCount++</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          idleConnectionCount++</span><br><span class="line"></span><br><span class="line">          <span class="comment">// 这个连接已经空闲,计算它空闲了多久，并且保存空闲了最久的连接</span></span><br><span class="line">          <span class="keyword">val</span> idleDurationNs = now - connection.idleAtNs</span><br><span class="line">          <span class="keyword">if</span> (idleDurationNs &gt; longestIdleDurationNs) &#123;</span><br><span class="line">            longestIdleDurationNs = idleDurationNs</span><br><span class="line">            longestIdleConnection = connection</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">Unit</span></span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">when</span> &#123;</span><br><span class="line">      longestIdleDurationNs &gt;= <span class="keyword">this</span>.keepAliveDurationNs</span><br><span class="line">          || idleConnectionCount &gt; <span class="keyword">this</span>.maxIdleConnections -&gt; &#123;</span><br><span class="line">        <span class="comment">// 如果空闲最久的连接比keepAliveDurationNs这个值要大就回收</span></span><br><span class="line">        <span class="keyword">val</span> connection = longestIdleConnection!!</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// 关闭socket</span></span><br><span class="line">        connection.socket().closeQuietly()</span><br><span class="line">        <span class="keyword">if</span> (connections.isEmpty()) cleanupQueue.cancelAll()</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 我们只回收了空闲超时最久的连接，可能还会有其他连接也超时了，返回0让它立马进行下一次清理</span></span><br><span class="line">        <span class="keyword">return</span> <span class="number">0L</span></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      idleConnectionCount &gt; <span class="number">0</span> -&gt; &#123;</span><br><span class="line">        <span class="comment">// 如果有空闲连接，就计算最近的一次空闲超时的时间，去等待</span></span><br><span class="line">        <span class="keyword">return</span> keepAliveDurationNs - longestIdleDurationNs</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      inUseConnectionCount &gt; <span class="number">0</span> -&gt; &#123;</span><br><span class="line">        <span class="comment">// 如果所有连接都在使用，就等待这个超时时间去重新检查清理</span></span><br><span class="line">        <span class="keyword">return</span> keepAliveDurationNs</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">else</span> -&gt; &#123;</span><br><span class="line">        <span class="comment">// 如果没有连接，就不需要再检查了</span></span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说这里面会查找空闲过久的连接，然后关闭它的socket。然后计算下一次进行cleanup的等待时长。</p>
+<p>pruneAndGetAllocationCount返回的是正在占用的请求数，用于检测连接是否空闲。但是其实它内部还会去回收泄露的Response:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">fun</span> <span class="title">pruneAndGetAllocationCount</span><span class="params">(connection: <span class="type">RealConnection</span>, now: <span class="type">Long</span>)</span></span>: <span class="built_in">Int</span> &#123;</span><br><span class="line">    connection.assertThreadHoldsLock()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> references = connection.calls</span><br><span class="line">    <span class="keyword">var</span> i = <span class="number">0</span></span><br><span class="line">    <span class="keyword">while</span> (i &lt; references.size) &#123;</span><br><span class="line">      <span class="keyword">val</span> reference = references[i]</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (reference.<span class="keyword">get</span>() != <span class="literal">null</span>) &#123;</span><br><span class="line">        i++</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// We've discovered a leaked call. This is an application bug.</span></span><br><span class="line">      <span class="keyword">val</span> callReference = reference <span class="keyword">as</span> CallReference</span><br><span class="line">      <span class="keyword">val</span> message = <span class="string">"A connection to <span class="subst">$&#123;connection.route().address.url&#125;</span> was leaked. "</span> +</span><br><span class="line">          <span class="string">"Did you forget to close a response body?"</span></span><br><span class="line">      Platform.<span class="keyword">get</span>().logCloseableLeak(message, callReference.callStackTrace)</span><br><span class="line"></span><br><span class="line">      references.removeAt(i)</span><br><span class="line">      connection.noNewExchanges = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">      <span class="comment">// If this was the last allocation, the connection is eligible for immediate eviction.</span></span><br><span class="line">      <span class="keyword">if</span> (references.isEmpty()) &#123;</span><br><span class="line">        connection.idleAtNs = now - keepAliveDurationNs</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> references.size</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的”A connection to ${connection.route().address.url} was leaked. Did you forget to close a response body?”指定就是前面请求计数那里讲的容易出现问题的第二点：得到一个Response之后一直不去读取的话实际上它会一直占中这这个Connect，具体可能是下面的样子:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">client.newCall(getRequest()).enqueue(new Callback() &#123;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> void onFailure(<span class="meta">@NotNull</span> Call call, <span class="meta">@NotNull</span> IOException e) &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> void onResponse(<span class="meta">@NotNull</span> Call call, <span class="meta">@NotNull</span> Response response) throws IOException &#123;</span><br><span class="line">    <span class="comment">// 啥都不干</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>onResponse传入的response没有人去读取数据，就会一直占用连接，但是由于它在后面又没有人引用就会被GC回收导致这条连接再也不能断开。</p>
+<p>pruneAndGetAllocationCount里面就通过弱引用get返回null的方式去检查到这样的异常，进行清理动作。</p>
+<h1 id="低版本的清理流程"><a href="#低版本的清理流程" class="headerlink" title="低版本的清理流程"></a>低版本的清理流程</h1><p>上面讲的是最新版本的清理流程，低版本的流程稍微有点差异但是原理大致相同:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Runnable cleanupRunnable = <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        <span class="keyword">long</span> waitNanos = cleanup(System.nanoTime());</span><br><span class="line">        <span class="keyword">if</span> (waitNanos == -<span class="number">1</span>) <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">if</span> (waitNanos &gt; <span class="number">0</span>) &#123;</span><br><span class="line">          <span class="keyword">long</span> waitMillis = waitNanos / <span class="number">1000000L</span>;</span><br><span class="line">          waitNanos -= (waitMillis * <span class="number">1000000L</span>);</span><br><span class="line">          <span class="keyword">synchronized</span> (ConnectionPool.<span class="keyword">this</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">              ConnectionPool.<span class="keyword">this</span>.wait(waitMillis, (<span class="keyword">int</span>) waitNanos);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException ignored) &#123;</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>会专门为连接的清理开一条线程用while true的方式不断检查，当然类似的会使用wait方法等待cleanup返回的时间，减少cpu占用。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
