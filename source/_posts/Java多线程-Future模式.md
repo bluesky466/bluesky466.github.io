@@ -118,11 +118,11 @@ public interface ExecutorService extends Executor {
 }
 ```
 
-__Future<?> submit(Runnable task) :__
+__Future\<?\> submit(Runnable task) :__
 
-它的返回值实际上是Future<Void>,子线程是不会返回数据的。
+它的返回值实际上是Future\<Void\>,子线程是不会返回数据的。
 
-__<T> Future<T> submit(Runnable task, T result) :__
+__\<T\> Future\<T\> submit(Runnable task, T result) :__
 
 这个方法是不是很蛋疼,返回的结果在调用的时候已经给出了。如果我一开始就知道结果那我为什么又要发起子线程呢？
 
@@ -148,7 +148,7 @@ try {
 }
 ```
 
-__<T> Future<T> submit(Callable<T> task) :__
+__\<T\> Future\<T\> submit(Callable\<T\> task) :__
 
 这个方法就比较好理解了, Callable.call()方法在子线程中被调用,同时它有返回值,只有将加载的数据直接return出来就好:
 
@@ -172,7 +172,7 @@ try {
 
 # 一个实际的例子
 
-比如我们在计算两个List<Integer>中的数的总和的时候就可以用Future模式提高效率:
+比如我们在计算两个List\<Integer\>中的数的总和的时候就可以用Future模式提高效率:
 
 ```
 public int getTotal(final List<Integer> a, final List<Integer> b) throws ExecutionException, InterruptedException {

@@ -300,9 +300,7 @@ task ADemoTask {
 
 Project间存在依赖，每个Project包含多个存在依赖的Task，Task内部有一个Action列表，Task的执行实际上就是内部Action的顺序执行。
 
-
-
-## 插件
+# 插件
 
 让我们回到build.gradle脚本，里面默认调用了project的apply、android、dependencies方法:
 
