@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Flutter三棵树创建原理 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Flutter,">
+  
+
+  <meta name="description" content="flutter的渲染机制基本就是靠Widget、Element、RenderObject三棵树去实现的，这篇博客就来讲讲这三棵树是怎么创建的。 首先我们来看看这三者到底是个啥:  Widget: 描述一个UI元素的配置数据，不可变，修改信息需要重新new  Element: 通过Widget配置实例化出来的对象,它是可变的  RenderObject: 真正的渲染对象   让我们用一个简单的dem">
+<meta name="keywords" content="技术相关,Flutter">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flutter三棵树创建原理">
+<meta property="og:url" content="http://139.199.4.241/2021/07/13/Flutter三棵树创建原理/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="flutter的渲染机制基本就是靠Widget、Element、RenderObject三棵树去实现的，这篇博客就来讲讲这三棵树是怎么创建的。 首先我们来看看这三者到底是个啥:  Widget: 描述一个UI元素的配置数据，不可变，修改信息需要重新new  Element: 通过Widget配置实例化出来的对象,它是可变的  RenderObject: 真正的渲染对象   让我们用一个简单的dem">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/Flutter三棵树创建原理/1.png">
+<meta property="og:image" content="http://139.199.4.241/Flutter三棵树创建原理/2.png">
+<meta property="og:image" content="http://139.199.4.241/Flutter三棵树创建原理/3.gif">
+<meta property="og:updated_time" content="2021-07-13T14:50:44.442Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Flutter三棵树创建原理">
+<meta name="twitter:description" content="flutter的渲染机制基本就是靠Widget、Element、RenderObject三棵树去实现的，这篇博客就来讲讲这三棵树是怎么创建的。 首先我们来看看这三者到底是个啥:  Widget: 描述一个UI元素的配置数据，不可变，修改信息需要重新new  Element: 通过Widget配置实例化出来的对象,它是可变的  RenderObject: 真正的渲染对象   让我们用一个简单的dem">
+<meta name="twitter:image" content="http://139.199.4.241/Flutter三棵树创建原理/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#runApp"><span class="toc-text">runApp</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Element-mount"><span class="toc-text">Element.mount</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-RenderObjectElement会创建RenderObject"><span class="toc-text">1.RenderObjectElement会创建RenderObject</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-创建子Element并mount到Element树"><span class="toc-text">2.创建子Element并mount到Element树</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#mount流程解析"><span class="toc-text">mount流程解析</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Flutter三棵树创建原理" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Flutter三棵树创建原理</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.07.13</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>flutter的渲染机制基本就是靠Widget、Element、RenderObject三棵树去实现的，这篇博客就来讲讲这三棵树是怎么创建的。</p>
+<p>首先我们来看看这三者到底是个啥:</p>
+<ul>
+<li><p>Widget: 描述一个UI元素的配置数据，不可变，修改信息需要重新new</p>
+</li>
+<li><p>Element: 通过Widget配置实例化出来的对象,它是可变的</p>
+</li>
+<li><p>RenderObject: 真正的渲染对象</p>
+</li>
+</ul>
+<p>让我们用一个简单的demo来做讲解:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> main() &#123;</span><br><span class="line">  runApp(MyApp());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyApp</span> <span class="keyword">extends</span> <span class="title">StatelessWidget</span> </span>&#123;</span><br><span class="line">  <span class="meta">@override</span></span><br><span class="line">  Widget build(BuildContext context) &#123;</span><br><span class="line">    <span class="keyword">return</span> MaterialApp(</span><br><span class="line">      title: <span class="string">'Flutter Demo'</span>,</span><br><span class="line">      home: HelloWorldPage(),</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HelloWorldPage</span> <span class="keyword">extends</span> <span class="title">StatelessWidget</span> </span>&#123;</span><br><span class="line">  <span class="meta">@override</span></span><br><span class="line">  Widget build(BuildContext context) &#123;</span><br><span class="line">    <span class="keyword">return</span> Center(</span><br><span class="line">      child: Text(<span class="string">"Hello World"</span>, style: TextStyle(color: Colors.blue)),</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码正在屏幕的中间显示了一个Hello World字符串。</p>
+<img src="/Flutter三棵树创建原理/1.png">
+
+<h1 id="runApp"><a href="#runApp" class="headerlink" title="runApp"></a>runApp</h1><p>在main函数里面只有一行runApp调用，追踪下去我们可以看到它主要做了三件事情:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> runApp(Widget app) &#123;</span><br><span class="line">  WidgetsFlutterBinding.ensureInitialized()</span><br><span class="line">    ..scheduleAttachRootWidget(app)</span><br><span class="line">    ..scheduleWarmUpFrame();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> scheduleAttachRootWidget(Widget rootWidget) &#123;</span><br><span class="line">    Timer.run(() &#123;</span><br><span class="line">      attachRootWidget(rootWidget);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">void</span> attachRootWidget(Widget rootWidget) &#123;</span><br><span class="line">    ...</span><br><span class="line">    _renderViewElement = RenderObjectToWidgetAdapter&lt;RenderBox&gt;(</span><br><span class="line">      container: renderView,</span><br><span class="line">      debugShortDescription: <span class="string">'[root]'</span>,</span><br><span class="line">      child: rootWidget,</span><br><span class="line">    ).attachToRenderTree(buildOwner!, renderViewElement <span class="keyword">as</span> RenderObjectToWidgetElement&lt;RenderBox&gt;?);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">RenderObjectToWidgetElement&lt;T&gt; attachToRenderTree(BuildOwner owner, [ RenderObjectToWidgetElement&lt;T&gt;? element ]) &#123;</span><br><span class="line">    ...</span><br><span class="line">    element = createElement();</span><br><span class="line">    ...</span><br><span class="line">    element!.mount(<span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">    ...</span><br><span class="line">  <span class="keyword">return</span> element!;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>创建RenderObjectToWidgetAdapter作为Widget树的根，将传入的Widget挂上去</li>
+<li>调用RenderObjectToWidgetAdapter.createElement创建Element</li>
+<li>调用Element.mount将它挂到Element树上，Element树的根节点的parent为null</li>
+</ol>
+<h1 id="Element-mount"><a href="#Element-mount" class="headerlink" title="Element.mount"></a>Element.mount</h1><p>Element的mount方法是三棵树创建流程的关键步骤，不同类型的Element mount的流程不太一样。</p>
+<h2 id="1-RenderObjectElement会创建RenderObject"><a href="#1-RenderObjectElement会创建RenderObject" class="headerlink" title="1.RenderObjectElement会创建RenderObject"></a>1.RenderObjectElement会创建RenderObject</h2><p>如果Element是RenderObjectElement类型的，那么它对应的Widget一定是RenderObjectWidget类型的，这是它的构造函数决定的:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">RenderObjectElement</span> <span class="keyword">extends</span> <span class="title">Element</span> </span>&#123;</span><br><span class="line">  RenderObjectElement(RenderObjectWidget widget) : <span class="keyword">super</span>(widget);</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它在mount的时候会调用RenderObjectWidget.createRenderObject创建RenderObject然后将它挂到RenderObject树上:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">RenderObject <span class="keyword">get</span> renderObject =&gt; _renderObject!;</span><br><span class="line"></span><br><span class="line">RenderObject? _renderObject;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> mount(<span class="built_in">Element</span>? parent, <span class="built_in">Object</span>? newSlot) &#123;</span><br><span class="line">    ...</span><br><span class="line">    _renderObject = widget.createRenderObject(<span class="keyword">this</span>);</span><br><span class="line">    ...</span><br><span class="line">    attachRenderObject(newSlot);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> attachRenderObject(<span class="built_in">Object</span>? newSlot) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 插入RenderObject树</span></span><br><span class="line">    _ancestorRenderObjectElement = _findAncestorRenderObjectElement();</span><br><span class="line">    _ancestorRenderObjectElement?.insertRenderObjectChild(renderObject, newSlot);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个_findAncestorRenderObjectElement方法比较魔性，找的是祖先RenderObjectElement，其实就是往parent一层层查找，直到找的RenderObjectElement:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">RenderObjectElement? _findAncestorRenderObjectElement() &#123;</span><br><span class="line">    <span class="built_in">Element</span>? ancestor = _parent;</span><br><span class="line">    <span class="keyword">while</span> (ancestor != <span class="keyword">null</span> &amp;&amp; ancestor <span class="keyword">is</span>! RenderObjectElement)</span><br><span class="line">      ancestor = ancestor._parent;</span><br><span class="line">    <span class="keyword">return</span> ancestor <span class="keyword">as</span> RenderObjectElement?;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>insertRenderObjectChild方法将创建的RenderObject插入成为祖先RenderObjectElement的RenderObject的子节点，这样就把创建的RenderObject挂到了RenderObject树上。</p>
+<h2 id="2-创建子Element并mount到Element树"><a href="#2-创建子Element并mount到Element树" class="headerlink" title="2.创建子Element并mount到Element树"></a>2.创建子Element并mount到Element树</h2><p>处理完本节点的RenderObject之后，就会创建子Element将它的parent设置成自己，mount到Element树上。</p>
+<p>Element都是通过Widget.createElement创建的，而Element会保存创建它的Widget。所以可以通过这个Widget去获取子Widget，然后用子Widget去创建子Element。</p>
+<p>子Widget的获取有两种方式，如果是在Widget的构造函数传入的，那么直接可以拿到它，例如上面的RenderObjectToWidgetAdapter，然后用它去createElement创建子Element:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 子widget是child参数传进去的</span></span><br><span class="line">RenderObjectToWidgetAdapter&lt;RenderBox&gt;(</span><br><span class="line">      container: renderView,</span><br><span class="line">      debugShortDescription: <span class="string">'[root]'</span>,</span><br><span class="line">      child: rootWidget,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> mount(<span class="built_in">Element</span>? parent, <span class="built_in">Object</span>? newSlot) &#123;</span><br><span class="line">    ...</span><br><span class="line">    _rebuild();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> _rebuild() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// widget.child拿到构造函数传进去的子widget，即rootWidget</span></span><br><span class="line">    _child = updateChild(_child, widget.child, _rootChildSlot);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">Element</span>? updateChild(<span class="built_in">Element</span>? child, Widget? newWidget, <span class="built_in">Object</span>? newSlot) &#123;</span><br><span class="line">    ...</span><br><span class="line">    newChild = inflateWidget(newWidget, newSlot);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">Element</span> inflateWidget(Widget newWidget, <span class="built_in">Object</span>? newSlot) &#123;</span><br><span class="line">    ...</span><br><span class="line">  <span class="comment">// 创建子Element</span></span><br><span class="line">    <span class="keyword">final</span> <span class="built_in">Element</span> newChild = newWidget.createElement();</span><br><span class="line">    ...</span><br><span class="line">  <span class="comment">// 调用子Element的mount方法将它挂到Element树上，parent是第一个参数this</span></span><br><span class="line">  newChild.mount(<span class="keyword">this</span>, newSlot);</span><br><span class="line">  ...</span><br><span class="line">    <span class="keyword">return</span> newChild;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>像StatelessWidget这种子widget是build出来的，则在mount的时候会调用它的build方法创建子widget，然后用它去createElement创建子Element:</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> mount(<span class="built_in">Element</span>? parent, <span class="built_in">Object</span>? newSlot) &#123;</span><br><span class="line">    ...</span><br><span class="line">    _firstBuild();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> _firstBuild() &#123;</span><br><span class="line">    rebuild();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> rebuild() &#123;</span><br><span class="line">    ...</span><br><span class="line">    performRebuild();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> performRebuild() &#123;</span><br><span class="line">    ...</span><br><span class="line">    built = build();</span><br><span class="line">    <span class="comment">//updateChild在上面也有追踪这里就不列出来了，内部调用了built.createElement创建子Element并返回</span></span><br><span class="line">    _child = updateChild(_child, built, slot);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Widget build() =&gt; widget.build(<span class="keyword">this</span>);</span><br></pre></td></tr></table></figure>
+
+<p>最终得到的三棵树大概长下面的样子，由于没有分成所以看上去是链表而不是树，但是这不影响我们理解，一旦某些节点有多个child节点就是输了:</p>
+<img src="/Flutter三棵树创建原理/2.png">
+
+<p>Element通过widget成员持有Widget，如果是RenderObjectElement还通过renderObject成员持有RenderObject，可以看出来Element是连接Widget和RenderObject的桥梁。三个树的构建也都是通过递归mount Element去实现的。</p>
+<p>当RenderObject树创建出来之后，Flutter的引擎就能遍历它去执行绘制将画面渲染出来了。</p>
+<h1 id="mount流程解析"><a href="#mount流程解析" class="headerlink" title="mount流程解析"></a>mount流程解析</h1><p>从上面的代码可以看得出来，mount是一个递归的过程，总结下来有下面几个步骤</p>
+<ol>
+<li>Element如果是RenderObjectElement则创建RenderObject，并从祖先找到上一个RenderObjectElement，然后调用祖先RenderObjectElement的RenderObject的insertRenderObjectChild方法插入创建的RenderObject</li>
+<li>如果子widget需要build出来就调用build方法创建子widget，如果不需要直接在成员变量可以拿到子widget</li>
+<li>调用子widget的createElement创建子Element</li>
+<li>调用子Element的mount方法将子Element的parent设置成自己，然后子Element去到第1步</li>
+</ol>
+<p>下面的动图展示了整个流程:</p>
+<img src="/Flutter三棵树创建原理/3.gif">
+
+<p>或者可以下载<a href="https://github.com/bluesky466/bluesky466.github.io/blob/develop/source/Flutter%E4%B8%89%E6%A3%B5%E6%A0%91%E5%88%9B%E5%BB%BA%E5%8E%9F%E7%90%86/Flutter%E4%B8%89%E6%A3%B5%E6%A0%91%E6%9E%84%E5%BB%BA%E8%BF%87%E7%A8%8B.pptx" target="_blank" rel="noopener">PPT</a>查看</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
