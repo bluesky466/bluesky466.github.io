@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>一个主线程卡死却没有ANR的BUG | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="今天测试报了个BUG，分析了一波顺利解决问题。但是感觉中间的一些思路、技巧和知识点比较有意思，所以记录下来。 问题定位与分析首先这个问题是是个概率性问题，在压测整机复位功能的时候出现的。我负责的某个服务在开机的时候会自启动，测试发现某一次复位完成开机之后功能没有办法正常使用，立马叫我过去看。  首先我到的时候现场是还在的，由于这是个Service，ui上看不出异常。所以adb 连接上机器之后首先使">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个主线程卡死却没有ANR的BUG">
+<meta property="og:url" content="http://139.199.4.241/2021/09/01/一个主线程卡死却没有ANR的BUG/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="今天测试报了个BUG，分析了一波顺利解决问题。但是感觉中间的一些思路、技巧和知识点比较有意思，所以记录下来。 问题定位与分析首先这个问题是是个概率性问题，在压测整机复位功能的时候出现的。我负责的某个服务在开机的时候会自启动，测试发现某一次复位完成开机之后功能没有办法正常使用，立马叫我过去看。  首先我到的时候现场是还在的，由于这是个Service，ui上看不出异常。所以adb 连接上机器之后首先使">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/一个主线程卡死却没有ANR的BUG/1.png">
+<meta property="og:updated_time" content="2021-09-01T14:31:06.609Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一个主线程卡死却没有ANR的BUG">
+<meta name="twitter:description" content="今天测试报了个BUG，分析了一波顺利解决问题。但是感觉中间的一些思路、技巧和知识点比较有意思，所以记录下来。 问题定位与分析首先这个问题是是个概率性问题，在压测整机复位功能的时候出现的。我负责的某个服务在开机的时候会自启动，测试发现某一次复位完成开机之后功能没有办法正常使用，立马叫我过去看。  首先我到的时候现场是还在的，由于这是个Service，ui上看不出异常。所以adb 连接上机器之后首先使">
+<meta name="twitter:image" content="http://139.199.4.241/一个主线程卡死却没有ANR的BUG/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#问题定位与分析"><span class="toc-text">问题定位与分析</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#ANR原理"><span class="toc-text">ANR原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#定时炸弹机制"><span class="toc-text">定时炸弹机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#KeyDispatchTimeout原理"><span class="toc-text">KeyDispatchTimeout原理</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#感想"><span class="toc-text">感想</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-一个主线程卡死却没有ANR的BUG" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">一个主线程卡死却没有ANR的BUG</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.09.01</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>今天测试报了个BUG，分析了一波顺利解决问题。但是感觉中间的一些思路、技巧和知识点比较有意思，所以记录下来。</p>
+<h1 id="问题定位与分析"><a href="#问题定位与分析" class="headerlink" title="问题定位与分析"></a>问题定位与分析</h1><p>首先这个问题是是个概率性问题，在压测整机复位功能的时候出现的。我负责的某个服务在开机的时候会自启动，测试发现某一次复位完成开机之后功能没有办法正常使用，立马叫我过去看。</p>
+<ol>
+<li><p>首先我到的时候现场是还在的，由于这是个Service，ui上看不出异常。所以adb 连接上机器之后首先使用PS命令查看进程，发现服务的进程是存在的</p>
+</li>
+<li><p>其次查看log，没有发现任何的异常打印或者奔溃重启的痕迹</p>
+</li>
+<li><p>查找关键日志发现异常，这个服务在子线程做完一些初始化操作之后会同步回主线程打开功能:</p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Log.d(TAG, <span class="string">"child thread finish"</span>);</span><br><span class="line">mHandler.sendEmptyMessage(MSG_START_FUNCTION);</span><br></pre></td></tr></table></figure>
+
+<p>子线程的打印找到了，而且它的下一行就是用Handler发送Message，但是主线程接的打印没有找到。</p>
+<p>由于这部分的代码十分简单，不存在什么bug，除非Handler机制出问题了。由于我们的机器还在研发阶段，系统哥调试的时候不小心改出什么奇怪的问题也是可能的，但是我们不能一上来就这么想，要不然把问题转给系统哥也会一脸懵逼无从入手。</p>
+<p>由于Handler的Message是逐个执行的，所以如果某个Message堵死了也会造成后面的Message没法处理。由于这次是主线程的Handler，如果我们的主线程卡死了也会出现这种问题。</p>
+<p>但是主线程卡死的话已经十几分钟过去了也没有出现ANR，/data/anr/下面也是空的。不过我们可以使用kill -3 &lt;pid&gt;命令强制输出trace文件，查看应用当前所有线程的调用栈。然后分析主线程现在是个啥情况:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"main"</span> <span class="attribute">prio</span>=5 <span class="attribute">tid</span>=1 Waiting</span><br><span class="line">  | <span class="attribute">group</span>=<span class="string">"main"</span> <span class="attribute">sCount</span>=1 <span class="attribute">dsCount</span>=0 <span class="attribute">flags</span>=1 <span class="attribute">obj</span>=0x7137cc28 <span class="attribute">self</span>=0xe3f82a10</span><br><span class="line">  | <span class="attribute">sysTid</span>=1208 <span class="attribute">nice</span>=0 <span class="attribute">cgrp</span>=default <span class="attribute">sched</span>=0/0 <span class="attribute">handle</span>=0xf09e6470</span><br><span class="line">  | <span class="attribute">state</span>=S schedstat=( 456814323 745320630 635 ) <span class="attribute">utm</span>=40 <span class="attribute">stm</span>=5 <span class="attribute">core</span>=0 <span class="attribute">HZ</span>=100</span><br><span class="line">  | <span class="attribute">stack</span>=0xff1c8000-0xff1ca000 <span class="attribute">stackSize</span>=8192KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  at java.lang.Object.wait(Native method)</span><br><span class="line">  - waiting on &lt;0x017f64da&gt; (a java.lang.Object)</span><br><span class="line">  at java.lang.Object.wait(Object.java:442)</span><br><span class="line">  at java.lang.Object.wait(Object.java:568)</span><br><span class="line">  at h.a.a.a.a.l.q.f(:4)</span><br><span class="line">  - locked &lt;0x017f64da&gt; (a java.lang.Object)</span><br><span class="line">  at h.a.a.a.a.l.q.e(:2)</span><br><span class="line">  at d.d.a.d.f.d.b(:3)</span><br><span class="line">  at d.d.a.d.f.a.<span class="builtin-name">run</span>(lambda:-1)</span><br><span class="line">  at android.os.Handler.handleCallback(Handler.java:938)</span><br><span class="line">  at android.os.Handler.dispatchMessage(Handler.java:99)</span><br><span class="line">  at android.os.Looper.loop(Looper.java:223)</span><br><span class="line">  at android.app.ActivityThread.main(ActivityThread.java:7666)</span><br><span class="line">  at java.lang.reflect.Method.invoke(Native method)</span><br><span class="line">  at com.android.internal.os.RuntimeInit<span class="variable">$MethodAndArgsCaller</span>.<span class="builtin-name">run</span>(RuntimeInit.java:592)</span><br><span class="line">  at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:952)</span><br></pre></td></tr></table></figure>
+
+<p>很给力，立马就验证了问题，主线程果然卡死在Object.wait了。</p>
+<p>但是代码里面搜索了一圈并没有直接使用这个wait方法，但是有个第三方库的类似的操作可能会用到它。由于之前一直没报过这种问题，应该是小概率实际所以我们必须给出实锤并且解决，要不然问题的回归比较难。</p>
+<p>代码被混淆了，虽然我们可以用mapping.txt文件来还原，但是由于这个项目的配套还不成熟，版本号机制都还没有加上去，所以找到对应的版本和mapping.txt文件比较困难。</p>
+<p>于是我选择将apk从机器里面adb pull扣出来用<a href="https://github.com/skylot/jadx" target="_blank" rel="noopener">jadx</a>反编译找到h.a.a.a.a.l.q.f这个方法看看:</p>
+<img src="/一个主线程卡死却没有ANR的BUG/1.png">
+
+<p>可以看到一些字符串和大概的代码逻辑。和之前猜测的第三方库做对比，发现的确我们的猜测是正确的，然后一步步对应整理回整个堆栈。发现的确是第三方库的某个方法wait一直阻塞住了主线程。这应该是第三方库的bug，幸好它有个重载方法可以传入超时时间，所以我们添加了个3秒的超时时间去解决问题。另外在主线程等待也不是个好的习惯，我们可以将它挪到子线程中。</p>
+<h1 id="ANR原理"><a href="#ANR原理" class="headerlink" title="ANR原理"></a>ANR原理</h1><p>虽然问题解决了，但是其实还有些知识点比较有意思值得去深究。我们都知道不能在主线程不能做耗时操作要不然会ANR，但是这个问题主线程都阻塞十几分钟了，算我们的是Service也应该最多200s后(后台服务)就会ANR，为啥就是没有ANR呢？</p>
+<p>我恢复堆栈之后发现，这个wait的阻塞是在Application.onCreate的时候调用的，也就是说Application.onCreate的卡顿并不会导致ANR。</p>
+<p>我们来回顾下ANR的4种类型:</p>
+<p><strong>1. KeyDispatchTimeout</strong> : input事件在5S内没有处理完成发生ANR</p>
+<p><strong>2. ServiceTimeout</strong> : bind,create,start,unbind等操作,前台Service在20s内,后台Service在200s内没有处理完成发生ANR</p>
+<p><strong>3. BroadcastTimeout</strong> : BroadcastReceiver onReceiver处理事务时前台广播在10S内,后台广播在60s内. 没有处理完成发生ANR</p>
+<p><strong>4. ProcessContentProviderPublishTimedOutLocked</strong> : ContentProvider publish在10s内没有处理完成发 生ANR</p>
+<p>的确上面Service、Broadcast、ContentProvider的ANR原因都是对应组件的生命周期回调超时，他们ANR的计算并没有包括Application.onCreate因为这个回调是进程的初始化，并不在四大组件中。</p>
+<p>另外一个知识点是并没有Activity生命周期的ANR，也就是说我们在Activity的onCreate、onStart这些生命周期中阻塞并不会造成ANR。</p>
+<p>Activity的ANR都是input事件例如按键和触摸消息处理耗时导致的。</p>
+<h2 id="定时炸弹机制"><a href="#定时炸弹机制" class="headerlink" title="定时炸弹机制"></a>定时炸弹机制</h2><p>ServiceTimeout、BroadcastTimeout、ProcessContentProviderPublishTimedOutLocked的原理都是类似的</p>
+<ol>
+<li>在处理前使用Handler.sendMessageDelayed发送一个ANR消息</li>
+<li>在处理完成之后使用Handler.removeMessages删除ANR消息</li>
+</ol>
+<p>这里可以类比成一个定时炸弹，在处理前埋下定时炸弹，只要没有再规定的时间内完成处理并且拆除炸弹，就会爆炸。</p>
+<p>我们这里只举一个Service的例子。在AMS里面调用Service.onCreate之前会sendMessageDelayed一个SERVICE_TIMEOUT_MSG的Message:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">realStartServiceLocked</span><span class="params">(ServiceRecord r, ProcessRecord app, <span class="keyword">boolean</span> execInFg)</span> <span class="keyword">throws</span> RemoteException </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 在bumpServiceExecutingLocked里面会发送SERVICE_TIMEOUT_MSG</span></span><br><span class="line">    bumpServiceExecutingLocked(r, execInFg, <span class="string">"create"</span>);</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 调用Service.onCreate</span></span><br><span class="line">    app.thread.scheduleCreateService(r, r.serviceInfo,</span><br><span class="line">                    mAm.compatibilityInfoForPackage(r.serviceInfo.applicationInfo),</span><br><span class="line">                    app.getReportedProcState());</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 下面的代码追踪bumpServiceExecutingLocked是如何发生SERVICE_TIMEOUT_MSG的</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">bumpServiceExecutingLocked</span><span class="params">(ServiceRecord r, <span class="keyword">boolean</span> fg, String why)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    scheduleServiceTimeoutLocked(r.app);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">bumpServiceExecutingLocked</span><span class="params">(ServiceRecord r, <span class="keyword">boolean</span> fg, String why)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    scheduleServiceTimeoutLocked(r.app);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">scheduleServiceTimeoutLocked</span><span class="params">(ProcessRecord proc)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (proc.executingServices.size() == <span class="number">0</span> || proc.thread == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    Message msg = mAm.mHandler.obtainMessage(</span><br><span class="line">            ActivityManagerService.SERVICE_TIMEOUT_MSG);</span><br><span class="line">    msg.obj = proc;</span><br><span class="line">    mAm.mHandler.sendMessageDelayed(msg,</span><br><span class="line">            proc.execServicesFg ? SERVICE_TIMEOUT : SERVICE_BACKGROUND_TIMEOUT);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而在ActivityThread里面Service.onCreate调用完成之后会通知AMS:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">handleCreateService</span><span class="params">(CreateServiceData data)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 创建service</span></span><br><span class="line">    service = packageInfo.getAppFactory().instantiateService(cl, data.info.name, data.intent);</span><br><span class="line">    <span class="comment">// 调用onCreate生命周期</span></span><br><span class="line">    service.onCreate();</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 告诉AMS,Service.onCreate已经调用完成</span></span><br><span class="line">    ActivityManager.getService().serviceDoneExecuting(</span><br><span class="line">                        data.token, SERVICE_DONE_EXECUTING_ANON, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AMS就会再serviceDoneExecutingLocked里面拆炸弹:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">serviceDoneExecutingLocked</span><span class="params">(ServiceRecord r, <span class="keyword">boolean</span> inDestroying, <span class="keyword">boolean</span> finishing)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 删除SERVICE_TIMEOUT_MSG</span></span><br><span class="line">    mAm.mHandler.removeMessages(ActivityManagerService.SERVICE_TIMEOUT_MSG, r.app);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="KeyDispatchTimeout原理"><a href="#KeyDispatchTimeout原理" class="headerlink" title="KeyDispatchTimeout原理"></a>KeyDispatchTimeout原理</h2><p>Activity的ANR并不是通过上面所说的埋定时炸弹的方式实现的，它有另外一套逻辑。</p>
+<p>前面我们也有说Activity的生命周期是不会触发ANR的，它的ANR实际上是在处理input事件的时候产生的。例如在按键消息或者触摸消息处理里面耗时太久。</p>
+<p>input事件的底层分发逻辑以前写过<a href="https://blog.islinjw.cn/2020/01/23/Android-Input%E7%B3%BB%E7%BB%9F-%E4%B8%80-%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%8E%B7%E5%8F%96%E6%B5%81%E7%A8%8B/" target="_blank" rel="noopener">两篇博客</a>感兴趣的同学可以详细了解下。我们这篇来补充上input事件分发的ANR检测原理。</p>
+<p>相关代码在native层的InputDispatcher.cpp里面，每个input事件都会唤醒Dispatcher线程进行分发处理，我们以按键消息为例:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> InputDispatcher::dispatchOnce() &#123;</span><br><span class="line">    ...</span><br><span class="line">    dispatchOnceInnerLocked(&amp;nextWakeupTime);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> InputDispatcher::dispatchOnceInnerLocked(<span class="keyword">nsecs_t</span>* nextWakeupTime) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Ready to start a new event.</span></span><br><span class="line">  <span class="comment">// If we don't already have a pending event, go grab one.</span></span><br><span class="line">    <span class="keyword">if</span> (! mPendingEvent) &#123;</span><br><span class="line">        ...</span><br><span class="line">        resetANRTimeoutsLocked();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (mPendingEvent-&gt;type) &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">case</span> EventEntry::TYPE_KEY: &#123;</span><br><span class="line">            ...</span><br><span class="line">            done = dispatchKeyLocked(currentTime, typedEntry, &amp;dropReason, nextWakeupTime);</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假设我们的应用接收到了它的第一个input事件KEY_DOWN。可以看到dispatchOnceInnerLocked里面判断如果是一个新的事件，就调用resetANRTimeoutsLocked清除ANR的标记，然后使用dispatchKeyLocked进行分发。</p>
+<p>resetANRTimeoutsLocked里面最重要的一步是将mInputTargetWaitCause设置成INPUT_TARGET_WAIT_CAUSE_NONE:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> InputDispatcher::resetANRTimeoutsLocked() &#123;</span><br><span class="line">    ...</span><br><span class="line">    mInputTargetWaitCause = INPUT_TARGET_WAIT_CAUSE_NONE;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>dispatchKeyLocked里面回去获取当前的焦点windows分发按键消息:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> InputDispatcher::dispatchKeyLocked(<span class="keyword">nsecs_t</span> currentTime, KeyEntry* entry,</span><br><span class="line">        DropReason* dropReason, <span class="keyword">nsecs_t</span>* nextWakeupTime) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">int32_t</span> injectionResult = findFocusedWindowTargetsLocked(currentTime,</span><br><span class="line">            entry, inputTargets, nextWakeupTime);</span><br><span class="line">    <span class="keyword">if</span> (injectionResult == INPUT_EVENT_INJECTION_PENDING) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int32_t</span> InputDispatcher::findFocusedWindowTargetsLocked(<span class="keyword">nsecs_t</span> currentTime,</span><br><span class="line">        <span class="keyword">const</span> EventEntry* entry, Vector&lt;InputTarget&gt;&amp; inputTargets, <span class="keyword">nsecs_t</span>* nextWakeupTime) &#123;</span><br><span class="line">    ...</span><br><span class="line">    reason = checkWindowReadyForMoreInputLocked(currentTime,</span><br><span class="line">            mFocusedWindowHandle, entry, <span class="string">"focused"</span>);</span><br><span class="line">    <span class="keyword">if</span> (!reason.isEmpty()) &#123;</span><br><span class="line">        injectionResult = handleTargetsNotReadyLocked(currentTime, entry,</span><br><span class="line">                mFocusedApplicationHandle, mFocusedWindowHandle, nextWakeupTime, reason.<span class="built_in">string</span>());</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于是一个新的事件，所以windows没有正在处理的消息。checkWindowReadyForMoreInputLocked拿到的reson是empty的，不会进入handleTargetsNotReadyLocked，而是正常向这个window分发。</p>
+<p>如果应用处理KEY_DOWN卡死了，那么在用户抬起手指触发KEY_UP事件的时候mPendingEvent则不为NULL，<strong>不会</strong>清除ANR标记，而且checkWindowReadyForMoreInputLocked返回的reason不是empty，就会进入handleTargetsNotReadyLocked方法:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int32_t</span> InputDispatcher::handleTargetsNotReadyLocked(<span class="keyword">nsecs_t</span> currentTime,</span><br><span class="line">        <span class="keyword">const</span> EventEntry* entry,</span><br><span class="line">        <span class="keyword">const</span> sp&lt;InputApplicationHandle&gt;&amp; applicationHandle,</span><br><span class="line">        <span class="keyword">const</span> sp&lt;InputWindowHandle&gt;&amp; windowHandle,</span><br><span class="line">        <span class="keyword">nsecs_t</span>* nextWakeupTime, <span class="keyword">const</span> <span class="keyword">char</span>* reason) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (mInputTargetWaitCause != INPUT_TARGET_WAIT_CAUSE_APPLICATION_NOT_READY) &#123;</span><br><span class="line">        ...</span><br><span class="line">        mInputTargetWaitCause = INPUT_TARGET_WAIT_CAUSE_APPLICATION_NOT_READY;</span><br><span class="line">        ...</span><br><span class="line">        mInputTargetWaitTimeoutTime = currentTime + timeout;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (currentTime &gt;= mInputTargetWaitTimeoutTime) &#123;</span><br><span class="line">        onANRLocked(currentTime, applicationHandle, windowHandle,</span><br><span class="line">                entry-&gt;eventTime, mInputTargetWaitStartTime, reason);</span><br><span class="line">        ...</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        *nextWakeupTime = mInputTargetWaitTimeoutTime;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们看到这个方法里面判断mInputTargetWaitCause不是INPUT_TARGET_WAIT_CAUSE_APPLICATION_NOT_READY（因为KEY_DOWN已经在resetANRTimeoutsLocked里面将它设置成INPUT_TARGET_WAIT_CAUSE_NONE了），所以会进入if里面设置mInputTargetWaitTimeoutTime和mInputTargetWaitCause。</p>
+<p>后面的”currentTime &gt;= mInputTargetWaitTimeoutTime”判断因为是刚设置的mInputTargetWaitTimeoutTime所以不会进入，而是会去到else里面设置nextWakeupTime，然后线程会睡眠。也就是说这个KEY_UP时间会被延迟timeout时间再执行。</p>
+<p>等时间到了线程被唤醒的时候mInputTargetWaitCause，已经是INPUT_TARGET_WAIT_CAUSE_APPLICATION_NOT_READY了，所以不会被修改，然后”currentTime &gt;= mInputTargetWaitTimeoutTime”判断会成功进入onANRLocked触发应用的ANR。</p>
+<p>简单来讲就是KEY_UP事件到来的时候发现之前上个事件还没有处理完，于是延迟5s再来看看，如果这个时候上个事件依然没有处理完，则触发ANR。</p>
+<p>这种机制有个特点就是假设你在KEY_UP里面卡死了，但是界面是没有任何动画，也不去触发input事件。那么虽然主线程卡死了，但是无论过多久都不会报ANR。如果这个时候你再去触发input事件(例如触摸或者按键)，就会发现过多5秒就出现ANR了。</p>
+<h1 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h1><p>随着年纪的增长，脑子就像个长时间运行的硬盘，塞满了各种有用的没用的东西。加载速度和检束的命中率越来越低。就像是以前明明有去专门看过ANR的原理，但是看到这个问题我的第一反应也是主线程不可能卡死要不然就ANR了。所以除了各种死记硬背的八股文知识，我认为更应该重视调试技巧和解决问题能力，这才是老年程序员的核心竞争力。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
