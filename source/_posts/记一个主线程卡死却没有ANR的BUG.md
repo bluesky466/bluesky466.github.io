@@ -1,19 +1,19 @@
-title: 一个主线程卡死却没有ANR的BUG
+title: 记一个主线程卡死却没有ANR的BUG
 date: 2021-09-01 22:29:18
 tags: 
     - 技术相关
     - Android
 ---
+
 今天测试报了个BUG，分析了一波顺利解决问题。但是感觉中间的一些思路、技巧和知识点比较有意思，所以记录下来。
 
 # 问题定位与分析
 
 首先这个问题是是个概率性问题，在压测整机复位功能的时候出现的。我负责的某个服务在开机的时候会自启动，测试发现某一次复位完成开机之后功能没有办法正常使用，立马叫我过去看。
 
-1. 首先我到的时候现场是还在的，由于这是个Service，ui上看不出异常。所以adb 连接上机器之后首先使用PS命令查看进程，发现服务的进程是存在的
-
+1. 首先我到的时候现场是还在的，由于这是个Service，ui上看不出异常。所以adb 连接上机器之后使用PS命令查看进程，发现服务的进程是存在的
 2. 其次查看log，没有发现任何的异常打印或者奔溃重启的痕迹
-3. 查找关键日志发现异常，这个服务在子线程做完一些初始化操作之后会同步回主线程打开功能:
+3. 接着查找关键日志发现异常，这个服务在子线程做完一些初始化操作之后会同步回主线程打开功能:
 
 ```java
 Log.d(TAG, "child thread finish");
@@ -55,7 +55,7 @@ mHandler.sendEmptyMessage(MSG_START_FUNCTION);
 
 很给力，立马就验证了问题，主线程果然卡死在Object.wait了。
 
-但是代码里面搜索了一圈并没有直接使用这个wait方法，但是有个第三方库的类似的操作可能会用到它。由于之前一直没报过这种问题，应该是小概率实际所以我们必须给出实锤并且解决，要不然问题的回归比较难。
+但是代码里面搜索了一圈并没有直接使用这个wait方法，倒是有个第三方库的类似的操作可能会用到它。由于之前一直没报过这种问题，应该是小概率实际所以我们必须给出实锤并且解决，要不然问题的回归比较难。
 
 代码被混淆了，虽然我们可以用mapping.txt文件来还原，但是由于这个项目的配套还不成熟，版本号机制都还没有加上去，所以找到对应的版本和mapping.txt文件比较困难。
 
@@ -63,11 +63,11 @@ mHandler.sendEmptyMessage(MSG_START_FUNCTION);
 
 {% img /一个主线程卡死却没有ANR的BUG/1.png %}
 
-可以看到一些字符串和大概的代码逻辑。和之前猜测的第三方库做对比，发现的确我们的猜测是正确的，然后一步步对应整理回整个堆栈。发现的确是第三方库的某个方法wait一直阻塞住了主线程。这应该是第三方库的bug，幸好它有个重载方法可以传入超时时间，所以我们添加了个3秒的超时时间去解决问题。另外在主线程等待也不是个好的习惯，我们可以将它挪到子线程中。
+可以看到一些字符串和大概的代码逻辑。和之前猜测的第三方库做对比，发现的确我们的猜测是正确的，然后一步步对应整理回整个堆栈。发现的确是第三方库的某个方法wait一直阻塞住了主线程。这应该是第三方库的bug，幸好它有个重载方法可以传入超时时间，所以我们添加了个3秒的超时时间，超时之后重试去解决问题。另外在主线程等待也不是个好的习惯，我们可以将它挪到子线程中。
 
 # ANR原理
 
-虽然问题解决了，但是其实还有些知识点比较有意思值得去深究。我们都知道不能在主线程不能做耗时操作要不然会ANR，但是这个问题主线程都阻塞十几分钟了，算我们的是Service也应该最多200s后(后台服务)就会ANR，为啥就是没有ANR呢？
+虽然问题解决了，但是其实还有些知识点比较有意思值得去深究。我们都知道不能在主线程不能做耗时操作，要不然会ANR。但是这个问题主线程都阻塞十几分钟了，就算我们的是Service也应该最多200s后(后台服务)就会ANR，为啥就是没有ANR呢？
 
 我恢复堆栈之后发现，这个wait的阻塞是在Application.onCreate的时候调用的，也就是说Application.onCreate的卡顿并不会导致ANR。
 
@@ -99,12 +99,13 @@ ServiceTimeout、BroadcastTimeout、ProcessContentProviderPublishTimedOutLocked�
 我们这里只举一个Service的例子。在AMS里面调用Service.onCreate之前会sendMessageDelayed一个SERVICE\_TIMEOUT\_MSG的Message:
 
 ```java
+// AMS start service核心代码
 private final void realStartServiceLocked(ServiceRecord r, ProcessRecord app, boolean execInFg) throws RemoteException {
     ...
     // 在bumpServiceExecutingLocked里面会发送SERVICE_TIMEOUT_MSG
     bumpServiceExecutingLocked(r, execInFg, "create");
     ...
-    // 调用Service.onCreate
+    // 异步调用Service.onCreate
     app.thread.scheduleCreateService(r, r.serviceInfo,
                     mAm.compatibilityInfoForPackage(r.serviceInfo.applicationInfo),
                     app.getReportedProcState());
@@ -163,6 +164,8 @@ private void serviceDoneExecutingLocked(ServiceRecord r, boolean inDestroying, b
     ...
 }
 ```
+
+这种机制打个比方就是歹徒(AMS)在你家装了个定时炸弹，然后威胁你去干一件事，你必须在规定时间内完成然后告诉他停止计时，要不然就会把你家炸上天(ANR)
 
 ## KeyDispatchTimeout原理
 
@@ -224,9 +227,6 @@ bool InputDispatcher::dispatchKeyLocked(nsecs_t currentTime, KeyEntry* entry,
     ...
     int32_t injectionResult = findFocusedWindowTargetsLocked(currentTime,
             entry, inputTargets, nextWakeupTime);
-    if (injectionResult == INPUT_EVENT_INJECTION_PENDING) {
-        return false;
-    }
     ...
 }
 
@@ -284,7 +284,10 @@ int32_t InputDispatcher::handleTargetsNotReadyLocked(nsecs_t currentTime,
 
 这种机制有个特点就是假设你在KEY\_UP里面卡死了，但是界面是没有任何动画，也不去触发input事件。那么虽然主线程卡死了，但是无论过多久都不会报ANR。如果这个时候你再去触发input事件(例如触摸或者按键)，就会发现过多5秒就出现ANR了。
 
+同样打个比方这种机制就像一个暴躁的恐怖分子(Input事件)去找神父(FocusWindow)忏悔,如果发现神父已经在接客了,就会过一会再来看看,如果到时候神父还是没空,就会引爆炸弹一了百了(ANR)。
+
 # 感想
 
-随着年纪的增长，脑子就像个长时间运行的硬盘，塞满了各种有用的没用的东西。加载速度和检束的命中率越来越低。就像是以前明明有去专门看过ANR的原理，但是看到这个问题我的第一反应也是主线程不可能卡死要不然就ANR了。所以除了各种死记硬背的八股文知识，我认为更应该重视调试技巧和解决问题能力，这才是老年程序员的核心竞争力。
+随着年纪的增长，脑子就像个长时间运行的硬盘，塞满了各种有用的没用的东西。加载速度和检索的命中率越来越低。就像是以前明明有去专门看过ANR的原理，但是看到这个问题我的第一反应也是主线程不可能卡死要不然就ANR了。所以除了各种死记硬背的八股文知识，我认为更应该重视调试技巧和解决问题能力，这才是老年程序员的核心竞争力。
+
 
