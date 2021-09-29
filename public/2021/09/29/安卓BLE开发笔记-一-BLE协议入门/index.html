@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓BLE开发笔记(一) BLE协议入门 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="最近遇到了一个BLE的项目，花时间恶补了下相关的知识，这里记录下来备忘。这篇笔记是纯协议的，先大概了解ble的协议和流程，能帮助我们更好的编码 Ble设备发现Ble设备的发现实际上靠的是Advertising(广播)机制。广播也有人管它叫做Beacon,我没有在官方文档里面查找到这个词，但是从网络上的文章来看，它们差不多就是同一个东西。 基于广播发现Ble设备有两种方式:  Ble设备设定间隔不断">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓BLE开发笔记(一) BLE协议入门">
+<meta property="og:url" content="http://139.199.4.241/2021/09/29/安卓BLE开发笔记-一-BLE协议入门/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="最近遇到了一个BLE的项目，花时间恶补了下相关的知识，这里记录下来备忘。这篇笔记是纯协议的，先大概了解ble的协议和流程，能帮助我们更好的编码 Ble设备发现Ble设备的发现实际上靠的是Advertising(广播)机制。广播也有人管它叫做Beacon,我没有在官方文档里面查找到这个词，但是从网络上的文章来看，它们差不多就是同一个东西。 基于广播发现Ble设备有两种方式:  Ble设备设定间隔不断">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/1.png">
+<meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/2.png">
+<meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/3.png">
+<meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/4.png">
+<meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/5.jpeg">
+<meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/6.png">
+<meta property="og:updated_time" content="2021-09-29T14:30:41.060Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓BLE开发笔记(一) BLE协议入门">
+<meta name="twitter:description" content="最近遇到了一个BLE的项目，花时间恶补了下相关的知识，这里记录下来备忘。这篇笔记是纯协议的，先大概了解ble的协议和流程，能帮助我们更好的编码 Ble设备发现Ble设备的发现实际上靠的是Advertising(广播)机制。广播也有人管它叫做Beacon,我没有在官方文档里面查找到这个词，但是从网络上的文章来看，它们差不多就是同一个东西。 基于广播发现Ble设备有两种方式:  Ble设备设定间隔不断">
+<meta name="twitter:image" content="http://139.199.4.241/安卓BLE开发笔记一/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Ble设备发现"><span class="toc-text">Ble设备发现</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#GATT协议结构"><span class="toc-text">GATT协议结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Characteristic"><span class="toc-text">Characteristic</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Properties"><span class="toc-text">Properties</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Descriptors"><span class="toc-text">Descriptors</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#MTU"><span class="toc-text">MTU</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓BLE开发笔记-一-BLE协议入门" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓BLE开发笔记(一) BLE协议入门</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.09.29</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近遇到了一个BLE的项目，花时间恶补了下相关的知识，这里记录下来备忘。这篇笔记是纯协议的，先大概了解ble的协议和流程，能帮助我们更好的编码</p>
+<h1 id="Ble设备发现"><a href="#Ble设备发现" class="headerlink" title="Ble设备发现"></a>Ble设备发现</h1><p>Ble设备的发现实际上靠的是Advertising(广播)机制。广播也有人管它叫做Beacon,我没有在官方文档里面查找到这个词，但是从网络上的文章来看，它们差不多就是同一个东西。</p>
+<p>基于广播发现Ble设备有两种方式:</p>
+<ol>
+<li>Ble设备设定间隔不断发送广播，手机只要接收到这个广播就能从里面携带的设备信息发现这个设备。同时广播里面也能携带一些特定的数据去实现一些特定的功能，如苹果开发的<a href="https://baike.baidu.com/item/iBeacon/13826305?fr=aladdin" target="_blank" rel="noopener"><em>IBeacon</em></a>。</li>
+<li>手机发送Scan Request广播，Ble设备监听到这个设备之后响应一个Scan Response广播</li>
+</ol>
+<p>由于这两种方式都基于广播，所以它们的数据格式是一样的。广播会自带一些信息，例如设备的名称、MAC地址等。除了自带的数据之外，我们还能携带一些额外的信息数据。根据<a href="https://www.bluetooth.com/specifications/specs/core-specification/" target="_blank" rel="noopener">官方</a>的<a href="https://www.bluetooth.org/DocMan/handlers/DownloadDoc.ashx?doc_id=521059" target="_blank" rel="noopener">文档</a>，可以看到这个额外数据的具体格式如下:</p>
+<img src="/安卓BLE开发笔记一/1.png">
+
+<p>可以看到广播数据里面包含多个AD Structure。每个AD Structure分为两个部分:数据段长度(1字节)+数据段(N字节)。数据段又分为头1个字节的AD Type标识类型和剩余的AD Data具体数据。</p>
+<p>注意看最后的Non-significant part,有时候在安卓的回调里面会在byte数组的最后看到一堆的0x0，这个实际上也是定义在协议里面正常的无意义数据，我们直接忽略它们就好。</p>
+<p>举个实际的例子，在手机上使用ble搜索应用搜索我司开发的蓝牙设备，查看其广播数据:</p>
+<img src="/安卓BLE开发笔记一/2.png">
+
+<p>可以看到广播数据0x0319C703020104030312180C094D41584559455F353146300C16791300000002000000735C，实际有5个AD Structure。</p>
+<p>AD Type如上图所说可以去蓝牙协议的<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>查看[Generic Access Profile文档](<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-numbers/Assigned" target="_blank" rel="noopener">https://btprodspecificationrefs.blob.core.windows.net/assigned-numbers/Assigned</a> Number Types/Generic Access Profile.pdf)，可以看到这五个字段类型分别是:</p>
+<table>
+<thead>
+<tr>
+<th>Data Type Value</th>
+<th>Data Type Name</th>
+<th>Reference for Definition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x19</td>
+<td>«Appearance»</td>
+<td>Bluetooth Core Specification:Core Specification Supplement, Part A, section 1.12</td>
+</tr>
+<tr>
+<td>0x01</td>
+<td>«Flags»</td>
+<td>Bluetooth Core Specification:Vol. 3, Part C, section 8.1.3 (v2.1 + EDR, 3.0 + HS and 4.0)Vol. 3, Part C, sections 11.1.3 and 18.1 (v4.0)Core Specification Supplement, Part A, section 1.3</td>
+</tr>
+<tr>
+<td>0x03</td>
+<td>«Complete List of 16-bit Service Class UUIDs»</td>
+<td>Bluetooth Core Specification:Vol. 3, Part C, section 8.1.1 (v2.1 + EDR, 3.0 + HS and 4.0)Vol. 3, Part C, sections 11.1.1 and 18.2 (v4.0)Core Specification Supplement, Part A, section 1.1</td>
+</tr>
+<tr>
+<td>0x09</td>
+<td>«Complete Local Name»</td>
+<td>Bluetooth Core Specification:Vol. 3, Part C, section 8.1.2 (v2.1 + EDR, 3.0 + HS and 4.0)Vol. 3, Part C, sections 11.1.2 and 18.4 (v4.0)Core Specification Supplement, Part A, section 1.2</td>
+</tr>
+<tr>
+<td>0x16</td>
+<td>«Service Data»</td>
+<td>Bluetooth Core Specification:Vol. 3, Part C, sections 11.1.10 and 18.10 (v4.0)</td>
+</tr>
+</tbody></table>
+<p>根据这里找到的DataType我们又可以去<a href="https://www.bluetooth.com/specifications/specs/" target="_blank" rel="noopener">官方</a>的<a href="https://www.bluetooth.com/specifications/specs/core-specification-supplement-10/" target="_blank" rel="noopener">Core Specification Supplement 10文档</a>查看Value的具体格式。这里我就不展开了。</p>
+<h1 id="GATT协议结构"><a href="#GATT协议结构" class="headerlink" title="GATT协议结构"></a>GATT协议结构</h1><p>虽然基于广播的机制我们已经能够实现手机与Ble设备的通信了，但是这种通信能实现的功能比较基础。所以Ble的协议还支持连接之后一对一的通信方式。</p>
+<p>Ble的连接都基于 GATT (Generic Attribute Profile) 协议之上，GATT 是一个在蓝牙连接之上的发送和接收很短的数据段的通用规范。</p>
+<p>GATT的结构如下:</p>
+<img src="/安卓BLE开发笔记一/3.png">
+
+<p>Ble设备里面会提供多个Service，这些Service会提供一些特定的功能。而每个Service里面有会有多个Characteristic，这些Characteristic里面的value实际就是功能具体的属性值。</p>
+<p>例如电池服务Battery Service里面就有一个Characteristic叫做Battery Level，手机可以读取这个Characteristic的value值来获取Ble设备当前的电量。</p>
+<p>我们来看看实际设备读取出来的数据:</p>
+<img src="/安卓BLE开发笔记一/4.png">
+
+<p>可以看到这里有Generic Access、Generic Attribute、Device Information三个Service。而Device Information Service下面又有四个Characteristic</p>
+<p>这些Service、Characteristic都会有一个UUID去做标识，例如Generic Access Service的UUID是0x1800。虽然我们这里看到的UUID都是16bit的，但是实际上它们的完整形式应该是0x0000xxxx-0000-1000-8000-00805F9B34FB。中间的xxxx就是截图中显示的16位uuid，即Generic Access Service的完整UUID是0x00001800-0000-1000-8000-00805F9B34FB。</p>
+<p>Service的UUID映射表可以到<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>的[16-bit UUIDs文档](<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit" target="_blank" rel="noopener">https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit</a> UUID Numbers Document.pdf)查看。</p>
+<h2 id="Characteristic"><a href="#Characteristic" class="headerlink" title="Characteristic"></a>Characteristic</h2><h3 id="Properties"><a href="#Properties" class="headerlink" title="Properties"></a>Properties</h3><p>截图里面的Characteristic的Properties都是READ，代表这个Characteristic是可读取的。它实际上是描述了这个Characteristic可以如何使用。Properties在安卓ble的sdk里面靠一个int类型的变量表示，每一个二进制位都标识了一直能力。我们可以通过按位与的方式判断是否支持:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Properties</strong></th>
+<th><strong>Value</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Broadcast</td>
+<td>0x01</td>
+<td>该Characteristic会被广播出来</td>
+</tr>
+<tr>
+<td>Read</td>
+<td>0x02</td>
+<td>该Characteristic可读</td>
+</tr>
+<tr>
+<td>Write Without Response</td>
+<td>0x04</td>
+<td>该Characteristic可写,写入完成后Ble设备不需要返回响应</td>
+</tr>
+<tr>
+<td>Write</td>
+<td>0x08</td>
+<td>该Characteristic可写,写入完成后Ble设备需要返回响应,可以监听到回调</td>
+</tr>
+<tr>
+<td>Notify</td>
+<td>0x10</td>
+<td>该Characteristic在改变的时候会发送通知,例如可以监听电量改变的消息去刷新ui</td>
+</tr>
+<tr>
+<td>Indicate</td>
+<td>0x20</td>
+<td>它和Notify类似，只不过主机(手机)在接收到通知的时候会返回一个响应给从机(Ble设备)，这样能够保证通知一定会被接收到</td>
+</tr>
+<tr>
+<td>Authenticated</td>
+<td>0x40</td>
+<td>该Characteristic需要先配对绑定才能写入</td>
+</tr>
+<tr>
+<td>Extended</td>
+<td>0x80</td>
+<td>该Characteristic拥有 Extended Properties</td>
+</tr>
+</tbody></table>
+<p>上面的机制实际上我只验证了Read、Write、Notify。其他的我都是根据根据<a href="https://www.bluetooth.com/specifications/specs/core-specification/" target="_blank" rel="noopener">官方</a>的<a href="https://www.bluetooth.org/DocMan/handlers/DownloadDoc.ashx?doc_id=521059" target="_blank" rel="noopener">文档</a>的“Table 3.5: Characteristic Properties bit field”表格自己理解的，可能会有错误，大家可以参考官方文档去理解。</p>
+<h3 id="Descriptors"><a href="#Descriptors" class="headerlink" title="Descriptors"></a>Descriptors</h3><p>除了Properties之外，Characteristic还有一个十分重要的数据段叫做Descriptors。一个Characteristic可能有0个或者多个Descriptor去描述它。</p>
+<p>例如当一个Characteristic是Notify或者Indicate的时候它会携带一个Client Characteristic Configuration Descriptor(uuid 0x2902)描述当前Characteristic是否打开通知功能。也就是说通知功能是可以通过修改Client Characteristic Configuration Descriptor主动打开或者关闭的，通过Descriptor携带数据的二进制位去标识功能的打开关闭:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Configuration</strong></th>
+<th><strong>Bit</strong> <strong>Number</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Notification</td>
+<td>0</td>
+<td>打开Notify功能</td>
+</tr>
+<tr>
+<td>Indication</td>
+<td>1</td>
+<td>打开Indicate功能</td>
+</tr>
+<tr>
+<td></td>
+<td>其他二进制位</td>
+<td>保留未来使用</td>
+</tr>
+</tbody></table>
+<p>Descriptor的UUID映射表同样可以到<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>的[16-bit UUIDs文档](<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit" target="_blank" rel="noopener">https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit</a> UUID Numbers Document.pdf)查看。</p>
+<h1 id="MTU"><a href="#MTU" class="headerlink" title="MTU"></a>MTU</h1><p>MTU指的是最大传输单元MAXIMUM TRANSMISSION UNIT,表示一次数据传输最多能传多大的数据，我们直接看它的官方说明:</p>
+<img src="/安卓BLE开发笔记一/5.jpeg">
+
+<p>可以看到我圈出来的地方,MTU最小需要支持23个字节，但是实际上这23三个字节也不是全部用来放数据，它的头三个字节需要携带操作类型和属性的16位uuid。所以只剩下23-3=20个字节用于传输数据:</p>
+<img src="/安卓BLE开发笔记一/6.png">
+
+<p>这里实际上有个坑，安卓默认MTU就是23也就是每次最多只能写入20字节的数据，所以最开始我写入一些比较大的数据的时候直接就失败了。需要先使用requestMtu将mtu设大。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
