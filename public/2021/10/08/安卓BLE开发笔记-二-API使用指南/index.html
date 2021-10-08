@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓BLE开发笔记(二) API使用指南 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="上一篇简单介绍了Ble协议，这篇来看看安卓上的代码具体要怎么写。 权限与功能要在代码中使用蓝牙功能需要先申请到对应的权限，在AndroidManifest.xml文件中添加权限声明 123&amp;lt;uses-permission android:name=&quot;android.permission.BLUETOOTH&quot; /&amp;gt;&amp;lt;uses-permission android:name=&quot;and">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓BLE开发笔记(二) API使用指南">
+<meta property="og:url" content="http://139.199.4.241/2021/10/08/安卓BLE开发笔记-二-API使用指南/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="上一篇简单介绍了Ble协议，这篇来看看安卓上的代码具体要怎么写。 权限与功能要在代码中使用蓝牙功能需要先申请到对应的权限，在AndroidManifest.xml文件中添加权限声明 123&amp;lt;uses-permission android:name=&quot;android.permission.BLUETOOTH&quot; /&amp;gt;&amp;lt;uses-permission android:name=&quot;and">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-10-08T11:09:00.804Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓BLE开发笔记(二) API使用指南">
+<meta name="twitter:description" content="上一篇简单介绍了Ble协议，这篇来看看安卓上的代码具体要怎么写。 权限与功能要在代码中使用蓝牙功能需要先申请到对应的权限，在AndroidManifest.xml文件中添加权限声明 123&amp;lt;uses-permission android:name=&quot;android.permission.BLUETOOTH&quot; /&amp;gt;&amp;lt;uses-permission android:name=&quot;and">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#权限与功能"><span class="toc-text">权限与功能</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#搜索蓝牙设备"><span class="toc-text">搜索蓝牙设备</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#连接蓝牙设备"><span class="toc-text">连接蓝牙设备</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Characteristic读写与监听"><span class="toc-text">Characteristic读写与监听</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#读取characteristic"><span class="toc-text">读取characteristic</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#写入characteristic"><span class="toc-text">写入characteristic</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#监听characteristic"><span class="toc-text">监听characteristic</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#配对"><span class="toc-text">配对</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#完整Demo"><span class="toc-text">完整Demo</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓BLE开发笔记-二-API使用指南" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓BLE开发笔记(二) API使用指南</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.10.08</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p><a href="https://blog.islinjw.cn/2021/09/29/%E5%AE%89%E5%8D%93BLE%E5%BC%80%E5%8F%91%E7%AC%94%E8%AE%B0-%E4%B8%80-BLE%E5%8D%8F%E8%AE%AE%E5%85%A5%E9%97%A8/" target="_blank" rel="noopener">上一篇</a>简单介绍了Ble协议，这篇来看看安卓上的代码具体要怎么写。</p>
+<h1 id="权限与功能"><a href="#权限与功能" class="headerlink" title="权限与功能"></a>权限与功能</h1><p>要在代码中使用蓝牙功能需要先申请到对应的权限，在AndroidManifest.xml文件中添加权限声明</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.BLUETOOTH"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.BLUETOOTH_ADMIN"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.ACCESS_COARSE_LOCATION"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>Ble属于蓝牙的功能，所以我们需要打开手机的蓝牙功能</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 打开蓝牙功能</span></span><br><span class="line"><span class="keyword">val</span> bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) <span class="keyword">as</span> BluetoothManager</span><br><span class="line"><span class="keyword">if</span> (!bluetoothManager.adapter.isEnabled) &#123;</span><br><span class="line">    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) &#123;</span><br><span class="line">        startScan()</span><br><span class="line">    &#125;.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而且虽然我们使用的是蓝牙功能，但是除了蓝牙的相关权限之外，还需要额外申请一个模糊定位的权限。要不然会启动蓝牙扫描失败:</p>
+<blockquote>
+<p>09-11 09:33:47.143 13249 13292 I BtGatt.ScanManager: Cannot start unfiltered scan in location-off. This scan will be resumed when location is on: 6</p>
+</blockquote>
+<p>原因是我们可以通过检查周边蓝牙设备信号的强度，来实现模糊定位。这个权限是需要动态申请的:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 判断是否有模糊定位的权限</span></span><br><span class="line"><span class="keyword">if</span> (PERMISSION_DENIED == PermissionChecker.checkCallingOrSelfPermission(<span class="keyword">this</span>, ACCESS_COARSE_LOCATION)) &#123;</span><br><span class="line">    requestPermissions(arrayOf(ACCESS_COARSE_LOCATION), REQUEST_CODE_ACCESS_COARSE_LOCATION)</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 判断GPS是否打开</span></span><br><span class="line"><span class="keyword">val</span> locationManager = getSystemService(LOCATION_SERVICE) <span class="keyword">as</span> LocationManager</span><br><span class="line"><span class="keyword">if</span> (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) &#123;</span><br><span class="line">    Toast.makeText(<span class="keyword">this</span>, <span class="string">"GPS功能没有打开"</span>, Toast.LENGTH_SHORT).show()</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>PS : 我司的大板上实际上没有GPS功能，所以最终让系统哥在framework里面把这个判断去掉了:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// packages/apps/Bluetooth/src/com/android/bluetooth/gatt/ScanManager.java</span></span><br><span class="line"><span class="comment">// 将这个if判断直接删掉就好，这里只是用来做安全判断的，实际上蓝牙的功能并不依赖gps</span></span><br><span class="line"><span class="keyword">if</span> (!locationEnabled &amp;&amp; !isFiltered) &#123;</span><br><span class="line">    Log.i(TAG, <span class="string">"Cannot start unfiltered scan in location-off. This scan will be"</span></span><br><span class="line">            + <span class="string">" resumed when location is on: "</span> + client.scannerId);</span><br><span class="line">    mSuspendedScanClients.add(client);</span><br><span class="line">    <span class="keyword">if</span> (client.stats != <span class="keyword">null</span>) &#123;</span><br><span class="line">        client.stats.recordScanSuspend(client.scannerId);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="搜索蓝牙设备"><a href="#搜索蓝牙设备" class="headerlink" title="搜索蓝牙设备"></a>搜索蓝牙设备</h1><p>功能和权限正常之后我们就能开始扫描周边的蓝牙设备。我看网上很多的教程都是通过BluetoothAdapter.startLeScan去实现的，实际上这个方法已经被标记为过时了，我们这里用新的api去实现:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">object</span> : ScanCallback() &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onScanResult</span><span class="params">(callbackType: <span class="type">Int</span>, result: <span class="type">ScanResult</span>?)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onScanResult(callbackType, result)</span><br><span class="line">        <span class="comment">// result里面可以拿到信号强度rssi、设备信息device、广播信息scanRecord等</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> manager = context.getSystemService(Context.BLUETOOTH_SERVICE) <span class="keyword">as</span> BluetoothManager</span><br><span class="line"><span class="keyword">val</span> adapter = manager.adapter</span><br><span class="line">scanner = adapter?.bluetoothLeScanner ?: <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">scanner.startScan(callback)</span><br></pre></td></tr></table></figure>
+
+<h1 id="连接蓝牙设备"><a href="#连接蓝牙设备" class="headerlink" title="连接蓝牙设备"></a>连接蓝牙设备</h1><p>蓝牙设备的连接直接调用onScanResult的result.device的connect方法即可:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">var</span> gatt: BluetoothGatt? = <span class="literal">null</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> gattCallback = <span class="keyword">object</span> : BluetoothGattCallback() &#123;</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onConnectionStateChange</span><span class="params">(gatt: <span class="type">BluetoothGatt</span>?, status: <span class="type">Int</span>, newState: <span class="type">Int</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onConnectionStateChange(gatt, status, newState)</span><br><span class="line">        <span class="keyword">this</span><span class="symbol">@BleHelper</span>.gatt = gatt ?: <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (newState == BluetoothProfile.STATE_CONNECTED) &#123;</span><br><span class="line">            connectCallback?.onConnected(gatt)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">connectDevice</span><span class="params">(context: <span class="type">Context</span>,device: <span class="type">BluetoothDevice</span>,callback: <span class="type">ConnectCallback</span>)</span></span> &#123;</span><br><span class="line">    connectCallback = callback</span><br><span class="line">    device.connectGatt(context, <span class="literal">true</span>, gattCallback)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>连接成功之后我们需要手动去扫描Ble设备提供的服务:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">var</span> gatt: BluetoothGatt? = <span class="literal">null</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> gattCallback = <span class="keyword">object</span> : BluetoothGattCallback() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onServicesDiscovered</span><span class="params">(gatt: <span class="type">BluetoothGatt</span>?, status: <span class="type">Int</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onServicesDiscovered(gatt, status)</span><br><span class="line">        <span class="keyword">val</span> services = gatt?.services ?: <span class="keyword">return</span></span><br><span class="line">        discoverServicesCallback?.onServicesDiscovered(services)</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">discoverServices</span><span class="params">(gatt: <span class="type">BluetoothGatt</span>, callback: <span class="type">DiscoverServicesCallback</span>)</span></span> &#123;</span><br><span class="line">    discoverServicesCallback = callback</span><br><span class="line">    gatt.discoverServices()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，连接和服务发现都是通过BluetoothGattCallback来回调的。实际上所有的GATT相关操作者如读写Characteristic、修改MTU等都是在这里回调的。</p>
+<h1 id="Characteristic读写与监听"><a href="#Characteristic读写与监听" class="headerlink" title="Characteristic读写与监听"></a>Characteristic读写与监听</h1><p>设备服务发现成功之后，我们就可以在BluetoothGatt里面遍历services和其中的characteristics。当然我们也可以通过uuid去搜索指定的characteristic:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">var</span> gatt: BluetoothGatt? = <span class="literal">null</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">getCharacteristic</span><span class="params">(serviceUuid: <span class="type">String</span>, characteristicUuid: <span class="type">String</span>)</span></span>: BluetoothGattCharacteristic? &#123;</span><br><span class="line">    <span class="keyword">return</span> gatt</span><br><span class="line">        ?.getService(UUID.fromString(serviceUuid))</span><br><span class="line">        ?.getCharacteristic(UUID.fromString(characteristicUuid))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过characteristic的properties属性我们可以判断到characteristic是不是可读、可写或者可监听的:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">isCharacteristicReadable</span><span class="params">(characteristic: <span class="type">BluetoothGattCharacteristic</span>)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_READ) != <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">isCharacteristicWriteable</span><span class="params">(characteristic: <span class="type">BluetoothGattCharacteristic</span>)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_WRITE) != <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">isCharacteristicNotify</span><span class="params">(characteristic: <span class="type">BluetoothGattCharacteristic</span>)</span></span>: <span class="built_in">Boolean</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY) != <span class="number">0</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="读取characteristic"><a href="#读取characteristic" class="headerlink" title="读取characteristic"></a>读取characteristic</h2><p>读取characteristic很简单，直接调用BluetoothGatt.readCharacteristic方法即可:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">var</span> gatt: BluetoothGatt? = <span class="literal">null</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> gattCallback = <span class="keyword">object</span> : BluetoothGattCallback() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCharacteristicRead</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        gatt: <span class="type">BluetoothGatt</span>?,</span></span></span><br><span class="line"><span class="function"><span class="params">        characteristic: <span class="type">BluetoothGattCharacteristic</span>?,</span></span></span><br><span class="line"><span class="function"><span class="params">        status: <span class="type">Int</span></span></span></span><br><span class="line"><span class="function"><span class="params">    )</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCharacteristicRead(gatt, characteristic, status)</span><br><span class="line">        <span class="comment">//characteristic?.value 即为读取出来的具体ByteArray</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">readCharacteristic</span><span class="params">(characteristic: <span class="type">BluetoothGattCharacteristic</span>, callback: <span class="type">ReadCharacteristicCallback</span>)</span></span> &#123;</span><br><span class="line">    readCharacteristicCallback = callback</span><br><span class="line">    gatt?.readCharacteristic(characteristic)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="写入characteristic"><a href="#写入characteristic" class="headerlink" title="写入characteristic"></a>写入characteristic</h2><p>写入的话上一篇有提到过安卓上默认MTU为23，最多一次只能写入20个字节的数据，所以如果数据量比较大的话需要设置一下mtu:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">var</span> gatt: BluetoothGatt? = <span class="literal">null</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> gattCallback = <span class="keyword">object</span> : BluetoothGattCallback() &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onMtuChanged</span><span class="params">(gatt: <span class="type">BluetoothGatt</span>?, mtu: <span class="type">Int</span>, status: <span class="type">Int</span>)</span></span> &#123;</span><br><span class="line">            <span class="keyword">super</span>.onMtuChanged(gatt, mtu, status)</span><br><span class="line">            Log.d(TAG, <span class="string">"onMtuChanged <span class="variable">$mtu</span>"</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">setMtu</span><span class="params">(mtu: <span class="type">Int</span>)</span></span> &#123;</span><br><span class="line">    gatt?.requestMtu(mtu)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>等MTU设置成功之后再调用BluetoothGatt.writeCharacteristic方法写入</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">var</span> gatt: BluetoothGatt? = <span class="literal">null</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> gattCallback = <span class="keyword">object</span> : BluetoothGattCallback() &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCharacteristicWrite</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            gatt: <span class="type">BluetoothGatt</span>?,</span></span></span><br><span class="line"><span class="function"><span class="params">            characteristic: <span class="type">BluetoothGattCharacteristic</span>?,</span></span></span><br><span class="line"><span class="function"><span class="params">            status: <span class="type">Int</span></span></span></span><br><span class="line"><span class="function"><span class="params">        )</span></span> &#123;</span><br><span class="line">            <span class="keyword">super</span>.onCharacteristicWrite(gatt, characteristic, status)</span><br><span class="line">            Log.d(TAG, <span class="string">"onCharacteristicWrite <span class="subst">$&#123;characteristic?.uuid&#125;</span> <span class="subst">$&#123;status&#125;</span>"</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">writeCharacteristic</span><span class="params">(characteristic: <span class="type">BluetoothGattCharacteristic</span>, bytes: <span class="type">ByteArray</span>)</span></span> &#123;</span><br><span class="line">    characteristic.value = bytes</span><br><span class="line">    gatt?.writeCharacteristic(characteristic)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="监听characteristic"><a href="#监听characteristic" class="headerlink" title="监听characteristic"></a>监听characteristic</h2><p>监听characteristic，如上一篇所说，需要先修改其Client Characteristic Configuration Descriptor(uuid 0x2902):</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">var</span> gatt: BluetoothGatt? = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">startCharacteristicChangeNotify</span><span class="params">(characteristic: <span class="type">BluetoothGattCharacteristic</span>, callback: <span class="type">CharacteristicChangedCallback</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> gatt = gatt ?: <span class="keyword">return</span></span><br><span class="line">    characteristicChangedCallback = callback</span><br><span class="line">    <span class="keyword">if</span> (gatt.setCharacteristicNotification(characteristic, <span class="literal">true</span>)) &#123;</span><br><span class="line">        <span class="keyword">val</span> descriptor = characteristic.getDescriptor(</span><br><span class="line">            UUID.fromString(UUID_DESCRIPTOR_CLIENT_CHARACTERISTIC_CONFIGURATION)</span><br><span class="line">        )</span><br><span class="line">        descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE</span><br><span class="line">        gatt.writeDescriptor(descriptor)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后才能接受到值改变的回调:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> gattCallback = <span class="keyword">object</span> : BluetoothGattCallback() &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onCharacteristicChanged</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        gatt: <span class="type">BluetoothGatt</span>?,</span></span></span><br><span class="line"><span class="function"><span class="params">        characteristic: <span class="type">BluetoothGattCharacteristic</span>?</span></span></span><br><span class="line"><span class="function"><span class="params">    )</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>.onCharacteristicChanged(gatt, characteristic)</span><br><span class="line">        <span class="keyword">if</span> (characteristic != <span class="literal">null</span>) &#123;</span><br><span class="line">            characteristicChangedCallback?.onCharacteristicChanged(characteristic)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="配对"><a href="#配对" class="headerlink" title="配对"></a>配对</h1><p>经典蓝牙的配对是通过BluetoothDevice.createBond()方法实现的，如果在扫描到设备之后直接调用，则可以配对成功。但如果先使用ble connect连接上去之后再去调用就会失败。据说是因为BluetoothDevice.createBond内部也会先判断是否connect，如果connect成功就不继续(这里我没有去找实际的源码验证，存疑)。</p>
+<p>但是我发现在原生的Setting蓝牙设置里面，就算是我已经ble connect成功的设备，再去点击连接也是可以绑定的（这里用了我司的一个智能笔设备验证）。于是直接查看原生Setting源码。发现可以通过bluetooth服务去实现:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">const</span> <span class="keyword">val</span> PACKAGE_BLUETOOTH = <span class="string">"com.android.bluetooth"</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">const</span> <span class="keyword">val</span> ACTION_BLUETOOTH = <span class="string">"android.bluetooth.IBluetoothHidHost"</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">var</span> hidHost: IBluetoothHidHost? = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">init</span><span class="params">(application: <span class="type">Application</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">this</span>.application = application</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> intent = Intent(ACTION_BLUETOOTH)</span><br><span class="line">    intent.setPackage(PACKAGE_BLUETOOTH)</span><br><span class="line"></span><br><span class="line">    Log.d(TAG, <span class="string">"init"</span>)</span><br><span class="line">    application.bindService(</span><br><span class="line">        intent,</span><br><span class="line">        <span class="keyword">object</span> : ServiceConnection &#123;</span><br><span class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onServiceConnected</span><span class="params">(name: <span class="type">ComponentName</span>?, service: <span class="type">IBinder</span>?)</span></span> &#123;</span><br><span class="line">                Log.d(TAG, <span class="string">"IBluetoothHidHost onServiceConnected"</span>)</span><br><span class="line">                hidHost = IBluetoothHidHost.Stub.asInterface(service)</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">onServiceDisconnected</span><span class="params">(name: <span class="type">ComponentName</span>?)</span></span> &#123;</span><br><span class="line">                Log.d(TAG, <span class="string">"IBluetoothHidHost onServiceDisconnected"</span>)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        Context.BIND_AUTO_CREATE</span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 绑定设备</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">bond</span><span class="params">(device: <span class="type">BluetoothDevice</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">val</span> result = hidHost?.connect(device)</span><br><span class="line">    Log.d(TAG,<span class="string">"bond <span class="variable">$result</span>"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>IBluetoothHidHost实际上在AndroidSdk内部没有提供，可以直接拷贝系统源码中生成的aidl代码来使用。</p>
+<h1 id="完整Demo"><a href="#完整Demo" class="headerlink" title="完整Demo"></a>完整Demo</h1><p>完整demo已经上传到<a href="https://github.com/bluesky466/BleDemo" target="_blank" rel="noopener">github</a>感兴趣的同学可以clone下来参考</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

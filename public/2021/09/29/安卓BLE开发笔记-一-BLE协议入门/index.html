@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/4.png">
 <meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/5.jpeg">
 <meta property="og:image" content="http://139.199.4.241/安卓BLE开发笔记一/6.png">
-<meta property="og:updated_time" content="2021-09-29T14:30:41.060Z">
+<meta property="og:updated_time" content="2021-10-08T11:04:49.008Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓BLE开发笔记(一) BLE协议入门">
 <meta name="twitter:description" content="最近遇到了一个BLE的项目，花时间恶补了下相关的知识，这里记录下来备忘。这篇笔记是纯协议的，先大概了解ble的协议和流程，能帮助我们更好的编码 Ble设备发现Ble设备的发现实际上靠的是Advertising(广播)机制。广播也有人管它叫做Beacon,我没有在官方文档里面查找到这个词，但是从网络上的文章来看，它们差不多就是同一个东西。 基于广播发现Ble设备有两种方式:  Ble设备设定间隔不断">
@@ -178,7 +178,7 @@
 <img src="/安卓BLE开发笔记一/2.png">
 
 <p>可以看到广播数据0x0319C703020104030312180C094D41584559455F353146300C16791300000002000000735C，实际有5个AD Structure。</p>
-<p>AD Type如上图所说可以去蓝牙协议的<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>查看[Generic Access Profile文档](<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-numbers/Assigned" target="_blank" rel="noopener">https://btprodspecificationrefs.blob.core.windows.net/assigned-numbers/Assigned</a> Number Types/Generic Access Profile.pdf)，可以看到这五个字段类型分别是:</p>
+<p>AD Type如上图所说可以去蓝牙协议的<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>查看<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-numbers/Assigned%20Number%20Types/Generic%20Access%20Profile.pdf" target="_blank" rel="noopener">Generic Access Profile文档</a>，可以看到这五个字段类型分别是:</p>
 <table>
 <thead>
 <tr>
@@ -226,7 +226,7 @@
 
 <p>可以看到这里有Generic Access、Generic Attribute、Device Information三个Service。而Device Information Service下面又有四个Characteristic</p>
 <p>这些Service、Characteristic都会有一个UUID去做标识，例如Generic Access Service的UUID是0x1800。虽然我们这里看到的UUID都是16bit的，但是实际上它们的完整形式应该是0x0000xxxx-0000-1000-8000-00805F9B34FB。中间的xxxx就是截图中显示的16位uuid，即Generic Access Service的完整UUID是0x00001800-0000-1000-8000-00805F9B34FB。</p>
-<p>Service的UUID映射表可以到<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>的[16-bit UUIDs文档](<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit" target="_blank" rel="noopener">https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit</a> UUID Numbers Document.pdf)查看。</p>
+<p>Service的UUID映射表可以到<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>的<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit%20UUID%20Numbers%20Document.pdf" target="_blank" rel="noopener">16-bit UUIDs文档</a>查看。</p>
 <h2 id="Characteristic"><a href="#Characteristic" class="headerlink" title="Characteristic"></a>Characteristic</h2><h3 id="Properties"><a href="#Properties" class="headerlink" title="Properties"></a>Properties</h3><p>截图里面的Characteristic的Properties都是READ，代表这个Characteristic是可读取的。它实际上是描述了这个Characteristic可以如何使用。Properties在安卓ble的sdk里面靠一个int类型的变量表示，每一个二进制位都标识了一直能力。我们可以通过按位与的方式判断是否支持:</p>
 <table>
 <thead>
@@ -304,7 +304,7 @@
 <td>保留未来使用</td>
 </tr>
 </tbody></table>
-<p>Descriptor的UUID映射表同样可以到<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>的[16-bit UUIDs文档](<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit" target="_blank" rel="noopener">https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit</a> UUID Numbers Document.pdf)查看。</p>
+<p>Descriptor的UUID映射表同样可以到<a href="https://www.bluetooth.com/specifications/assigned-numbers/" target="_blank" rel="noopener">官方</a>的<a href="https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit%20UUID%20Numbers%20Document.pdf" target="_blank" rel="noopener">16-bit UUIDs文档</a>查看。</p>
 <h1 id="MTU"><a href="#MTU" class="headerlink" title="MTU"></a>MTU</h1><p>MTU指的是最大传输单元MAXIMUM TRANSMISSION UNIT,表示一次数据传输最多能传多大的数据，我们直接看它的官方说明:</p>
 <img src="/安卓BLE开发笔记一/5.jpeg">
 

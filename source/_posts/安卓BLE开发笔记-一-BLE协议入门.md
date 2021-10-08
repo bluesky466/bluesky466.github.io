@@ -32,7 +32,7 @@ Ble设备的发现实际上靠的是Advertising(广播)机制。广播也有人�
 
 可以看到广播数据0x0319C703020104030312180C094D41584559455F353146300C16791300000002000000735C，实际有5个AD Structure。
 
-AD Type如上图所说可以去蓝牙协议的[官方](https://www.bluetooth.com/specifications/assigned-numbers/)查看[Generic Access Profile文档](https://btprodspecificationrefs.blob.core.windows.net/assigned-numbers/Assigned Number Types/Generic Access Profile.pdf)，可以看到这五个字段类型分别是:
+AD Type如上图所说可以去蓝牙协议的[官方](https://www.bluetooth.com/specifications/assigned-numbers/)查看[Generic Access Profile文档](https://btprodspecificationrefs.blob.core.windows.net/assigned-numbers/Assigned%20Number%20Types/Generic%20Access%20Profile.pdf)，可以看到这五个字段类型分别是:
 
 | Data Type Value | Data Type Name                                | Reference for Definition                                     |
 | --------------- | --------------------------------------------- | ------------------------------------------------------------ |
@@ -68,7 +68,7 @@ Ble设备里面会提供多个Service，这些Service会提供一些特定的功
 
 这些Service、Characteristic都会有一个UUID去做标识，例如Generic Access Service的UUID是0x1800。虽然我们这里看到的UUID都是16bit的，但是实际上它们的完整形式应该是0x0000xxxx-0000-1000-8000-00805F9B34FB。中间的xxxx就是截图中显示的16位uuid，即Generic Access Service的完整UUID是0x00001800-0000-1000-8000-00805F9B34FB。
 
-Service的UUID映射表可以到[官方](https://www.bluetooth.com/specifications/assigned-numbers/)的[16-bit UUIDs文档](https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit UUID Numbers Document.pdf)查看。
+Service的UUID映射表可以到[官方](https://www.bluetooth.com/specifications/assigned-numbers/)的[16-bit UUIDs文档](https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit%20UUID%20Numbers%20Document.pdf)查看。
 
 ## Characteristic
 
@@ -102,7 +102,7 @@ Service的UUID映射表可以到[官方](https://www.bluetooth.com/specification
 | Indication        | 1                  | 打开Indicate功能 |
 |                   | 其他二进制位       | 保留未来使用     |
 
-Descriptor的UUID映射表同样可以到[官方](https://www.bluetooth.com/specifications/assigned-numbers/)的[16-bit UUIDs文档](https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit UUID Numbers Document.pdf)查看。
+Descriptor的UUID映射表同样可以到[官方](https://www.bluetooth.com/specifications/assigned-numbers/)的[16-bit UUIDs文档](https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit%20UUID%20Numbers%20Document.pdf)查看。
 
 # MTU
 
