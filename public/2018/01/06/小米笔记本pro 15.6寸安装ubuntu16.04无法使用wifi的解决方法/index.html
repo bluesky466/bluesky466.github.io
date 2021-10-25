@@ -169,7 +169,7 @@
 <li><a href="https://github.com/bluesky466/filesave/blob/master/miwifi/linux-image-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb" target="_blank" rel="noopener">linux-image-4.10.14-041014-generic_4.10.14-041014.201705031501_amd64.deb</a></li>
 </ul>
 <p>然后执行命令将它们全部安装,接着重启电脑就可以了:</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">sudo</span> dpkg -i <span class="regexp">*.deb</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dpkg -i *.deb</span><br></pre></td></tr></table></figure>
 
 <h2 id="关闭secure-boot"><a href="#关闭secure-boot" class="headerlink" title="关闭secure boot"></a>关闭secure boot</h2><p>这个步骤可能不需要。因为我之前在搜索其他解决方式的时候就已经将它关闭了</p>
 <p>如果你按照我上面的方法安装驱动之后还是不能使用wifi的话。进入bois查看是否位于UEFI且开启了secure boot,是的话将它关闭。</p>

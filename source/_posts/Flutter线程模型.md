@@ -206,3 +206,14 @@ I/flutter (17503): globalData from otherIsolate 5
 I/flutter (17503): globalData from otherIsolate 6
 ```
 
+
+# 参考
+
+学习这部分知识的时候参考了下面的文章，有兴趣的同学可以看看:
+
+[给 Android 开发者的 Flutter 指南](https://flutter.cn/docs/get-started/flutter-for/android-devs#what-is-the-equivalent-of-runonuithread-in-flutter)
+
+[Dart asynchronous programming: Isolates and event loops](https://medium.com/dartlang/dart-asynchronous-programming-isolates-and-event-loops-bffc3e296a6a)
+
+[Dart与消息循环机制[翻译]](https://www.jianshu.com/p/7549b63a72d7)
+
