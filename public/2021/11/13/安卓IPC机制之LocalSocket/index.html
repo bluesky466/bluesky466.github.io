@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓IPC机制之LocalSocket | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="LocalSocket作为安卓提供的一种IPC机制，可能应用层的同学比较陌生，我实际也是在这段时间做项目使用到才注意到它并去了解的。不过实际上framework层里面被频繁使用到了，例如我很久前写的博客从源码看安卓应用的启动过程里面提到其他进程和Zygote进程之间的通信使用的是LocalSocket。 那么LocalSocket和Socket到底有什么不同呢？官方文档里面其实提到了它其实是基于U">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓IPC机制之LocalSocket">
+<meta property="og:url" content="http://139.199.4.241/2021/11/13/安卓IPC机制之LocalSocket/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="LocalSocket作为安卓提供的一种IPC机制，可能应用层的同学比较陌生，我实际也是在这段时间做项目使用到才注意到它并去了解的。不过实际上framework层里面被频繁使用到了，例如我很久前写的博客从源码看安卓应用的启动过程里面提到其他进程和Zygote进程之间的通信使用的是LocalSocket。 那么LocalSocket和Socket到底有什么不同呢？官方文档里面其实提到了它其实是基于U">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-11-13T09:34:03.833Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓IPC机制之LocalSocket">
+<meta name="twitter:description" content="LocalSocket作为安卓提供的一种IPC机制，可能应用层的同学比较陌生，我实际也是在这段时间做项目使用到才注意到它并去了解的。不过实际上framework层里面被频繁使用到了，例如我很久前写的博客从源码看安卓应用的启动过程里面提到其他进程和Zygote进程之间的通信使用的是LocalSocket。 那么LocalSocket和Socket到底有什么不同呢？官方文档里面其实提到了它其实是基于U">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#使用方式"><span class="toc-text">使用方式</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#性能"><span class="toc-text">性能</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#优缺点"><span class="toc-text">优缺点</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#需要注意的地方"><span class="toc-text">需要注意的地方</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓IPC机制之LocalSocket" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓IPC机制之LocalSocket</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.11.13</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>LocalSocket作为安卓提供的一种IPC机制，可能应用层的同学比较陌生，我实际也是在这段时间做项目使用到才注意到它并去了解的。不过实际上framework层里面被频繁使用到了，例如我很久前写的博客<a href="https://blog.islinjw.cn/2018/03/08/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8B%E5%AE%89%E5%8D%93%E5%BA%94%E7%94%A8%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/" target="_blank" rel="noopener">从源码看安卓应用的启动过程</a>里面提到其他进程和Zygote进程之间的通信使用的是LocalSocket。</p>
+<p>那么LocalSocket和Socket到底有什么不同呢？<a href="https://developer.android.com/reference/android/net/LocalServerSocket" target="_blank" rel="noopener">官方文档</a>里面其实提到了它其实是基于UNIX-domain socket的:</p>
+<blockquote>
+<p>Non-standard class for creating an inbound UNIX-domain socket in the Linux abstract namespace.</p>
+</blockquote>
+<p>Socket本来是用来做不同主机间的网络通信的，如果有人想拿来做本机的IPC通信就会发现它的性能堪忧(例如实现binder机制做不到的传输大文件)，因为它需要走网络协议栈、打包拆包、计算校验等，如果是TCP还需要走三次握手和应答。</p>
+<p>于是后面就发展出了UNIX-domain socket (LocalSocket)，它的api和socket的基本一致，但是本质上只是一种IPC通信，不可和外部主机通信，但是因为IPC通信是可靠通信，直接将数据拷贝到目标进程内存即可，所以没有之前说的那些耗时的操作。</p>
+<h1 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h1><p>我们先来看看它的使用方式:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">demoClient</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    LocalSocket client = <span class="keyword">new</span> LocalSocket();</span><br><span class="line">    client.connect(<span class="keyword">new</span> LocalSocketAddress(<span class="string">"me.linjw.localsocket"</span>));</span><br><span class="line">    client.getOutputStream().write(<span class="number">123</span>);</span><br><span class="line">    <span class="keyword">int</span> read = client.getInputStream().read();</span><br><span class="line">    Log.d(TAG, <span class="string">"response from server : "</span> + read);</span><br><span class="line">    client.close();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">demoServer</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    LocalServerSocket server = <span class="keyword">new</span> LocalServerSocket(<span class="string">"me.linjw.localsocket"</span>);</span><br><span class="line">    LocalSocket client = server.accept();</span><br><span class="line">    <span class="keyword">int</span> read = client.getInputStream().read();</span><br><span class="line">    Log.d(TAG, <span class="string">"request from client :"</span> + read);</span><br><span class="line">    client.getOutputStream().write(read + <span class="number">1</span>);</span><br><span class="line">    client.getOutputStream().flush();</span><br><span class="line">    client.close();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 打印</span></span><br><span class="line"><span class="comment">// request from client :123</span></span><br><span class="line"><span class="comment">// response from server : 124</span></span><br></pre></td></tr></table></figure>
+
+<p>没错，看起来和普通Socket的用法很类似了。</p>
+<h1 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h1><p>性能是评判一种ipc进制好坏的重要指标，例如我们常用的Binder机制就是用了mmap机制实现了数据的一次拷贝提高了传输速度。</p>
+<p>于是我写了一个<a href="https://github.com/bluesky466/IPCSpeechTest" target="_blank" rel="noopener">测试程序</a>来对比AIDL、LocalSocket和TCP Socket的传输速度。测试的逻辑大概是:</p>
+<ol>
+<li>每次传输读或者写1024 byte数据</li>
+<li>计算3000次读或者写的耗时(也就是计算读3000k或者写3000k数据的总耗时)</li>
+<li>LocalSocket和TCP Socket每次传输完数据都断开连接,下次需要重新连接</li>
+</ol>
+<p>在我们的产品设备上得到的实际数据如下:</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>方向</th>
+<th>第一次3000k</th>
+<th>第二次3000k</th>
+<th>第三次3000k</th>
+<th>第四次3000k</th>
+<th>平均时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AIDL</td>
+<td>读</td>
+<td>1.711s</td>
+<td>1.195s</td>
+<td>1.25s</td>
+<td>1.169s</td>
+<td>1.33125s</td>
+</tr>
+<tr>
+<td>LocalSocket</td>
+<td>读</td>
+<td>1.674s</td>
+<td>1.286s</td>
+<td>1.185s</td>
+<td>1.219s</td>
+<td>1.341s</td>
+</tr>
+<tr>
+<td>TCP Socket</td>
+<td>读</td>
+<td>10.188s</td>
+<td>8.926s</td>
+<td>8.865s</td>
+<td>8.803s</td>
+<td>9.1955</td>
+</tr>
+<tr>
+<td>AIDL</td>
+<td>写</td>
+<td>1.261s</td>
+<td>1.212s</td>
+<td>1.175s</td>
+<td>1.23s</td>
+<td>1.2195</td>
+</tr>
+<tr>
+<td>LocalSocket</td>
+<td>写</td>
+<td>1.387s</td>
+<td>1.323s</td>
+<td>1.23s</td>
+<td>1.35s</td>
+<td>1.3225</td>
+</tr>
+<tr>
+<td>TCP Socket</td>
+<td>写</td>
+<td>8.284s</td>
+<td>8.242s</td>
+<td>8.324s</td>
+<td>8.285s</td>
+<td>8.28375</td>
+</tr>
+</tbody></table>
+<p>从上面的数据可以看出来LocalSocket虽然会比AIDL慢但是也差的不多，而tcp的耗时就比较多了。虽然我没有具体看过LocalSocket的底层原理，但是想来既然它在framework层被频繁使用，那么谷歌应该也应该会考虑到性能这一点。</p>
+<h1 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h1><p>优点:</p>
+<ol>
+<li>可以进行数据流读写,没有大小限制</li>
+<li>比TCP Socket会更加安全，因为不能通过抓包监听传输的数据</li>
+<li>不会开启线程池(Zygote之所以使用它而不是Binder也是因为Binder机制默认会启动线程池，而fork在多线程下只会fork出当前线程)</li>
+</ol>
+<p>缺点:</p>
+<ol>
+<li>比Binder的速度还是会稍微慢那么一点点</li>
+<li>没有像AIDL这样的高层封装，需要自己实现</li>
+<li>和TCP Socket对比起来不能跨主机通信</li>
+</ol>
+<h1 id="需要注意的地方"><a href="#需要注意的地方" class="headerlink" title="需要注意的地方"></a>需要注意的地方</h1><ol>
+<li>虽然不是真正的网络传输，但是也需要声明android.permission.INTERNET权限，要不然同样会报java.net.SocketException: Permission denied异常</li>
+<li>虽然可以通过LocalSocket和framework层直接通信，但是如果系统打开了SeLinux就会出现Permission denied异常</li>
+<li>在模拟器上LocalSocket的flush用多了耗时有时候会比较严重(Tcp没有问题，实机测试LocalSocket也没有出现问题，猜测和系统相关)</li>
+</ol>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
