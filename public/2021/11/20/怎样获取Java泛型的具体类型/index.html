@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>怎样获取Java泛型的具体类型 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,java,">
+  
+
+  <meta name="description" content="之前写过一篇博客介绍过Java泛型的类型擦除机制，实际上Java的泛型是使用所有类的公共父类Object去实现: 1234//错误,泛型的类型被擦除了,T在运行时实际上是Object,不能直接new出来public &amp;lt;T&amp;gt; void foo(T arg) &amp;#123;    return arg != null ? arg : new T();&amp;#125;  那是不是运行的时候就真的无">
+<meta name="keywords" content="技术相关,java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="怎样获取Java泛型的具体类型">
+<meta property="og:url" content="http://139.199.4.241/2021/11/20/怎样获取Java泛型的具体类型/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="之前写过一篇博客介绍过Java泛型的类型擦除机制，实际上Java的泛型是使用所有类的公共父类Object去实现: 1234//错误,泛型的类型被擦除了,T在运行时实际上是Object,不能直接new出来public &amp;lt;T&amp;gt; void foo(T arg) &amp;#123;    return arg != null ? arg : new T();&amp;#125;  那是不是运行的时候就真的无">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-11-20T06:20:47.872Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="怎样获取Java泛型的具体类型">
+<meta name="twitter:description" content="之前写过一篇博客介绍过Java泛型的类型擦除机制，实际上Java的泛型是使用所有类的公共父类Object去实现: 1234//错误,泛型的类型被擦除了,T在运行时实际上是Object,不能直接new出来public &amp;lt;T&amp;gt; void foo(T arg) &amp;#123;    return arg != null ? arg : new T();&amp;#125;  那是不是运行的时候就真的无">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#为什么拿不到泛型的具体类型"><span class="toc-text">为什么拿不到泛型的具体类型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#继承泛型类指定泛型类型"><span class="toc-text">继承泛型类指定泛型类型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#封装工具类"><span class="toc-text">封装工具类</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-怎样获取Java泛型的具体类型" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">怎样获取Java泛型的具体类型</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.11.20</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>之前写过一篇<a href="https://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/" target="_blank" rel="noopener">博客</a>介绍过Java泛型的类型擦除机制，实际上Java的泛型是使用所有类的公共父类Object去实现:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//错误,泛型的类型被擦除了,T在运行时实际上是Object,不能直接new出来</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">(T arg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> arg != <span class="keyword">null</span> ? arg : <span class="keyword">new</span> T();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那是不是运行的时候就真的无法获取到泛型使用的实际类型呢？</p>
+<p>我们可以从一些第三方库找到答案,例如Gson,它就支持解析泛型类型:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Foo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">	T data;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Type type = <span class="keyword">new</span> TypeToken&lt;Foo&gt;() &#123;&#125;.getType();</span><br><span class="line">Foo foo = <span class="keyword">new</span> Gson().fromJson(json, type);</span><br></pre></td></tr></table></figure>
+
+<p>它是怎么做到的呢？</p>
+<h1 id="为什么拿不到泛型的具体类型"><a href="#为什么拿不到泛型的具体类型" class="headerlink" title="为什么拿不到泛型的具体类型"></a>为什么拿不到泛型的具体类型</h1><p>我们一步步来探索这个问题。先写一个简单的例子:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GenericsDemo</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> NoSuchFieldException </span>&#123;</span><br><span class="line">		Foo&lt;String&gt; foo = <span class="keyword">new</span> Foo&lt;String&gt;();</span><br><span class="line">        Class fooClass = foo.getClass();</span><br><span class="line">        Field field = fooClass.getField(<span class="string">"data"</span>);</span><br><span class="line">    </span><br><span class="line">        System.out.println(fooClass);</span><br><span class="line">        System.out.println(field.getType());</span><br><span class="line">        System.out.println(field.getGenericType());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Foo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">		<span class="keyword">public</span> T data;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行之后看到打印里面泛型的实际类型String已经不见了，变成了Object:</p>
+<blockquote>
+<p>class GenericsDemo$Foo<br>class java.lang.Object<br>T</p>
+</blockquote>
+<p>所以我们也就没有办法知道new Foo的时候指定的String类型。</p>
+<h1 id="继承泛型类指定泛型类型"><a href="#继承泛型类指定泛型类型" class="headerlink" title="继承泛型类指定泛型类型"></a>继承泛型类指定泛型类型</h1><p>这里还涉及到一个类加载的知识点，getClass方法拿到的实际是类加载器加载的类信息，而类信息在编译的时候就已经确定了。我们用”javac GenericsDemo.java”编译这个java代码，可以看到它生成了两个.class文件:</p>
+<blockquote>
+<p>GenericsDemo$Foo.class GenericsDemo.class     GenericsDemo.java</p>
+</blockquote>
+<p>GenericsDemo$Foo.class就是内部类Foo的信息了，使用”javap GenericsDemo$Foo”命令查看内容,可以发现它里面没有运行时的类型信息，<strong>也就是说在编译Foo类的时候，编译器没有办法确定它的具体泛型类型</strong>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Compiled from &quot;GenericsDemo.java&quot;</span><br><span class="line">public class GenericsDemo$Foo&lt;T&gt; &#123;</span><br><span class="line">  public T data;</span><br><span class="line">  public GenericsDemo$Foo();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是如果我们继承Foo并且指定泛型类型:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">StringFoo</span> <span class="keyword">extends</span> <span class="title">Foo</span>&lt;<span class="title">String</span>&gt; </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再使用”javap GenericsDemo$StringFoo”命令去查看它编译生成的GenericsDemo$StringFoo.class文件:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Compiled from &quot;GenericsDemo.java&quot;</span><br><span class="line">public class GenericsDemo$StringFoo extends GenericsDemo$Foo&lt;java.lang.String&gt; &#123;</span><br><span class="line">  public GenericsDemo$StringFoo();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>会发现class文件里携带了泛型的类型信息，<strong>也就是说StringFoo在编译的时候就能确定其泛型类型</strong>。既然class文件携带了信息，那么java虚拟机在加载的时候就能把这些信息加载进去。</p>
+<p>但是要怎么获取到它呢？如果使用getClass().getSuperclass()去获取父类信息是拿不到泛型的信息的，但是java提供了一个getGenericSuperclass的方法可以获取:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GenericsDemo</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> NoSuchFieldException </span>&#123;</span><br><span class="line">		Foo&lt;String&gt; foo = <span class="keyword">new</span> StringFoo();</span><br><span class="line">        System.out.println(foo.getClass().getSuperclass());</span><br><span class="line">        System.out.println(foo.getClass().getGenericSuperclass());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Foo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">		<span class="keyword">public</span> T data;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">StringFoo</span> <span class="keyword">extends</span> <span class="title">Foo</span>&lt;<span class="title">String</span>&gt; </span>&#123;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>class GenericsDemo$Foo<br>GenericsDemo$Foo&lt;java.lang.String&gt;</p>
+</blockquote>
+<p>如果父类使用了泛型那么getGenericSuperclass拿到的Type实际是ParameterizedType类型，可以通过其getActualTypeArguments方法获取泛型参数:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Foo&lt;String&gt; foo = <span class="keyword">new</span> StringFoo();</span><br><span class="line">ParameterizedType superGenericSuperclass = (ParameterizedType) foo.getClass().getGenericSuperclass();</span><br><span class="line"><span class="keyword">for</span> (Type arg : superGenericSuperclass.getActualTypeArguments()) &#123;</span><br><span class="line">	System.out.println(arg);	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打印如下:</p>
+<blockquote>
+<p>class java.lang.String</p>
+</blockquote>
+<p>所以我们可以再配合class的getTypeParameters方法确定在运行的时候每个泛型参数对应的具体是什么:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Foo&lt;String&gt; foo = <span class="keyword">new</span> StringFoo();</span><br><span class="line">ParameterizedType superGenericSuperclass = (ParameterizedType) foo.getClass().getGenericSuperclass();</span><br><span class="line">Class superClass = foo.getClass().getSuperclass();</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; superGenericSuperclass.getActualTypeArguments().length; i++) &#123;</span><br><span class="line">    System.out.println(superClass.getTypeParameters()[i] + <span class="string">" -&gt; "</span> + superGenericSuperclass.getActualTypeArguments()[i]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打印如下:</p>
+<blockquote>
+<p>T -&gt; class java.lang.String</p>
+</blockquote>
+<h1 id="封装工具类"><a href="#封装工具类" class="headerlink" title="封装工具类"></a>封装工具类</h1><p>所以如果需要在运行的时候获取泛型的具体类型，可以写一个子类去继承它，然后使用getGenericSuperclass获取父类的泛型信息。但是这样的方式比较死板，有没有什么好的方式可以不用继承去实现呢?</p>
+<p>我们看看下面的代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">System.out.println(<span class="keyword">new</span> Foo&lt;String&gt;().getClass().getGenericSuperclass());</span><br><span class="line">System.out.println(<span class="keyword">new</span> Foo&lt;String&gt;()&#123;&#125;.getClass().getGenericSuperclass());</span><br></pre></td></tr></table></figure>
+
+<p>它的打印如下：</p>
+<blockquote>
+<p>class java.lang.Object<br>GenericsDemo$Foo&lt;java.lang.String&gt;</p>
+</blockquote>
+<p>可以看到我们只是在new的后面加上了{},就能通过getClass().getGenericSuperclass()去获取泛型信息了。</p>
+<p>这样是因为加上{}之后实际上已经是一个匿名内部类了。通过“javac GenericsDemo.java”命令编译，可以看到编出出来多了个“GenericsDemo$1.class”文件。</p>
+<p>匿名内部类的实现原理实际上就是给它创建一个名为GenericsDemo$XXX的子类,所以从他的class信息里面可以看到父类的泛型信息:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Compiled from &quot;GenericsDemo.java&quot;</span><br><span class="line">final class GenericsDemo$1 extends GenericsDemo$Foo&lt;java.lang.String&gt; &#123;</span><br><span class="line">  GenericsDemo$1();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>基于上面的知识点:</p>
+<ol>
+<li>匿名内部类会生成一个子类</li>
+<li>生成的子类携带了父类的泛型信息</li>
+</ol>
+<p>我们可以写一个抽象的Token类,强制必须创建匿名内部类。然后通过查找父类的泛型信息的方式获取具体的泛型类型:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GenericsDemo</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">new</span> Token&lt;Foo&lt;String&gt;&gt;() &#123;&#125;.parseGenericInfo();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Foo</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">        T data;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Token</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parseGenericInfo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">// GenericsDemo$Token&lt;GenericsDemo$Foo&lt;java.lang.String&gt;&gt;</span></span><br><span class="line">            ParameterizedType genericSuperclass = (ParameterizedType) <span class="keyword">this</span>.getClass().getGenericSuperclass();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// GenericsDemo$Foo&lt;java.lang.String&gt;</span></span><br><span class="line">            ParameterizedType targetGenericClass = (ParameterizedType) genericSuperclass.getActualTypeArguments()[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">            <span class="comment">// class GenericsDemo$Foo</span></span><br><span class="line">            Class targetClass = (Class) targetGenericClass.getRawType();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; targetGenericClass.getActualTypeArguments().length; i++) &#123;</span><br><span class="line">                System.out.println(targetClass.getTypeParameters()[i] + <span class="string">" -&gt; "</span> + targetGenericClass.getActualTypeArguments()[i]);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到这个代码已经和Gson里面解析泛型的代码类似了:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Type type = <span class="keyword">new</span> TypeToken&lt;Foo&gt;() &#123;&#125;.getType();</span><br><span class="line">Foo foo = <span class="keyword">new</span> Gson().fromJson(json, type);</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
