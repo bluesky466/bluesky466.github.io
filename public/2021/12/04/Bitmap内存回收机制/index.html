@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Bitmap内存回收机制 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="Bitmap可以说是安卓里面最常见的内存消耗大户了，我们开发过程中遇到的oom问题很多都是由它引发的。谷歌官方也一直在迭代它的像素内存管理策略。从 Android 2.3.3以前的分配在native上，到2.3-7.1之间的分配在java堆上，又到8.0之后的回到native上。几度变迁，它的回收方法也在跟着变化。 Android 2.3.3以前2.3.3以前Bitmap的像素内存是分配在natv">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bitmap内存回收机制">
+<meta property="og:url" content="http://139.199.4.241/2021/12/04/Bitmap内存回收机制/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="Bitmap可以说是安卓里面最常见的内存消耗大户了，我们开发过程中遇到的oom问题很多都是由它引发的。谷歌官方也一直在迭代它的像素内存管理策略。从 Android 2.3.3以前的分配在native上，到2.3-7.1之间的分配在java堆上，又到8.0之后的回到native上。几度变迁，它的回收方法也在跟着变化。 Android 2.3.3以前2.3.3以前Bitmap的像素内存是分配在natv">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-12-17T12:23:08.639Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Bitmap内存回收机制">
+<meta name="twitter:description" content="Bitmap可以说是安卓里面最常见的内存消耗大户了，我们开发过程中遇到的oom问题很多都是由它引发的。谷歌官方也一直在迭代它的像素内存管理策略。从 Android 2.3.3以前的分配在native上，到2.3-7.1之间的分配在java堆上，又到8.0之后的回到native上。几度变迁，它的回收方法也在跟着变化。 Android 2.3.3以前2.3.3以前Bitmap的像素内存是分配在natv">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Android-2-3-3以前"><span class="toc-text">Android 2.3.3以前</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Android-3-0-Android-7-1"><span class="toc-text">Android 3.0~Android 7.1</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Android-8-0之后"><span class="toc-text">Android 8.0之后</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Bitmap内存回收机制" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Bitmap内存回收机制</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.12.04</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>Bitmap可以说是安卓里面最常见的内存消耗大户了，我们开发过程中遇到的oom问题很多都是由它引发的。谷歌官方也一直在迭代它的像素内存管理策略。从 Android 2.3.3以前的分配在native上，到2.3-7.1之间的分配在java堆上，又到8.0之后的回到native上。几度变迁，它的回收方法也在跟着变化。</p>
+<h1 id="Android-2-3-3以前"><a href="#Android-2-3-3以前" class="headerlink" title="Android 2.3.3以前"></a>Android 2.3.3以前</h1><p>2.3.3以前Bitmap的像素内存是分配在natvie上，而且不确定什么时候会被回收。根据<a href="https://developer.android.com/topic/performance/graphics/manage-memory" target="_blank" rel="noopener">官方文档</a>的说法我们需要手动调用Bitmap.recycle()去回收:</p>
+<blockquote>
+<p>在 Android 2.3.3（API 级别 10）及更低版本上，位图的后备像素数据存储在本地内存中。它与存储在 Dalvik 堆中的位图本身是分开的。本地内存中的像素数据并不以可预测的方式释放，可能会导致应用短暂超出其内存限制并崩溃。</p>
+</blockquote>
+<blockquote>
+<p>在 Android 2.3.3（API 级别 10）及更低版本上，建议使用 <code>recycle()</code>。如果您在应用中显示大量位图数据，则可能会遇到 <code>OutOfMemoryError</code> 错误。利用 <code>recycle()</code> 方法，应用可以尽快回收内存。</p>
+</blockquote>
+<blockquote>
+<p><strong>注意</strong>：只有当您确定位图已不再使用时才应该使用 <code>recycle()</code>。如果您调用 <code>recycle()</code> 并在稍后尝试绘制位图，则会收到错误：<code>&quot;Canvas: trying to use a recycled bitmap&quot;</code>。</p>
+</blockquote>
+<h1 id="Android-3-0-Android-7-1"><a href="#Android-3-0-Android-7-1" class="headerlink" title="Android 3.0~Android 7.1"></a>Android 3.0~Android 7.1</h1><p>虽然3.0~7.1的版本Bitmp的像素内存是分配在java堆上的，但是实际是在natvie层进行decode的，而且会在native层创建一个c++的对象和java层的Bitmap对象进行关联。</p>
+<p>从BitmapFactory的源码我们可以看到它一路调用到nativeDecodeStream这个native方法:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// BitmapFactory.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Bitmap <span class="title">decodeFile</span><span class="params">(String pathName, Options opts)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	stream = <span class="keyword">new</span> FileInputStream(pathName);</span><br><span class="line">	bm = decodeStream(stream, null, opts);</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> bm;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Bitmap <span class="title">decodeStream</span><span class="params">(InputStream is, Rect outPadding, Options opts)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	bm = decodeStreamInternal(is, outPadding, opts);</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> bm;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Bitmap <span class="title">decodeStreamInternal</span><span class="params">(InputStream is, Rect outPadding, Options opts)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> nativeDecodeStream(is, tempStorage, outPadding, opts);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>nativeDecodeStream实际上会通过jni创建java堆的内存,然后读取io流解码图片将像素数据存到这个java堆内存里面:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// BitmapFactory.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> jobject <span class="title">nativeDecodeStream</span><span class="params">(JNIEnv* env, jobject clazz, jobject is, jbyteArray storage,</span></span></span><br><span class="line"><span class="function"><span class="params">        jobject padding, jobject options)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    bitmap = doDecode(env, bufferedStream, padding, options);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> bitmap;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> jobject <span class="title">doDecode</span><span class="params">(JNIEnv* env, SkStreamRewindable* stream, jobject padding, jobject options)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">// outputAllocator是像素内存的分配器,会在java堆上创建内存给像素数据,可以通过BitmapFactory.Options.inBitmap复用前一个bitmap像素内存</span></span><br><span class="line">	SkBitmap::Allocator* outputAllocator = (javaBitmap != <span class="literal">NULL</span>) ?</span><br><span class="line">            (SkBitmap::Allocator*)&amp;recyclingAllocator : (SkBitmap::Allocator*)&amp;javaAllocator;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 将内存分配器设置给解码器</span></span><br><span class="line">    decoder-&gt;setAllocator(outputAllocator);</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">//解码</span></span><br><span class="line">    <span class="keyword">if</span> (decoder-&gt;decode(stream, &amp;decodingBitmap, prefColorType, decodeMode)</span><br><span class="line">                != SkImageDecoder::kSuccess) &#123;</span><br><span class="line">        <span class="keyword">return</span> nullObjectReturn(<span class="string">"decoder-&gt;decode returned false"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">	<span class="keyword">return</span> GraphicsJNI::createBitmap(env, javaAllocator.getStorageObjAndReset(),</span><br><span class="line">            bitmapCreateFlags, ninePatchChunk, ninePatchInsets, <span class="number">-1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Graphics.cpp</span></span><br><span class="line">jobject GraphicsJNI::createBitmap(JNIEnv* env, android::Bitmap* bitmap,</span><br><span class="line">        <span class="keyword">int</span> bitmapCreateFlags, jbyteArray ninePatchChunk, jobject ninePatchInsets,</span><br><span class="line">        <span class="keyword">int</span> density) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// java层的Bitmap对象实际上是natvie层new出来的</span></span><br><span class="line">    <span class="comment">// native层也会创建一个android::Bitmap对象与java层的Bitmap对象绑定</span></span><br><span class="line">    <span class="comment">// bitmap-&gt;javaByteArray()代码bitmap的像素数据其实是存在java层的byte数组中</span></span><br><span class="line">    jobject obj = env-&gt;NewObject(gBitmap_class, gBitmap_constructorMethodID,</span><br><span class="line">            <span class="keyword">reinterpret_cast</span>&lt;jlong&gt;(bitmap), bitmap-&gt;javaByteArray(),</span><br><span class="line">            bitmap-&gt;width(), bitmap-&gt;height(), density, isMutable, isPremultiplied,</span><br><span class="line">            ninePatchChunk, ninePatchInsets);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看最后会调用javaAllocator.getStorageObjAndReset()创建一个android::Bitmap类型的native层Bitmap对象，然后通过jni调用java层的Bitmap构造函数去创建java层的Bitmap对象，同时将native层的Bitmap对象保存到mNativePtr:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// Bitmap.java</span></span><br><span class="line"><span class="comment">// Convenience for JNI access</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> mNativePtr;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Private constructor that must received an already allocated native bitmap</span></span><br><span class="line"><span class="comment"> * int (pointer).</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">// called from JNI</span></span><br><span class="line">Bitmap(<span class="keyword">long</span> nativeBitmap, <span class="keyword">byte</span>[] buffer, <span class="keyword">int</span> width, <span class="keyword">int</span> height, <span class="keyword">int</span> density,</span><br><span class="line">        <span class="keyword">boolean</span> isMutable, <span class="keyword">boolean</span> requestPremultiplied,</span><br><span class="line">        <span class="keyword">byte</span>[] ninePatchChunk, NinePatch.InsetStruct ninePatchInsets) &#123;</span><br><span class="line">    ...</span><br><span class="line">    mNativePtr = nativeBitmap;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的源码我们也能看出来，Bitmap的像素是存在java堆的，所以如果bitmap没有人使用了，垃圾回收器就能自动回收这块的内存，但是在native创建出来的nativeBitmap要怎么回收呢？从Bitmap的源码我们可以看到在Bitmap构造函数里面还会创建一个BitmapFinalizer去管理nativeBitmap:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Private constructor that must received an already allocated native bitmap</span></span><br><span class="line"><span class="comment"> * int (pointer).</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">// called from JNI</span></span><br><span class="line">Bitmap(<span class="keyword">long</span> nativeBitmap, <span class="keyword">byte</span>[] buffer, <span class="keyword">int</span> width, <span class="keyword">int</span> height, <span class="keyword">int</span> density,</span><br><span class="line">        <span class="keyword">boolean</span> isMutable, <span class="keyword">boolean</span> requestPremultiplied,</span><br><span class="line">        <span class="keyword">byte</span>[] ninePatchChunk, NinePatch.InsetStruct ninePatchInsets) &#123;</span><br><span class="line">    ...</span><br><span class="line">    mNativePtr = nativeBitmap;</span><br><span class="line">    mFinalizer = <span class="keyword">new</span> BitmapFinalizer(nativeBitmap);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>BitmapFinalizer的原理十分简单。Bitmap对象被销毁的时候BitmapFinalizer也会同步被销毁，然后就可以在BitmapFinalizer.finalize()里面销毁native层的nativeBitmap:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">BitmapFinalizer</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> mNativeBitmap;</span><br><span class="line">    ...</span><br><span class="line">    BitmapFinalizer(<span class="keyword">long</span> nativeBitmap) &#123;</span><br><span class="line">        mNativeBitmap = nativeBitmap;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">finalize</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">super</span>.finalize();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">            <span class="comment">// Ignore</span></span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            setNativeAllocationByteCount(<span class="number">0</span>);</span><br><span class="line">            nativeDestructor(mNativeBitmap);</span><br><span class="line">            mNativeBitmap = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Android-8-0之后"><a href="#Android-8-0之后" class="headerlink" title="Android 8.0之后"></a>Android 8.0之后</h1><p>8.0以后像素内存又被放回了native上，所以依然需要在java层的Bitmap对象回收之后同步回收native的内存。</p>
+<p>虽然BitmapFinalizer同样可以实现，但是Java的finalize方法实际上是不推荐使用的，所以谷歌也换了NativeAllocationRegistry去实现:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Private constructor that must received an already allocated native bitmap</span></span><br><span class="line"><span class="comment"> * int (pointer).</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">// called from JNI</span></span><br><span class="line">Bitmap(<span class="keyword">long</span> nativeBitmap, <span class="keyword">int</span> width, <span class="keyword">int</span> height, <span class="keyword">int</span> density,</span><br><span class="line">        <span class="keyword">boolean</span> isMutable, <span class="keyword">boolean</span> requestPremultiplied,</span><br><span class="line">    ...</span><br><span class="line">    mNativePtr = nativeBitmap;</span><br><span class="line">    <span class="keyword">long</span> nativeSize = NATIVE_ALLOCATION_SIZE + getAllocationByteCount();</span><br><span class="line">    NativeAllocationRegistry registry = <span class="keyword">new</span> NativeAllocationRegistry(</span><br><span class="line">        Bitmap<span class="class">.<span class="keyword">class</span>.<span class="title">getClassLoader</span>(), <span class="title">nativeGetNativeFinalizer</span>(), <span class="title">nativeSize</span>)</span>;</span><br><span class="line">    registry.registerNativeAllocation(<span class="keyword">this</span>, nativeBitmap);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>NativeAllocationRegistry底层实际上使用了sun.misc.Cleaner,可以为对象注册一个清理的Runnable。当对象内存被回收的时候jvm就会调用它。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sun.misc.Cleaner;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> Runnable <span class="title">registerNativeAllocation</span><span class="params">(Object referent, Allocator allocator)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    CleanerThunk thunk = <span class="keyword">new</span> CleanerThunk();</span><br><span class="line">    Cleaner cleaner = Cleaner.create(referent, thunk);</span><br><span class="line">    ..</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">CleanerThunk</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (nativePtr != <span class="number">0</span>) &#123;</span><br><span class="line">            applyFreeFunction(freeFunction, nativePtr);</span><br><span class="line">        &#125;</span><br><span class="line">        registerNativeFree(size);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个Cleaner的原理也很暴力,首先它是一个虚引用,registerNativeAllocation实际上创建了一个Bitmap的虚引用:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Cleaner.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Cleaner</span> <span class="keyword">extends</span> <span class="title">PhantomReference</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Cleaner <span class="title">create</span><span class="params">(Object ob, Runnable thunk)</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">return</span> add(<span class="keyword">new</span> Cleaner(ob, thunk));</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Cleaner</span><span class="params">(Object referent, Runnable thunk)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(referent, dummyQueue);</span><br><span class="line">        <span class="keyword">this</span>.thunk = thunk;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clean</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">        thunk.run();</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>虚引用的话我们都知道需要配合一个ReferenceQueue使用，当对象的引用被回收的时候，jvm就会将这个虚引用丢到ReferenceQueue里面。而ReferenceQueue在插入的时候居然通过instanceof判断了下是不是Cleaner:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ReferenceQueue.java</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">enqueueLocked</span><span class="params">(Reference&lt;? extends T&gt; r)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (r <span class="keyword">instanceof</span> Cleaner) &#123;</span><br><span class="line">        Cleaner cl = (sun.misc.Cleaner) r;</span><br><span class="line">        cl.clean();</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说Bitmap对象被回收,就会触发Cleaner这个虚引用被丢入ReferenceQueue，而ReferenceQueue里面会判断丢进来的虚引用是不是Cleaner，如果是就调用Cleaner.clean()方法。而clean方法内部就会再去执行我们注册的清理的Runnable。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
