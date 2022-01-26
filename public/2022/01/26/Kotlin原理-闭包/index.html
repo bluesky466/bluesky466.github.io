@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Kotlin原理-闭包 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="讲kotlin的闭包我想从java的闭包讲起。 Java不完整闭包Java的闭包是不完整的,它要求匿名内部类使用外部的变量必现是final的,这就使我们不能在匿名内部类里面修改外部变量的值: 123456789final Integer data = 0; // 必须是finalView.OnClickListener listener = new View.OnClickListener() &amp;">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin原理-闭包">
+<meta property="og:url" content="http://139.199.4.241/2022/01/26/Kotlin原理-闭包/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="讲kotlin的闭包我想从java的闭包讲起。 Java不完整闭包Java的闭包是不完整的,它要求匿名内部类使用外部的变量必现是final的,这就使我们不能在匿名内部类里面修改外部变量的值: 123456789final Integer data = 0; // 必须是finalView.OnClickListener listener = new View.OnClickListener() &amp;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-01-26T06:01:28.166Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kotlin原理-闭包">
+<meta name="twitter:description" content="讲kotlin的闭包我想从java的闭包讲起。 Java不完整闭包Java的闭包是不完整的,它要求匿名内部类使用外部的变量必现是final的,这就使我们不能在匿名内部类里面修改外部变量的值: 123456789final Integer data = 0; // 必须是finalView.OnClickListener listener = new View.OnClickListener() &amp;">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Java不完整闭包"><span class="toc-text">Java不完整闭包</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#突破Java不完整闭包限制"><span class="toc-text">突破Java不完整闭包限制</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Kotlin闭包原理"><span class="toc-text">Kotlin闭包原理</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Kotlin原理-闭包" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Kotlin原理-闭包</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.01.26</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>讲kotlin的闭包我想从java的闭包讲起。</p>
+<h1 id="Java不完整闭包"><a href="#Java不完整闭包" class="headerlink" title="Java不完整闭包"></a>Java不完整闭包</h1><p>Java的闭包是不完整的,它要求匿名内部类使用外部的变量必现是final的,这就使我们不能在匿名内部类里面修改外部变量的值:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">final Integer data = 0; // 必须是final</span><br><span class="line"></span><br><span class="line">View.OnClickListener listener = new View.OnClickListener() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void onClick(View v) &#123;</span><br><span class="line">        Log.d(TAG, &quot; data = &quot; + data);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">findViewById(R.id.button).setOnClickListener(listener);</span><br></pre></td></tr></table></figure>
+
+<p>这个要求的根本原因在于方法内的临时变量是存放在栈区的,一旦方法调用完成,这部分的内存就会被释放。如果我们再去修改这块的内存就会造成不可预期的后果。</p>
+<p>但是问题又来了,如果一旦方法调用完成,上面例子的data这个引用的内存就会被回收。那么在onClick的时候为什么还能读取到值呢?</p>
+<p>原因在于java实现匿名内部类的原理是Java编译器会给它生成一个实际的类,将外部变量保存到这个类的成员变量里,我们可以通过下面的代码打印出这个生成的类:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Log.d(TAG, &quot;class &quot; + listener.getClass() + &quot; &#123; &quot;);</span><br><span class="line">for (Field field : listener.getClass().getDeclaredFields()) &#123;</span><br><span class="line">    StringBuilder sb = new StringBuilder();</span><br><span class="line">    sb.append(&quot;\t&quot;);</span><br><span class="line"></span><br><span class="line">    if (Modifier.isFinal(field.getModifiers())) &#123;</span><br><span class="line">        sb.append(&quot;final &quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    sb.append(field.getType().getName())</span><br><span class="line">            .append(&quot; &quot;)</span><br><span class="line">            .append(field.getName())</span><br><span class="line">            .append(&quot;;&quot;);</span><br><span class="line"></span><br><span class="line">    Log.d(TAG, sb.toString());</span><br><span class="line">&#125;</span><br><span class="line">Log.d(TAG, &quot;&#125;&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>输出如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">D closure : class class me.linjw.demo.MainActivity$1 &#123;</span><br><span class="line">D closure :      final me.linjw.demo.MainActivity this$0;</span><br><span class="line">D closure :      final java.lang.Integer val$data;</span><br><span class="line">D closure : &#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到这个类除了用成员变量保存了外部的data的副本之外,还保存了外部类MainActivity的引用。这也是匿名内部类/非静态内部类持有外部类引用的原理。</p>
+<h1 id="突破Java不完整闭包限制"><a href="#突破Java不完整闭包限制" class="headerlink" title="突破Java不完整闭包限制"></a>突破Java不完整闭包限制</h1><p>知道了Java匿名内部类持有外部对象引用的原理之后,我们其实是可以通过下面的方法绕过不能修改外部对象的限制的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">final Integer[] data = new Integer[]&#123;0&#125;;</span><br><span class="line"></span><br><span class="line">View.OnClickListener listener = new View.OnClickListener() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void onClick(View v) &#123;</span><br><span class="line">        data[0]++;</span><br><span class="line">        Log.d(TAG, &quot; data = &quot; + data[0]);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这种做法的原理在于,data这个引用本身的内存在栈区,方法调用完会被回收,但是它所指向的数组的内存在堆区,只有还有引用指向它就不会被回收。而Java编译器生成的这个类巧合就有个成员变量保存了data的副本,指向了这个数组。</p>
+<p>用c++的话来讲就是,指针在方法结束的时候被回收了,但是指针所指向的堆内存没有被回收。</p>
+<h1 id="Kotlin闭包原理"><a href="#Kotlin闭包原理" class="headerlink" title="Kotlin闭包原理"></a>Kotlin闭包原理</h1><p>Kotlin闭包的原理实际上就是上面讲的突破Java不完整闭包限制的原理。用工具查看下面Kotlin代码生成的Java字节码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">var data = 0</span><br><span class="line">findViewById&lt;Button&gt;(R.id.button).setOnClickListener &#123;</span><br><span class="line">    data++</span><br><span class="line">    Log.d(TAG,&quot;data = $data&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到data实际指向了一个IntRef的堆内存,在IntRef的element成员里面保存的才是实际的值:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">final IntRef data = new IntRef();</span><br><span class="line">data.element = 0;</span><br><span class="line">((Button)this.findViewById(1000095)).setOnClickListener((OnClickListener)(new OnClickListener() &#123;</span><br><span class="line">   public final void onClick(View it) &#123;</span><br><span class="line">      int var10001 = data.element++;</span><br><span class="line">      Log.d(MainActivity.this.TAG, &quot;data = &quot; + data.element);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;));</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
