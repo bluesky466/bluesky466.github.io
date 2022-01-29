@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Kotlin原理-by关键字 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="委托模式也叫代理模式,指的是一个对象接收到请求之后将请求转交由另外的对象来处理,它也是继承的一种很好的替代方式,可以实现用组合替代继承。 Kotlin内置了一个by关键字,可以很方便的实现代理. 委托类借用Kotlin中文站的例子: 1234567891011121314interface Base &amp;#123;    fun print()&amp;#125;class BaseImpl(val x:">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin原理-by关键字">
+<meta property="og:url" content="http://139.199.4.241/2022/01/29/Kotlin原理-by关键字/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="委托模式也叫代理模式,指的是一个对象接收到请求之后将请求转交由另外的对象来处理,它也是继承的一种很好的替代方式,可以实现用组合替代继承。 Kotlin内置了一个by关键字,可以很方便的实现代理. 委托类借用Kotlin中文站的例子: 1234567891011121314interface Base &amp;#123;    fun print()&amp;#125;class BaseImpl(val x:">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-01-29T02:09:11.483Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kotlin原理-by关键字">
+<meta name="twitter:description" content="委托模式也叫代理模式,指的是一个对象接收到请求之后将请求转交由另外的对象来处理,它也是继承的一种很好的替代方式,可以实现用组合替代继承。 Kotlin内置了一个by关键字,可以很方便的实现代理. 委托类借用Kotlin中文站的例子: 1234567891011121314interface Base &amp;#123;    fun print()&amp;#125;class BaseImpl(val x:">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#委托类"><span class="toc-text">委托类</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#委托属性"><span class="toc-text">委托属性</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#by-lazy原理"><span class="toc-text">by lazy原理</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Kotlin原理-by关键字" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Kotlin原理-by关键字</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.01.29</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>委托模式也叫代理模式,指的是一个对象接收到请求之后将请求转交由另外的对象来处理,它也是继承的一种很好的替代方式,可以实现用组合替代继承。</p>
+<p>Kotlin内置了一个by关键字,可以很方便的实现代理.</p>
+<h1 id="委托类"><a href="#委托类" class="headerlink" title="委托类"></a>委托类</h1><p>借用<a href="https://www.kotlincn.net/docs/reference/delegation.html" target="_blank" rel="noopener">Kotlin中文站</a>的例子:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">interface Base &#123;</span><br><span class="line">    fun print()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class BaseImpl(val x: Int) : Base &#123;</span><br><span class="line">    override fun print() &#123; print(x) &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Derived(b: Base) : Base by b</span><br><span class="line"></span><br><span class="line">fun main() &#123;</span><br><span class="line">    val b = BaseImpl(10)</span><br><span class="line">    Derived(b).print()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Derived的所有请求会被转发给传入的b对象,它的实现原理实际上是编译器帮我们补全了Derived的方法,将传入的b对象保存起来,然后在补全的方法内去调用b对象:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public final class Derived implements Base &#123;</span><br><span class="line">    private final /* synthetic */ Base $$delegate_0;</span><br><span class="line"></span><br><span class="line">    public void print() &#123;</span><br><span class="line">        this.$$delegate_0.print();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Derived(Base b) &#123;</span><br><span class="line">        Intrinsics.checkNotNullParameter(b, &quot;b&quot;);</span><br><span class="line">        this.$$delegate_0 = b;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>by关键字的好处在于如果Base接口有多个方法需要实现,而我们只想对其中一个方法进行改造,例如统计print的调用次数,那么可以在Derived里面只实现print方法,而其他的方法由by关键字自动生成:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">interface Base &#123;</span><br><span class="line">    fun print()</span><br><span class="line">    fun method1()</span><br><span class="line">    fun method2()</span><br><span class="line">    fun method3()</span><br><span class="line">    fun method4()</span><br><span class="line">    fun method5()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Derived(private val b: Base) : Base by b &#123;</span><br><span class="line">    var printInvokeCount = 0</span><br><span class="line">        private set</span><br><span class="line"></span><br><span class="line">    override fun print() &#123;</span><br><span class="line">        printInvokeCount++</span><br><span class="line">        this.b.print()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>by关键字虽然方便但是也有限制,那就是它只能委托接口的方法,如果把Base改成class而不是interface,Derived就不能使用by去委托了。</p>
+<h1 id="委托属性"><a href="#委托属性" class="headerlink" title="委托属性"></a>委托属性</h1><p>除了整个类进行委托之外,我们也可能对类的成员变量进行委托:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">class StringDelegate &#123;</span><br><span class="line">    private lateinit var str: String</span><br><span class="line"></span><br><span class="line">    // 实现get委托方法</span><br><span class="line">    operator fun getValue(thisRef: Any?, property: KProperty&lt;*&gt;): String &#123;</span><br><span class="line">        println(&quot;get $thisRef.$&#123;property.name&#125;&quot;)</span><br><span class="line">        return str</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 实现set委托方法</span><br><span class="line">    operator fun setValue(thisRef: Any?, property: KProperty&lt;*&gt;, value: String) &#123;</span><br><span class="line">        println(&quot;set $thisRef.$&#123;property.name&#125; to $value&quot;)</span><br><span class="line">        str = value</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Data &#123;</span><br><span class="line">    var str by StringDelegate()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它的原理实际上是在Data类里面将这个StringDelegate给保存了起来,然后在getStr/setStr里面去调用它的对应方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public final class Data &#123;</span><br><span class="line">   // $FF: synthetic field</span><br><span class="line">   static final KProperty[] $$delegatedProperties = new KProperty[]&#123;(KProperty)Reflection.mutableProperty1(new MutablePropertyReference1Impl(Data.class, &quot;str&quot;, &quot;getStr()Ljava/lang/String;&quot;, 0))&#125;;</span><br><span class="line"></span><br><span class="line">   @NotNull</span><br><span class="line">   private final StringDelegate str$delegate = new StringDelegate();</span><br><span class="line"></span><br><span class="line">   @NotNull</span><br><span class="line">   public final String getStr() &#123;</span><br><span class="line">      return this.str$delegate.getValue(this, $$delegatedProperties[0]);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public final void setStr(@NotNull String var1) &#123;</span><br><span class="line">      Intrinsics.checkNotNullParameter(var1, &quot;&lt;set-?&gt;&quot;);</span><br><span class="line">      this.str$delegate.setValue(this, $$delegatedProperties[0], var1);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="by-lazy原理"><a href="#by-lazy原理" class="headerlink" title="by lazy原理"></a>by lazy原理</h2><p>基于上面的属性委托原理,我们很容易就能实现自己的by lazy:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">class MyLazy&lt;T&gt;(initializer: () -&gt; T) &#123;</span><br><span class="line">    companion object &#123;</span><br><span class="line">        val UNINITIALIZED_VALUE = Object()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private var initializer: (() -&gt; T)? = initializer</span><br><span class="line">    private var value: Any? = UNINITIALIZED_VALUE</span><br><span class="line"></span><br><span class="line">    operator fun getValue(thisRef: Any?, property: KProperty&lt;*&gt;): T &#123;</span><br><span class="line">        if (value == UNINITIALIZED_VALUE) &#123;</span><br><span class="line">            value = initializer!!()</span><br><span class="line">            initializer = null // 把初始化方法置空,避免其引用外部类引用造成内存泄露</span><br><span class="line">        &#125;</span><br><span class="line">        return value as T</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Data &#123;</span><br><span class="line">    val data by MyLazy &#123; null &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际上kotlin的lazy原理也差不多是这样了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">public actual fun &lt;T&gt; lazy(initializer: () -&gt; T): Lazy&lt;T&gt; = SynchronizedLazyImpl(initializer)</span><br><span class="line"></span><br><span class="line">private class SynchronizedLazyImpl&lt;out T&gt;(initializer: () -&gt; T, lock: Any? = null) : Lazy&lt;T&gt;, Serializable &#123;</span><br><span class="line">    private var initializer: (() -&gt; T)? = initializer</span><br><span class="line"></span><br><span class="line">    @Volatile private var _value: Any? = UNINITIALIZED_VALUE</span><br><span class="line"></span><br><span class="line">    private val lock = lock ?: this</span><br><span class="line"></span><br><span class="line">    override val value: T</span><br><span class="line">        get() &#123;</span><br><span class="line">            val _v1 = _value</span><br><span class="line">            if (_v1 !== UNINITIALIZED_VALUE) &#123;</span><br><span class="line">                @Suppress(&quot;UNCHECKED_CAST&quot;)</span><br><span class="line">                return _v1 as T</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            return synchronized(lock) &#123;</span><br><span class="line">                val _v2 = _value</span><br><span class="line">                if (_v2 !== UNINITIALIZED_VALUE) &#123;</span><br><span class="line">                    @Suppress(&quot;UNCHECKED_CAST&quot;) (_v2 as T)</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    val typedValue = initializer!!()</span><br><span class="line">                    _value = typedValue</span><br><span class="line">                    initializer = null</span><br><span class="line">                    typedValue</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而且可以看到lazy在初始化对象的时候会对初始化的代码块使用synchronized上锁,所以是线程安全的。这个锁我们可以外部传入,也可以默认使用SynchronizedLazyImpl的this指针</p>
+<p>当然如果我们觉得这个synchronized加锁会影响性能,也可以使用lazy的重载方法去指定线程安全策略:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public actual fun &lt;T&gt; lazy(mode: LazyThreadSafetyMode, initializer: () -&gt; T): Lazy&lt;T&gt; =</span><br><span class="line">    when (mode) &#123;</span><br><span class="line">        LazyThreadSafetyMode.SYNCHRONIZED -&gt; SynchronizedLazyImpl(initializer)  // 使用synchronized加锁</span><br><span class="line">        LazyThreadSafetyMode.PUBLICATION -&gt; SafePublicationLazyImpl(initializer) //使用cas机制保证线程安全</span><br><span class="line">        LazyThreadSafetyMode.NONE -&gt; UnsafeLazyImpl(initializer) // 不加锁,不考虑线程安全问题</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
