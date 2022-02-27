@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Kotlin原理-object关键字 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="object关键字有下面的三种用法:  对象声明 伴生对象 对象表达式  我们逐一来看看它们的实现原理 对象声明object类可以看成是java里面的单例模式在kotlin的便捷实现: 123456789101112object TestObject &amp;#123;    const val TAG = &amp;quot;TestObject&amp;quot;    fun foo() &amp;#123;    &amp;#">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kotlin原理-object关键字">
+<meta property="og:url" content="http://139.199.4.241/2022/02/27/Kotlin原理-object关键字/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="object关键字有下面的三种用法:  对象声明 伴生对象 对象表达式  我们逐一来看看它们的实现原理 对象声明object类可以看成是java里面的单例模式在kotlin的便捷实现: 123456789101112object TestObject &amp;#123;    const val TAG = &amp;quot;TestObject&amp;quot;    fun foo() &amp;#123;    &amp;#">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-02-27T06:10:31.682Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kotlin原理-object关键字">
+<meta name="twitter:description" content="object关键字有下面的三种用法:  对象声明 伴生对象 对象表达式  我们逐一来看看它们的实现原理 对象声明object类可以看成是java里面的单例模式在kotlin的便捷实现: 123456789101112object TestObject &amp;#123;    const val TAG = &amp;quot;TestObject&amp;quot;    fun foo() &amp;#123;    &amp;#">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#对象声明"><span class="toc-text">对象声明</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#伴生对象"><span class="toc-text">伴生对象</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#对象表达式"><span class="toc-text">对象表达式</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Kotlin原理-object关键字" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Kotlin原理-object关键字</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.02.27</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>object关键字有下面的三种用法:</p>
+<ol>
+<li>对象声明</li>
+<li>伴生对象</li>
+<li>对象表达式</li>
+</ol>
+<p>我们逐一来看看它们的实现原理</p>
+<h1 id="对象声明"><a href="#对象声明" class="headerlink" title="对象声明"></a>对象声明</h1><p>object类可以看成是java里面的单例模式在kotlin的便捷实现:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">object TestObject &#123;</span><br><span class="line">    const val TAG = &quot;TestObject&quot;</span><br><span class="line"></span><br><span class="line">    fun foo() &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// kotlin 中调用</span><br><span class="line">TestObject.foo()</span><br><span class="line"></span><br><span class="line">// java 中调用</span><br><span class="line">TestObject.INSTANCE.foo();</span><br></pre></td></tr></table></figure>
+
+<p>从java的用法里面能看出来,对象声明的原理实际上是将其转换成了java的单例模式:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public final class TestObject &#123;</span><br><span class="line">    @NotNull</span><br><span class="line">    public static final String TAG = &quot;TestObject&quot;;</span><br><span class="line">    @NotNull</span><br><span class="line">    public static final TestObject INSTANCE;</span><br><span class="line"></span><br><span class="line">    public final void foo() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private TestObject() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    static &#123;</span><br><span class="line">        TestObject var0 = new TestObject();</span><br><span class="line">        INSTANCE = var0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果与java混用的时候，需要使用INSTANCE获取单例比较麻烦,可以使用@JvmStatic注解将方法修饰成静态方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">object TestObject &#123;</span><br><span class="line">    @JvmStatic</span><br><span class="line">    fun foo() &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>转换出来的java类就会把foo()定义为静态方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public final class TestObject &#123;</span><br><span class="line">    @NotNull</span><br><span class="line">    public static final TestObject INSTANCE;</span><br><span class="line"></span><br><span class="line">    // 这里是静态方法</span><br><span class="line">    @JvmStatic</span><br><span class="line">    public static final void foo() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private TestObject() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    static &#123;</span><br><span class="line">        TestObject var0 = new TestObject();</span><br><span class="line">        INSTANCE = var0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="伴生对象"><a href="#伴生对象" class="headerlink" title="伴生对象"></a>伴生对象</h1><p>Kotlin中并没有静态成员的概念,但是我们可以使用伴生对象达到类似的效果:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">class TestClass &#123;</span><br><span class="line">    companion object &#123;</span><br><span class="line">        var data = 123</span><br><span class="line">        fun foo() &#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// kotlin 中调用</span><br><span class="line">TestClass.foo()</span><br><span class="line"></span><br><span class="line">// java 中调用</span><br><span class="line">TestClass.Companion.foo();</span><br></pre></td></tr></table></figure>
+
+<p>同样可以在java调用中看出来它实际是生成了TestClass的Companion静态内部类:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public final class TestClass &#123;</span><br><span class="line">    private static int data = 123;</span><br><span class="line"></span><br><span class="line">    @NotNull</span><br><span class="line">    public static final TestClass.Companion Companion = new TestClass.Companion((DefaultConstructorMarker)null);</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">   </span><br><span class="line">    public static final class Companion &#123;</span><br><span class="line">        public final void foo() &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        private Companion() &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public final int getData() &#123;</span><br><span class="line">            return TestClass.data;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public final void setData(int var1) &#123;</span><br><span class="line">            TestClass.data = var1;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同样在java调用的时候需要引用Companion静态成员变量,我们可以用@JvmField和@JvmStatic去简化:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">class TestClass &#123;</span><br><span class="line">    companion object &#123;</span><br><span class="line">        @JvmField</span><br><span class="line">        var data = 123</span><br><span class="line"></span><br><span class="line">        @JvmStatic</span><br><span class="line">        fun foo() &#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面kotlin代码转换的java代码如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public final class TestClass &#123;</span><br><span class="line">    public static int data = 123;</span><br><span class="line"></span><br><span class="line">    public static final TestClass.Companion Companion = new TestClass.Companion((DefaultConstructorMarker)null);</span><br><span class="line"></span><br><span class="line">    public static final void foo() &#123;</span><br><span class="line">        Companion.foo();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static final class Companion &#123;</span><br><span class="line">        @JvmStatic</span><br><span class="line">        public final void foo() &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        private Companion() &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="对象表达式"><a href="#对象表达式" class="headerlink" title="对象表达式"></a>对象表达式</h1><p>对象表达式实际上就是java的匿名内部类:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">var listener = object : View.OnClickListener &#123;</span><br><span class="line">    override fun onClick(p0: View?) &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它转换成的java代码如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">OnClickListener var10000 = new OnClickListener() &#123;</span><br><span class="line">    public void onClick(@Nullable View p0) &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
