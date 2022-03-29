@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>JNI调用速度优化 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="c/c++,java,Android">
+  
+
+  <meta name="description" content="FastJNI最近在看JNI HOOK的时候看到了个叫做fastJNI的东西,它可以加速JNI方法的调用,比较有意思。 首先我们都知道RegisterNativeMethods用于动态注册JNI方法: 12345678910111213141516171819static const JNINativeMethod jniNativeMethod[] = &amp;#123;        &amp;#123;&amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JNI调用速度优化">
+<meta property="og:url" content="http://139.199.4.241/2022/03/29/JNI调用速度优化/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="FastJNI最近在看JNI HOOK的时候看到了个叫做fastJNI的东西,它可以加速JNI方法的调用,比较有意思。 首先我们都知道RegisterNativeMethods用于动态注册JNI方法: 12345678910111213141516171819static const JNINativeMethod jniNativeMethod[] = &amp;#123;        &amp;#123;&amp;">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/uqfEB4fHU3PptSk6MLv-djLS2a2GLfIOcwgGxPTOabcM6boIM9Ag0940WRpyb5I5F9XKShP2D5mA17HrTKdYFvkpvkcS3S-cxNosUUgp1HrmkLWmgvOBsK51fNbvYKavs9sKbLYMI0q7lPWvwrdt_6TpTk5q3S8cNJkKaB1IUB5_zjFMfS20X7Z8Ik5bGyFJzbqW7N1pd_UjVxge6Sqa6rrqapOqFv-o0gJWoUx5pnSqmip6PbGj0000">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/IquiIb58IomkyVBpLAZcKW02C95Mb9YRgf0TL9gNbvYKanfSabYI2fK7WRpyb5I5lCIIp3AGL7AsGZHS2WHqTNL9uZ-Ri-Rfd0tFfkryjddgimKTSBbOL0kp4iiIgM7TYvcpddNFVpPd5wPTjLnW2c6JhXsAFwqKNkoV_RHrAJ2u8CwrKdW-UykplgKlDZG_dx82JREDBhfci2gGWYUx5pzVq8YcknO0">
+<meta property="og:image" content="http://139.199.4.241/JNI调用速度优化/1.png">
+<meta property="og:image" content="http://139.199.4.241/JNI调用速度优化/2.png">
+<meta property="og:updated_time" content="2022-03-29T14:10:08.750Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JNI调用速度优化">
+<meta name="twitter:description" content="FastJNI最近在看JNI HOOK的时候看到了个叫做fastJNI的东西,它可以加速JNI方法的调用,比较有意思。 首先我们都知道RegisterNativeMethods用于动态注册JNI方法: 12345678910111213141516171819static const JNINativeMethod jniNativeMethod[] = &amp;#123;        &amp;#123;&amp;">
+<meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/uqfEB4fHU3PptSk6MLv-djLS2a2GLfIOcwgGxPTOabcM6boIM9Ag0940WRpyb5I5F9XKShP2D5mA17HrTKdYFvkpvkcS3S-cxNosUUgp1HrmkLWmgvOBsK51fNbvYKavs9sKbLYMI0q7lPWvwrdt_6TpTk5q3S8cNJkKaB1IUB5_zjFMfS20X7Z8Ik5bGyFJzbqW7N1pd_UjVxge6Sqa6rrqapOqFv-o0gJWoUx5pnSqmip6PbGj0000">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#FastJNI"><span class="toc-text">FastJNI</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#FastNative-amp-CriticalNative"><span class="toc-text">@FastNative &amp; @CriticalNative</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#更快速的原生方法"><span class="toc-text">更快速的原生方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用-FastNative和-CriticalNative"><span class="toc-text">使用@FastNative和@CriticalNative</span></a></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-JNI调用速度优化" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">JNI调用速度优化</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.03.29</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="FastJNI"><a href="#FastJNI" class="headerlink" title="FastJNI"></a>FastJNI</h1><p>最近在看JNI HOOK的时候看到了个叫做fastJNI的东西,它可以加速JNI方法的调用,比较有意思。</p>
+<p>首先我们都知道RegisterNativeMethods用于动态注册JNI方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">static const JNINativeMethod jniNativeMethod[] = &#123;</span><br><span class="line">        &#123;&quot;stringFromJNI&quot;, &quot;(Ljava/lang/String;)V&quot;, (void *) (stringFromJNI)&#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *javaVm, void *pVoid) &#123;</span><br><span class="line">    JNIEnv *jniEnv = nullptr;</span><br><span class="line">    jint result = javaVm-&gt;GetEnv(reinterpret_cast&lt;void **&gt;(&amp;jniEnv), JNI_VERSION_1_6); </span><br><span class="line">    if (result != JNI_OK) &#123;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    jclass jniClass = jniEnv-&gt;FindClass(&quot;me/linjw/demo/MainActivity&quot;);</span><br><span class="line">    jniEnv-&gt;RegisterNatives(</span><br><span class="line">        jniClass, </span><br><span class="line">        jniNativeMethod,</span><br><span class="line">        sizeof(jniNativeMethod) / sizeof(JNINativeMethod)</span><br><span class="line">    );</span><br><span class="line">    return JNI_VERSION_1_6;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果我们在方法签名的前面加上”!”,就可以指定使用fastJNI的方式去调用这个native方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">static const JNINativeMethod jniNativeMethod[] = &#123;</span><br><span class="line">        &#123;&quot;stringFromJNI&quot;, &quot;!(Ljava/lang/String;)V&quot;, (void *) (stringFromJNI)&#125;,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>查看RegisterNativeMethods可以知道,它实际上是给Native方法设置了kAccFastNative标志位:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line">// jni_internal.cc</span><br><span class="line">static jint RegisterNativeMethods(JNIEnv* env, jclass java_class, const JNINativeMethod* methods,</span><br><span class="line">                                jint method_count, bool return_errors) &#123;</span><br><span class="line">    ...</span><br><span class="line">    for (jint i = 0; i &lt; method_count; ++i) &#123;</span><br><span class="line">        const char* name = methods[i].name;</span><br><span class="line">        const char* sig = methods[i].signature;</span><br><span class="line">        const void* fnPtr = methods[i].fnPtr;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line">        bool is_fast = false;</span><br><span class="line">        // Notes about fast JNI calls:</span><br><span class="line">        //</span><br><span class="line">        // On a normal JNI call, the calling thread usually transitions</span><br><span class="line">        // from the kRunnable state to the kNative state. But if the</span><br><span class="line">        // called native function needs to access any Java object, it</span><br><span class="line">        // will have to transition back to the kRunnable state.</span><br><span class="line">        //</span><br><span class="line">        // There is a cost to this double transition. For a JNI call</span><br><span class="line">        // that should be quick, this cost may dominate the call cost.</span><br><span class="line">        //</span><br><span class="line">        // On a fast JNI call, the calling thread avoids this double</span><br><span class="line">        // transition by not transitioning from kRunnable to kNative and</span><br><span class="line">        // stays in the kRunnable state.</span><br><span class="line">        //</span><br><span class="line">        // There are risks to using a fast JNI call because it can delay</span><br><span class="line">        // a response to a thread suspension request which is typically</span><br><span class="line">        // used for a GC root scanning, etc. If a fast JNI call takes a</span><br><span class="line">        // long time, it could cause longer thread suspension latency</span><br><span class="line">        // and GC pauses.</span><br><span class="line">        //</span><br><span class="line">        // Thus, fast JNI should be used with care. It should be used</span><br><span class="line">        // for a JNI call that takes a short amount of time (eg. no</span><br><span class="line">        // long-running loop) and does not block (eg. no locks, I/O,</span><br><span class="line">        // etc.)</span><br><span class="line">        //</span><br><span class="line">        // A &apos;!&apos; prefix in the signature in the JNINativeMethod</span><br><span class="line">        // indicates that it&apos;s a fast JNI call and the runtime omits the</span><br><span class="line">        // thread state transition from kRunnable to kNative at the</span><br><span class="line">        // entry.</span><br><span class="line">        if (*sig == &apos;!&apos;) &#123;</span><br><span class="line">            is_fast = true;</span><br><span class="line">            ++sig;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        m-&gt;RegisterNative(fnPtr, is_fast);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return JNI_OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// art_method.cc</span><br><span class="line">void ArtMethod::RegisterNative(const void* native_method, bool is_fast) &#123;</span><br><span class="line">    CHECK(IsNative()) &lt;&lt; PrettyMethod(this);</span><br><span class="line">    CHECK(!IsFastNative()) &lt;&lt; PrettyMethod(this);</span><br><span class="line">    CHECK(native_method != nullptr) &lt;&lt; PrettyMethod(this);</span><br><span class="line">    if (is_fast) &#123;</span><br><span class="line">        SetAccessFlags(GetAccessFlags() | kAccFastNative);</span><br><span class="line">    &#125;</span><br><span class="line">    SetEntryPointFromJni(native_method);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>源码的注释里面也描述了fastJNI的原理:</p>
+<ol>
+<li>java方法运行在kRunnable state，native方法运行在kNative state</li>
+<li>java进入native方法，从kRunnable state切换到kNative state会消耗时间</li>
+<li>如果native方法需要调到java的代码，从kNative state切换回kRunnable state也会耗时</li>
+<li>如果在方法签名前面加上”!”可以将native方法定义成fastJNI方法</li>
+<li>fastJNI方法运行在kRunnable state，避免了state的切换耗时</li>
+</ol>
+<p>以我的理解是这样的,默认情况下虚拟机栈和本地方法栈在两个不同的state下,相当于退出和进入java虚拟机环境,所以会有一系列的环境的存储与恢复:</p>
+<img src="http://www.plantuml.com/plantuml/svg/uqfEB4fHU3PptSk6MLv-djLS2a2GLfIOcwgGxPTOabcM6boIM9Ag0940WRpyb5I5F9XKShP2D5mA17HrTKdYFvkpvkcS3S-cxNosUUgp1HrmkLWmgvOBsK51fNbvYKavs9sKbLYMI0q7lPWvwrdt_6TpTk5q3S8cNJkKaB1IUB5_zjFMfS20X7Z8Ik5bGyFJzbqW7N1pd_UjVxge6Sqa6rrqapOqFv-o0gJWoUx5pnSqmip6PbGj0000">
+
+<p>虚拟机是c/c++写的,而fastJNI相当于在执行虚拟机栈的环境上直接调用了native方法,所以java和本地方法是直接相互调用的:</p>
+<img src="http://www.plantuml.com/plantuml/svg/IquiIb58IomkyVBpLAZcKW02C95Mb9YRgf0TL9gNbvYKanfSabYI2fK7WRpyb5I5lCIIp3AGL7AsGZHS2WHqTNL9uZ-Ri-Rfd0tFfkryjddgimKTSBbOL0kp4iiIgM7TYvcpddNFVpPd5wPTjLnW2c6JhXsAFwqKNkoV_RHrAJ2u8CwrKdW-UykplgKlDZG_dx82JREDBhfci2gGWYUx5pzVq8YcknO0">
+
+<p>JAVA GC的stop the work实际上只是停止了java虚拟机的世界,并没没有办法停止native层的代码。</p>
+<p>普通jni会有java虚拟机环境的进出,单纯的执行native代码对虚拟机环境没有任何影响,所以只需要在进入虚拟机的时候判断是否已经停止。</p>
+<p>但fastJNI由于native代码会直接调用运行java层的代码,所以stop the work的时候反而需要判断是否在fastJNI过程中,以避免stop the work的过程中java代码被native层执行。</p>
+<p>因此fastJNI使用的时候需要注意:</p>
+<blockquote>
+<p>fastJNI会导致Java GC之类的线程挂起请求操作被推迟,所以fastJNI方法需要尽量的短小和不要在里面做一些阻塞操作</p>
+</blockquote>
+<h1 id="FastNative-amp-CriticalNative"><a href="#FastNative-amp-CriticalNative" class="headerlink" title="@FastNative &amp; @CriticalNative"></a>@FastNative &amp; @CriticalNative</h1><p>fastJNI在安卓8.0之后就被废弃了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">// jni_internal.cc</span><br><span class="line">static jint RegisterNativeMethods(JNIEnv* env, jclass java_class, const JNINativeMethod* methods,</span><br><span class="line">                                jint method_count, bool return_errors) &#123;</span><br><span class="line">    ...</span><br><span class="line">    for (jint i = 0; i &lt; method_count; ++i) &#123;</span><br><span class="line">        const char* name = methods[i].name;</span><br><span class="line">        const char* sig = methods[i].signature;</span><br><span class="line">        const void* fnPtr = methods[i].fnPtr;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line">        if (*sig == &apos;!&apos;) &#123;</span><br><span class="line">            is_fast = true;</span><br><span class="line">            ++sig;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        if (UNLIKELY(is_fast)) &#123;</span><br><span class="line">            // There are a few reasons to switch:</span><br><span class="line">            // 1) We don&apos;t support !bang JNI anymore, it will turn to a hard error later.</span><br><span class="line">            // 2) @FastNative is actually faster. At least 1.5x faster than !bang JNI.</span><br><span class="line">            //    and switching is super easy, remove ! in C code, add annotation in .java code.</span><br><span class="line">            // 3) Good chance of hitting DCHECK failures in ScopedFastNativeObjectAccess</span><br><span class="line">            //    since that checks for presence of @FastNative and not for ! in the descriptor.</span><br><span class="line">            LOG(WARNING) &lt;&lt; &quot;!bang JNI is deprecated. Switch to @FastNative for &quot; &lt;&lt; m-&gt;PrettyMethod();</span><br><span class="line">            is_fast = false;</span><br><span class="line">            // TODO: make this a hard register error in the future.</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        const void* final_function_ptr = m-&gt;RegisterNative(fnPtr, is_fast);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return JNI_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注释上说高版本的安卓提供了@FastNative去替代fastJNI。我们从<a href="https://source.android.google.cn/devices/tech/dalvik/improvements?hl=zh-cn" target="_blank" rel="noopener">官方文档</a>上可以找到它和另外一个叫 @CriticalNative 的东西:</p>
+<h3 id="更快速的原生方法"><a href="#更快速的原生方法" class="headerlink" title="更快速的原生方法"></a>更快速的原生方法</h3><p>使用 <a href="https://android.googlesource.com/platform/libcore/+/master/dalvik/src/main/java/dalvik/annotation/optimization/FastNative.java" target="_blank" rel="noopener">@FastNative</a> 和 <a href="https://android.googlesource.com/platform/libcore/+/master/dalvik/src/main/java/dalvik/annotation/optimization/CriticalNative.java" target="_blank" rel="noopener">@CriticalNative</a> 注解可以更快速地对 Java 原生接口 (JNI) 进行原生调用。这些内置的 ART 运行时优化可以加快 JNI 转换速度，并取代了现已弃用的 !bang JNI 标记。这些注解对非原生方法没有任何影响，并且仅适用于 bootclasspath 上的平台 Java 语言代码（无 Play 商店更新）。</p>
+<p>@FastNative 注解支持非静态方法。如果某种方法将 jobject 作为参数或返回值进行访问，请使用此注解。</p>
+<p>利用 @CriticalNative 注解，可更快速地运行原生方法，但存在以下限制：</p>
+<ul>
+<li>方法必须是静态方法 - 没有参数、返回值或隐式 this 的对象。</li>
+<li>仅将基元类型传递给原生方法。</li>
+<li>原生方法在其函数定义中不使用 JNIEnv 和 jclass 参数。</li>
+<li>方法必须使用 RegisterNatives 进行注册，而不是依靠动态 JNI 链接。</li>
+</ul>
+<blockquote>
+<p>@FastNative 和 @CriticalNative 注解在执行原生方法时会停用垃圾回收。不要与长时间运行的方法一起使用，包括通常很快但一般不受限制的方法。</p>
+<p>停顿垃圾回收可能会导致死锁。如果锁尚未得到本地释放（即尚未返回受管理代码），请勿在原生快速调用期间获取锁。此要求不适用于常规的 JNI 调用，因为 ART 将正执行的原生代码视为已暂停的状态。</p>
+</blockquote>
+<p>@FastNative 可以使原生方法的性能提升高达 3 倍，而 @CriticalNative 可以使原生方法的性能提升高达 5 倍。例如，在 Nexus 6P 设备上测量的 JNI 转换如下：</p>
+<table>
+<thead>
+<tr>
+<th>Java 原生接口 (JNI) 调用</th>
+<th>执行时间（以纳秒计）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>常规 JNI</td>
+<td>115</td>
+</tr>
+<tr>
+<td>!bang JNI</td>
+<td>60</td>
+</tr>
+<tr>
+<td>@FastNative</td>
+<td>35</td>
+</tr>
+<tr>
+<td>@CriticalNative</td>
+<td>25</td>
+</tr>
+</tbody></table>
+<h3 id="使用-FastNative和-CriticalNative"><a href="#使用-FastNative和-CriticalNative" class="headerlink" title="使用@FastNative和@CriticalNative"></a>使用@FastNative和@CriticalNative</h3><p>这两个东西的效果这么好,Framework里面也大量用到了。那么当我们充分了解了它们的影响之后,可以在适当的情景下使用。</p>
+<p>但是如果你直接import它们的话会发现,在Android Studio里面报红色的Error,找不到具体的定义:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">import dalvik.annotation.optimization.CriticalNative;</span><br><span class="line">import dalvik.annotation.optimization.FastNative;</span><br></pre></td></tr></table></figure>
+
+<p>原因是它们都是Hide的接口对应用层隐藏。网上有不少调用隐藏API的方式,但是可能这两个类的位置比较特别,我也没有能从隐藏接口里面找到它们。于是乎我用了一个比较取巧的方式,直接把它们的代码拷贝了下来,在自己的工程里面创建同样的package去放:</p>
+<img src="/JNI调用速度优化/1.png">
+
+<p>从结果来看,速度的确是有比较明显的优化的:</p>
+<img src="/JNI调用速度优化/2.png">
+
+<p>完整的DEMO可以到<a href="https://github.com/bluesky466/FastNativeDemo" target="_blank" rel="noopener">Github</a>上下载</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
