@@ -12,7 +12,7 @@ tags:
 
 ```
 static const JNINativeMethod jniNativeMethod[] = {
-        {"stringFromJNI", "(Ljava/lang/String;)V", (void *) (stringFromJNI)},
+        {"stringFromJNI", "()Ljava/lang/String;", (void *) (stringFromJNI)},
 };
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *javaVm, void *pVoid) {
@@ -36,7 +36,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *javaVm, void *pVoid) {
 
 ```
 static const JNINativeMethod jniNativeMethod[] = {
-        {"stringFromJNI", "!(Ljava/lang/String;)V", (void *) (stringFromJNI)},
+        {"stringFromJNI", "!()Ljava/lang/String;", (void *) (stringFromJNI)},
 };
 ```
 
