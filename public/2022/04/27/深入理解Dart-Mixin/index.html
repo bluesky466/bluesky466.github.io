@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>深入理解Dart Mixin | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Dart,">
+  
+
+  <meta name="description" content="假设我们需要实现一个动物世界的功能。Animal作为基类派生出哺乳类、鸟类、鱼类三种类型,各个类型又能派生出具体的动物。每种动物都具有步行、游泳、飞行三种能力中的某几种能力:   由于Java和kotlin都不允许多继承，我们可以将walk、swim、fly定义成interface，让各个具体的动物类去实现这几个接口。在java7里面需要在不同动物类中写同样的实现代码，但如果用java8或者kot">
+<meta name="keywords" content="技术相关,Dart">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解Dart Mixin">
+<meta property="og:url" content="http://139.199.4.241/2022/04/27/深入理解Dart-Mixin/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="假设我们需要实现一个动物世界的功能。Animal作为基类派生出哺乳类、鸟类、鱼类三种类型,各个类型又能派生出具体的动物。每种动物都具有步行、游泳、飞行三种能力中的某几种能力:   由于Java和kotlin都不允许多继承，我们可以将walk、swim、fly定义成interface，让各个具体的动物类去实现这几个接口。在java7里面需要在不同动物类中写同样的实现代码，但如果用java8或者kot">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/深入理解Dart_Mixin/1.png">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1C1">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1EvkFBoIr8LSbBJIXJoqo2ghAo09W5DB2ZAp2lHK39KqhJc0fgX05A9JJtSL3IDHaHhX3i7pGHZP1C0">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/bSv12eCm40NG_PnYSAKK16TfTkqXkXQTO20aOgPGADwzISMqKWfrz_bCtazlkn3mQcGyTu4RV03Y2RNtJLbjaM9S0FhzwHO8-IxiXaFAPJHs-7wOJG1mNXWjQq6ltnTjczHeJhDnKXQliavTKQbOhqCAeej9-ENafGo6syHplVvPxGSe3nnZwG-MFjad">
+<meta property="og:updated_time" content="2022-04-27T15:05:22.702Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解Dart Mixin">
+<meta name="twitter:description" content="假设我们需要实现一个动物世界的功能。Animal作为基类派生出哺乳类、鸟类、鱼类三种类型,各个类型又能派生出具体的动物。每种动物都具有步行、游泳、飞行三种能力中的某几种能力:   由于Java和kotlin都不允许多继承，我们可以将walk、swim、fly定义成interface，让各个具体的动物类去实现这几个接口。在java7里面需要在不同动物类中写同样的实现代码，但如果用java8或者kot">
+<meta name="twitter:image" content="http://139.199.4.241/深入理解Dart_Mixin/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#dart-extends-amp-implements"><span class="toc-text">dart extends &amp; implements</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#mixin"><span class="toc-text">mixin</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#线性化"><span class="toc-text">线性化</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#mixin关键字"><span class="toc-text">mixin关键字</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#with的类不能有构造函数"><span class="toc-text">with的类不能有构造函数</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考博客"><span class="toc-text">参考博客</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-深入理解Dart-Mixin" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">深入理解Dart Mixin</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.04.27</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>假设我们需要实现一个动物世界的功能。Animal作为基类派生出哺乳类、鸟类、鱼类三种类型,各个类型又能派生出具体的动物。每种动物都具有步行、游泳、飞行三种能力中的某几种能力:</p>
+<img src="/深入理解Dart_Mixin/1.png">
+
+<p>由于Java和kotlin都不允许多继承，我们可以将walk、swim、fly定义成interface，让各个具体的动物类去实现这几个接口。在java7里面需要在不同动物类中写同样的实现代码，但如果用java8或者kotlin，可以在interface中编写默认实现去避免重复代码。而在dart中我们要怎么实现呢?</p>
+<h1 id="dart-extends-amp-implements"><a href="#dart-extends-amp-implements" class="headerlink" title="dart extends &amp; implements"></a>dart extends &amp; implements</h1><p>首先dart里面是没有interface的, 但是我们可以把class当做接口被实现。使用implements把某个class当做接口来实现要求我们重写这个class的<strong>所有</strong>方法, 而使用extends继承某个class则可以继承父类实现了的方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">class Base &#123;</span><br><span class="line">  void foo1() &#123;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  void foo2() &#123;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Child1 implements Base &#123;</span><br><span class="line">  @override</span><br><span class="line">  void foo1() &#123;</span><br><span class="line">    // TODO: implement foo1</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  @override</span><br><span class="line">  void foo2() &#123;</span><br><span class="line">    // TODO: implement foo2</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Child2 extends Base &#123;</span><br><span class="line">  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>implements会将class的实现抹掉就不存在默认实现一说,而dart也是不允许多继承的。那么我们只能将walk、swim、fly三个接口在不同动物类中重复实现一遍吗?</p>
+<p>其实dart里有个叫做mixin的概念可以解决上面的问题</p>
+<h1 id="mixin"><a href="#mixin" class="headerlink" title="mixin"></a>mixin</h1><p>mixin实际上也是面向对象编程中的概念,在<a href="https://zh.wikipedia.org/wiki/Mixin" target="_blank" rel="noopener">维基百科</a>上对它的解释如下:</p>
+<blockquote>
+<p>Mixin是面向对象程序设计语言中的类，提供了方法的实现。其他类可以访问mixin类的方法而不必成为其子类。[1]Mixin有时被称作”included”而不是”inherited”。mixin为使用它的class提供额外的功能，但自身却不单独使用（不能单独生成实例对象，属于抽象类）。因为有以上限制，Mixin类通常作为功能模块使用，在需要该功能时“混入”，而且不会使类的关系变得复杂。用户与Mixin不是“is-a”的关系，而是“-able”关系</p>
+</blockquote>
+<p>dart语言里面我们可以使用with关键字实现mixin,将一个或者多个class混入另一个类:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">class Base1 &#123;</span><br><span class="line">  void foo1() &#123;</span><br><span class="line">    print(&quot;foo1&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Base2 &#123;</span><br><span class="line">  void foo2() &#123;</span><br><span class="line">    print(&quot;foo2&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Child2 with Base1, Base2 &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>没错,通过with多个类,可以实现类似多继承的效果。</p>
+<p>既然允许with多个类,那么如果这些类中有个相同方法,那会出现什么事情。实际上kotlin、java8使用接口的默认实现也会出现一样的问题，他们的处理方法是当出现相同方法的时候实现类需要手动指定使用哪个接口的默认实现,要不然编译会报错:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// java8</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IBase1</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">default</span> <span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"1"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IBase2</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">default</span> <span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"2"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword">implements</span> <span class="title">IBase1</span>, <span class="title">IBase2</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        IBase2.<span class="keyword">super</span>.foo();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//kotlin</span></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IBase1</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">foo</span><span class="params">()</span></span> &#123;</span><br><span class="line">        println(<span class="string">"1"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IBase2</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fun</span> <span class="title">foo</span><span class="params">()</span></span> &#123;</span><br><span class="line">        println(<span class="string">"2"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Child</span> : <span class="type">IBase1</span>, <span class="type">IBase2 &#123;</span></span></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">foo</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">super</span>&lt;IBase2&gt;.foo()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="线性化"><a href="#线性化" class="headerlink" title="线性化"></a>线性化</h1><p>而在dart with里面越后面的类优先级越高:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">class Base1 &#123;</span><br><span class="line">  void foo() &#123;</span><br><span class="line">    print(&quot;1&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Base2 &#123;</span><br><span class="line">  void foo() &#123;</span><br><span class="line">    print(&quot;2&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Base3 &#123;</span><br><span class="line">  void foo() &#123;</span><br><span class="line">    print(&quot;3&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Child extends Base1 with Base2, Base3 &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个时候调用Child.foo方法实际会优先调用Base3.foo。原因是dart实际是通过创建中间类继承实现的mixin,上面的代码相当于:</p>
+<img src="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1C1">
+
+<p>通过从左到右的顺序生成中间父类去继承将extends、with线性化成一个单继承链。所以<strong>Base2、Base3实际上不是Child的父类</strong></p>
+<h1 id="mixin关键字"><a href="#mixin关键字" class="headerlink" title="mixin关键字"></a>mixin关键字</h1><p>在上面的例子中我们使用普通的class去with，但dart实际上提供了一个mixin关键字，它定义了不能实例化，也不能extends只能with的类:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">mixin Base &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 编译失败: mixin类不能extends</span><br><span class="line">// class Child extends Base &#123;</span><br><span class="line">//</span><br><span class="line">// &#125;</span><br><span class="line"></span><br><span class="line">// 编译成功: mixin类可以with</span><br><span class="line">class Child with Base &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void main() &#123;</span><br><span class="line">  // 编译失败: mixin类不能实例化</span><br><span class="line">  // Base()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样的类实际上和java、kotlin里面的interface已经很像了。</p>
+<p>另外我们可以通过mixin … on 限定某个类只能由某些类去with:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">class Base1 &#123;</span><br><span class="line">  void foo() &#123;</span><br><span class="line">    print(&quot;1&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Base2 &#123;</span><br><span class="line">  void foo() &#123;</span><br><span class="line">    print(&quot;2&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">mixin Base3 on Base1 &#123;</span><br><span class="line">  void foo() &#123;</span><br><span class="line">    super.foo();</span><br><span class="line">    print(&quot;3&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Child extends Base1 with Base2, Base3 &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的demo中Base3只能由Base1去with,那就以为着这个with Base3的类一定是继承或者with了 Base1,所以可以调用这个类的super.foo方法。要注意的是，这个super.foo并不指定一定调用的是Base1.foo。例如上面的代码调用Child().foo()之后的打印实际上是:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3</span><br><span class="line">2</span><br></pre></td></tr></table></figure>
+
+<p>它们线性化的到的继承关系和前面全是class的代码并没有差别:</p>
+<img src="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1EvkFBoIr8LSbBJIXJoqo2ghAo09W5DB2ZAp2lHK39KqhJc0fgX05A9JJtSL3IDHaHhX3i7pGHZP1C0">
+
+
+<p>从上面的uml图我们就能理解为什么打印是32了</p>
+<p>理解了这个简单的例子之后我们再来看一个复杂一点的例子:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">class Base1 &#123;</span><br><span class="line">  void foo1() &#123;</span><br><span class="line">    print(&quot;Base1.foo1&quot;);</span><br><span class="line">    foo2();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  void foo2() &#123;</span><br><span class="line">    print(&quot;Base1.foo2&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">mixin Base2 on Base1 &#123;</span><br><span class="line">  void foo1() &#123;</span><br><span class="line">    super.foo1();</span><br><span class="line">    print(&quot;Base2.foo1&quot;);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  void foo2() &#123;</span><br><span class="line">    print(&quot;Base2.foo2&quot;);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class Child with Base1,Base2 &#123;&#125;</span><br><span class="line"></span><br><span class="line">void main() &#123;</span><br><span class="line">  Child().foo1();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它的输出是:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Base1.foo1</span><br><span class="line">Base2.foo2</span><br><span class="line">Base2.foo1</span><br></pre></td></tr></table></figure>
+
+<p>原因是Base2.foo1中的super.foo1实际上调用的是Base1.foo1,而Base1.foo1中的foo2,由于继承的多态特性,调用的是Base2.foo2。我们可以通过下面uml图辅助理解,<strong>注意看继承关系里面是没有Base1、Base2的因为它们都是通过with混入的,并不是Child的父类</strong>:</p>
+<img src="http://www.plantuml.com/plantuml/svg/bSv12eCm40NG_PnYSAKK16TfTkqXkXQTO20aOgPGADwzISMqKWfrz_bCtazlkn3mQcGyTu4RV03Y2RNtJLbjaM9S0FhzwHO8-IxiXaFAPJHs-7wOJG1mNXWjQq6ltnTjczHeJhDnKXQliavTKQbOhqCAeej9-ENafGo6syHplVvPxGSe3nnZwG-MFjad">
+
+<h1 id="with的类不能有构造函数"><a href="#with的类不能有构造函数" class="headerlink" title="with的类不能有构造函数"></a>with的类不能有构造函数</h1><p>另外,with的class和mixin类型都是不允许有构造函数的,因为mixin机制语义上是向一个类混入其他类的方法或者成员变量,使得我们可以在混合类中访问到混入类的方法或者属性。而混入其他类的构造函数实际上是没有意义的,因为不会有人手动去调用这个混入类的构造函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">class Base1 &#123;</span><br><span class="line">  Base1() &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 编译失败: 不能with一个带有构造函数的类</span><br><span class="line">// class Child with Base1 &#123;&#125;</span><br><span class="line"></span><br><span class="line">// 编译失败: mixin类型只能with,所以不能有构造函数</span><br><span class="line">// mixin Base2 &#123;</span><br><span class="line">//   Base2() &#123;&#125;</span><br><span class="line">// &#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="参考博客"><a href="#参考博客" class="headerlink" title="参考博客"></a>参考博客</h1><p><a href="https://medium.com/flutter-community/dart-what-are-mixins-3a72344011f3" target="_blank" rel="noopener">https://medium.com/flutter-community/dart-what-are-mixins-3a72344011f3</a></p>
+<p><a href="https://www.jianshu.com/p/f4efaa6b8fe6" target="_blank" rel="noopener">https://www.jianshu.com/p/f4efaa6b8fe6</a></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
