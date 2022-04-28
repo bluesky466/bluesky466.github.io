@@ -253,6 +253,7 @@ note left of Base1WithBase2::foo
 end note
 
 note left of Base1WithBase2WithBase3::foo
+  super.foo();
   print("3");
 end note
 {% endplantuml %}
@@ -327,7 +328,6 @@ note left of WithBase1WithBase2::foo1
 end note
 
 note left of WithBase1WithBase2::foo2
-  super.foo1();
   print("Base2.foo2");
 end note
 {% endplantuml %}
