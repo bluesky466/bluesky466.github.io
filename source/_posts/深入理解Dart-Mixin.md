@@ -222,8 +222,8 @@ class Child extends Base1 with Base2, Base3 {}
 上面的demo中Base3只能由Base1去with,那就以为着这个with Base3的类一定是继承或者with了 Base1,所以可以调用这个类的super.foo方法。要注意的是，这个super.foo并不指定一定调用的是Base1.foo。例如上面的代码调用Child().foo()之后的打印实际上是:
 
 ```
-3
 2
+3
 ```
 
 它们线性化的到的继承关系和前面全是class的代码并没有差别:
@@ -258,7 +258,7 @@ end note
 {% endplantuml %}
 
 
-从上面的uml图我们就能理解为什么打印是32了
+从上面的uml图我们就能理解为什么打印是23了
 
 理解了这个简单的例子之后我们再来看一个复杂一点的例子:
 
