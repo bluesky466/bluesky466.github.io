@@ -25,9 +25,9 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://139.199.4.241/深入理解Dart_Mixin/1.png">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1C1">
-<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1EvkFBoIr8LSbBJIXJoqo2ghAo09W5DB2ZAp2lHK39KqhJc0fgX05A9JJtSL3IDHaHhX3i7pGHZP1C0">
-<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/bSv12eCm40NG_PnYSAKK16TfTkqXkXQTO20aOgPGADwzISMqKWfrz_bCtazlkn3mQcGyTu4RV03Y2RNtJLbjaM9S0FhzwHO8-IxiXaFAPJHs-7wOJG1mNXWjQq6ltnTjczHeJhDnKXQliavTKQbOhqCAeej9-ENafGo6syHplVvPxGSe3nnZwG-MFjad">
-<meta property="og:updated_time" content="2022-04-28T09:35:02.167Z">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1EvkFBoIr8LSbBJIXJoqo2ghAo09W5DB2ZAp2lHK39KqhJc0fgX05A9JJtSL3IDHaHhX3i7Pa9nQK5gaHxOGzO80usH3GG0">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vM2CyioN1AB4urLAZcKb3GLaZBppVKq8GnZO3CMYwkP5IbC8QHGcf5IMfU2accE6TavgHWQeIRoSN5bPTVaggGavfMef2VXb1XPGKo5MXcGL5cNec64bXG3oIcf6aD58POPCq5D5S1P08kS-0smGqiBYr8BTA3kDaQrG8Zk0Ma6Mk4nHWZP6C0">
+<meta property="og:updated_time" content="2022-04-28T12:27:26.789Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入理解Dart Mixin">
 <meta name="twitter:description" content="假设我们需要实现一个动物世界的功能。Animal作为基类派生出哺乳类、鸟类、鱼类三种类型,各个类型又能派生出具体的动物。每种动物都具有步行、游泳、飞行三种能力中的某几种能力:   由于Java和kotlin都不允许多继承，我们可以将walk、swim、fly定义成interface，让各个具体的动物类去实现这几个接口。在java7里面需要在不同动物类中写同样的实现代码，但如果用java8或者kot">
@@ -200,7 +200,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2</span><br><span class="line">3</span><br></pre></td></tr></table></figure>
 
 <p>它们线性化的到的继承关系和前面全是class的代码并没有差别:</p>
-<img src="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1EvkFBoIr8LSbBJIXJoqo2ghAo09W5DB2ZAp2lHK39KqhJc0fgX05A9JJtSL3IDHaHhX3i7pGHZP1C0">
+<img src="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1EvkFBoIr8LSbBJIXJoqo2ghAo09W5DB2ZAp2lHK39KqhJc0fgX05A9JJtSL3IDHaHhX3i7Pa9nQK5gaHxOGzO80usH3GG0">
 
 
 <p>从上面的uml图我们就能理解为什么打印是23了</p>
@@ -211,7 +211,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Base1.foo1</span><br><span class="line">Base2.foo2</span><br><span class="line">Base2.foo1</span><br></pre></td></tr></table></figure>
 
 <p>原因是Base2.foo1中的super.foo1实际上调用的是Base1.foo1,而Base1.foo1中的foo2,由于继承的多态特性,调用的是Base2.foo2。我们可以通过下面uml图辅助理解,<strong>注意看继承关系里面是没有Base1、Base2的因为它们都是通过with混入的,并不是Child的父类</strong>:</p>
-<img src="http://www.plantuml.com/plantuml/svg/bSv12eCm40NG_PnYSAKK16TfTkqXkXQTO20aOgPGADwzISMqKWfrz_bCtazlkn3mQcGyTu4RV03Y2RNtJLbjaM9S0FhzwHO8-IxiXaFAPJHs-7wOJG1mNXWjQq6ltnTjczHeJhDnKXQliavTKQbOhqCAeej9-ENafGo6syHplVvPxGSe3nnZwG-MFjad">
+<img src="http://www.plantuml.com/plantuml/svg/Iyv9B2vM2CyioN1AB4urLAZcKb3GLaZBppVKq8GnZO3CMYwkP5IbC8QHGcf5IMfU2accE6TavgHWQeIRoSN5bPTVaggGavfMef2VXb1XPGKo5MXcGL5cNec64bXG3oIcf6aD58POPCq5D5S1P08kS-0smGqiBYr8BTA3kDaQrG8Zk0Ma6Mk4nHWZP6C0">
 
 <h1 id="with的类不能有构造函数"><a href="#with的类不能有构造函数" class="headerlink" title="with的类不能有构造函数"></a>with的类不能有构造函数</h1><p>另外,with的class和mixin类型都是不允许有构造函数的,因为mixin机制语义上是向一个类混入其他类的方法或者成员变量,使得我们可以在混合类中访问到混入类的方法或者属性。而混入其他类的构造函数实际上是没有意义的,因为不会有人手动去调用这个混入类的构造函数。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">class Base1 &#123;</span><br><span class="line">  Base1() &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 编译失败: 不能with一个带有构造函数的类</span><br><span class="line">// class Child with Base1 &#123;&#125;</span><br><span class="line"></span><br><span class="line">// 编译失败: mixin类型只能with,所以不能有构造函数</span><br><span class="line">// mixin Base2 &#123;</span><br><span class="line">//   Base2() &#123;&#125;</span><br><span class="line">// &#125;</span><br></pre></td></tr></table></figure>
