@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓录制MP3(二) - LAME使用 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,音视频,">
+  
+
+  <meta name="description" content="上篇文章介绍了数字音频的基础知识,这篇文章我们来看看代码应该怎么写: 录音PCM第一步我们先用AudioRecord录制PCM音频: 123456789101112131415161718192021222324252627private lateinit var buffer: ByteArrayfun start(audioSource: Int, sampleRate: Int, chann">
+<meta name="keywords" content="技术相关,Android,音视频">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓录制MP3(二) - LAME使用">
+<meta property="og:url" content="http://139.199.4.241/2022/05/30/安卓录制MP3-二-LAME使用/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="上篇文章介绍了数字音频的基础知识,这篇文章我们来看看代码应该怎么写: 录音PCM第一步我们先用AudioRecord录制PCM音频: 123456789101112131415161718192021222324252627private lateinit var buffer: ByteArrayfun start(audioSource: Int, sampleRate: Int, chann">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-05-30T12:47:05.243Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓录制MP3(二) - LAME使用">
+<meta name="twitter:description" content="上篇文章介绍了数字音频的基础知识,这篇文章我们来看看代码应该怎么写: 录音PCM第一步我们先用AudioRecord录制PCM音频: 123456789101112131415161718192021222324252627private lateinit var buffer: ByteArrayfun start(audioSource: Int, sampleRate: Int, chann">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#录音PCM"><span class="toc-text">录音PCM</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#使用LAME进行MP3编码"><span class="toc-text">使用LAME进行MP3编码</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#编译"><span class="toc-text">编译</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#导入AndroidStudio"><span class="toc-text">导入AndroidStudio</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#lame基本使用"><span class="toc-text">lame基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#初始化"><span class="toc-text">初始化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#编码质量"><span class="toc-text">编码质量</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MP3编码"><span class="toc-text">MP3编码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#清理工作"><span class="toc-text">清理工作</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#结合JNI进行使用"><span class="toc-text">结合JNI进行使用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#DEMO代码"><span class="toc-text">DEMO代码</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓录制MP3-二-LAME使用" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓录制MP3(二) - LAME使用</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.05.30</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p><a href="https://blog.islinjw.cn/2022/05/26/%E5%AE%89%E5%8D%93%E5%BD%95%E5%88%B6MP3-%E4%B8%80-%E6%95%B0%E5%AD%97%E9%9F%B3%E9%A2%91%E5%9F%BA%E7%A1%80/" target="_blank" rel="noopener">上篇文章</a>介绍了数字音频的基础知识,这篇文章我们来看看代码应该怎么写:</p>
+<h1 id="录音PCM"><a href="#录音PCM" class="headerlink" title="录音PCM"></a>录音PCM</h1><p>第一步我们先用AudioRecord录制PCM音频:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">private lateinit var buffer: ByteArray</span><br><span class="line"></span><br><span class="line">fun start(audioSource: Int, sampleRate: Int, channelConfig: Int, audioFormat: Int): Boolean &#123;</span><br><span class="line">    ...</span><br><span class="line">    val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)</span><br><span class="line"></span><br><span class="line">    buffer = ByteArray(bufferSize)</span><br><span class="line">    recorder = AudioRecord(audioSource, sampleRate, channelConfig, audioFormat, bufferSize)</span><br><span class="line"></span><br><span class="line">    recorderThread = RecordThread()</span><br><span class="line">    recorderThread?.start()</span><br><span class="line">    return true</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">inner class RecordThread : Thread() &#123;</span><br><span class="line">    override fun run() &#123;</span><br><span class="line">        super.run()</span><br><span class="line"></span><br><span class="line">        var readLen: Int</span><br><span class="line">        recorder?.startRecording()</span><br><span class="line">        while (recorder?.recordingState == AudioRecord.RECORDSTATE_RECORDING) &#123;</span><br><span class="line">            readLen = recorder?.read(buffer, 0, buffer.size) ?: break</span><br><span class="line">            listener.onRecord(buffer, readLen)</span><br><span class="line">        &#125;</span><br><span class="line">        recorder = null</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到AudioRecord的使用很简单，就是创建一个AudioRecord对象然后在子线程中不断地read就好,audioSource指的是通过哪个设备录音,其他的几个参数在基础部分都有讲过,就不过多介绍了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">private const val AUDIO_SOURCE = MediaRecorder.AudioSource.MIC</span><br><span class="line">private const val SAMPLE_RATE = 44100</span><br><span class="line">private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT</span><br><span class="line">private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO // 单通道</span><br><span class="line">//private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_STEREO // 双通道</span><br><span class="line">recorder.start(AUDIO_SOURCE, SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)</span><br></pre></td></tr></table></figure>
+
+<p>当然,记得需要申请录音权限:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;uses-permission android:name=&quot;android.permission.RECORD_AUDIO&quot; /&gt;</span><br></pre></td></tr></table></figure>
+
+<h1 id="使用LAME进行MP3编码"><a href="#使用LAME进行MP3编码" class="headerlink" title="使用LAME进行MP3编码"></a>使用LAME进行MP3编码</h1><p>得到PCM裸流之后我们就需要对他进行MP3编码,LAME就是一个开源的MP3音频压缩软件,也是公认有损MP3中压缩效果最好的编码器。</p>
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>使用LAME需要自行编译出静态库,首先我们从LAME的<a href="https://lame.sourceforge.io/download.php" target="_blank" rel="noopener">官网</a>下载最新版本的LAME源码。从源码文件目录结构中可以看出它使用AutoMake编译,之前写过几篇AutoMake的<a href="https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="noopener">学习笔记</a>,感兴趣的同学可以看看。</p>
+<p>或者也可以直接修改Demo工程的<a href="https://github.com/bluesky466/AndroidLameDemo/blob/master/lame/lame-3.100/build-lame.sh" target="_blank" rel="noopener">build-lame.sh</a>。修改开头的NDK路径、安卓版本、abi这几个参数接口直接运行在output目录生成出.a文件和.h文件:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/zsh</span><br><span class="line"></span><br><span class="line">NDK_ROOT=/Users/linjw/Library/Android/sdk/ndk/22.1.7171670</span><br><span class="line">ANDROID_API_VERSION=21</span><br><span class="line">NDK_TOOLCHAIN_ABI_VERSION=4.9</span><br><span class="line">ABIS=(armeabi armeabi-v7a arm64-v8a x86 x86_64)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h2 id="导入AndroidStudio"><a href="#导入AndroidStudio" class="headerlink" title="导入AndroidStudio"></a>导入AndroidStudio</h2><p>得到静态库之后在CMake中导入静态库:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">cmake_minimum_required(VERSION 3.18.1)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">project(&quot;lame&quot;)</span><br><span class="line"></span><br><span class="line">add_library(</span><br><span class="line">        lame</span><br><span class="line">        SHARED</span><br><span class="line">        native-lib.cpp)</span><br><span class="line"></span><br><span class="line"># 导入lame头文件</span><br><span class="line">include_directories($&#123;CMAKE_SOURCE_DIR&#125;/include)</span><br><span class="line"></span><br><span class="line">#导入lame静态库</span><br><span class="line">add_library(mp3lame STATIC IMPORTED)</span><br><span class="line">set_target_properties(</span><br><span class="line">        mp3lame</span><br><span class="line">        PROPERTIES IMPORTED_LOCATION</span><br><span class="line">        $&#123;CMAKE_SOURCE_DIR&#125;/../../../jniLibs/$&#123;ANDROID_ABI&#125;/libmp3lame.a)</span><br><span class="line"></span><br><span class="line">find_library(</span><br><span class="line">        log-lib</span><br><span class="line">        log)</span><br><span class="line"></span><br><span class="line">target_link_libraries(</span><br><span class="line">        lame</span><br><span class="line">        mp3lame # 链接lame静态库</span><br><span class="line">        $&#123;log-lib&#125;)</span><br></pre></td></tr></table></figure>
+
+<h1 id="lame基本使用"><a href="#lame基本使用" class="headerlink" title="lame基本使用"></a>lame基本使用</h1><h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><p>在了解了MP3的基础知识之后其实很容易上手lame。</p>
+<p>第一步无非就是一些音频参数的初始化设置:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">第一步: 创建lame_global_flags*</span><br><span class="line">lame_global_flags *client = lame_init();</span><br><span class="line"></span><br><span class="line">第二步: 配置参数</span><br><span class="line">lame_set_in_samplerate(client, 44100);    // 输入采样率</span><br><span class="line">lame_set_out_samplerate(client, 44100);   // 输出采样率44100</span><br><span class="line">lame_set_num_channels(client, 2);         // 通道数2</span><br><span class="line">lame_set_brate(client, 128);              // 比特率128kbps</span><br><span class="line">lame_set_quality(client, 2);              // 编码质量2</span><br><span class="line">lame_init_params(client);                 // 初始化参数</span><br></pre></td></tr></table></figure>
+
+<h3 id="编码质量"><a href="#编码质量" class="headerlink" title="编码质量"></a>编码质量</h3><p>上面的参数大部分都在前一篇介绍过了,只剩一个编码质量没讲过,他其实是用来选择压缩算法的。算法编号从0到9,0音质最好但是算法最复杂也最耗时,9音质最差但算法效率最高。一般会选择2。</p>
+<p>比特率和压缩算法都能决定MP3的音质。压缩前的PCM裸流音质最好，大小最大。</p>
+<p>由于MP3的大小等于比特率乘时长，压缩后的MP3比特率越大，那么它的大小就越大，就越接近压缩前的PCM，损失的信息也就越少，解压之后就越接近原本的PCM的曲线，音质自然就越好。</p>
+<p>而选择压缩算法的意义在于，在相同比特率的情况下( MP3文件大小相同)，好的压缩算法解压出来的声音曲线能更接近原本的PCM曲线，但是相应的它的计算量就会更大。</p>
+<p>可以说选择大的比特率是用存储空间换音质，而选择音质高的压缩算法则是用cpu资源换音质。</p>
+<h2 id="MP3编码"><a href="#MP3编码" class="headerlink" title="MP3编码"></a>MP3编码</h2><p>配置好初始化参数之后就只要将PCM数据传递给LAME进行压缩即可,这里有几种PCM的传递方式:</p>
+<p><strong>1. 左右通道分开输入</strong></p>
+<p>双通道立体声,有时候左右通道的数据会放在不同的文件里面,可以使用下面的方法去编码MP3:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">int CDECL lame_encode_buffer (</span><br><span class="line">        lame_global_flags*  gfp,           /* global context handle         */</span><br><span class="line">        const short int     buffer_l [],   /* PCM data for left channel     */</span><br><span class="line">        const short int     buffer_r [],   /* PCM data for right channel    */</span><br><span class="line">        const int           nsamples,      /* number of samples per channel */</span><br><span class="line">        unsigned char*      mp3buf,        /* pointer to encoded MP3 stream */</span><br><span class="line">        const int           mp3buf_size ); /* number of valid octets in this stream */</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>gfp : lame_init返回的lame_global_flags*</li>
+<li>buffer_l : 左通道数据</li>
+<li>buffer_r : 右通道数据</li>
+<li>nsamples : 每个通道的采样点数量。例如当AudioFormat为16bit的时候, 一个采样点大小为2byte, 则nsamples = buffer_l有效数据长度(byte) / 2</li>
+<li>mp3buf : 编码后的MP3会存放到这里</li>
+<li>mp3buf_size : mp3buf的大小,它可以通过采样率、比特率和前面的nsamples计算出来,不过LAME提供了一个最大buffer大小计算的简单算法(1.25*nsamples + 7200 byte)</li>
+</ul>
+<p>他的返回值如下:</p>
+<ul>
+<li>&gt;=0 : 编码后的MP3数据的大小,即存储到mp3buf的MP3音频的byte数</li>
+<li>-1 : mp3buf的大小太小</li>
+<li>-2 : malloc()方法出现问题</li>
+<li>-3 : lame_init_params()没有调用</li>
+<li>-4 : 音频数据异常</li>
+</ul>
+<p>参考代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int encodeSize = lame_encode_buffer_interleaved(client, pcm, numSamples, result, resultSize);</span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 单通道输入</strong></p>
+<p>有时候我们的数据只会有一个通道的数据,例如AudioRecord的ChannelConfig配置成AudioFormat.CHANNEL_IN_MONO。</p>
+<p>这个时候我们只需要把right输入设置成NULL即可:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int encodeSize = lame_encode_buffer(client, left, null, numSamples, result, resultSize);</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. 多通道混合输入</strong></p>
+<p>当AudioRecord的ChannelConfig配置成AudioFormat.CHANNEL_IN_STEREO。左右声道的数据会交叉存储在PCM裸流中。或者其他更多通道混合输入的时候我们可以用lame_encode_buffer_interleaved方法进行编码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">int CDECL lame_encode_buffer_interleaved(</span><br><span class="line">        lame_global_flags*  gfp,           /* global context  handlei */</span><br><span class="line">        short int           pcm[],         /* PCM data for left and right channel, interleaved */</span><br><span class="line">        int                 num_samples,   /* number of samples per channel,  _not_ number of samples in pcm [] */</span><br><span class="line">        unsigned char*      mp3buf,        /* pointer to encoded MP3 stream */</span><br><span class="line">        int                 mp3buf_size ); /* number of valid octets in this stream */</span><br></pre></td></tr></table></figure>
+
+<p>指的注意的是,这里的num_samples指的是每个通道的采样点数,而不是所有通道的采样点数之和。</p>
+<p>例如当AudioFormat为16bit、双通道输入的时候, 一个采样点大小为2byte, 则</p>
+<p>nsamples = buffer_l有效数据长度(byte) / 2(16bite为2byte) / 2(通道数为2)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int encodeSize = lame_encode_buffer_interleaved(client, pcm, numSamples, result, resultSize);</span><br></pre></td></tr></table></figure>
+
+<h2 id="清理工作"><a href="#清理工作" class="headerlink" title="清理工作"></a>清理工作</h2><p>当编码结束之后我们可以用lame_close方法进行清理:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lame_close(client);</span><br></pre></td></tr></table></figure>
+
+<h1 id="结合JNI进行使用"><a href="#结合JNI进行使用" class="headerlink" title="结合JNI进行使用"></a>结合JNI进行使用</h1><p>由于LAEM的使用需要保存lame_global_flags<em>,我们可以将它强转成long传到java进行保存,在需要的时候再讲传入的long强转回lame_global_flags</em>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">class LameMp3 &#123;</span><br><span class="line">    private var lameClientPtr: Long = createLameMp3Client()</span><br><span class="line"></span><br><span class="line">    fun destroy(): Int &#123;</span><br><span class="line">        val ret = close(lameClientPtr)</span><br><span class="line">        lameClientPtr = 0</span><br><span class="line">        return ret</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    private external fun createLameMp3Client(): Long</span><br><span class="line">    private external fun close(client: Long): Int</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">extern &quot;C&quot; JNIEXPORT jlong JNICALL</span><br><span class="line">Java_me_linjw_lib_lame_LameMp3_createLameMp3Client(</span><br><span class="line">        JNIEnv *env,</span><br><span class="line">        jobject thiz) &#123;</span><br><span class="line">    lame_global_flags *client = lame_init();</span><br><span class="line">    LOGD(&quot;createLameMp3Client: %ld&quot;, (long) client);</span><br><span class="line">    return reinterpret_cast&lt;jlong&gt;(client);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">extern &quot;C&quot; JNIEXPORT int JNICALL</span><br><span class="line">Java_me_linjw_lib_lame_LameMp3_close(</span><br><span class="line">        JNIEnv *env,</span><br><span class="line">        jobject thiz,</span><br><span class="line">        jlong clientPtr) &#123;</span><br><span class="line">    lame_global_flags *client = reinterpret_cast&lt;lame_global_flags *&gt;(clientPtr);</span><br><span class="line">    LOGD(&quot;close(%ld)&quot;, client);</span><br><span class="line">    return lame_close(client);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>详细代码参考<a href="https://github.com/bluesky466/AndroidLameDemo/blob/master/lame/src/main/java/me/linjw/lib/lame/LameMp3.kt" target="_blank" rel="noopener">LameMp3.kt</a>和<a href="https://github.com/bluesky466/AndroidLameDemo/blob/master/lame/src/main/cpp/native-lib.cpp" target="_blank" rel="noopener">native-lib.cpp</a></p>
+<h1 id="DEMO代码"><a href="#DEMO代码" class="headerlink" title="DEMO代码"></a>DEMO代码</h1><p>DEMO代码已经放到<a href="https://github.com/bluesky466/AndroidLameDemo" target="_blank" rel="noopener">github</a>上</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

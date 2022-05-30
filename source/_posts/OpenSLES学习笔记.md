@@ -3,7 +3,7 @@ date: 2018-09-01 20:24:42
 tags:
     - 技术相关
     - Android
-    - C/C++
+    - 音视频
 ---
 
 一般来讲在安卓中常使用AudioRecord、MediaRecorder对音频进行采集,使用SoundPool、MediaPlayer、AudioTrack进行音频播放。

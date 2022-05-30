@@ -3,6 +3,7 @@ date: 2022-05-26 21:22:13
 tags:
   - 技术相关
   - Android
+  - 音视频
 ---
 
 在安卓上实现录音功能有两种方式使用AudioRecord录制PCM裸流,或者用MediaRecorder录制编码后的音频流。但是MediaRecorder的编码格式并不包括MP3格式:

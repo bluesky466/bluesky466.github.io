@@ -5,6 +5,13 @@ tags:
 	- 编译相关
 ---
 
+系列笔记:
+
+[1. automake学习笔记 - helloworld](https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/)
+[2. automake学习笔记 - 模块化编译](https://blog.islinjw.cn/2017/03/21/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%A8%A1%E5%9D%97%E5%8C%96%E7%BC%96%E8%AF%91/)
+[3. automake学习笔记 - 安装与发布](https://blog.islinjw.cn/2017/03/26/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8F%91%E5%B8%83/)
+[4. automake学习笔记 - 交叉编译](https://blog.islinjw.cn/2017/04/02/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/)
+
 虽然之前已经用过一段时间的automake,但是总觉得对它的理解不过充分,只是知其然而不知其所以然。于是下定决心好好啃[文档](http://www.gnu.org/software/automake/manual/automake.html),并将学的的东西记录下来。
 
 这篇文章用一个简单的log工具的编译先对automake做一个hello world级别的介绍。

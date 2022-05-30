@@ -15,18 +15,18 @@
     <meta name="keywords" content="技术相关,编译相关,">
   
 
-  <meta name="description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。 这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。 使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:  2.2.8 Cr">
+  <meta name="description" content="系列笔记: 1. automake学习笔记 - helloworld2. automake学习笔记 - 模块化编译3. automake学习笔记 - 安装与发布4. automake学习笔记 - 交叉编译 什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者ex">
 <meta name="keywords" content="技术相关,编译相关">
 <meta property="og:type" content="article">
 <meta property="og:title" content="automake学习笔记 - 交叉编译">
 <meta property="og:url" content="http://139.199.4.241/2017/04/02/automake学习笔记-交叉编译/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。 这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。 使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:  2.2.8 Cr">
+<meta property="og:description" content="系列笔记: 1. automake学习笔记 - helloworld2. automake学习笔记 - 模块化编译3. automake学习笔记 - 安装与发布4. automake学习笔记 - 交叉编译 什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者ex">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2022-02-07T05:47:21.425Z">
+<meta property="og:updated_time" content="2022-05-30T10:27:01.203Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="automake学习笔记 - 交叉编译">
-<meta name="twitter:description" content="什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。 这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。 使用automake进行交叉编译automake就提供了交叉编译的功能，但是它的官方文档十分的简单:  2.2.8 Cr">
+<meta name="twitter:description" content="系列笔记: 1. automake学习笔记 - helloworld2. automake学习笔记 - 模块化编译3. automake学习笔记 - 安装与发布4. automake学习笔记 - 交叉编译 什么是交叉编译很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者ex">
 
   
 
@@ -155,7 +155,9 @@
 
   <div class="article-content">
     
-      <h2 id="什么是交叉编译"><a href="#什么是交叉编译" class="headerlink" title="什么是交叉编译"></a>什么是交叉编译</h2><p>很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。</p>
+      <p>系列笔记:</p>
+<p><a href="https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="noopener">1. automake学习笔记 - helloworld</a><br><a href="https://blog.islinjw.cn/2017/03/21/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%A8%A1%E5%9D%97%E5%8C%96%E7%BC%96%E8%AF%91/" target="_blank" rel="noopener">2. automake学习笔记 - 模块化编译</a><br><a href="https://blog.islinjw.cn/2017/03/26/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8F%91%E5%B8%83/" target="_blank" rel="noopener">3. automake学习笔记 - 安装与发布</a><br><a href="https://blog.islinjw.cn/2017/04/02/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/" target="_blank" rel="noopener">4. automake学习笔记 - 交叉编译</a></p>
+<h2 id="什么是交叉编译"><a href="#什么是交叉编译" class="headerlink" title="什么是交叉编译"></a>什么是交叉编译</h2><p>很多时候我们因为各种原因需要在一个平台上编译其他平台的程序。如在linux或者windows上编译可以在安卓使用的so库、apk等。在linux上编译windows的dll或者exe等。</p>
 <p>这种在某个系统平台下可以产生另一个系统平台的可执行文件的技术就叫做交叉编译。</p>
 <h2 id="使用automake进行交叉编译"><a href="#使用automake进行交叉编译" class="headerlink" title="使用automake进行交叉编译"></a>使用automake进行交叉编译</h2><p>automake就提供了交叉编译的功能，但是它的<a href="https://www.gnu.org/software/automake/manual/html_node/Cross_002dCompilation.html" target="_blank" rel="noopener">官方文档</a>十分的简单:</p>
 <blockquote>
