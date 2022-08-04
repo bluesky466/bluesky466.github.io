@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android多用户singleUser配置的一些坑 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="最近关于多用户功能报了几个bug,我觉得蛮有意思的这里记录一下。 起因是是测试报了打开了多用户功能并且切到另外一个用户之后,系统功能异常。调试发现我们的中间层服务启动了两个进程: 12system         6074   2524 14649520 96244 SyS_epoll_wait      0 S me.linjw.demo.multiuseru10_system     7991">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android多用户singleUser配置的一些坑">
+<meta property="og:url" content="http://139.199.4.241/2022/08/04/Android多用户singleUser配置的一些坑/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="最近关于多用户功能报了几个bug,我觉得蛮有意思的这里记录一下。 起因是是测试报了打开了多用户功能并且切到另外一个用户之后,系统功能异常。调试发现我们的中间层服务启动了两个进程: 12system         6074   2524 14649520 96244 SyS_epoll_wait      0 S me.linjw.demo.multiuseru10_system     7991">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-08-04T13:28:59.308Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android多用户singleUser配置的一些坑">
+<meta name="twitter:description" content="最近关于多用户功能报了几个bug,我觉得蛮有意思的这里记录一下。 起因是是测试报了打开了多用户功能并且切到另外一个用户之后,系统功能异常。调试发现我们的中间层服务启动了两个进程: 12system         6074   2524 14649520 96244 SyS_epoll_wait      0 S me.linjw.demo.multiuseru10_system     7991">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#android-singleUser配置"><span class="toc-text">android:singleUser配置</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#android-exported被自动关闭"><span class="toc-text">android:exported被自动关闭</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#全局浮动框在子用户不显示"><span class="toc-text">全局浮动框在子用户不显示</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#结尾吐槽"><span class="toc-text">结尾吐槽</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android多用户singleUser配置的一些坑" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android多用户singleUser配置的一些坑</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.08.04</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近关于多用户功能报了几个bug,我觉得蛮有意思的这里记录一下。</p>
+<p>起因是是测试报了打开了多用户功能并且切到另外一个用户之后,系统功能异常。调试发现我们的中间层服务启动了两个进程:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">system         6074   2524 14649520 96244 SyS_epoll_wait      0 S me.linjw.demo.multiuser</span><br><span class="line">u10_system     7991   2524 14582664 94148 SyS_epoll_wait      0 S me.linjw.demo.multiuser</span><br></pre></td></tr></table></figure>
+
+<p>从上面可以看出me.linjw.demo.multiuser这个应用分别在USER为system和u10_system各起了一个进程。查找了下资料发现正常情况下一个应用进程的确是不能跨用户访问的,会在不同的用户下启动新的进程。</p>
+<h1 id="android-singleUser配置"><a href="#android-singleUser配置" class="headerlink" title="android:singleUser配置"></a>android:singleUser配置</h1><p>由于历史代码原因,我们系统上的硬件操控接口的确不支持多个进程访问,也不好修改。只能靠我们应用做规避。使用ps命令查看了下,发现像system_server这样的系统服务在多用户下也只有一个进程。谷歌应该会考虑到这种多用户共用一个进程的场景,于是在开发者文档中找到多用户相关<a href="https://source.android.google.cn/devices/tech/admin/multiuser-apps?hl=zh-cn" target="_blank" rel="noopener">文档</a>:</p>
+<blockquote>
+<p>如需将应用识别为单例，请将 android:singleUser=”true” 添加至 Android 清单中的服务、接收器或提供程序。</p>
+</blockquote>
+<p>由于现象是多个进程，我下意识认为这个singleUser配置是针对应用的,所以在AndroidManifest.xml的application标签中配置上去,但是发现没有作用:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;application</span><br><span class="line">    android:allowBackup=&quot;true&quot;</span><br><span class="line">    android:icon=&quot;@mipmap/ic_launcher&quot;</span><br><span class="line">    android:label=&quot;@string/app_name&quot;</span><br><span class="line">    android:roundIcon=&quot;@mipmap/ic_launcher_round&quot;</span><br><span class="line">    android:supportsRtl=&quot;true&quot;</span><br><span class="line">    android:singleUser=&quot;true&quot;</span><br><span class="line">    android:theme=&quot;@style/Theme.MultiuserDemo&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>由于文档里面没有其他信息，从网上搜索找到的类似需要系统签名、android:persistent需要为true这样的信息也确认过没有效果。本来还怀疑是我们framework里面做了什么修改导把这块改坏了。</p>
+<p>于是去看这部分相关的framework源码,主要逻辑在<a href="https://cs.android.com/android/platform/superproject/+/android-11.0.0_r9:frameworks/base/services/core/java/com/android/server/am/ActiveServices.java;l=2342" target="_blank" rel="noopener">ActiveServices.retrieveServiceLocked</a>里面,子用户里启动服务的时候会去通过isSingleton判断是否使用主用户的进程,如果是的话就使用主用户的进程,不需要新启动一个进程::</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/java/com/android/server/am/ActiveServices.java</span><br><span class="line">private ServiceLookupResult retrieveServiceLocked(Intent service,</span><br><span class="line">        String instanceName, String resolvedType, String callingPackage,</span><br><span class="line">        int callingPid, int callingUid, int userId,</span><br><span class="line">        boolean createIfNeeded, boolean callingFromFg, boolean isBindExternal,</span><br><span class="line">        boolean allowInstant) &#123;</span><br><span class="line">    ...</span><br><span class="line">    // 这里在不同userId下查询出来的rInfo就是不一样的</span><br><span class="line">    ResolveInfo rInfo = mAm.getPackageManagerInternalLocked().resolveService(service,</span><br><span class="line">            resolvedType, flags, userId, callingUid);</span><br><span class="line">    ServiceInfo sInfo = rInfo != null ? rInfo.serviceInfo : null;</span><br><span class="line">    ...</span><br><span class="line">    // userId不为0代表子用户下运行</span><br><span class="line">    if (userId &gt; 0) &#123;</span><br><span class="line">        if (mAm.isSingleton(sInfo.processName, sInfo.applicationInfo,</span><br><span class="line">                sInfo.name, sInfo.flags)</span><br><span class="line">                &amp;&amp; mAm.isValidSingletonCall(callingUid, sInfo.applicationInfo.uid)) &#123;</span><br><span class="line">            // 如果组件isSingleton判断为true</span><br><span class="line">            // 则将userId改成0,并使用clearCallingIdentity清除调用进程的用户信息,重新查询</span><br><span class="line">            // 则查出来的rInfoForUserId0为主用户的缓存  </span><br><span class="line">            userId = 0;</span><br><span class="line">            smap = getServiceMapLocked(0);</span><br><span class="line">            // Bypass INTERACT_ACROSS_USERS permission check</span><br><span class="line">            final long token = Binder.clearCallingIdentity();</span><br><span class="line">            try &#123;</span><br><span class="line">                ResolveInfo rInfoForUserId0 = mAm.getPackageManagerInternalLocked().resolveService(service,</span><br><span class="line">                                resolvedType, flags, userId, callingUid);</span><br><span class="line">                if (rInfoForUserId0 == null) &#123;</span><br><span class="line">                    Slog.w(TAG_SERVICE,</span><br><span class="line">                            &quot;Unable to resolve service &quot; + service + &quot; U=&quot; + userId</span><br><span class="line">                                    + &quot;: not found&quot;);</span><br><span class="line">                    return null;</span><br><span class="line">                &#125;</span><br><span class="line">                // 然后用这个rInfoForUserId0.serviceInfo去替换之前查出来的rInfo.serviceInfo,保证多用户下都用主用户下的同一个进程</span><br><span class="line">                sInfo = rInfoForUserId0.serviceInfo;</span><br><span class="line">            &#125; finally &#123;</span><br><span class="line">                Binder.restoreCallingIdentity(token);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        sInfo = new ServiceInfo(sInfo);</span><br><span class="line">        sInfo.applicationInfo = mAm.getAppInfoForUser(sInfo.applicationInfo, userId);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>判断是否在多用户下只启动单个进程主要靠<a href="https://cs.android.com/android/platform/superproject/+/android-11.0.0_r9:frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java;l=15103" target="_blank" rel="noopener">isSingleton</a>这个方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java</span><br><span class="line">boolean isSingleton(String componentProcessName, ApplicationInfo aInfo,</span><br><span class="line">        String className, int flags) &#123;</span><br><span class="line">    boolean result = false;</span><br><span class="line">    // For apps that don&apos;t have pre-defined UIDs, check for permission</span><br><span class="line">    if (UserHandle.getAppId(aInfo.uid) &gt;= FIRST_APPLICATION_UID) &#123;</span><br><span class="line">        if ((flags &amp; ServiceInfo.FLAG_SINGLE_USER) != 0) &#123;</span><br><span class="line">            if (ActivityManager.checkUidPermission(</span><br><span class="line">                    INTERACT_ACROSS_USERS,</span><br><span class="line">                    aInfo.uid) != PackageManager.PERMISSION_GRANTED) &#123;</span><br><span class="line">                ComponentName comp = new ComponentName(aInfo.packageName, className);</span><br><span class="line">                String msg = &quot;Permission Denial: Component &quot; + comp.flattenToShortString()</span><br><span class="line">                        + &quot; requests FLAG_SINGLE_USER, but app does not hold &quot;</span><br><span class="line">                        + INTERACT_ACROSS_USERS;</span><br><span class="line">                Slog.w(TAG, msg);</span><br><span class="line">                throw new SecurityException(msg);</span><br><span class="line">            &#125;</span><br><span class="line">            // Permission passed</span><br><span class="line">            result = true;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; else if (&quot;system&quot;.equals(componentProcessName)) &#123;</span><br><span class="line">        result = true;</span><br><span class="line">    &#125; else if ((flags &amp; ServiceInfo.FLAG_SINGLE_USER) != 0) &#123;</span><br><span class="line">        // Phone app and persistent apps are allowed to export singleuser providers.</span><br><span class="line">        result = UserHandle.isSameApp(aInfo.uid, PHONE_UID)</span><br><span class="line">                || (aInfo.flags &amp; ApplicationInfo.FLAG_PERSISTENT) != 0;</span><br><span class="line">    &#125;</span><br><span class="line">    if (DEBUG_MU) Slog.v(TAG_MU,</span><br><span class="line">            &quot;isSingleton(&quot; + componentProcessName + &quot;, &quot; + aInfo + &quot;, &quot; + className + &quot;, 0x&quot;</span><br><span class="line">            + Integer.toHexString(flags) + &quot;) = &quot; + result);</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打开DEBUG_MU之后查看打印,发现singleUser是按组件来配置的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">08-03 13:45:20.092  3289  4023 V ActivityManager_MU: isSingleton(me.linjw.demo.multiuser, ApplicationInfo&#123;417a0ea me.linjw.demo.multiuser&#125;, me.linjw.demo.multiuser.TestService, 0x0) = false</span><br></pre></td></tr></table></figure>
+
+<p>所以应该在service里面配置:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;service</span><br><span class="line">    android:name=&quot;.TestService&quot;</span><br><span class="line">    android:exported=&quot;true&quot;</span><br><span class="line">    android:singleUser=&quot;true&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>实际上如果我一开始看到是<a href="https://source.android.google.cn/devices/tech/admin/multiuser-apps" target="_blank" rel="noopener">英文文档</a>,应该就不会出现这样的误解了:</p>
+<blockquote>
+<p>To identify an app as a singleton, add android:singleUser=”true” to your service, receiver, or provider in the Android manifest.</p>
+</blockquote>
+<h1 id="android-exported被自动关闭"><a href="#android-exported被自动关闭" class="headerlink" title="android:exported被自动关闭"></a>android:exported被自动关闭</h1><p>修改完成自检通过,开开心心上传代码原本以为问题已经解决。没想到一天之后另外一个客户的软件报了连接不上我们的Service的问题:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">08-03 12:13:22.108  3185  3557 W ActivityManager: Permission Denial: Accessing service me.linjw.demo.multiuser/.TestService from pid=5994, uid=10055 that is not exported from uid 1000</span><br><span class="line">08-03 12:13:22.112  5994  5994 E AndroidRuntime: Caused by: java.lang.SecurityException: Not allowed to bind to service Intent &#123; act=me.linjw.multiuser.service pkg=me.linjw.demo.multiuser &#125;</span><br></pre></td></tr></table></figure>
+
+<p>从日志上来看TestService没有export,但是从AndroidManifest.xml上看android:exported的确设置成true了。而且尝试把android:singleUser改成fasle又能连上。这就意味着android:singleUser陪着会影响到android:exported。</p>
+<p>但这里又有个问题,当初我修改完android:singleUser=”true”之后是有自检通过的,如果exported为false,那自检为什么能通过?</p>
+<p>最终排查发现我们的应用设置了sharedUserId声明为系统进程:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;</span><br><span class="line">    package=&quot;me.linjw.demo.multiuser&quot;</span><br><span class="line">    android:sharedUserId=&quot;android.uid.system&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>当初自检的时候的那个应用的sharedUserId也是android.uid.system,所以相当于他们是同一个应用,可以相互访问exported为false的组件。</p>
+<p>原因排查清楚了,那要怎么解决呢?还是只能从framework源码开始翻起,先去<a href="https://cs.android.com/android/platform/superproject/+/android-11.0.0_r9:frameworks/base/services/core/java/com/android/server/am/ActiveServices.java;l=2532" target="_blank" rel="noopener">报错的地方</a>看起,找找为什么exported会被自动改成false:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/java/com/android/server/am/ActiveServices.java</span><br><span class="line">private ServiceLookupResult retrieveServiceLocked(Intent service,</span><br><span class="line">          String instanceName, String resolvedType, String callingPackage,</span><br><span class="line">          int callingPid, int callingUid, int userId,</span><br><span class="line">          boolean createIfNeeded, boolean callingFromFg, boolean isBindExternal,</span><br><span class="line">          boolean allowInstant) &#123;</span><br><span class="line">      ServiceRecord r = null;</span><br><span class="line">      ...</span><br><span class="line">      if (mAm.checkComponentPermission(r.permission,</span><br><span class="line">              callingPid, callingUid, r.appInfo.uid, r.exported) != PERMISSION_GRANTED) &#123;</span><br><span class="line">          if (!r.exported) &#123;</span><br><span class="line">              Slog.w(TAG, &quot;Permission Denial: Accessing service &quot; + r.shortInstanceName</span><br><span class="line">                      + &quot; from pid=&quot; + callingPid</span><br><span class="line">                      + &quot;, uid=&quot; + callingUid</span><br><span class="line">                      + &quot; that is not exported from uid &quot; + r.appInfo.uid);</span><br><span class="line">              return new ServiceLookupResult(null, &quot;not exported from uid &quot;</span><br><span class="line">                      + r.appInfo.uid);</span><br><span class="line">          &#125;</span><br><span class="line">          Slog.w(TAG, &quot;Permission Denial: Accessing service &quot; + r.shortInstanceName</span><br><span class="line">                  + &quot; from pid=&quot; + callingPid</span><br><span class="line">                  + &quot;, uid=&quot; + callingUid</span><br><span class="line">                  + &quot; requires &quot; + r.permission);</span><br><span class="line">          return new ServiceLookupResult(null, r.permission);</span><br><span class="line">      &#125;</span><br><span class="line">      ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从这里看r的exported为false导致了这个异常,我们需要在retrieveServiceLocked里面一路追踪r的exported是怎么被singleUser影响的,由于这部分代码比较曲折我也找了很久才找到关键代码。</p>
+<p>在<a href="https://cs.android.com/android/platform/superproject/+/android-11.0.0_r9:frameworks/base/services/core/java/com/android/server/pm/PackageManagerService.java;l=11783" target="_blank" rel="noopener">PackageManagerService</a>扫描应用信息的时候,会判断SCAN_AS_PRIVILEGED这个flag,如果没有设置就会执行markNotActivitiesAsNotExportedIfSingleUser</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/java/com/android/server/pm/PackageManagerService.java</span><br><span class="line">if ((scanFlags &amp; SCAN_AS_PRIVILEGED) == 0) &#123;</span><br><span class="line">    parsedPackage</span><br><span class="line">            .markNotActivitiesAsNotExportedIfSingleUser();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><a href="https://cs.android.com/android/platform/superproject/+/android-11.0.0_r9:frameworks/base/services/core/java/com/android/server/pm/parsing/pkg/PackageImpl.java;l=454;drc=da9304867216e65874eae45db56d8d3fd3674105;bpv=1;bpt=1" target="_blank" rel="noopener">markNotActivitiesAsNotExportedIfSingleUser</a>顾名思义,就会在配置了SingleUser的时候去修改exported,实际上它里面除了Activity不修改,其他的三个组件都修改了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public PackageImpl markNotActivitiesAsNotExportedIfSingleUser() &#123;</span><br><span class="line">    // ignore export request for single user receivers</span><br><span class="line">    int receiversSize = receivers.size();</span><br><span class="line">    for (int index = 0; index &lt; receiversSize; index++) &#123;</span><br><span class="line">        ParsedActivity receiver = receivers.get(index);</span><br><span class="line">        if ((receiver.getFlags() &amp; ActivityInfo.FLAG_SINGLE_USER) != 0) &#123;</span><br><span class="line">            receiver.setExported(false);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // ignore export request for single user services</span><br><span class="line">    int servicesSize = services.size();</span><br><span class="line">    for (int index = 0; index &lt; servicesSize; index++) &#123;</span><br><span class="line">        ParsedService service = services.get(index);</span><br><span class="line">        if ((service.getFlags() &amp; ActivityInfo.FLAG_SINGLE_USER) != 0) &#123;</span><br><span class="line">            service.setExported(false);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // ignore export request for single user providers</span><br><span class="line">    int providersSize = providers.size();</span><br><span class="line">    for (int index = 0; index &lt; providersSize; index++) &#123;</span><br><span class="line">        ParsedProvider provider = providers.get(index);</span><br><span class="line">        if ((provider.getFlags() &amp; ActivityInfo.FLAG_SINGLE_USER) != 0) &#123;</span><br><span class="line">            provider.setExported(false);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return this;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那问题就在于我们的应用没有携带SCAN_AS_PRIVILEGED,所以在singleUser为true的时候exported会被改成false。那我们要怎么带上这个flag呢?搜索了下<a href="https://wrlus.com/android-security/system-apps-and-cve-2020-0391/" target="_blank" rel="noopener">资料</a>发现这个flag代表着特权应用,只要预装到下面目录的就能成为特权应用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/system/framework</span><br><span class="line">/system/priv-app</span><br><span class="line">/vendor/priv-app</span><br><span class="line">/odm/priv-app</span><br><span class="line">/product/priv-app</span><br><span class="line">/system_ext/priv-app</span><br></pre></td></tr></table></figure>
+
+<p>最终将预装路径从/syste/app改到/syste/priv-app解决问题。</p>
+<h1 id="全局浮动框在子用户不显示"><a href="#全局浮动框在子用户不显示" class="headerlink" title="全局浮动框在子用户不显示"></a>全局浮动框在子用户不显示</h1><p>没想到过了两天又报了另外一个问题,我们通过WindowManager.addView添加的全局浮动框在子用户不显示,在主用户是好的。又踩了一个隐藏的坑。</p>
+<p>既然不显示,那么首先考虑是不是addView失败了,于是用dumpsys window看看有没有add成功:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">console:/ # dumpsys window | grep me.linjw.demo.multiuser</span><br><span class="line">    mPackageName=me.linjw.demo.multiuser</span><br><span class="line">  Window #0 Window&#123;a03fb0 u0 me.linjw.demo.multiuser&#125;:</span><br><span class="line">    mOwnerUid=1000 showForAllUsers=false package=me.linjw.demo.multiuser appop=SYSTEM_ALERT_WINDOW</span><br></pre></td></tr></table></figure>
+
+<p>从打印上来看是add成功的,但是里面有个showForAllUsers引起了我的注意,大概猜测是addView的时候有个showForAllUsers的flag没有设置,于是在源码里面搜索还真找到了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// android/view/WindowManager.java</span><br><span class="line">@SystemApi</span><br><span class="line">@RequiresPermission(permission.INTERNAL_SYSTEM_WINDOW)</span><br><span class="line">public static final int SYSTEM_FLAG_SHOW_FOR_ALL_USERS = 0x00000010;</span><br></pre></td></tr></table></figure>
+
+<p>但是它的值和FLAG_NOT_TOUCHABLE重复了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public static final int FLAG_NOT_TOUCHABLE      = 0x00000010;</span><br></pre></td></tr></table></figure>
+
+<p>于是从搜索了下它,发现需要设置到WindowManager.LayoutParams.privateFlags而不是WindowManager.LayoutParams.flags</p>
+<p>可惜的是无论是privateFlags还是SYSTEM_FLAG_SHOW_FOR_ALL_USERS都是系统api,所以只能用反射去设置:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">private int SYSTEM_FLAG_SHOW_FOR_ALL_USERS = 0x00000010;</span><br><span class="line"></span><br><span class="line">// 多用户下需要设置这个flag才能在其他用户显示</span><br><span class="line">Field privateFlags = null;</span><br><span class="line">try &#123;</span><br><span class="line">    privateFlags = WindowManager.LayoutParams.class.getDeclaredField(&quot;privateFlags&quot;);</span><br><span class="line">    privateFlags.set(wmParams, SYSTEM_FLAG_SHOW_FOR_ALL_USERS);</span><br><span class="line">&#125; catch (Exception e) &#123;</span><br><span class="line">    Log.e(&quot;testtest&quot;, &quot;err&quot;, e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>设置之后的确在子用户下也显示成功了,用dumpsys window查看showForAllUsers也变成了true:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">console:/ # dumpsys window | grep me.linjw.demo.multiuser</span><br><span class="line">    mPackageName=me.linjw.demo.multiuser</span><br><span class="line">  Window #0 Window&#123;3655208 u0 me.linjw.demo.multiuser&#125;:</span><br><span class="line">    mOwnerUid=1000 showForAllUsers=true package=me.linjw.demo.multiuser appop=SYSTEM_ALERT_WINDOW</span><br></pre></td></tr></table></figure>
+
+<h1 id="结尾吐槽"><a href="#结尾吐槽" class="headerlink" title="结尾吐槽"></a>结尾吐槽</h1><p>这系列问题前前后后差不多一个月才弄完,framework部分源码的源码看得人都晕了,也不知道还会不会有其他意料之外的坑。当个安卓应用开发太难了…</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
