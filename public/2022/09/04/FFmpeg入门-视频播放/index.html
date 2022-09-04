@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>FFmpeg入门 - 视频播放 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,音视频,">
+  
+
+  <meta name="description" content="音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道等.有些格式限制比较多,例如AVI视频轨道只能有一条,音频轨道也只能有一条.而有些格式则比较灵活,例如OGG视频的视频、音频轨">
+<meta name="keywords" content="技术相关,音视频">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FFmpeg入门 - 视频播放">
+<meta property="og:url" content="http://139.199.4.241/2022/09/04/FFmpeg入门-视频播放/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道等.有些格式限制比较多,例如AVI视频轨道只能有一条,音频轨道也只能有一条.而有些格式则比较灵活,例如OGG视频的视频、音频轨">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/ut8eBaaiAYdDpU62iBAAy_EughaKW43fnVAsbuicFflM_cJtDYKhY22In8kzArusJWPAA7aOcPayRcW4KgRFrtO-Mx3dwPx-vxDQdlPrFz-pykNypK35IbRHIf6XOK1LGUvEA8fcxtlQtAyKMwkZWB00eWTXWQEZCr2dRu0nFkC3d7tXSb1HL5EVhft-TETKcAbAIc2PMgvQBeVKl1Imnq4CK5W00000">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/bPBDIiD054RtynIpL9aMYLMwyaMaYrWdpM2J3kbO474HnLQGMfGgxXfi8Ij3nNyfVHfdaho5qqngQuEAY-GcvDvpxXU6wWuZZDHioDkTA0Zu_H4y04ihop2NsuJYQYZQ0R1h34E7L4m6JCOeSfX5aK6gE9_F0splm4a3E0I0pcX3D-gV26_4Hnt5bBojoEyhJUbRGrPZxJQGHGlomXLMHtg3BAg80IUqXCBVdZzUk_oqAPvSo4nipsyIZgvbO-YvipNYtaDyUr62gifFSYwxWwwNfNyD_HBolCVzCpNvHOSfNacdahZL4jvBLaBBrZnSpgVJmPWFMkBoJdJ70E1g7V-HAVARIIPLVyfaQXi596_hoP_L_XrDqQVHr1i_xeIFNjQrlzSeQAiK9LMJfwQoNImM5vJ9ARiPXuFtD77o32OjnFW4">
+<meta property="og:updated_time" content="2022-09-04T05:00:00.188Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="FFmpeg入门 - 视频播放">
+<meta name="twitter:description" content="音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道等.有些格式限制比较多,例如AVI视频轨道只能有一条,音频轨道也只能有一条.而有些格式则比较灵活,例如OGG视频的视频、音频轨">
+<meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/ut8eBaaiAYdDpU62iBAAy_EughaKW43fnVAsbuicFflM_cJtDYKhY22In8kzArusJWPAA7aOcPayRcW4KgRFrtO-Mx3dwPx-vxDQdlPrFz-pykNypK35IbRHIf6XOK1LGUvEA8fcxtlQtAyKMwkZWB00eWTXWQEZCr2dRu0nFkC3d7tXSb1HL5EVhft-TETKcAbAIc2PMgvQBeVKl1Imnq4CK5W00000">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#音视频编解码基础"><span class="toc-text">音视频编解码基础</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#ffmpeg简单入门"><span class="toc-text">ffmpeg简单入门</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#解析文件流-解协议和解封装"><span class="toc-text">解析文件流(解协议和解封装)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建各个轨道的解码器-分流"><span class="toc-text">创建各个轨道的解码器(分流)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用对应的解码器解码各个轨道-解码"><span class="toc-text">使用对应的解码器解码各个轨道(解码)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#视频流解析"><span class="toc-text">视频流解析</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#视频解码"><span class="toc-text">视频解码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-解码速度问题"><span class="toc-text">1.解码速度问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-内存泄漏问题"><span class="toc-text">2.内存泄漏问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-AVPacket帧类型问题"><span class="toc-text">3.AVPacket帧类型问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#PTS同步"><span class="toc-text">PTS同步</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#其他"><span class="toc-text">其他</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-FFmpeg入门-视频播放" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">FFmpeg入门 - 视频播放</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.09.04</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起.</p>
+<h1 id="音视频编解码基础"><a href="#音视频编解码基础" class="headerlink" title="音视频编解码基础"></a>音视频编解码基础</h1><p>我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。</p>
+<p>这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道等.<br>有些格式限制比较多,例如AVI视频轨道只能有一条,音频轨道也只能有一条.<br>而有些格式则比较灵活,例如OGG视频的视频、音频轨道都能有多条.</p>
+<p>像音频、视频这种数据量很大的轨道,上面的数据实际上都是通过压缩的。<br>视频轨道上可能是H264、H256这样压缩过的图像数据,通过解码可以还原成YUV、RGB等格式的图像数据。<br>音频轨道上可能是MP3、AAC这样压缩过的的音频数据,通过解码可以还原成PCM的音频裸流。</p>
+<img src="http://www.plantuml.com/plantuml/svg/ut8eBaaiAYdDpU62iBAAy_EughaKW43fnVAsbuicFflM_cJtDYKhY22In8kzArusJWPAA7aOcPayRcW4KgRFrtO-Mx3dwPx-vxDQdlPrFz-pykNypK35IbRHIf6XOK1LGUvEA8fcxtlQtAyKMwkZWB00eWTXWQEZCr2dRu0nFkC3d7tXSb1HL5EVhft-TETKcAbAIc2PMgvQBeVKl1Imnq4CK5W00000">
+
+<p>实际上使用ffmpeg去播放视频也就是根据文件的格式一步步还原出图像数据交给显示设备显示、还原出音频数据交给音频设备播放:</p>
+<img src="http://www.plantuml.com/plantuml/svg/bPBDIiD054RtynIpL9aMYLMwyaMaYrWdpM2J3kbO474HnLQGMfGgxXfi8Ij3nNyfVHfdaho5qqngQuEAY-GcvDvpxXU6wWuZZDHioDkTA0Zu_H4y04ihop2NsuJYQYZQ0R1h34E7L4m6JCOeSfX5aK6gE9_F0splm4a3E0I0pcX3D-gV26_4Hnt5bBojoEyhJUbRGrPZxJQGHGlomXLMHtg3BAg80IUqXCBVdZzUk_oqAPvSo4nipsyIZgvbO-YvipNYtaDyUr62gifFSYwxWwwNfNyD_HBolCVzCpNvHOSfNacdahZL4jvBLaBBrZnSpgVJmPWFMkBoJdJ70E1g7V-HAVARIIPLVyfaQXi596_hoP_L_XrDqQVHr1i_xeIFNjQrlzSeQAiK9LMJfwQoNImM5vJ9ARiPXuFtD77o32OjnFW4">
+
+<h1 id="ffmpeg简单入门"><a href="#ffmpeg简单入门" class="headerlink" title="ffmpeg简单入门"></a>ffmpeg简单入门</h1><p>了解了视频的播放流程之后我们来做一个简单的播放器实际入门一下ffmpeg。由于这篇博客是入门教程,这个播放器功能会进行简化:</p>
+<ol>
+<li>使用ffmpeg 4.4.2版本 - 4.x的版本被使用的比较广泛,而且最新的5.x版本资料比较少</li>
+<li>只解码一个视频轨道的画面进行播放 - 不需要考虑音视频同步的问题</li>
+<li>使用SDL2在主线程解码 - 不需要考虑多线程同步问题</li>
+<li>使用源码+Makefile构建 - 在MAC和Ubuntu上验证过,Windows的同学需要自己创建下vs的工程了</li>
+</ol>
+<p>使用ffmpeg去解码大概有下面的几个步骤和关键函数,大家可以和上面的流程图对应一下:</p>
+<h3 id="解析文件流-解协议和解封装"><a href="#解析文件流-解协议和解封装" class="headerlink" title="解析文件流(解协议和解封装)"></a>解析文件流(解协议和解封装)</h3><ol>
+<li>avformat_open_input : 可以打开File、RTMP等协议的数据流,并且读取文件头解析出视频信息,如解析出各个轨道和时长等</li>
+<li>avformat_find_stream_info : 对于没有文件头的格式如MPEG或者H264裸流等,可以通过这个函数解析前几帧得到视频的信息</li>
+</ol>
+<h3 id="创建各个轨道的解码器-分流"><a href="#创建各个轨道的解码器-分流" class="headerlink" title="创建各个轨道的解码器(分流)"></a>创建各个轨道的解码器(分流)</h3><ol>
+<li>avcodec_find_decoder: 查找对应的解码器</li>
+<li>avcodec_alloc_context3: 创建解码器上下文</li>
+<li>avcodec_parameters_to_context: 设置解码所需要的参数</li>
+<li>avcodec_open2: 打开解码器</li>
+</ol>
+<h3 id="使用对应的解码器解码各个轨道-解码"><a href="#使用对应的解码器解码各个轨道-解码" class="headerlink" title="使用对应的解码器解码各个轨道(解码)"></a>使用对应的解码器解码各个轨道(解码)</h3><ol>
+<li>av_read_frame: 从视频流读取视频数据包</li>
+<li>avcodec_send_packet: 发送视频数据包给解码器解码</li>
+<li>avcodec_receive_frame: 从解码器读取解码后的帧数据</li>
+</ol>
+<p>为了几种精力在音视频部分，我拆分出了专门进行解码的VideoDecoder类和专门进行画面显示的SdlWindow类,大家主要关注VideoDecoder部分即可。</p>
+<h1 id="视频流解析"><a href="#视频流解析" class="headerlink" title="视频流解析"></a>视频流解析</h1><p>由于实际解码前的解析文件流和创建解码器代码比较固定化,我直接将代码贴出来,大家可能跟着注释看下每个步骤的含义:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> VideoDecoder::Load(<span class="keyword">const</span> <span class="built_in">string</span>&amp; url) &#123;</span><br><span class="line">    mUrl = url;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 打开文件流读取文件头解析出视频信息如轨道信息、时长等</span></span><br><span class="line">    <span class="comment">// mFormatContext初始化为NULL,如果打开成功,它会被设置成非NULL的值,在不需要的时候可以通过avcodec_free_context释放。</span></span><br><span class="line">    <span class="comment">// 这个方法实际可以打开多种来源的数据,url可以是本地路径、rtmp地址等</span></span><br><span class="line">    <span class="comment">// 在不需要的时候通过avformat_close_input关闭文件流</span></span><br><span class="line">    <span class="keyword">if</span>(avformat_open_input(&amp;mFormatContext, url.c_str(), <span class="literal">NULL</span>, <span class="literal">NULL</span>) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"open "</span> &lt;&lt; url &lt;&lt; <span class="string">" failed"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 对于没有文件头的格式如MPEG或者H264裸流等,可以通过这个函数解析前几帧得到视频的信息</span></span><br><span class="line">    <span class="keyword">if</span>(avformat_find_stream_info(mFormatContext, <span class="literal">NULL</span>) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"can't find stream info in "</span> &lt;&lt; url &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查找视频轨道,实际上我们也可以通过遍历AVFormatContext的streams得到,代码如下:</span></span><br><span class="line">    <span class="comment">// for(int i = 0 ; i &lt; mFormatContext-&gt;nb_streams ; i++) &#123;</span></span><br><span class="line">    <span class="comment">//     if(mFormatContext-&gt;streams[i]-&gt;codecpar-&gt;codec_type == AVMEDIA_TYPE_VIDEO) &#123;</span></span><br><span class="line">    <span class="comment">//         mVideoStreamIndex = i;</span></span><br><span class="line">    <span class="comment">//         break;</span></span><br><span class="line">    <span class="comment">//     &#125;</span></span><br><span class="line">    <span class="comment">// &#125;</span></span><br><span class="line">    mVideoStreamIndex = av_find_best_stream(mFormatContext, AVMEDIA_TYPE_VIDEO, <span class="number">-1</span>, <span class="number">-1</span>, <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(mVideoStreamIndex &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"can't find video stream in "</span> &lt;&lt; url &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取视频轨道的解码器相关参数</span></span><br><span class="line">    AVCodecParameters* codecParam = mFormatContext-&gt;streams[mVideoStreamIndex]-&gt;codecpar;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"codec id = "</span> &lt;&lt; codecParam-&gt;codec_id &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 通过codec_id获取到对应的解码器</span></span><br><span class="line">    <span class="comment">// codec_id是enum AVCodecID类型,我们可以通过它知道视频流的格式,如AV_CODEC_ID_H264(0x1B)、AV_CODEC_ID_H265(0xAD)等</span></span><br><span class="line">    <span class="comment">// 当然如果是音频轨道的话它的值可能是AV_CODEC_ID_MP3(0x15001)、AV_CODEC_ID_AAC(0x15002)等</span></span><br><span class="line">    AVCodec* codec = avcodec_find_decoder(codecParam-&gt;codec_id);</span><br><span class="line">    <span class="keyword">if</span>(codec == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"can't find codec"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建解码器上下文,解码器的一些环境就保存在这里</span></span><br><span class="line">    <span class="comment">// 在不需要的时候可以通过avcodec_free_context释放</span></span><br><span class="line">    mCodecContext = avcodec_alloc_context3(codec);</span><br><span class="line">    <span class="keyword">if</span> (mCodecContext == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"can't alloc codec context"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 设置解码器参数</span></span><br><span class="line">    <span class="keyword">if</span>(avcodec_parameters_to_context(mCodecContext, codecParam) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"can't set codec params"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 打开解码器,从源码里面看到在avcodec_free_context释放解码器上下文的时候会close,</span></span><br><span class="line">    <span class="comment">// 所以我们可以不用自己调用avcodec_close去关闭</span></span><br><span class="line">    <span class="keyword">if</span>(avcodec_open2(mCodecContext, codec, <span class="literal">NULL</span>) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"can't open codec"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建创建AVPacket接收数据包</span></span><br><span class="line">    <span class="comment">// 无论是压缩的音频流还是压缩的视频流,都是由一个个数据包组成的</span></span><br><span class="line">    <span class="comment">// 解码的过程实际就是从文件流中读取一个个数据包传给解码器去解码</span></span><br><span class="line">    <span class="comment">// 对于视频，它通常应包含一个压缩帧</span></span><br><span class="line">    <span class="comment">// 对于音频，它可能是一段压缩音频、包含多个压缩帧</span></span><br><span class="line">    <span class="comment">// 在不需要的时候可以通过av_packet_free释放</span></span><br><span class="line">    mPacket = av_packet_alloc();</span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> == mPacket) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"can't alloc packet"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建AVFrame接收解码器解码出来的原始数据(视频的画面帧或者音频的PCM裸流)</span></span><br><span class="line">    <span class="comment">// 在不需要的时候可以通过av_frame_free释放</span></span><br><span class="line">    mFrame = av_frame_alloc();</span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> == mFrame) &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"can't alloc frame"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可以从解码器上下文获取视频的尺寸</span></span><br><span class="line">    <span class="comment">// 这个尺寸实际上是从AVCodecParameters里面复制过去的,所以直接用codecParam-&gt;width、codecParam-&gt;height也可以</span></span><br><span class="line">    mVideoWidth = mCodecContext-&gt;width;</span><br><span class="line">    mVideoHegiht =  mCodecContext-&gt;height;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可以从解码器上下文获取视频的像素格式</span></span><br><span class="line">    <span class="comment">// 这个像素格式实际上是从AVCodecParameters里面复制过去的,所以直接用codecParam-&gt;format也可以</span></span><br><span class="line">    mPixelFormat = mCodecContext-&gt;pix_fmt;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们使用VideoDecoder::Load打开视频流并准备好解码器。之后就是解码的过程,解码完成之后再调用VideoDecoder::Release去释放资源:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> VideoDecoder::Release() &#123;</span><br><span class="line">    mUrl = <span class="string">""</span>;</span><br><span class="line">    mVideoStreamIndex = <span class="number">-1</span>;</span><br><span class="line">    mVideoWidth = <span class="number">-1</span>;</span><br><span class="line">    mVideoHegiht = <span class="number">-1</span>;</span><br><span class="line">    mDecodecStart = <span class="number">-1</span>;</span><br><span class="line">    mLastDecodecTime = <span class="number">-1</span>;</span><br><span class="line">    mPixelFormat = AV_PIX_FMT_NONE;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> != mFormatContext) &#123;</span><br><span class="line">        avformat_close_input(&amp;mFormatContext);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="literal">NULL</span> != mCodecContext) &#123;</span><br><span class="line">        avcodec_free_context(&amp;mCodecContext);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> != mPacket) &#123;</span><br><span class="line">        av_packet_free(&amp;mPacket);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> != mFrame) &#123;</span><br><span class="line">        av_frame_free(&amp;mFrame);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="视频解码"><a href="#视频解码" class="headerlink" title="视频解码"></a>视频解码</h1><p>解码器创建完成之后就可以开始解码了:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">AVFrame* VideoDecoder::NextFrame() &#123;</span><br><span class="line">    <span class="keyword">if</span>(av_read_frame(mFormatContext, mPacket) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    AVFrame* frame = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">if</span>(mPacket-&gt;stream_index == mVideoStreamIndex</span><br><span class="line">        &amp;&amp; avcodec_send_packet(mCodecContext, mPacket) == <span class="number">0</span></span><br><span class="line">        &amp;&amp; avcodec_receive_frame(mCodecContext, mFrame) == <span class="number">0</span>) &#123;</span><br><span class="line">        frame = mFrame;</span><br><span class="line"></span><br><span class="line">        ... <span class="comment">//1.解码速度问题</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    av_packet_unref(mPacket); <span class="comment">// 2.内存泄漏问题</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(frame == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> NextFrame(); <span class="comment">// 3.AVPacket帧类型问题</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> frame;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它的核心逻辑其实就是下面这三步:</p>
+<ol>
+<li>使用av_read_frame 从视频流读取视频数据包</li>
+<li>使用avcodec_send_packet 发送视频数据包给解码器解码</li>
+<li>使用avcodec_receive_frame 从解码器读取解码后的帧数据</li>
+</ol>
+<p>除了关键的三个步骤之外还有些细节需要注意:</p>
+<h3 id="1-解码速度问题"><a href="#1-解码速度问题" class="headerlink" title="1.解码速度问题"></a>1.解码速度问题</h3><p>由于解码的速度比较快,我们可以等到需要播放的时候再去解码下一帧。这样可以降低cpu的占用,也能减少绘制线程堆积画面队列造成内存占用过高.</p>
+<p>由于这个demo没有单独的解码线程,在渲染线程进行解码,sdl渲染本身就耗时,所以就算不延迟也会发现画面是正常速度播放的.可以将绘制的代码注释掉,然后在该方法内加上打印,会发现一下子就解码完整个视频了。</p>
+<h3 id="2-内存泄漏问题"><a href="#2-内存泄漏问题" class="headerlink" title="2.内存泄漏问题"></a>2.内存泄漏问题</h3><p>解码完成之后压缩数据包的数据就不需要了,需要使用av_packet_unref将AVPacket释放。</p>
+<p>其实AVFrame在使用完成之后也需要使用av_frame_unref去释放AVFrame的像画面素数据,但是在avcodec_receive_frame内会调用av_frame_unref将上一帧的内存清除,而最后一帧的数据也会在Release的时候被av_frame_free清除,所以我们不需要手动调用av_frame_unref.</p>
+<h3 id="3-AVPacket帧类型问题"><a href="#3-AVPacket帧类型问题" class="headerlink" title="3.AVPacket帧类型问题"></a>3.AVPacket帧类型问题</h3><p>由于视频压缩帧存在i帧、b帧、p帧这些类型,并不是每种帧都可以直接解码出原始画面,b帧是双向差别帧，也就是说b帧记录的是本帧与前后帧的差别,还需要后面的帧才能解码.</p>
+<p>如果这一帧AVPacket没有解码出数据来的话,就递归调用NextFrame解码下一帧,直到解出下一帧原生画面来</p>
+<h2 id="PTS同步"><a href="#PTS同步" class="headerlink" title="PTS同步"></a>PTS同步</h2><p>AVFrame有个pts的成员变量,代表了画面在什么时候应该显示.由于视频的解码速度通常会很快,例如一个1分钟的视频可能一秒钟就解码完成了.所以我们需要计算出这一帧应该在什么时候播放,如果时间还没有到就添加延迟。</p>
+<p>有些视频流不带pts数据,按30fps将每帧间隔统一成32ms:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(AV_NOPTS_VALUE == mFrame-&gt;pts) &#123;</span><br><span class="line">    <span class="keyword">int64_t</span> sleep = <span class="number">32000</span> - (av_gettime() - mLastDecodecTime);</span><br><span class="line">    <span class="keyword">if</span>(mLastDecodecTime != <span class="number">-1</span> &amp;&amp; sleep &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        av_usleep(sleep);</span><br><span class="line">    &#125;</span><br><span class="line">    mLastDecodecTime = av_gettime();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果视频流带pts数据,我们需要计算这个pts具体是视频的第几微秒.</p>
+<p>pts的单位可以通过AVFormatContext找到对应的AVStream,然后再获取AVStream的time_base得到:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AVRational timebase = mFormatContext-&gt;streams[mPacket-&gt;stream_index]-&gt;time_base;</span><br></pre></td></tr></table></figure>
+
+<p>AVRational是个分数,代表几分之几秒:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Rational number (pair of numerator and denominator).</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">AVRational</span>&#123;</span></span><br><span class="line">    <span class="keyword">int</span> num; <span class="comment">///&lt; Numerator</span></span><br><span class="line">    <span class="keyword">int</span> den; <span class="comment">///&lt; Denominator</span></span><br><span class="line">&#125; AVRational;</span><br></pre></td></tr></table></figure>
+
+<p>我们用timebase.num * 1.0f / timebase.den计算出这个分数的值,然后乘以1000等到ms,再乘以1000得到us.后半部分的计算其实可以放到VideoDecoder::Load里面保存到成员变量,但是为了讲解方便就放在这里了:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int64_t</span> pts = mFrame-&gt;pts * <span class="number">1000</span> * <span class="number">1000</span> * timebase.num * <span class="number">1.0f</span> / timebase.den;</span><br></pre></td></tr></table></figure>
+
+<p>这个pts都是以视频开头开始计算的,所以我们需要先保存第一帧的时间戳,然后再去计算当前播到第几微秒.完整代码如下:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(AV_NOPTS_VALUE == mFrame-&gt;pts) &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    AVRational timebase = mFormatContext-&gt;streams[mPacket-&gt;stream_index]-&gt;time_base;</span><br><span class="line">    <span class="keyword">int64_t</span> pts = mFrame-&gt;pts * <span class="number">1000</span> * <span class="number">1000</span> * timebase.num * <span class="number">1.0f</span> / timebase.den;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果是第一帧就记录开始时间</span></span><br><span class="line">    <span class="keyword">if</span>(mFrame-&gt;pts == <span class="number">0</span>) &#123;</span><br><span class="line">        mDecodecStart = av_gettime() - pts;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当前时间减去开始时间,得到当前播放到了视频的第几微秒</span></span><br><span class="line">    <span class="keyword">int64_t</span> now = av_gettime() - mDecodecStart;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果这一帧的播放时间还没有到就等到播放时间到了再返回</span></span><br><span class="line">    <span class="keyword">if</span>(pts &gt; now) &#123;</span><br><span class="line">        av_usleep(pts - now);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h1><p>完整的<a href="https://github.com/bluesky466/FFmpegDemo" target="_blank" rel="noopener">Demo</a>已经放到Github上,图像渲染的部分在SdlWindow类中,它使用SDL2去做ui绘制,由于和音视频编解码没有关系就不展开讲了.视频解码部分在VideoDecoder类中.</p>
+<p>编译的时候需要修改Makefile里面ffmpeg和sdl2的路径,然后make编译完成之后用下面命令即可播放视频:</p>
+<blockquote>
+<p>demo -p 视频路径播放视频</p>
+</blockquote>
+<p>PS: </p>
+<p>某些函数会有数字后缀,如avcodec_alloc_context3、avcodec_open2等，实际上这个数字后缀是这个函数的第几个版本的意思,从源码的doc/APIchanges可以看出来:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2011-07-10 - 3602ad7 / 0b950fe - lavc 53.8.0</span><br><span class="line">  Add avcodec_open2(), deprecate avcodec_open().</span><br><span class="line">  NOTE: this was backported to 0.7</span><br><span class="line"></span><br><span class="line">  Add avcodec_alloc_context3. Deprecate avcodec_alloc_context() and</span><br><span class="line">  avcodec_alloc_context2().</span><br></pre></td></tr></table></figure>
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
