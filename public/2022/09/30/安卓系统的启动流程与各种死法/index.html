@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓系统的启动流程与各种死法 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="最近遇到了蛮多framework挂掉引发的问题,这里做个总结分享.在看具体bug之前先简单了解下安卓系统的启动流程可以帮助我们定位和分析问题: 系统启动流程开机的流程图如下:   大概的步骤为:  启动BootLoader: 开机引导可以初始化硬件设备、建立内存空间映射图等,然后拉起LinuxKerne 启动LinuxKernel: 设置缓存、加载驱动等,然后启动init进程 init进程根据in">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓系统的启动流程与各种死法">
+<meta property="og:url" content="http://139.199.4.241/2022/09/30/安卓系统的启动流程与各种死法/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="最近遇到了蛮多framework挂掉引发的问题,这里做个总结分享.在看具体bug之前先简单了解下安卓系统的启动流程可以帮助我们定位和分析问题: 系统启动流程开机的流程图如下:   大概的步骤为:  启动BootLoader: 开机引导可以初始化硬件设备、建立内存空间映射图等,然后拉起LinuxKerne 启动LinuxKernel: 设置缓存、加载驱动等,然后启动init进程 init进程根据in">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/TOz13e9034NtdA8du033IhTYOaACwmRAs2WTqncCU7eP1mCQN3Nz__N_r0VKa9cjSw5qs90McIbP-WViI8Mkuyh2eSW0MgUNSG2Ovs1Te28jrU03THNfFHulCJZiguy2Q95bqaz_z4tI5nbHJGL7dgt5KGHAxAK-f_PL8C_pv94qq95QMckVg9dv8emVF-IQEXIqiUl7xRN5cjehouhxZfw3VN2t5m00">
+<meta property="og:updated_time" content="2022-09-30T14:06:19.264Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓系统的启动流程与各种死法">
+<meta name="twitter:description" content="最近遇到了蛮多framework挂掉引发的问题,这里做个总结分享.在看具体bug之前先简单了解下安卓系统的启动流程可以帮助我们定位和分析问题: 系统启动流程开机的流程图如下:   大概的步骤为:  启动BootLoader: 开机引导可以初始化硬件设备、建立内存空间映射图等,然后拉起LinuxKerne 启动LinuxKernel: 设置缓存、加载驱动等,然后启动init进程 init进程根据in">
+<meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/TOz13e9034NtdA8du033IhTYOaACwmRAs2WTqncCU7eP1mCQN3Nz__N_r0VKa9cjSw5qs90McIbP-WViI8Mkuyh2eSW0MgUNSG2Ovs1Te28jrU03THNfFHulCJZiguy2Q95bqaz_z4tI5nbHJGL7dgt5KGHAxAK-f_PL8C_pv94qq95QMckVg9dv8emVF-IQEXIqiUl7xRN5cjehouhxZfw3VN2t5m00">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#系统启动流程"><span class="toc-text">系统启动流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#系统奔溃重启流程"><span class="toc-text">系统奔溃重启流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#系统开机之后死掉"><span class="toc-text">系统开机之后死掉</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#死法一-看门狗干掉"><span class="toc-text">死法一: 看门狗干掉</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#死法二-出现未捕获异常被干掉"><span class="toc-text">死法二: 出现未捕获异常被干掉</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#死法三-系统关键服务奔溃导致系统重启"><span class="toc-text">死法三: 系统关键服务奔溃导致系统重启</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#系统开机死掉导致开不了机"><span class="toc-text">系统开机死掉导致开不了机</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#死法四-native奔溃导致卡logo"><span class="toc-text">死法四: native奔溃导致卡logo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#死法五-系统应用签名错误导致系统崩溃开不了机"><span class="toc-text">死法五: 系统应用签名错误导致系统崩溃开不了机</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓系统的启动流程与各种死法" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓系统的启动流程与各种死法</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.09.30</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近遇到了蛮多framework挂掉引发的问题,这里做个总结分享.在看具体bug之前先简单了解下安卓系统的启动流程可以帮助我们定位和分析问题:</p>
+<h1 id="系统启动流程"><a href="#系统启动流程" class="headerlink" title="系统启动流程"></a>系统启动流程</h1><p>开机的流程图如下:</p>
+<img src="http://www.plantuml.com/plantuml/svg/TOz13e9034NtdA8du033IhTYOaACwmRAs2WTqncCU7eP1mCQN3Nz__N_r0VKa9cjSw5qs90McIbP-WViI8Mkuyh2eSW0MgUNSG2Ovs1Te28jrU03THNfFHulCJZiguy2Q95bqaz_z4tI5nbHJGL7dgt5KGHAxAK-f_PL8C_pv94qq95QMckVg9dv8emVF-IQEXIqiUl7xRN5cjehouhxZfw3VN2t5m00">
+
+<p>大概的步骤为:</p>
+<ol>
+<li>启动BootLoader: 开机引导可以初始化硬件设备、建立内存空间映射图等,然后拉起LinuxKerne</li>
+<li>启动LinuxKernel: 设置缓存、加载驱动等,然后启动init进程</li>
+<li>init进程根据init.rc进行初始化: init.rc可以看做一个脚本,可以在里面修改文件权限、设置属性、拉起进程等,zygote、servicemanager、surfaceflinger这些系统进程就是它拉起来的</li>
+<li>启动zygote: zygote启动的时候会孵化system_server进程</li>
+<li>启动system_server: system_server会启动PMS、WMS、AMS等系统服务</li>
+<li>启动AMS: AMS启动的时候会去启动一些ui相关的进程如SystemUi、Launcher等</li>
+</ol>
+<h1 id="系统奔溃重启流程"><a href="#系统奔溃重启流程" class="headerlink" title="系统奔溃重启流程"></a>系统奔溃重启流程</h1><p>再来分析下当system_server挂掉的时候的重启流程:</p>
+<ol>
+<li>由于java层的进程都是zygote fork出来的,它会监听子进程退出的信号,然后判断如果是system_server退出则kill掉自己</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">// https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/jni/com_android_internal_os_Zygote.cpp?q=com_android_internal_os_Zygote.cpp</span><br><span class="line"></span><br><span class="line">// This signal handler is for zygote mode, since the zygote must reap its children</span><br><span class="line"></span><br><span class="line">static jint com_android_internal_os_Zygote_nativeForkSystemServer(</span><br><span class="line">        JNIEnv* env, jclass, uid_t uid, gid_t gid, jintArray gids,</span><br><span class="line">        jint runtime_flags, jobjectArray rlimits, jlong permitted_capabilities,</span><br><span class="line">        jlong effective_capabilities) &#123;</span><br><span class="line">  ...</span><br><span class="line">  // 保存system_server的pid</span><br><span class="line">  gSystemServerPid = pid;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static void SigChldHandler(int /*signal_number*/, siginfo_t* info, void* /*ucontext*/) &#123;</span><br><span class="line">    pid_t pid;</span><br><span class="line">    ...</span><br><span class="line">    while ((pid = waitpid(-1, &amp;status, WNOHANG)) &gt; 0) &#123;</span><br><span class="line">        ...</span><br><span class="line">        // 如果system_server死掉了就把自己干掉</span><br><span class="line">        if (pid == gSystemServerPid) &#123;</span><br><span class="line">            async_safe_format_log(ANDROID_LOG_ERROR, LOG_TAG,</span><br><span class="line">                                  &quot;Exit zygote because system server (pid %d) has terminated&quot;, pid);</span><br><span class="line">            kill(getpid(), SIGKILL);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>zygote死掉之后init进程会重新把它拉起来</li>
+</ol>
+<p>因为zygote的rc文件里面配置了在zygote重启的时候会重新启动audioserver、cameraserver等进程,所以他们也会重启</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">service zygote /system/bin/app_process64 -Xzygote /system/bin --zygote --start-system-server --socket-name=zygote</span><br><span class="line">    class main</span><br><span class="line">    priority -20</span><br><span class="line">    user root</span><br><span class="line">    group root readproc reserved_disk</span><br><span class="line">    socket zygote stream 660 root system</span><br><span class="line">    socket usap_pool_primary stream 660 root system</span><br><span class="line">    onrestart exec_background - system system -- /system/bin/vdc volume abort_fuse</span><br><span class="line">    onrestart write /sys/power/state on</span><br><span class="line">    onrestart restart audioserver</span><br><span class="line">    onrestart restart cameraserver</span><br><span class="line">    onrestart restart media</span><br><span class="line">    onrestart restart netd</span><br><span class="line">    onrestart restart wificond</span><br><span class="line">    task_profiles ProcessCapacityHigh MaxPerformance</span><br></pre></td></tr></table></figure>
+
+<p>然后zygote启动的时候又会重新启动system_server进程.接着就回到了正常开机的流程:PMS、WMS、AMS这些系统服务和SystemUi、Launcher被启动</p>
+<h1 id="系统开机之后死掉"><a href="#系统开机之后死掉" class="headerlink" title="系统开机之后死掉"></a>系统开机之后死掉</h1><h2 id="死法一-看门狗干掉"><a href="#死法一-看门狗干掉" class="headerlink" title="死法一: 看门狗干掉"></a>死法一: 看门狗干掉</h2><p>问题: 我们的某个应用打不开</p>
+<p>直接原因: 从anr的trace定位到该应用启动的时候会调用嵌入式组提供的某个so库,调用里面的某个方法卡死造成anr。</p>
+<p>本来到这里锅应该就转给底层去看了,但是底层说他也看不出具体原因,希望我们协助分析下.</p>
+<p>一通搜索之后在发现anr里面有系统的trace文件:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// 这里是trace文件首行,意味着system_server出现卡死所以打印的堆栈</span><br><span class="line">----- pid 4129 at 2021-11-04 19:08:03 -----</span><br><span class="line">Cmd line: system_server</span><br><span class="line">Build fingerprint: &apos;ViewSonic/IFP8650-5/IFP8650-5:11.0.0/20220907.130307/release-keys&apos;</span><br><span class="line">ABI: &apos;arm64&apos;</span><br><span class="line">Build type: optimized</span><br><span class="line">Zygote loaded classes=21210 post zygote classes=3385</span><br><span class="line">Dumping registered class loaders</span><br><span class="line">#0 dalvik.system.PathClassLoader: [], parent #1</span><br><span class="line">#1 java.lang.BootClassLoader: [], no parent</span><br></pre></td></tr></table></figure>
+
+<p>我还是第一次在anr目录下见到system_server卡死的堆栈,真是涨见识了。</p>
+<p>既然看到堆栈文件了证明system_server挂过然后自动重启了,所以我们在日志文件里找下19:08:03附件的日志看看,能看到system_server由于StorageManagerService阻塞被看门狗干掉了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">11-04 19:08:10.436312  4129  4154 W Watchdog: *** WATCHDOG KILLING SYSTEM PROCESS: Blocked in monitor com.android.server.StorageManagerService on foreground thread (android.fg)</span><br><span class="line">11-04 19:08:10.436985  4129  4154 W Watchdog: android.fg annotated stack trace:</span><br><span class="line">11-04 19:08:10.437073  4129  4154 W Watchdog:     at android.os.MessageQueue.nativePollOnce(Native Method)</span><br><span class="line">11-04 19:08:10.437120  4129  4154 W Watchdog:     at android.os.MessageQueue.next(MessageQueue.java:335)</span><br><span class="line">11-04 19:08:10.437161  4129  4154 W Watchdog:     at android.os.Looper.loop(Looper.java:183)</span><br><span class="line">11-04 19:08:10.437202  4129  4154 W Watchdog:     at android.os.HandlerThread.run(HandlerThread.java:67)</span><br><span class="line">11-04 19:08:10.437244  4129  4154 W Watchdog:     at com.android.server.ServiceThread.run(ServiceThread.java:44)</span><br><span class="line">11-04 19:08:10.437272  4129  4154 W Watchdog: *** GOODBYE!</span><br><span class="line">--------- switch to main</span><br><span class="line">11-04 19:08:10.437306  4129  4154 I Process : Sending signal. PID: 4129 SIG: 9</span><br><span class="line">...</span><br><span class="line">11-04 19:08:11.591232  3900  3900 E Zygote  : Exit zygote because system server (pid 4129) has terminated</span><br></pre></td></tr></table></figure>
+
+<p>然后它会自动重启:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">然后framework重启:</span><br><span class="line">11-04 19:08:11.990854 10300 10300 D AndroidRuntime: &gt;&gt;&gt;&gt;&gt;&gt; START com.android.internal.os.ZygoteInit uid 0 &lt;&lt;&lt;&lt;&lt;&lt;</span><br></pre></td></tr></table></figure>
+
+<p>那系统重启了为什么会导致so方法卡死呢?</p>
+<p>从系统哥那了解到so内部实际是和某个由init.rc启动的服务进程做通讯,该进程需要调用system_server的某些方法。</p>
+<p>system_server crash重启,并不会引发这个服务进程重启,也不会通知到这个服务,所以这个服务保存着之前挂掉的system_server的通讯链路,通讯失败然后就出现问题了。</p>
+<h2 id="死法二-出现未捕获异常被干掉"><a href="#死法二-出现未捕获异常被干掉" class="headerlink" title="死法二: 出现未捕获异常被干掉"></a>死法二: 出现未捕获异常被干掉</h2><p>过了几天在另外一个方案上又出现了同样卡死的问题,容易联想到应该也是system_server挂掉了。正常情况下system_server进程号是在1000以内的,用ps命令查看进程号发现它比较大,所以大概率的确是挂过了:</p>
+<blockquote>
+<p>ps -A | grep system_server</p>
+</blockquote>
+<p>其实我们可以直接通过”Exit zygote”关键字查找日志,石锤它是否真的挂过:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; grep -rn &quot;Exit zygote&quot;</span><br><span class="line">./logd/logcat.099:12670:09-19 06:19:39.800634   301   301 E Zygote  : Exit zygote because system server (pid 618) has terminated</span><br></pre></td></tr></table></figure>
+
+<p>从崩溃的时间点开始往上找618进程的日志可以看到他是因为创建IpClient失败崩溃:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">--------- switch to crash</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: *** FATAL EXCEPTION IN SYSTEM PROCESS: WifiHandlerThread</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: java.lang.IllegalStateException: Could not create IpClient</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.android.net.networkstack.NetworkStackClientBase.lambda$makeIpClient$1(NetworkStackClientBase.java:74)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.android.net.networkstack.-$$Lambda$NetworkStackClientBase$vgsHk-RCpPUAYmE-7YTwKKaAuFA.accept(Unknown Source:6)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.android.net.networkstack.NetworkStackClientBase.requestConnector(NetworkStackClientBase.java:119)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.android.net.networkstack.NetworkStackClientBase.makeIpClient(NetworkStackClientBase.java:70)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.android.net.ip.IpClientUtil.makeIpClient(IpClientUtil.java:80)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.server.wifi.FrameworkFacade.makeIpClient(FrameworkFacade.java:202)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.server.wifi.ClientModeImpl.setupClientMode(ClientModeImpl.java:3606)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.server.wifi.ClientModeImpl.access$3600(ClientModeImpl.java:164)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.server.wifi.ClientModeImpl$ConnectModeState.enter(ClientModeImpl.java:3790)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.com.android.internal.util.StateMachine$SmHandler.invokeEnterMethods(StateMachine.java:1037)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.com.android.internal.util.StateMachine$SmHandler.performTransitions(StateMachine.java:879)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.com.android.internal.util.StateMachine$SmHandler.handleMessage(StateMachine.java:819)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:106)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:223)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at android.os.HandlerThread.run(HandlerThread.java:67)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: Caused by: android.os.DeadObjectException</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at android.os.BinderProxy.transactNative(Native Method)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at android.os.BinderProxy.transact(BinderProxy.java:550)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.android.net.INetworkStackConnector$Stub$Proxy.makeIpClient(INetworkStackConnector.java:226)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	at com.android.wifi.x.android.net.networkstack.NetworkStackClientBase.lambda$makeIpClient$1(NetworkStackClientBase.java:72)</span><br><span class="line">09-19 06:19:38.510179   618   700 E AndroidRuntime: 	... 14 more</span><br><span class="line">--------- switch to events</span><br><span class="line">09-19 06:19:38.510843   618   700 I am_crash: [618,0,system_server,-1,android.os.DeadObjectException,Could not create IpClient,BinderProxy.java,-2]</span><br></pre></td></tr></table></figure>
+
+<h2 id="死法三-系统关键服务奔溃导致系统重启"><a href="#死法三-系统关键服务奔溃导致系统重启" class="headerlink" title="死法三: 系统关键服务奔溃导致系统重启"></a>死法三: 系统关键服务奔溃导致系统重启</h2><p>过了一个星期，又又出现了同样的卡死问题。但是这次直接过滤”Exit zygote”关键字找不到信息, 但是看system_server进程号是4677,大概率还是挂过</p>
+<blockquote>
+<p>system         4677   4416 6 02:47:25 ?     00:05:48 system_server</p>
+</blockquote>
+<p>然后再搜索zygote启动的关键字” START com.android.internal.os.ZygoteInit”发现的确系统在中间重启过:</p>
+<blockquote>
+<p>./logd/logcat.028:3181:09-29 02:47:22.978333  4416  4416 D AndroidRuntime: &gt;&gt;&gt;&gt;&gt;&gt; START com.android.internal.os.ZygoteInit uid 0 &lt;&lt;&lt;&lt;&lt;&lt;</p>
+</blockquote>
+<p>去这个时间往上找可以看到一些native的堆栈错误:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">--------- switch to crash</span><br><span class="line">09-29 02:47:21.762310  4403  4403 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***</span><br><span class="line">09-29 02:47:21.762564  4403  4403 F DEBUG   : Build fingerprint: &apos;Droidlogic/t982_ar301/AVS-7500:11/RD2A.211001.002/eng.user5.20220811.094633:user/test-keys&apos;</span><br><span class="line">09-29 02:47:21.762637  4403  4403 F DEBUG   : Revision: &apos;0&apos;</span><br><span class="line">09-29 02:47:21.762742  4403  4403 F DEBUG   : ABI: &apos;arm&apos;</span><br><span class="line">09-29 02:47:21.763405  4403  4403 F DEBUG   : Timestamp: 2022-09-29 02:47:21-0400</span><br><span class="line">09-29 02:47:21.763549  4403  4403 F DEBUG   : pid: 343, tid: 3098, name: composer@2.4-se  &gt;&gt;&gt; /vendor/bin/hw/android.hardware.graphics.composer@2.4-service.droidlogic &lt;&lt;&lt;</span><br><span class="line">09-29 02:47:21.763584  4403  4403 F DEBUG   : uid: 1000</span><br><span class="line">09-29 02:47:21.763614  4403  4403 F DEBUG   : signal 11 (SIGSEGV), code 2 (SEGV_ACCERR), fault addr 0xf26ea000</span><br><span class="line">09-29 02:47:21.763695  4403  4403 F DEBUG   : Cause: [GWP-ASan]: Buffer Overflow, 0 bytes right of a 24-byte allocation at 0xf26e9fe8</span><br><span class="line">09-29 02:47:21.763743  4403  4403 F DEBUG   :     r0  f26e9fe8  r1  0000000c  r2  00000000  r3  00000000</span><br><span class="line">09-29 02:47:21.763774  4403  4403 F DEBUG   :     r4  00000000  r5  0000001a  r6  e87d9088  r7  f0444160</span><br><span class="line">09-29 02:47:21.763803  4403  4403 F DEBUG   :     r8  e87d9080  r9  e87d8ec8  r10 f26e9fe8  r11 f0e3f760</span><br><span class="line">09-29 02:47:21.763836  4403  4403 F DEBUG   :     ip  f0e3db20  sp  e87d8ea0  lr  f0e18db3  pc  f1d9ceca</span><br><span class="line">09-29 02:47:21.776427  4403  4403 F DEBUG   : backtrace:</span><br><span class="line">09-29 02:47:21.776600  4403  4403 F DEBUG   :       #00 pc 00002eca  /vendor/lib/libamgralloc_ext.so (am_gralloc_get_width(native_handle const*)+8) (BuildId: e6b2c270ca2b92162da0e931af324ab6)</span><br><span class="line">09-29 02:47:21.776802  4403  4403 F DEBUG   :       #01 pc 00058daf  /vendor/lib/hw/hwcomposer.amlogic.so (NnProcessor::asyncProcess(std::__1::shared_ptr&lt;DrmFramebuffer&gt;&amp;, std::__1::shared_ptr&lt;DrmFramebuffer&gt;&amp;, int&amp;)+310) (BuildId: 0ed81d2b4576c8a8b13c166d0020f67a)</span><br><span class="line">09-29 02:47:21.776907  4403  4403 F DEBUG   :       #02 pc 0004a82f  /vendor/lib/hw/hwcomposer.amlogic.so (MultiplanesWithDiComposition::runProcessor(MultiplanesWithDiComposition::DisplayPair&amp;, int&amp;, int&amp;)+210) (BuildId: 0ed81d2b4576c8a8b13c166d0020f67a)</span><br><span class="line">09-29 02:47:21.776977  4403  4403 F DEBUG   :       #03 pc 0004d9e1  /vendor/lib/hw/hwcomposer.amlogic.so (MultiplanesWithDiComposition::commit(bool)+976) (BuildId: 0ed81d2b4576c8a8b13c166d0020f67a)</span><br><span class="line">09-29 02:47:21.777048  4403  4403 F DEBUG   :       #04 pc 0003d1bb  /vendor/lib/hw/hwcomposer.amlogic.so (Hwc2Display::presentVideo(int*)+58) (BuildId: 0ed81d2b4576c8a8b13c166d0020f67a)</span><br><span class="line">09-29 02:47:21.777102  4403  4403 F DEBUG   :       #05 pc 0004370f  /vendor/lib/hw/hwcomposer.amlogic.so (VideoTunnelThread::handleGameMode()+154) (BuildId: 0ed81d2b4576c8a8b13c166d0020f67a)</span><br><span class="line">09-29 02:47:21.777154  4403  4403 F DEBUG   :       #06 pc 00043375  /vendor/lib/hw/hwcomposer.amlogic.so (VideoTunnelThread::gameModeThreadMain(void*)+56) (BuildId: 0ed81d2b4576c8a8b13c166d0020f67a)</span><br><span class="line">09-29 02:47:21.777213  4403  4403 F DEBUG   :       #07 pc 000808b3  /apex/com.android.runtime/lib/bionic/libc.so (__pthread_start(void*)+40) (BuildId: 7bc8508bdbcc8163b9a5fbf3443efa72)</span><br><span class="line">09-29 02:47:21.777261  4403  4403 F DEBUG   :       #08 pc 00039d23  /apex/com.android.runtime/lib/bionic/libc.so (__start_thread+30) (BuildId: 7bc8508bdbcc8163b9a5fbf3443efa72)</span><br><span class="line">09-29 02:47:21.777295  4403  4403 F DEBUG   : deallocated by thread 445:</span><br></pre></td></tr></table></figure>
+
+<p>这个堆栈我看们可以看出pid 343这个进程在libamgralloc_ext.so的am_gralloc_get_width方法里面出现了野指针</p>
+<p>然后往下翻一点可以看到一堆的系统服务died:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">09-29 02:47:22.551747   394  3624 E csound  : [HIDLServer]:serviceDied, droid tvserver daemon a client died cookie:2</span><br><span class="line">09-29 02:47:22.551817   394  3624 E csound  : tvserver daemon client:2 died</span><br><span class="line">09-29 02:47:22.551865   394  3624 E csound  : handleServiceDeath, client size:5</span><br><span class="line">09-29 02:47:22.551956   323   411 E SystemControl: systemcontrol daemon client died cookie:1</span><br><span class="line">09-29 02:47:22.637123   493   621 W AudioSystem: AudioFlinger server died!</span><br><span class="line">09-29 02:47:22.079547   393   393 E HwcComposer: executeCommands failed because of Status(EX_TRANSACTION_FAILED): &apos;DEAD_OBJECT: &apos;</span><br><span class="line">09-29 02:47:22.114335  1020  1358 W SurfaceComposerClient: ComposerService remote (surfaceflinger) died [0xf24d2c10]</span><br><span class="line">09-29 02:47:22.450807   323   411 E SystemControl: systemcontrol daemon client died cookie:0</span><br><span class="line">09-29 02:47:22.451031   394  3624 E csound  : [HIDLServer]:serviceDied, droid tvserver daemon a client died cookie:4</span><br><span class="line">09-29 02:47:22.451104   394  3624 E csound  : tvserver daemon client:4 died</span><br><span class="line">09-29 02:47:22.451150   394  3624 E csound  : handleServiceDeath, client size:5</span><br></pre></td></tr></table></figure>
+
+<p>而且上一个system_server(pid 777)最后的打印是为343创建墓碑文件,接着Zygote就重启了,所以大概率是这个系统服务的奔溃引发了整个系统的奔溃:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">09-29 02:47:22.009985   777   996 W NativeCrashListener: Couldn&apos;t find ProcessRecord for pid 343</span><br><span class="line">--------- switch to main</span><br><span class="line">09-29 02:47:22.010605   291   291 E tombstoned: Tombstone written to: /data/tombstones/tombstone_08</span><br><span class="line">--------- switch to system</span><br><span class="line">09-29 02:47:22.017120   777   811 I BootReceiver: Copying /data/tombstones/tombstone_08 to DropBox (SYSTEM_TOMBSTONE)</span><br><span class="line">09-29 02:47:22.018136   777   811 I DropBoxManagerService: add tag=SYSTEM_TOMBSTONE isTagEnabled=true flags=0x2</span><br><span class="line">--------- switch to events</span><br><span class="line">09-29 02:47:22.042284   777   811 I dropbox_file_copy: [/data/tombstones/tombstone_08,65536,SYSTEM_TOMBSTONE]</span><br><span class="line">09-29 02:47:22.047667   777   811 I commit_sys_config_file: [log-files,5]</span><br><span class="line">...</span><br><span class="line">09-29 02:47:22.978333  4416  4416 D AndroidRuntime: &gt;&gt;&gt;&gt;&gt;&gt; START com.android.internal.os.ZygoteInit uid 0 &lt;&lt;&lt;&lt;&lt;&lt;</span><br></pre></td></tr></table></figure>
+
+<p>由于log里面并没有搜索到Zygote exit或者crash的信息,那么有可能是日志被冲掉了</p>
+<p>还有可能是zygote被restart了,我们看这个进程的rc文件可以看他如果他重启的话会重启surfaceflinger:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">service vendor.hwcomposer-2-4 /vendor/bin/hw/android.hardware.graphics.composer@2.4-service.droidlogic</span><br><span class="line">    class hal animation</span><br><span class="line">    user system</span><br><span class="line">    group graphics drmrpc</span><br><span class="line">    capabilities SYS_NICE</span><br><span class="line">    onrestart restart surfaceflinger</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>然后看surfaceflinger的rc文件发现它会重启zygote:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">service surfaceflinger /system/bin/surfaceflinger</span><br><span class="line">	class core animation</span><br><span class="line">	user system</span><br><span class="line">	group graphics drmrpc readproc</span><br><span class="line">	capabilities SYS_NICE</span><br><span class="line">	onrestart restart zygote</span><br><span class="line">	...</span><br></pre></td></tr></table></figure>
+
+<p>所以死因就清晰了</p>
+<ol>
+<li>/vendor/bin/hw/android.hardware.graphics.composer@2.4-service.droidlogic出现野指针crash重启</li>
+<li>/vendor/bin/hw/android.hardware.graphics.composer@2.4-service.droidlogic重启的时候会重启surfaceflinger</li>
+<li>surfaceflinger重启的时候又会重启zygote</li>
+</ol>
+<p><strong>为了以后不再受这个卡死问题的困扰,让系统哥在zygote的rc文件里面配置zygote重启的时候把那个异常的服务也同步重启就可以了。</strong></p>
+<h1 id="系统开机死掉导致开不了机"><a href="#系统开机死掉导致开不了机" class="headerlink" title="系统开机死掉导致开不了机"></a>系统开机死掉导致开不了机</h1><h2 id="死法四-native奔溃导致卡logo"><a href="#死法四-native奔溃导致卡logo" class="headerlink" title="死法四: native奔溃导致卡logo"></a>死法四: native奔溃导致卡logo</h2><p>问题: 升级软件之后开机卡logo开不了机</p>
+<p>出现这个问题首先要分析日志,但是串口直接logcat的话刷的太快不好排查所有些抓日志的小技巧:</p>
+<ol>
+<li>使用重定向把日志导出到文件,例如/storage目录下:</li>
+</ol>
+<blockquote>
+<p>logcat &gt; /storage/log.log</p>
+</blockquote>
+<p>然后就能用busybox vi去编辑查看了</p>
+<ol start="2">
+<li>插入u盘将日志文件导出到u盘(需要root)</li>
+</ol>
+<p>由于开机没有成功,u盘可能还没有挂载上去,需要我们手动挂载。</p>
+<p>首先需要用blkid命令列出所有文件系统,找到u盘(u盘名字就叫PTT)的设备节点为/dev/sda1:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">console:/storage # blkid</span><br><span class="line">/dev/zram0: UUID="12a21a37-1a08-42e6-97e3-90cb1a1ba60a" TYPE="swap"</span><br><span class="line">/dev/mmcblk0p16: TYPE="squashfs"</span><br><span class="line">/dev/mmcblk0p18: TYPE="squashfs"</span><br><span class="line">/dev/mmcblk0p20: UUID="57f8f4bc-abf4-655f-bf67-946fc0f9f25b" TYPE="ext4"</span><br><span class="line">/dev/mmcblk0p32: SEC_TYPE="msdos" UUID="5278-5278" TYPE="vfat"</span><br><span class="line">/dev/mmcblk0p39: UUID="57f8f4bc-abf4-655f-bf67-946fc0f9f25b" TYPE="ext4"</span><br><span class="line">/dev/block/mmcblk0p56: LABEL="/" UUID="5ac835d7-e53a-59f8-a2c4-b8a6967b849e" TYPE="ext4"</span><br><span class="line">/dev/block/mmcblk0p58: LABEL="vendor" UUID="c7f6b4dc-c6f7-59d6-90cf-bc83aed55ec7" TYPE="ext4"</span><br><span class="line">/dev/block/mmcblk0p60: UUID="cf81e7c0-047f-404a-81da-7d188dd0ccc0" TYPE="ext4"</span><br><span class="line">/dev/sda1: LABEL="PTT" UUID="B4BE-1BCC" TYPE="vfat"</span><br></pre></td></tr></table></figure>
+
+<p>然后随便找个地方例如就在/storage,创建一个目录并且将u盘mount过去,接着将日志拷贝过去:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mkdir sda</span><br><span class="line">mount /dev/sda1 sda/</span><br><span class="line">cp /storage/log.log /storage/sda</span><br><span class="line">sync</span><br></pre></td></tr></table></figure>
+
+<p>然后我们就能把u盘拔出来插到我们自己的电脑上分析日志了,从这个日志里面由于zygote还没启动成功,所以前面用的”Exit zygote”关键字是找不到日志的,但是能看到一直在报native层的堆栈。</p>
+<p>创建java虚拟机的时候找不到libaccelerator_base.so触发断言导致系统奔溃:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">09-22 11:34:20.119  2233  2233 I tombstoned: received crash request for pid 3174</span><br><span class="line">09-22 11:34:20.128  3209  3209 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***</span><br><span class="line">09-22 11:34:20.129  3209  3209 F DEBUG   : Build fingerprint: &apos;cvt/mt9950_cn/mt9950_cn:11/RP1A.200720.011/6182:user/release-keys&apos;</span><br><span class="line">09-22 11:34:20.129  3209  3209 F DEBUG   : Revision: &apos;0&apos;</span><br><span class="line">09-22 11:34:20.129  3209  3209 F DEBUG   : ABI: &apos;arm64&apos;</span><br><span class="line">09-22 11:34:20.129  3209  3209 F DEBUG   : Timestamp: 2022-09-22 11:34:20+0800</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   : pid: 3174, tid: 3174, name: main  &gt;&gt;&gt; zygote64 &lt;&lt;&lt;</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   : uid: 0</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   : signal 6 (SIGABRT), code -1 (SI_QUEUE), fault addr --------</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   : Abort message: &apos;Error preloading public library libaccelerator_base.so: dlopen failed: library &quot;libaccelerator_base.so&quot; not found&apos;</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     x0  0000000000000000  x1  0000000000000c66  x2  0000000000000006  x3  0000007fe9f17ef0</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     x4  0000007c1de1e000  x5  0000007c1de1e000  x6  0000007c1de1e000  x7  000000000000168c</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     x8  00000000000000f0  x9  0000007c192b17f8  x10 ffffff80fffffbdf  x11 0000000000000001</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     x12 0000000000000000  x13 0000000000000655  x14 0000007fe9f16d10  x15 00008b1aad54c6e4</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     x16 0000007c1934ac80  x17 0000007c1932bf20  x18 0000007c1d608000  x19 00000000000000ac</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     x20 0000000000000c66  x21 00000000000000b2  x22 0000000000000c66  x23 00000000ffffffff</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     x24 0000007987636000  x25 0000000000000002  x26 0000007987013c07  x27 000000000000002b</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     x28 0000007987638000  x29 0000007fe9f17f70</span><br><span class="line">09-22 11:34:20.130  3209  3209 F DEBUG   :     lr  0000007c192df0c4  sp  0000007fe9f17ed0  pc  0000007c192df0f4  pst 0000000000000000</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   : backtrace:</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #00 pc 000000000004e0f4  /apex/com.android.runtime/lib64/bionic/libc.so (abort+180) (BuildId: c78cdff5b820a550771130d6bde95081)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #01 pc 0000000000565bc8  /apex/com.android.art/lib64/libart.so (art::Runtime::Abort(char const*)+2320) (BuildId: a0e45eb7480266d293a7de84fc1c7a3c)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #02 pc 0000000000013ab0  /system/lib64/libbase.so (android::base::SetAborter(std::__1::function&lt;void (char const*)&gt;&amp;&amp;)::$_3::__invoke(char const*)+80) (BuildId: 6d398535cd6d9315930f056432520bb9)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #03 pc 0000000000006ec8  /system/lib64/liblog.so (__android_log_assert+336) (BuildId: c92329feece7a2d7fa4d9fb6acc815f9)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #04 pc 000000000000ebcc  /apex/com.android.art/lib64/libnativeloader.so (android::nativeloader::LibraryNamespaces::Initialize()+324) (BuildId: 4e6450569b3bdee211e32baf7d0dfba7)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #05 pc 000000000000e044  /apex/com.android.art/lib64/libnativeloader.so (InitializeNativeLoader+36) (BuildId: 4e6450569b3bdee211e32baf7d0dfba7)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #06 pc 000000000039066c  /apex/com.android.art/lib64/libart.so (JNI_CreateJavaVM+732) (BuildId: a0e45eb7480266d293a7de84fc1c7a3c)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #07 pc 00000000000a023c  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::startVm(_JavaVM**, _JNIEnv**, bool, bool)+9060) (BuildId: 88ac6961382cb34f5fac714acaf48103)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #08 pc 00000000000a0890  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector&lt;android::String8&gt; const&amp;, bool)+464) (BuildId: 88ac6961382cb34f5fac714acaf48103)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #09 pc 0000000000003570  /system/bin/app_process64 (main+1320) (BuildId: d4686d3f8282764488eb9ca7cc518583)</span><br><span class="line">09-22 11:34:20.151  3209  3209 F DEBUG   :       #10 pc 00000000000495b4  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+108) (BuildId: c78cdff5b820a550771130d6bde95081)</span><br><span class="line">09-22 11:34:20.192  3175  3175 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 3175 (main), pid 3175 (main)</span><br></pre></td></tr></table></figure>
+
+<p>像这种native的奔溃,如果logcat里面定位不到根因的话可以分析/data/tombstones下的墓碑文件,里面的信息比较全:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">console:/data/tombstones # ls</span><br><span class="line">tombstone_00  tombstone_07  tombstone_14  tombstone_21  tombstone_28</span><br><span class="line">tombstone_01  tombstone_08  tombstone_15  tombstone_22  tombstone_29</span><br><span class="line">tombstone_02  tombstone_09  tombstone_16  tombstone_23  tombstone_30</span><br><span class="line">tombstone_03  tombstone_10  tombstone_17  tombstone_24  tombstone_31</span><br><span class="line">tombstone_04  tombstone_11  tombstone_18  tombstone_25</span><br><span class="line">tombstone_05  tombstone_12  tombstone_19  tombstone_26</span><br><span class="line">tombstone_06  tombstone_13  tombstone_20  tombstone_27</span><br></pre></td></tr></table></figure>
+
+<h2 id="死法五-系统应用签名错误导致系统崩溃开不了机"><a href="#死法五-系统应用签名错误导致系统崩溃开不了机" class="headerlink" title="死法五: 系统应用签名错误导致系统崩溃开不了机"></a>死法五: 系统应用签名错误导致系统崩溃开不了机</h2><p>有时候我们在手动替换系统应用的时候会出现开不了机的情况,那么由于是替换完应用才出现问题的,所以我们可以直接接入串口过滤应用包名:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">console:/storage # blkid logcat | grep me.linjw.demo</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: java.lang.IllegalStateException: Signature mismatch on system package me.linjw.demo for shared user SharedUserSetting&#123;5a1fdd7 android.uid.system/1000&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的信息就能很明显的看到是me.linjw.demo的签名错误导致抛出异常。</p>
+<p>如果是编译系统的时候应用签名就错了,升级软件就开不了机,我们用前面的方法把logcat导出来,还是过滤下”Exit zygote”关键字,也是能看到日志的:</p>
+<blockquote>
+<p>09-21 23:19:11.061  3541  3541 E Zygote  : Exit zygote because system server (pid 3611) has terminated</p>
+</blockquote>
+<p>同样再往上搜索3611进程的日志可以看到是PackageManagerService在开机的时候搜索所有安装的apk的时候触发到了应用系统签名错误的异常:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: *** FATAL EXCEPTION IN SYSTEM PROCESS: main</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: java.lang.IllegalStateException: Signature mismatch on system package me.linjw.demo for shared user SharedUserSetting&#123;5a1fdd7 android.uid.system/1000&#125;</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.pm.PackageManagerService.reconcilePackagesLocked(PackageManagerService.java:16568)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.pm.PackageManagerService.addForInitLI(PackageManagerService.java:9537)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.pm.PackageManagerService.scanDirLI(PackageManagerService.java:9131)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.pm.PackageManagerService.scanDirTracedLI(PackageManagerService.java:9083)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.pm.PackageManagerService.&lt;init&gt;(PackageManagerService.java:3111)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.pm.PackageManagerService.main(PackageManagerService.java:2599)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.SystemServer.startBootstrapServices(SystemServer.java:851)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.SystemServer.run(SystemServer.java:590)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.server.SystemServer.main(SystemServer.java:408)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:592)</span><br><span class="line">09-21 23:19:10.932  3611  3611 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:925)</span><br><span class="line">09-21 23:19:10.933  3611  3611 E AndroidRuntime: Error reporting crash</span><br><span class="line">09-21 23:19:10.933  3611  3611 E AndroidRuntime: java.lang.NullPointerException: Attempt to invoke interface method &apos;void android.app.IActivityManager.handleApplicationCrash(android.os.IBinder, android.app.ApplicationErrorReport$ParcelableCrashInfo)&apos; on a null object reference</span><br><span class="line">09-21 23:19:10.933  3611  3611 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$KillApplicationHandler.uncaughtException(RuntimeInit.java:158)</span><br><span class="line">09-21 23:19:10.933  3611  3611 E AndroidRuntime: 	at java.lang.ThreadGroup.uncaughtException(ThreadGroup.java:1073)</span><br><span class="line">09-21 23:19:10.933  3611  3611 E AndroidRuntime: 	at java.lang.ThreadGroup.uncaughtException(ThreadGroup.java:1068)</span><br><span class="line">09-21 23:19:10.933  3611  3611 E AndroidRuntime: 	at java.lang.Thread.dispatchUncaughtException(Thread.java:2203)</span><br><span class="line">09-21 23:19:10.933  3611  3611 I Process : Sending signal. PID: 3611 SIG: 9</span><br><span class="line">09-21 23:19:11.061  3541  3541 E Zygote  : Zygote failed to write to system_server FD: Connection refused</span><br><span class="line">09-21 23:19:11.061  3541  3541 I Zygote  : Process 3611 exited due to signal 9 (Killed)</span><br><span class="line">09-21 23:19:11.061  3541  3541 E Zygote  : Exit zygote because system server (pid 3611) has terminated</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>1.如果发现system_server的进程号比较大,那么大概率重启过</p>
+<p>2.可以用”Exit zygote”关键字去搜索找到system_server挂掉的时间,如果没有这个找不到这个关机字的话也能搜索下”START com.android.internal.os.ZygoteInit”看看重启的时间,然后往上搜索下面的关键字找具体死因:</p>
+<ul>
+<li>DEBUG : native 层出现异常的时候会有堆栈的打印</li>
+<li>crash : 奔溃信息打印</li>
+<li>kill : 一些异常触发系统被强杀</li>
+<li>tombstone : 虚拟机、c层的错误触发墓碑文件生成</li>
+<li>died : 某些服务死掉</li>
+</ul>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
