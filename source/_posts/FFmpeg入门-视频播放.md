@@ -5,6 +5,11 @@ tags:
   - 音视频
 ---
 
+系列文章:
+
+1. [FFmpeg入门 - 视频播放](https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/)
+2. [FFmpeg入门 - rtmp推流](https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/)
+3. [FFmpeg入门 - Android移植](https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/)
 
 音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起.
 
@@ -364,7 +369,7 @@ if(AV_NOPTS_VALUE == mFrame->pts) {
     int64_t pts = mFrame->pts * 1000 * 1000 * timebase.num * 1.0f / timebase.den;
 
     // 如果是第一帧就记录开始时间
-    if(mFrame->pts == 0) {
+    if(-1 == mDecodecStart) {
         mDecodecStart = av_gettime() - pts;
     }
 

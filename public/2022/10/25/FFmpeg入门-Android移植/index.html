@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>FFmpeg入门 - Android移植 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,音视频,">
+  
+
+  <meta name="description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直">
+<meta name="keywords" content="技术相关,Android,音视频">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FFmpeg入门 - Android移植">
+<meta property="og:url" content="http://139.199.4.241/2022/10/25/FFmpeg入门-Android移植/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/1.png">
+<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/YUV444.png">
+<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/YUV422.png">
+<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/YUV420.png">
+<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/2.png">
+<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/3.jpeg">
+<meta property="og:updated_time" content="2022-10-25T12:29:53.901Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="FFmpeg入门 - Android移植">
+<meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直">
+<meta name="twitter:image" content="http://139.199.4.241/FFmpeg入门Android移植/1.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#FFmpeg编译与集成"><span class="toc-text">FFmpeg编译与集成</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OpenGLES播放FFmpeg"><span class="toc-text">OpenGLES播放FFmpeg</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#YUV"><span class="toc-text">YUV</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#YUV444"><span class="toc-text">YUV444</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#YUV422"><span class="toc-text">YUV422</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#YUV420"><span class="toc-text">YUV420</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenGLES显示YUV图像"><span class="toc-text">OpenGLES显示YUV图像</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#linesize"><span class="toc-text">linesize</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#保持视频长宽比"><span class="toc-text">保持视频长宽比</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Demo工程"><span class="toc-text">Demo工程</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-FFmpeg入门-Android移植" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">FFmpeg入门 - Android移植</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.10.25</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ol>
+<li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">FFmpeg入门 - 视频播放</a></li>
+<li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/" target="_blank" rel="noopener">FFmpeg入门 - rtmp推流</a></li>
+<li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/" target="_blank" rel="noopener">FFmpeg入门 - Android移植</a></li>
+</ol>
+<p>前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。</p>
+<h1 id="FFmpeg编译与集成"><a href="#FFmpeg编译与集成" class="headerlink" title="FFmpeg编译与集成"></a>FFmpeg编译与集成</h1><p>FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的<a href="https://github.com/bluesky466/FFmpegAndroidDemo/blob/master/ffmpeg-4.4.2/build_ffmpeg.sh" target="_blank" rel="noopener">脚本</a>放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直接执行。然后就能在android目录里面得到编译好的so和.h</p>
+<p>如果的确编译出现问题,也可以直接用我编出来的<a href="https://github.com/bluesky466/FFmpegAndroidDemo/tree/master/app/jniLibs" target="_blank" rel="noopener">库</a>。</p>
+<p>将库放到AndroidStudio工程的jniLibs目录,将include目录放到app/src/main/cpp下,然后修改CMakeLists.txt添加ffmpeg头文件路径、库路径、链接配置等:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">cmake_minimum_required(VERSION 3.18.1)</span><br><span class="line"></span><br><span class="line">project(&quot;ffmpegdemo&quot;)</span><br><span class="line"></span><br><span class="line">add_library(ffmpegdemo SHARED ffmpeg_demo.cpp video_sender.cpp opengl_display.cpp egl_helper.cpp video_decoder.cpp)</span><br><span class="line"></span><br><span class="line">find_library(log-lib log)</span><br><span class="line"></span><br><span class="line"># 头文件路径</span><br><span class="line">include_directories($&#123;CMAKE_SOURCE_DIR&#125;/include)</span><br><span class="line"></span><br><span class="line"># ffmpeg库依赖</span><br><span class="line">add_library(avcodec SHARED IMPORTED)</span><br><span class="line">set_target_properties(avcodec PROPERTIES IMPORTED_LOCATION $&#123;CMAKE_SOURCE_DIR&#125;/../../../jniLibs/$&#123;ANDROID_ABI&#125;/libavcodec.so)</span><br><span class="line"></span><br><span class="line">add_library(avfilter SHARED IMPORTED)</span><br><span class="line">set_target_properties(avfilter PROPERTIES IMPORTED_LOCATION $&#123;CMAKE_SOURCE_DIR&#125;/../../../jniLibs/$&#123;ANDROID_ABI&#125;/libavfilter.so)</span><br><span class="line"></span><br><span class="line">add_library(avformat SHARED IMPORTED)</span><br><span class="line">set_target_properties(avformat PROPERTIES IMPORTED_LOCATION $&#123;CMAKE_SOURCE_DIR&#125;/../../../jniLibs/$&#123;ANDROID_ABI&#125;/libavformat.so)</span><br><span class="line"></span><br><span class="line">add_library(avutil SHARED IMPORTED)</span><br><span class="line">set_target_properties(avutil PROPERTIES IMPORTED_LOCATION $&#123;CMAKE_SOURCE_DIR&#125;/../../../jniLibs/$&#123;ANDROID_ABI&#125;/libavutil.so)</span><br><span class="line"></span><br><span class="line">add_library(swresample SHARED IMPORTED)</span><br><span class="line">set_target_properties(swresample PROPERTIES IMPORTED_LOCATION $&#123;CMAKE_SOURCE_DIR&#125;/../../../jniLibs/$&#123;ANDROID_ABI&#125;/libswresample.so)</span><br><span class="line"></span><br><span class="line">add_library(swscale SHARED IMPORTED)</span><br><span class="line">set_target_properties(swscale PROPERTIES IMPORTED_LOCATION $&#123;CMAKE_SOURCE_DIR&#125;/../../../jniLibs/$&#123;ANDROID_ABI&#125;/libswscale.so)</span><br><span class="line"></span><br><span class="line">target_link_libraries(</span><br><span class="line">        ffmpegdemo</span><br><span class="line"></span><br><span class="line">        # log</span><br><span class="line">        $&#123;log-lib&#125;</span><br><span class="line"></span><br><span class="line">        EGL</span><br><span class="line">        GLESv2</span><br><span class="line">        android</span><br><span class="line"></span><br><span class="line">        # FFmpeg libs</span><br><span class="line">        avcodec</span><br><span class="line">        avfilter</span><br><span class="line">        avformat</span><br><span class="line">        avutil</span><br><span class="line">        swresample</span><br><span class="line">        swscale</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>这样一套下来其实ffmpeg的安卓环境就整好了,我们把之前的<a href="https://github.com/bluesky466/FFmpegDemo/blob/main/video_sender.cpp" target="_blank" rel="noopener">video_sender.cpp</a>和<a href="https://github.com/bluesky466/FFmpegDemo/blob/main/video_sender.h" target="_blank" rel="noopener">video_sender.h</a>拷贝过来添加个jni的接口验证下推流:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// java</span><br><span class="line">File file = new File(getFilesDir(), &quot;video.flv&quot;);</span><br><span class="line"></span><br><span class="line">try &#123;</span><br><span class="line">    InputStream is = getAssets().open(&quot;video.flv&quot;);</span><br><span class="line">    OutputStream os = new FileOutputStream(file);</span><br><span class="line">    FileUtils.copy(is, os);</span><br><span class="line">&#125; catch (Exception e) &#123;</span><br><span class="line">    Log.d(&quot;FFmpegDemo&quot;, &quot;err&quot;, e);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">new Thread(new Runnable() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">        send(file.getAbsolutePath(), &quot;rtmp://&quot; + SERVER_IP + &quot;/live/livestream&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;).start();</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">//jni</span><br><span class="line">extern &quot;C&quot; JNIEXPORT void JNICALL</span><br><span class="line">Java_me_linjw_demo_ffmpeg_MainActivity_send(</span><br><span class="line">        JNIEnv *env,</span><br><span class="line">        jobject /* this */,</span><br><span class="line">        jstring srcFile,</span><br><span class="line">        jstring destUrl) &#123;</span><br><span class="line">    const char *src = env-&gt;GetStringUTFChars(srcFile, NULL);</span><br><span class="line">    const char *dest = env-&gt;GetStringUTFChars(destUrl, NULL);</span><br><span class="line">    LOGD(&quot;send: %s -&gt; %s&quot;, src, dest);</span><br><span class="line">    VideoSender::Send(src, dest);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后就可以用安卓去推流,在pc上用之前的demo进行播放验证。</p>
+<h1 id="OpenGLES播放FFmpeg"><a href="#OpenGLES播放FFmpeg" class="headerlink" title="OpenGLES播放FFmpeg"></a>OpenGLES播放FFmpeg</h1><p>之前的<a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">demo</a>使用SDL2播放视频,但是安卓上更常规的做法是通过OpenGLES去播放。其实之前在做摄像教程的时候已经有介绍过OpenGLES的使用了:</p>
+<p><a href="https://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="noopener">安卓特效相机(二) EGL基础</a></p>
+<p><a href="https://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="noopener">安卓特效相机(三) OpenGL ES 特效渲染</a></p>
+<p>这篇我们就只补充下之前没有提到的部分。</p>
+<h2 id="YUV"><a href="#YUV" class="headerlink" title="YUV"></a>YUV</h2><p>首先有个很重要的知识点在于我们的视频很多情况下解码出来都是<a href="https://zh.wikipedia.org/zh-sg/YUV" target="_blank" rel="noopener">YUV格式</a>的画面而不是安卓应用开发常见的RGB格式。</p>
+<p>YUV是编译true-color颜色空间（color space）的种类，Y’UV, YUV, YCbCr，YPbPr等专有名词都可以称为YUV，彼此有重叠。“Y”表示明亮度（Luminance、Luma），“U”和“V”则是色度、浓度（Chrominance、Chroma）,也就是说通过UV可以选择到一种颜色:</p>
+<img src="/FFmpeg入门Android移植/1.png">
+
+<p>然后再加上这种颜色的亮度就能代表我们实际看到的颜色。</p>
+<p>YUV的发明是由于彩色电视与黑白电视的过渡时期,黑白电视只有亮度的值(Y)到了彩色电视的时代为了兼容之前的黑白电视,于是在亮度值后面加上了UV值指定颜色,如果忽略了UV那么剩下的Y,就和黑白电视的信号保持一致。</p>
+<p>这种情况下数据是以 <strong>平面格式(planar formats)</strong> 去保存的,类似YYYYUUUUVVVV,YUV三者分开存放。<br>另外也有和常见的RGB存放方式类似的 <strong>紧缩格式(packed formats)</strong> ,类似YUVYUVYUV,每个像素点的YUV数据连续存放。</p>
+<p>由于人的肉眼对亮度敏感对颜色相对不敏感,所以我们可以相邻的几个像素共用用UV信息,减少数据带宽。</p>
+<p>这里的共用UV信息并没有对多个像素点做UV数据的均值,而是简单的跳过一些像素点不去读取他们的UV数据。</p>
+<h3 id="YUV444"><a href="#YUV444" class="headerlink" title="YUV444"></a>YUV444</h3><p>每个像素都有自己的YUV数据,每个像素占用Y + U + V = 8 + 8 + 8 = 24 bits</p>
+<img src="/FFmpeg入门Android移植/YUV444.png">
+
+<p>444的含义是同一行相邻的4个像素,分别采样4个Y,4个U,4个V</p>
+<h3 id="YUV422"><a href="#YUV422" class="headerlink" title="YUV422"></a>YUV422</h3><p>每两个像素共用一对UV分量,每像素平均占用Y + U + V = 8 + 4 + 4 = 16 bits</p>
+<img src="/FFmpeg入门Android移植/YUV422.png">
+
+<p>422的含义是同一行相邻的4个像素,分别采样4个Y,2个U,2个V</p>
+<h3 id="YUV420"><a href="#YUV420" class="headerlink" title="YUV420"></a>YUV420</h3><p>每四个像素共用一对UV分量,每像素平均占用Y + U + V = 8 + 2 + 2 = 12 bits</p>
+<img src="/FFmpeg入门Android移植/YUV420.png">
+
+<p>YUV420在YUV422的基础上再隔行扫描UV信息,一行只采集U,下一行只采集V</p>
+<p>420的含义是同一行相邻的4个像素,分别采样4个Y,2个U,0个V,或者4个Y,0个U,2个V</p>
+<h2 id="OpenGLES显示YUV图像"><a href="#OpenGLES显示YUV图像" class="headerlink" title="OpenGLES显示YUV图像"></a>OpenGLES显示YUV图像</h2><p>由于OpenGLES使用RGB色彩,所以我们需要在fragmentShader里面将YUV转成RGB,转换公式如下:</p>
+<p>R = Y + 1.4075 * V;<br>G = Y - 0.3455 * U - 0.7169*V;<br>B = Y + 1.779 * U;</p>
+<p>由于解码之后的数据使用平面格式(planar formats)保存,所以我们可以创建三张灰度图图片分别存储YUV的分量,另外由于OpenGLES里面色彩的值范围是0~1.0,而UV分量的取值范围是-0.5~0.5所以我们UV分量统一减去0.5做偏移.于是fragmentShader代码如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">static const string FRAGMENT_SHADER = &quot;#extension GL_OES_EGL_image_external : require\n&quot;</span><br><span class="line">                                      &quot;precision highp float;\n&quot;</span><br><span class="line">                                      &quot;varying vec2 vCoord;\n&quot;</span><br><span class="line">                                      &quot;uniform sampler2D texY;\n&quot;</span><br><span class="line">                                      &quot;uniform sampler2D texU;\n&quot;</span><br><span class="line">                                      &quot;uniform sampler2D texV;\n&quot;</span><br><span class="line">                                      &quot;varying vec4 vColor;\n&quot;</span><br><span class="line">                                      &quot;void main() &#123;\n&quot;</span><br><span class="line">                                      &quot;    float y = texture2D(texY, vCoord).x;\n&quot;</span><br><span class="line">                                      &quot;    float u = texture2D(texU, vCoord).x - 0.5;\n&quot;</span><br><span class="line">                                      &quot;    float v = texture2D(texV, vCoord).x - 0.5;\n&quot;</span><br><span class="line">                                      &quot;    float r = y + 1.4075 * v;\n&quot;</span><br><span class="line">                                      &quot;    float g = y - 0.3455 * u - 0.7169 * v;\n&quot;</span><br><span class="line">                                      &quot;    float b = y + 1.779 * u;\n&quot;</span><br><span class="line">                                      &quot;    gl_FragColor = vec4(r, g, b, 1);\n&quot;</span><br><span class="line">                                      &quot;&#125;&quot;;</span><br></pre></td></tr></table></figure>
+
+<p>接着由于OpenGLES里面纹理坐标原点是左下角,而解码的画面原点是左上角,所以纹理坐标需要上下调换一下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">static const float VERTICES[] = &#123;</span><br><span class="line">        -1.0f, 1.0f,</span><br><span class="line">        -1.0f, -1.0f,</span><br><span class="line">        1.0f, -1.0f,</span><br><span class="line">        1.0f, 1.0f</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// 由于OpenGLES里面纹理坐标原点是左下角,而解码的画面原点是左上角,所以纹理坐标需要上下调换一下</span><br><span class="line">static const float TEXTURE_COORDS[] = &#123;</span><br><span class="line">        0.0f, 0.0f,</span><br><span class="line">        0.0f, 1.0f,</span><br><span class="line">        1.0f, 1.0f,</span><br><span class="line">        1.0f, 0.0f</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">static const short ORDERS[] = &#123;</span><br><span class="line">        0, 1, 2, // 左下角三角形</span><br><span class="line"></span><br><span class="line">        2, 3, 0  // 右上角三角形</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>最后就只要将每帧解析出来的图像交给OpenGLES去渲染就好:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">AVFrame *frame;</span><br><span class="line">while ((frame = decoder.NextFrame()) != NULL) &#123;</span><br><span class="line">    eglHelper.MakeCurrent();</span><br><span class="line">    display.Render(frame-&gt;data, frame-&gt;linesize);</span><br><span class="line">    eglHelper.SwapBuffers();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="linesize"><a href="#linesize" class="headerlink" title="linesize"></a>linesize</h2><p>接着我们就需要根据这些YUV数据创建三个灰度图分别存储各个分量的数据。这里有个知识点,解码得到的YUV数据,高是对应分量的高,但是宽却不一定是对应分量的宽.</p>
+<p>这是因为在做视频解码的时候会对宽进行对齐,让宽是16或者32的整数倍,具体是16还是32由cpu决定.例如我们的video.flv视频,原始画面尺寸是289*160,如果按32去对齐的话,他的Y分量的宽则是320.</p>
+<p>对齐之后的宽在ffmpeg里面称为linesize,而由于我们这个demo只支持YUV420的格式,它的Y分量的高度为原始图像的高度,UV分量的高度由于是隔行扫描,所以是原生图像高度的一半:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">void OpenGlDisplay::Render(uint8_t *yuv420Data[3], int lineSize[3]) &#123;</span><br><span class="line">    // 解码得到的YUV数据,高是对应分量的高,但是宽却不一定是对应分量的宽</span><br><span class="line">    // 这是因为在做视频解码的时候会对宽进行对齐,让宽是16或者32的整数倍,具体是16还是32由cpu决定</span><br><span class="line">    // 例如我们的video.flv视频,原始画面尺寸是689x405,如果按32去对齐的话,他的Y分量的宽则是720</span><br><span class="line">    // 对齐之后的宽在ffmpeg里面称为linesize</span><br><span class="line">    // 而对于YUV420来说Y分量的高度为原始图像的高度,UV分量的高度由于是隔行扫描,所以是原生图像高度的一半</span><br><span class="line">    setTexture(0, &quot;texY&quot;, yuv420Data[0], lineSize[0], mVideoHeight);</span><br><span class="line">    setTexture(1, &quot;texU&quot;, yuv420Data[1], lineSize[1], mVideoHeight / 2);</span><br><span class="line">    setTexture(2, &quot;texV&quot;, yuv420Data[2], lineSize[2], mVideoHeight / 2);</span><br><span class="line"></span><br><span class="line">    // 由于对齐之后创建的纹理宽度大于原始画面的宽度,所以如果直接显示,视频的右侧会出现异常</span><br><span class="line">    // 所以我们将纹理坐标进行缩放,忽略掉右边对齐多出来的部分</span><br><span class="line">    GLint scaleX = glGetAttribLocation(mProgram, &quot;aCoordScaleX&quot;);</span><br><span class="line">    glVertexAttrib1f(scaleX, mVideoWidth * 1.0f / lineSize[0]);</span><br><span class="line"></span><br><span class="line">    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);</span><br><span class="line">    glDrawElements(GL_TRIANGLES, sizeof(ORDERS) / sizeof(short), GL_UNSIGNED_SHORT, ORDERS);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另外由于对齐之后创建的纹理宽度大于原始画面的宽度,所以如果直接显示,视频的右侧会出现异常:</p>
+<img src="/FFmpeg入门Android移植/2.png">
+
+<p>所以我们将纹理坐标进行缩放,忽略掉右边对齐多出来的部分:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// VERTICES_SHADER</span><br><span class="line">vCoord = vec2(aCoord.x * aCoordScaleX, aCoord.y);</span><br></pre></td></tr></table></figure>
+
+<h2 id="保持视频长宽比"><a href="#保持视频长宽比" class="headerlink" title="保持视频长宽比"></a>保持视频长宽比</h2><p>虽然视频能正常播放了，但是可以看到整个视频是铺满屏幕的。所以我们需要对视频进行缩放让他保持长宽比然后屏幕居中:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">void OpenGlDisplay::SetVideoSize(int videoWidth, int videoHeight) &#123;</span><br><span class="line">    mVideoWidth = videoWidth;</span><br><span class="line">    mVideoHeight = videoHeight;</span><br><span class="line"></span><br><span class="line">    // 如果不做处理(-1.0f, 1.0f),(-1.0f, -1.0f),(1.0f, -1.0f),(1.0f, 1.0f)这个矩形会铺满整个屏幕导致图像拉伸</span><br><span class="line">    // 由于坐标的原点在屏幕中央,所以只需要判断是横屏还是竖屏然后对x轴或者y轴做缩放就能让图像屏幕居中,然后恢复原始视频的长宽比</span><br><span class="line">    if (mWindowHeight &gt; mWindowWidth) &#123;</span><br><span class="line">        // 如果是竖屏的话,图像的宽不需要缩放,图像的高缩小使其竖直居中</span><br><span class="line">        GLint scaleX = glGetAttribLocation(mProgram, &quot;aPosScaleX&quot;);</span><br><span class="line">        glVertexAttrib1f(scaleX, 1.0f);</span><br><span class="line"></span><br><span class="line">        // y坐标 * mWindowWidth / mWindowHeight 得到屏幕居中的正方形</span><br><span class="line">        // 然后再 * videoHeight / videoWidth 就能恢复原始视频的长宽比</span><br><span class="line">        float r = 1.0f * mWindowWidth / mWindowHeight * videoHeight / videoWidth;</span><br><span class="line">        GLint scaleY = glGetAttribLocation(mProgram, &quot;aPosScaleY&quot;);</span><br><span class="line">        glVertexAttrib1f(scaleY, r);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        // 如果是横屏的话,图像的高不需要缩放,图像的宽缩小使其水平居中</span><br><span class="line">        GLint scaleY = glGetAttribLocation(mProgram, &quot;aPosScaleY&quot;);</span><br><span class="line">        glVertexAttrib1f(scaleY, 1.0f);</span><br><span class="line"></span><br><span class="line">        // x坐标 * mWindowHeight / mWindowWidth 得到屏幕居中的正方形</span><br><span class="line">        // 然后再 * videoWidth / videoHeight 就能恢复原始视频的长宽比</span><br><span class="line">        float r = 1.0f * mWindowHeight / mWindowWidth * videoWidth / videoHeight;</span><br><span class="line">        GLint scaleX = glGetAttribLocation(mProgram, &quot;aPosScaleX&quot;);</span><br><span class="line">        glVertexAttrib1f(scaleX, r);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// VERTICES_SHADER</span><br><span class="line">gl_Position = vec4(aPosition.x * aPosScaleX, aPosition.y * aPosScaleY, 0, 1);</span><br></pre></td></tr></table></figure>
+
+<img src="/FFmpeg入门Android移植/3.jpeg">
+
+
+<h1 id="Demo工程"><a href="#Demo工程" class="headerlink" title="Demo工程"></a>Demo工程</h1><p>完整的代码已经上传到<a href="https://github.com/bluesky466/FFmpegAndroidDemo" target="_blank" rel="noopener">Github</a></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

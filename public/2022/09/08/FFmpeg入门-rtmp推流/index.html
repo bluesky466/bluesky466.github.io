@@ -15,19 +15,19 @@
     <meta name="keywords" content="技术相关,音视频,">
   
 
-  <meta name="description" content="上一篇博客介绍了怎样用ffmpeg去播放视频. 里面用于打开视频流的avformat_open_input函数除了打开本地视频之外,实际上也能打开rtmp协议的远程视频,实现拉流: 123./demo -p 本地视频路径./demo -p rtmp://服务器ip/视频流路径  这篇文章我们来讲下怎样实现推流,然后和之前的demo代码配合就能完成推流、拉流的整个过程,实现直播。 rtmp服务器整个">
+  <meta name="description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  上一篇博客介绍了怎样用ffmpeg去播放视频. 里面用于打开视频流的avformat_open_input函数除了打开本地视频之外,实际上也能打开rtmp协议的远程视频,实现拉流: 123./demo -p 本地视频路径./demo -p rtmp://服务器ip/视频流路">
 <meta name="keywords" content="技术相关,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FFmpeg入门 - rtmp推流">
 <meta property="og:url" content="http://139.199.4.241/2022/09/08/FFmpeg入门-rtmp推流/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="上一篇博客介绍了怎样用ffmpeg去播放视频. 里面用于打开视频流的avformat_open_input函数除了打开本地视频之外,实际上也能打开rtmp协议的远程视频,实现拉流: 123./demo -p 本地视频路径./demo -p rtmp://服务器ip/视频流路径  这篇文章我们来讲下怎样实现推流,然后和之前的demo代码配合就能完成推流、拉流的整个过程,实现直播。 rtmp服务器整个">
+<meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  上一篇博客介绍了怎样用ffmpeg去播放视频. 里面用于打开视频流的avformat_open_input函数除了打开本地视频之外,实际上也能打开rtmp协议的远程视频,实现拉流: 123./demo -p 本地视频路径./demo -p rtmp://服务器ip/视频流路">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/uqhEoIzDKQZcKb28VZQdzsdNmgSpLyHorN9nHJ_hM_5iQ-FprUjZ5NJjK6IHs12fxaweIYu0">
-<meta property="og:updated_time" content="2022-09-08T13:45:33.210Z">
+<meta property="og:updated_time" content="2022-10-25T12:29:52.831Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="FFmpeg入门 - rtmp推流">
-<meta name="twitter:description" content="上一篇博客介绍了怎样用ffmpeg去播放视频. 里面用于打开视频流的avformat_open_input函数除了打开本地视频之外,实际上也能打开rtmp协议的远程视频,实现拉流: 123./demo -p 本地视频路径./demo -p rtmp://服务器ip/视频流路径  这篇文章我们来讲下怎样实现推流,然后和之前的demo代码配合就能完成推流、拉流的整个过程,实现直播。 rtmp服务器整个">
+<meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  上一篇博客介绍了怎样用ffmpeg去播放视频. 里面用于打开视频流的avformat_open_input函数除了打开本地视频之外,实际上也能打开rtmp协议的远程视频,实现拉流: 123./demo -p 本地视频路径./demo -p rtmp://服务器ip/视频流路">
 <meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/uqhEoIzDKQZcKb28VZQdzsdNmgSpLyHorN9nHJ_hM_5iQ-FprUjZ5NJjK6IHs12fxaweIYu0">
 
   
@@ -157,7 +157,13 @@
 
   <div class="article-content">
     
-      <p><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">上一篇博客</a>介绍了怎样用ffmpeg去播放视频.</p>
+      <p>系列文章:</p>
+<ol>
+<li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">FFmpeg入门 - 视频播放</a></li>
+<li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/" target="_blank" rel="noopener">FFmpeg入门 - rtmp推流</a></li>
+<li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/" target="_blank" rel="noopener">FFmpeg入门 - Android移植</a></li>
+</ol>
+<p><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">上一篇博客</a>介绍了怎样用ffmpeg去播放视频.</p>
 <p>里面用于打开视频流的avformat_open_input函数除了打开本地视频之外,实际上也能打开rtmp协议的远程视频,实现拉流:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./demo -p 本地视频路径</span><br><span class="line"></span><br><span class="line">./demo -p rtmp://服务器ip/视频流路径</span><br></pre></td></tr></table></figure>
 

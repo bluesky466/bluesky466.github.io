@@ -15,20 +15,20 @@
     <meta name="keywords" content="技术相关,音视频,">
   
 
-  <meta name="description" content="音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道等.有些格式限制比较多,例如AVI视频轨道只能有一条,音频轨道也只能有一条.而有些格式则比较灵活,例如OGG视频的视频、音频轨">
+  <meta name="description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道">
 <meta name="keywords" content="技术相关,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FFmpeg入门 - 视频播放">
 <meta property="og:url" content="http://139.199.4.241/2022/09/04/FFmpeg入门-视频播放/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道等.有些格式限制比较多,例如AVI视频轨道只能有一条,音频轨道也只能有一条.而有些格式则比较灵活,例如OGG视频的视频、音频轨">
+<meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/ut8eBaaiAYdDpU62iBAAy_EughaKW43fnVAsbuicFflM_cJtDYKhY22In8kzArusJWPAA7aOcPayRcW4KgRFrtO-Mx3dwPx-vxDQdlPrFz-pykNypK35IbRHIf6XOK1LGUvEA8fcxtlQtAyKMwkZWB00eWTXWQEZCr2dRu0nFkC3d7tXSb1HL5EVhft-TETKcAbAIc2PMgvQBeVKl1Imnq4CK5W00000">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/bPBDIiD054RtynIpL9aMYLMwyaMaYrWdpM2J3kbO474HnLQGMfGgxXfi8Ij3nNyfVHfdaho5qqngQuEAY-GcvDvpxXU6wWuZZDHioDkTA0Zu_H4y04ihop2NsuJYQYZQ0R1h34E7L4m6JCOeSfX5aK6gE9_F0splm4a3E0I0pcX3D-gV26_4Hnt5bBojoEyhJUbRGrPZxJQGHGlomXLMHtg3BAg80IUqXCBVdZzUk_oqAPvSo4nipsyIZgvbO-YvipNYtaDyUr62gifFSYwxWwwNfNyD_HBolCVzCpNvHOSfNacdahZL4jvBLaBBrZnSpgVJmPWFMkBoJdJ70E1g7V-HAVARIIPLVyfaQXi596_hoP_L_XrDqQVHr1i_xeIFNjQrlzSeQAiK9LMJfwQoNImM5vJ9ARiPXuFtD77o32OjnFW4">
-<meta property="og:updated_time" content="2022-09-04T05:00:00.188Z">
+<meta property="og:updated_time" content="2022-10-25T12:29:50.886Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="FFmpeg入门 - 视频播放">
-<meta name="twitter:description" content="音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道等.有些格式限制比较多,例如AVI视频轨道只能有一条,音频轨道也只能有一条.而有些格式则比较灵活,例如OGG视频的视频、音频轨">
+<meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道">
 <meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/ut8eBaaiAYdDpU62iBAAy_EughaKW43fnVAsbuicFflM_cJtDYKhY22In8kzArusJWPAA7aOcPayRcW4KgRFrtO-Mx3dwPx-vxDQdlPrFz-pykNypK35IbRHIf6XOK1LGUvEA8fcxtlQtAyKMwkZWB00eWTXWQEZCr2dRu0nFkC3d7tXSb1HL5EVhft-TETKcAbAIc2PMgvQBeVKl1Imnq4CK5W00000">
 
   
@@ -158,7 +158,13 @@
 
   <div class="article-content">
     
-      <p>音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起.</p>
+      <p>系列文章:</p>
+<ol>
+<li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">FFmpeg入门 - 视频播放</a></li>
+<li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/" target="_blank" rel="noopener">FFmpeg入门 - rtmp推流</a></li>
+<li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/" target="_blank" rel="noopener">FFmpeg入门 - Android移植</a></li>
+</ol>
+<p>音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起.</p>
 <h1 id="音视频编解码基础"><a href="#音视频编解码基础" class="headerlink" title="音视频编解码基础"></a>音视频编解码基础</h1><p>我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。</p>
 <p>这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道等.<br>有些格式限制比较多,例如AVI视频轨道只能有一条,音频轨道也只能有一条.<br>而有些格式则比较灵活,例如OGG视频的视频、音频轨道都能有多条.</p>
 <p>像音频、视频这种数据量很大的轨道,上面的数据实际上都是通过压缩的。<br>视频轨道上可能是H264、H256这样压缩过的图像数据,通过解码可以还原成YUV、RGB等格式的图像数据。<br>音频轨道上可能是MP3、AAC这样压缩过的的音频数据,通过解码可以还原成PCM的音频裸流。</p>
@@ -228,7 +234,7 @@
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int64_t</span> pts = mFrame-&gt;pts * <span class="number">1000</span> * <span class="number">1000</span> * timebase.num * <span class="number">1.0f</span> / timebase.den;</span><br></pre></td></tr></table></figure>
 
 <p>这个pts都是以视频开头开始计算的,所以我们需要先保存第一帧的时间戳,然后再去计算当前播到第几微秒.完整代码如下:</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(AV_NOPTS_VALUE == mFrame-&gt;pts) &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    AVRational timebase = mFormatContext-&gt;streams[mPacket-&gt;stream_index]-&gt;time_base;</span><br><span class="line">    <span class="keyword">int64_t</span> pts = mFrame-&gt;pts * <span class="number">1000</span> * <span class="number">1000</span> * timebase.num * <span class="number">1.0f</span> / timebase.den;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果是第一帧就记录开始时间</span></span><br><span class="line">    <span class="keyword">if</span>(mFrame-&gt;pts == <span class="number">0</span>) &#123;</span><br><span class="line">        mDecodecStart = av_gettime() - pts;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当前时间减去开始时间,得到当前播放到了视频的第几微秒</span></span><br><span class="line">    <span class="keyword">int64_t</span> now = av_gettime() - mDecodecStart;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果这一帧的播放时间还没有到就等到播放时间到了再返回</span></span><br><span class="line">    <span class="keyword">if</span>(pts &gt; now) &#123;</span><br><span class="line">        av_usleep(pts - now);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(AV_NOPTS_VALUE == mFrame-&gt;pts) &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    AVRational timebase = mFormatContext-&gt;streams[mPacket-&gt;stream_index]-&gt;time_base;</span><br><span class="line">    <span class="keyword">int64_t</span> pts = mFrame-&gt;pts * <span class="number">1000</span> * <span class="number">1000</span> * timebase.num * <span class="number">1.0f</span> / timebase.den;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果是第一帧就记录开始时间</span></span><br><span class="line">    <span class="keyword">if</span>(<span class="number">-1</span> == mDecodecStart) &#123;</span><br><span class="line">        mDecodecStart = av_gettime() - pts;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 当前时间减去开始时间,得到当前播放到了视频的第几微秒</span></span><br><span class="line">    <span class="keyword">int64_t</span> now = av_gettime() - mDecodecStart;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果这一帧的播放时间还没有到就等到播放时间到了再返回</span></span><br><span class="line">    <span class="keyword">if</span>(pts &gt; now) &#123;</span><br><span class="line">        av_usleep(pts - now);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <h1 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h1><p>完整的<a href="https://github.com/bluesky466/FFmpegDemo" target="_blank" rel="noopener">Demo</a>已经放到Github上,图像渲染的部分在SdlWindow类中,它使用SDL2去做ui绘制,由于和音视频编解码没有关系就不展开讲了.视频解码部分在VideoDecoder类中.</p>
 <p>编译的时候需要修改Makefile里面ffmpeg和sdl2的路径,然后make编译完成之后用下面命令即可播放视频:</p>
