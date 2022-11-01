@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>当Gson遇上data class | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="当Gson遇上kotlin data class,会发生一些很有意思的现象: 现象1: 非空类型失效 123456data class TestData(    val a: String,    val b: String)val data = Gson().fromJson(&amp;quot;&amp;#123;&amp;#125;&amp;quot;, TestData::class.java)println(&amp;quot">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="当Gson遇上data class">
+<meta property="og:url" content="http://139.199.4.241/2022/11/01/当Gson遇上data-class/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="当Gson遇上kotlin data class,会发生一些很有意思的现象: 现象1: 非空类型失效 123456data class TestData(    val a: String,    val b: String)val data = Gson().fromJson(&amp;quot;&amp;#123;&amp;#125;&amp;quot;, TestData::class.java)println(&amp;quot">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-11-01T15:02:38.618Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="当Gson遇上data class">
+<meta name="twitter:description" content="当Gson遇上kotlin data class,会发生一些很有意思的现象: 现象1: 非空类型失效 123456data class TestData(    val a: String,    val b: String)val data = Gson().fromJson(&amp;quot;&amp;#123;&amp;#125;&amp;quot;, TestData::class.java)println(&amp;quot">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Gson解析流程"><span class="toc-text">Gson解析流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#非空类型失效和构造函数不会被调用的原理"><span class="toc-text">非空类型失效和构造函数不会被调用的原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Unsafe"><span class="toc-text">Unsafe</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#data-class-默认值的原理"><span class="toc-text">data class 默认值的原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DefaultConstructorMarker"><span class="toc-text">DefaultConstructorMarker</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#全部成员都有默认值的情况"><span class="toc-text">全部成员都有默认值的情况</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#解决思路"><span class="toc-text">解决思路</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-当Gson遇上data-class" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">当Gson遇上data class</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.11.01</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>当Gson遇上kotlin data class,会发生一些很有意思的现象:</p>
+<p>现象1: 非空类型失效</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">data class TestData(</span><br><span class="line">    val a: String,</span><br><span class="line">    val b: String</span><br><span class="line">)</span><br><span class="line">val data = Gson().fromJson(&quot;&#123;&#125;&quot;, TestData::class.java)</span><br><span class="line">println(&quot;a:$&#123;data.a&#125;, b:$&#123;data.b&#125;&quot;) //输出: a:null, b:null</span><br></pre></td></tr></table></figure>
+
+<p>现象2: 构造函数不会被调用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">data class TestData(</span><br><span class="line">    val a: String,</span><br><span class="line">    val b: String</span><br><span class="line">) &#123;</span><br><span class="line">    init &#123;</span><br><span class="line">        println(&quot;TestData init!!!&quot;) // 这一行代码不会执行到</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">val data = Gson().fromJson(&quot;&#123;&#125;&quot;, TestData::class.java)</span><br></pre></td></tr></table></figure>
+
+<p>现象3: 默认值失效</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">data class TestData(</span><br><span class="line">    val a: String,</span><br><span class="line">    val b: String = &quot;bbb&quot;</span><br><span class="line">)</span><br><span class="line">val data = Gson().fromJson(&quot;&#123;\&quot;a\&quot;:\&quot;aaa\&quot;&#125;&quot;, TestData::class.java)</span><br><span class="line">println(&quot;$data&quot;) //输出: TestData(a=aaa, b=null)</span><br></pre></td></tr></table></figure>
+
+<p>现象4: 当全部成员都有默认值的时候默认值和构造函数又生效了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">data class TestData(</span><br><span class="line">    val a: String = &quot;&quot;,</span><br><span class="line">    val b: String = &quot;bbb&quot;</span><br><span class="line">) &#123;</span><br><span class="line">    init &#123;</span><br><span class="line">        println(&quot;TestData init!!!&quot;) // 这一行代码能执行到</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">val data = Gson().fromJson(&quot;&#123;\&quot;a\&quot;:\&quot;aaa\&quot;&#125;&quot;, TestData::class.java)</span><br><span class="line">println(&quot;$data&quot;) //输出: TestData(a=aaa, b=bbb)</span><br></pre></td></tr></table></figure>
+
+<h1 id="Gson解析流程"><a href="#Gson解析流程" class="headerlink" title="Gson解析流程"></a>Gson解析流程</h1><p>要理解上面的现象我们先要了解Gson是怎样工作的。</p>
+<p>Gson解析json分两步,创建对象实例和给成员变量赋值.</p>
+<p>创建对象实例是通过ConstructorConstructor.get(TypeToken&lt;T&gt; typeToken)方法获取到构造器去创建的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line">public &lt;T&gt; ObjectConstructor&lt;T&gt; get(TypeToken&lt;T&gt; typeToken) &#123;</span><br><span class="line">    final Type type = typeToken.getType();</span><br><span class="line">    final Class&lt;? super T&gt; rawType = typeToken.getRawType();</span><br><span class="line"></span><br><span class="line">    // 从instanceCreators中查找,我们可以用GsonBuilder.registerTypeAdapter指定某种类型的构造器,默认情况下instanceCreators是空的</span><br><span class="line">    final InstanceCreator&lt;T&gt; typeCreator = (InstanceCreator&lt;T&gt;) instanceCreators.get(type);</span><br><span class="line">    if (typeCreator != null) &#123;</span><br><span class="line">      return new ObjectConstructor&lt;T&gt;() &#123;</span><br><span class="line">        @Override public T construct() &#123;</span><br><span class="line">          return typeCreator.createInstance(type);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 这里还是在instanceCreators里查找,只不过用rawType当key</span><br><span class="line">    final InstanceCreator&lt;T&gt; rawTypeCreator =</span><br><span class="line">        (InstanceCreator&lt;T&gt;) instanceCreators.get(rawType);</span><br><span class="line">    if (rawTypeCreator != null) &#123;</span><br><span class="line">      return new ObjectConstructor&lt;T&gt;() &#123;</span><br><span class="line">        @Override public T construct() &#123;</span><br><span class="line">          return rawTypeCreator.createInstance(type);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 查找一些特殊集合如EnumSet、EnumMap的构造器</span><br><span class="line">    ObjectConstructor&lt;T&gt; specialConstructor = newSpecialCollectionConstructor(type, rawType);</span><br><span class="line">    if (specialConstructor != null) &#123;</span><br><span class="line">      return specialConstructor;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 通过rawType.getDeclaredConstructor()反射获取类的无参构造函数</span><br><span class="line">    FilterResult filterResult = ReflectionAccessFilterHelper.getFilterResult(reflectionFilters, rawType);</span><br><span class="line">    ObjectConstructor&lt;T&gt; defaultConstructor = newDefaultConstructor(rawType, filterResult);</span><br><span class="line">    if (defaultConstructor != null) &#123;</span><br><span class="line">      return defaultConstructor;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 查找普通的Collection或者Map,如ArrayList、HashMap等的构造器</span><br><span class="line">    ObjectConstructor&lt;T&gt; defaultImplementation = newDefaultImplementationConstructor(type, rawType);</span><br><span class="line">    if (defaultImplementation != null) &#123;</span><br><span class="line">      return defaultImplementation;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 判断类型是否可以实例化,例如接口和抽象类就不能实例化</span><br><span class="line">    final String exceptionMessage = checkInstantiable(rawType);</span><br><span class="line">    if (exceptionMessage != null) &#123;</span><br><span class="line">      return new ObjectConstructor&lt;T&gt;() &#123;</span><br><span class="line">        @Override public T construct() &#123;</span><br><span class="line">          throw new JsonIOException(exceptionMessage);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 最后使用sun.misc.Unsafe去兜底创建实例</span><br><span class="line">    if (filterResult == FilterResult.ALLOW) &#123;</span><br><span class="line">      return newUnsafeAllocator(rawType);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      final String message = &quot;Unable to create instance of &quot; + rawType + &quot;; ReflectionAccessFilter &quot;</span><br><span class="line">          + &quot;does not permit using reflection or Unsafe. Register an InstanceCreator or a TypeAdapter &quot;</span><br><span class="line">          + &quot;for this type or adjust the access filter to allow using reflection.&quot;;</span><br><span class="line">      return new ObjectConstructor&lt;T&gt;() &#123;</span><br><span class="line">        @Override public T construct() &#123;</span><br><span class="line">          throw new JsonIOException(message);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取到对象的构造器,之后就能用它去创建对象实例,然后遍历json字段查找对象是否有对应的成员变量,如果有就通过反射设置进去:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public T read(JsonReader in) throws IOException &#123;</span><br><span class="line">  if (in.peek() == JsonToken.NULL) &#123;</span><br><span class="line">    in.nextNull();</span><br><span class="line">    return null;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // 通过ConstructorConstructor.get(TypeToken\&lt;T\&gt; typeToken)查询的构造器创建实例对象</span><br><span class="line">  A accumulator = createAccumulator();</span><br><span class="line"></span><br><span class="line">  try &#123;</span><br><span class="line">    in.beginObject();</span><br><span class="line">    // 遍历json</span><br><span class="line">    while (in.hasNext()) &#123;</span><br><span class="line">      String name = in.nextName();</span><br><span class="line"></span><br><span class="line">      // 从对象的成员变量列表查询是否有该字段</span><br><span class="line">      BoundField field = boundFields.get(name);</span><br><span class="line">      if (field == null || !field.deserialized) &#123;</span><br><span class="line">        // 对象没有该成员变量则跳过</span><br><span class="line">        in.skipValue();</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        // 对象有该成员变量则读取json的值,通过反射设置给对象</span><br><span class="line">        readField(accumulator, in, field);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; catch (IllegalStateException e) &#123;</span><br><span class="line">    throw new JsonSyntaxException(e);</span><br><span class="line">  &#125; catch (IllegalAccessException e) &#123;</span><br><span class="line">    throw ReflectionHelper.createExceptionForUnexpectedIllegalAccess(e);</span><br><span class="line">  &#125;</span><br><span class="line">  in.endObject();</span><br><span class="line">  return finalize(accumulator);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="非空类型失效和构造函数不会被调用的原理"><a href="#非空类型失效和构造函数不会被调用的原理" class="headerlink" title="非空类型失效和构造函数不会被调用的原理"></a>非空类型失效和构造函数不会被调用的原理</h1><p>了解了Gson的解析流程之后我们再来看看问题1的data class对应的java代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">// kotlin代码</span><br><span class="line">data class TestData(</span><br><span class="line">    val a: String,</span><br><span class="line">    val b: String</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">// java对应的类</span><br><span class="line">public final class TestData &#123;</span><br><span class="line">   private final String a;</span><br><span class="line">   private final String b;</span><br><span class="line">   ...</span><br><span class="line">   public final String getA() &#123;</span><br><span class="line">      return this.a;</span><br><span class="line">   &#125;</span><br><span class="line">   public final String getB() &#123;</span><br><span class="line">      return this.b;</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">   public TestData(@NotNull String a, @NotNull String b) &#123;</span><br><span class="line">      Intrinsics.checkNotNullParameter(a, &quot;a&quot;);</span><br><span class="line">      Intrinsics.checkNotNullParameter(b, &quot;b&quot;);</span><br><span class="line">      super();</span><br><span class="line">      this.a = a;</span><br><span class="line">      this.b = b;</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">   @NotNull</span><br><span class="line">   public String toString() &#123;</span><br><span class="line">      return &quot;TestData(a=&quot; + this.a + &quot;, b=&quot; + this.b + &quot;)&quot;;</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到只有在构造函数里面做了判空,但是它并没有无参构造函数所以gson是通过Unsafe去兜底创建TestData实例的。Unsafe创建类的实例并不会调用到构造函数,所以就绕过类判空的步骤。</p>
+<p>同理也能解释现象2构造函数不会被调用的问题。</p>
+<h2 id="Unsafe"><a href="#Unsafe" class="headerlink" title="Unsafe"></a>Unsafe</h2><blockquote>
+<p>Unsafe是位于sun.misc包下的一个类，主要提供一些用于执行低级别、不安全操作的方法，如直接访问系统内存资源、自主管理内存资源等，这些方法在提升Java运行效率、增强Java语言底层资源操作能力方面起到了很大的作用。 – <a href="https://tech.meituan.com/2019/02/14/talk-about-java-magic-class-unsafe.html" target="_blank" rel="noopener">Java魔法类：Unsafe应用解析</a></p>
+</blockquote>
+<p>我们可以通过下面的代码创建TestData实例而不调用TestData的构造函数:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">val unsafeClass = Class.forName(&quot;sun.misc.Unsafe&quot;)</span><br><span class="line">val theUnsafe = unsafeClass.getDeclaredField(&quot;theUnsafe&quot;)</span><br><span class="line">theUnsafe.isAccessible = true</span><br><span class="line">val unsafe = theUnsafe.get(null)</span><br><span class="line">val allocateInstance = unsafeClass.getMethod(&quot;allocateInstance&quot;, Class::class.java)</span><br><span class="line">val testData = allocateInstance.invoke(unsafe, TestData::class.java) as TestData</span><br></pre></td></tr></table></figure>
+
+<h2 id="data-class-默认值的原理"><a href="#data-class-默认值的原理" class="headerlink" title="data class 默认值的原理"></a>data class 默认值的原理</h2><p>接着我们继续来看现象3默认值失效的问题,这里会牵扯到data class默认值的原理,我们来看看对应的java代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">// kotlin代码</span><br><span class="line">data class TestData(</span><br><span class="line">    val a: String,</span><br><span class="line">    val b: String = &quot;bbb&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">// java对应的类</span><br><span class="line">public final class TestData &#123;</span><br><span class="line">   private final String a;</span><br><span class="line">   private final String b;</span><br><span class="line"></span><br><span class="line">   ...</span><br><span class="line"></span><br><span class="line">   public TestData(@NotNull String a, @NotNull String b) &#123;</span><br><span class="line">      Intrinsics.checkNotNullParameter(a, &quot;a&quot;);</span><br><span class="line">      Intrinsics.checkNotNullParameter(b, &quot;b&quot;);</span><br><span class="line">      super();</span><br><span class="line">      this.a = a;</span><br><span class="line">      this.b = b;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public TestData(String var1, String var2, int var3, DefaultConstructorMarker var4) &#123;</span><br><span class="line">      if ((var3 &amp; 2) != 0) &#123;</span><br><span class="line">         var2 = &quot;bbb&quot;;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      this(var1, var2);</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到,kotlin的默认参数并不是通过重载实现的,而是新增一个构造函数,用一个int的各个bit位来表示前面的参数是否需要设置成默认值。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// 例如下面这行kotlin代码:</span><br><span class="line">val testData = TestData(&quot;aaa&quot;)</span><br><span class="line"></span><br><span class="line">// 对应的java代码是这样的:</span><br><span class="line">TestData testData = new TestData(&quot;aaa&quot;, (String)null, 2, (DefaultConstructorMarker)null);</span><br></pre></td></tr></table></figure>
+
+<p>这样做的好处在于只需要新建一个构造函数。用下面这种java传统的函数重载来做,如果有很多的默认值的话需要创建很多的构造函数:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public final class TestData &#123;</span><br><span class="line">   ...</span><br><span class="line"></span><br><span class="line">   public TestData(@NotNull String a, @NotNull String b) &#123;</span><br><span class="line">      ...</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public TestData(String var1) &#123;</span><br><span class="line">      this(var1, &quot;bbb&quot;);</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>到这里我们也能理解现象3默认值失效的原因了,和前面的两个现象一样是因为没有调用到TestData的构造函数,所以就没有赋默认值.</p>
+<h2 id="DefaultConstructorMarker"><a href="#DefaultConstructorMarker" class="headerlink" title="DefaultConstructorMarker"></a>DefaultConstructorMarker</h2><p>另外在生成的构造函数里我们还看到了一个DefaultConstructorMarker参数:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public TestData(String var1, String var2, int var3, DefaultConstructorMarker var4)</span><br></pre></td></tr></table></figure>
+
+<p>这个参数会在kotlin自动生成的构造函数里面出现,目的是为了防止和我们自己定义的构造函数碰撞:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">// kotlin代码</span><br><span class="line">data class TestData(</span><br><span class="line">    val a: String,</span><br><span class="line">    val b: String = &quot;bbb&quot;</span><br><span class="line">) &#123;</span><br><span class="line">    constructor(a: String, b: String, i: Int) : this(a, b) &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 对应的java代码</span><br><span class="line">public final class TestData &#123;</span><br><span class="line">   private final String a;</span><br><span class="line">   private final String b;</span><br><span class="line"></span><br><span class="line">   public TestData(@NotNull String a, @NotNull String b) &#123;</span><br><span class="line">      ...</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   // 假设没有DefaultConstructorMarker参数,下面的两个构造函数就会撞车了</span><br><span class="line">   public TestData(String var1, String var2, int var3, DefaultConstructorMarker var4) &#123;</span><br><span class="line">      ...</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public TestData(@NotNull String a, @NotNull String b, int i) &#123;</span><br><span class="line">      Intrinsics.checkNotNullParameter(a, &quot;a&quot;);</span><br><span class="line">      Intrinsics.checkNotNullParameter(b, &quot;b&quot;);</span><br><span class="line">      this(a, b);</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="全部成员都有默认值的情况"><a href="#全部成员都有默认值的情况" class="headerlink" title="全部成员都有默认值的情况"></a>全部成员都有默认值的情况</h1><p>最后我们来分析下现象4当全部成员都有默认值的情况:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">// kotlin代码</span><br><span class="line">data class TestData(</span><br><span class="line">    val a: String = &quot;&quot;,</span><br><span class="line">    val b: String = &quot;bbb&quot;</span><br><span class="line">) &#123;</span><br><span class="line">    init &#123;</span><br><span class="line">        println(&quot;TestData init!!!&quot;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 对应的java代码</span><br><span class="line">public final class TestData &#123;</span><br><span class="line">   private final String a;</span><br><span class="line">   private final String b;</span><br><span class="line"></span><br><span class="line">   ...</span><br><span class="line"></span><br><span class="line">   public TestData(@NotNull String a, @NotNull String b) &#123;</span><br><span class="line">      Intrinsics.checkNotNullParameter(a, &quot;a&quot;);</span><br><span class="line">      Intrinsics.checkNotNullParameter(b, &quot;b&quot;);</span><br><span class="line">      super();</span><br><span class="line">      this.a = a;</span><br><span class="line">      this.b = b;</span><br><span class="line">      String var3 = &quot;TestData init!!!&quot;;</span><br><span class="line">      boolean var4 = false;</span><br><span class="line">      System.out.println(var3);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public TestData(String var1, String var2, int var3, DefaultConstructorMarker var4) &#123;</span><br><span class="line">      if ((var3 &amp; 1) != 0) &#123;</span><br><span class="line">         var1 = &quot;&quot;;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      if ((var3 &amp; 2) != 0) &#123;</span><br><span class="line">         var2 = &quot;bbb&quot;;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      this(var1, var2);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public TestData() &#123;</span><br><span class="line">      this((String)null, (String)null, 3, (DefaultConstructorMarker)null);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到当所有成员都有默认值的时候,会生成无参构造函数,这样的话Gson就会调用无参构造函数去创建实例。</p>
+<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><p>了解完原理我们来看看怎么解决,下面有一些思路:</p>
+<ol>
+<li>当需要使用默认值的时候全部成员变量都加上默认值</li>
+<li>使用代码生成的方式创建InstanceCreator并注册到gson,在里面创建实例并预先填好默认值</li>
+<li>改用对kotlin支持更好的<a href="https://github.com/Kotlin/kotlinx.serialization" target="_blank" rel="noopener">kotlinx.serialization</a>或者<a href="https://github.com/square/moshi" target="_blank" rel="noopener">moshi</a></li>
+</ol>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
