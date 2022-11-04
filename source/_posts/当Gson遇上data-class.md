@@ -298,6 +298,8 @@ public final class TestData {
 }
 ```
 
+除了这个之外它也能比较方便的去支持任意位置的默认值。
+
 到这里我们也能理解现象3默认值失效的原因了,和前面的两个现象一样是因为没有调用到TestData的构造函数,所以就没有赋默认值.
 
 ## DefaultConstructorMarker
@@ -407,3 +409,109 @@ public final class TestData {
 1. 当需要使用默认值的时候全部成员变量都加上默认值
 2. 使用代码生成的方式创建InstanceCreator并注册到gson,在里面创建实例并预先填好默认值
 3. 改用对kotlin支持更好的[kotlinx.serialization](https://github.com/Kotlin/kotlinx.serialization)或者[moshi](https://github.com/square/moshi)
+
+
+
+## kotlinx.serialization原理
+
+kotlinx.serialization的原理在于@Serializable注解的data class对应的java代码会多出一个$serializer类,它会记录所有构造参数对应的json key,然后在解析出来的json里面读取出value去传入构造函数:
+
+```
+// kotlin代码
+@Serializable
+data class TestData(
+    val a: String,
+    val b: String = "aaa"
+)
+
+// java对应的类
+public final class TestData {
+   private final String a;
+   private final String b;
+
+   ...
+   
+   public static final class $serializer implements GeneratedSerializer {
+      ...
+      private static final SerialDescriptor $$serialDesc;
+      
+      static {
+         TestData.$serializer var0 = new TestData.$serializer();
+         INSTANCE = var0;
+         PluginGeneratedSerialDescriptor var1 = new PluginGeneratedSerialDescriptor("me.linjw.demo.debugtool.TestData", (GeneratedSerializer)INSTANCE, 2);
+         var1.addElement("a", false);
+         var1.addElement("b", true);
+         $$serialDesc = var1;
+      }
+      ...
+      public TestData deserialize(@NotNull Decoder decoder) {
+         Intrinsics.checkNotNullParameter(decoder, "decoder");
+         SerialDescriptor var2 = $$serialDesc;
+         int var4 = 0;
+         String var5 = null;
+         String var6 = null;
+         Decoder decoder = decoder.beginStructure(var2);
+         if (decoder.decodeSequentially()) {
+            var5 = decoder.decodeStringElement(var2, 0);
+            var6 = decoder.decodeStringElement(var2, 1);
+            var4 = Integer.MAX_VALUE;
+         } else {
+            label19:
+            while(true) {
+               int var3 = decoder.decodeElementIndex(var2);
+               switch(var3) {
+               case -1:
+                  break label19;
+               case 0:
+                  var5 = decoder.decodeStringElement(var2, 0);
+                  var4 |= 1;
+                  break;
+               case 1:
+                  var6 = decoder.decodeStringElement(var2, 1);
+                  var4 |= 2;
+                  break;
+               default:
+                  throw (Throwable)(new UnknownFieldException(var3));
+               }
+            }
+         }
+
+         decoder.endStructure(var2);
+         return new TestData(var4, var5, var6, (SerializationConstructorMarker)null);
+      }
+      ...
+   }
+}
+```
+
+毕竟是kotlin官方的库,能够对生成的字节码任意的做改动去实现。
+
+## moshi原理
+
+moshi则比较委婉,通过kotlin的反射机制遍历构造函数的参数,判断有没有可选参数,如果有的话就走callBy方法通过key-value map的方式传入参数,如果没有可选参数则通过vararg可变参数列表的方式顺序传入参数:
+
+```
+// Confirm all parameters are present, optional, or nullable.
+var isFullInitialized = allBindings.size == constructorSize
+for (i in 0 until constructorSize) {
+  if (values[i] === ABSENT_VALUE) {
+    when {
+      constructor.parameters[i].isOptional -> isFullInitialized = false
+      constructor.parameters[i].type.isMarkedNullable -> values[i] = null // Replace absent with null.
+      else -> throw missingProperty(
+        constructor.parameters[i].name,
+        allBindings[i]?.jsonName,
+        reader
+      )
+    }
+  }
+}
+
+// Call the constructor using a Map so that absent optionals get defaults.
+val result = if (isFullInitialized) {
+  constructor.call(*values)
+} else {
+  constructor.callBy(IndexedParameterMap(constructor.parameters, values))
+}
+
+```
