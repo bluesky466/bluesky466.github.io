@@ -15,13 +15,13 @@
     <meta name="keywords" content="技术相关,Android,音视频,">
   
 
-  <meta name="description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直">
+  <meta name="description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下ND">
 <meta name="keywords" content="技术相关,Android,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FFmpeg入门 - Android移植">
 <meta property="og:url" content="http://139.199.4.241/2022/10/25/FFmpeg入门-Android移植/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直">
+<meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下ND">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/1.png">
 <meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/YUV444.png">
@@ -29,10 +29,10 @@
 <meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/YUV420.png">
 <meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/2.png">
 <meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/3.jpeg">
-<meta property="og:updated_time" content="2022-10-25T12:29:53.901Z">
+<meta property="og:updated_time" content="2022-11-26T16:13:59.498Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="FFmpeg入门 - Android移植">
-<meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直">
+<meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下ND">
 <meta name="twitter:image" content="http://139.199.4.241/FFmpeg入门Android移植/1.png">
 
   
@@ -167,6 +167,7 @@
 <li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">FFmpeg入门 - 视频播放</a></li>
 <li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/" target="_blank" rel="noopener">FFmpeg入门 - rtmp推流</a></li>
 <li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/" target="_blank" rel="noopener">FFmpeg入门 - Android移植</a></li>
+<li><a href="https://blog.islinjw.cn/2022/11/27/FFmpeg%E5%85%A5%E9%97%A8-%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/" target="_blank" rel="noopener">FFmpeg入门 - 格式转换</a></li>
 </ol>
 <p>前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。</p>
 <h1 id="FFmpeg编译与集成"><a href="#FFmpeg编译与集成" class="headerlink" title="FFmpeg编译与集成"></a>FFmpeg编译与集成</h1><p>FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的<a href="https://github.com/bluesky466/FFmpegAndroidDemo/blob/master/ffmpeg-4.4.2/build_ffmpeg.sh" target="_blank" rel="noopener">脚本</a>放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直接执行。然后就能在android目录里面得到编译好的so和.h</p>

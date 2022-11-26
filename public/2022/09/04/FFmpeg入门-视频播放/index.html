@@ -15,20 +15,20 @@
     <meta name="keywords" content="技术相关,音视频,">
   
 
-  <meta name="description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道">
+  <meta name="description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道">
 <meta name="keywords" content="技术相关,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FFmpeg入门 - 视频播放">
 <meta property="og:url" content="http://139.199.4.241/2022/09/04/FFmpeg入门-视频播放/index.html">
 <meta property="og:site_name" content="LinJW">
-<meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道">
+<meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/ut8eBaaiAYdDpU62iBAAy_EughaKW43fnVAsbuicFflM_cJtDYKhY22In8kzArusJWPAA7aOcPayRcW4KgRFrtO-Mx3dwPx-vxDQdlPrFz-pykNypK35IbRHIf6XOK1LGUvEA8fcxtlQtAyKMwkZWB00eWTXWQEZCr2dRu0nFkC3d7tXSb1HL5EVhft-TETKcAbAIc2PMgvQBeVKl1Imnq4CK5W00000">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/bPBDIiD054RtynIpL9aMYLMwyaMaYrWdpM2J3kbO474HnLQGMfGgxXfi8Ij3nNyfVHfdaho5qqngQuEAY-GcvDvpxXU6wWuZZDHioDkTA0Zu_H4y04ihop2NsuJYQYZQ0R1h34E7L4m6JCOeSfX5aK6gE9_F0splm4a3E0I0pcX3D-gV26_4Hnt5bBojoEyhJUbRGrPZxJQGHGlomXLMHtg3BAg80IUqXCBVdZzUk_oqAPvSo4nipsyIZgvbO-YvipNYtaDyUr62gifFSYwxWwwNfNyD_HBolCVzCpNvHOSfNacdahZL4jvBLaBBrZnSpgVJmPWFMkBoJdJ70E1g7V-HAVARIIPLVyfaQXi596_hoP_L_XrDqQVHr1i_xeIFNjQrlzSeQAiK9LMJfwQoNImM5vJ9ARiPXuFtD77o32OjnFW4">
-<meta property="og:updated_time" content="2022-10-25T12:29:50.886Z">
+<meta property="og:updated_time" content="2022-11-26T16:14:37.665Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="FFmpeg入门 - 视频播放">
-<meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道例如视频轨道、音频轨道、字幕轨道">
+<meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起. 音视频编解码基础我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。 这样的视频文件可能会有多条轨道">
 <meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/ut8eBaaiAYdDpU62iBAAy_EughaKW43fnVAsbuicFflM_cJtDYKhY22In8kzArusJWPAA7aOcPayRcW4KgRFrtO-Mx3dwPx-vxDQdlPrFz-pykNypK35IbRHIf6XOK1LGUvEA8fcxtlQtAyKMwkZWB00eWTXWQEZCr2dRu0nFkC3d7tXSb1HL5EVhft-TETKcAbAIc2PMgvQBeVKl1Imnq4CK5W00000">
 
   
@@ -163,6 +163,7 @@
 <li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">FFmpeg入门 - 视频播放</a></li>
 <li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/" target="_blank" rel="noopener">FFmpeg入门 - rtmp推流</a></li>
 <li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/" target="_blank" rel="noopener">FFmpeg入门 - Android移植</a></li>
+<li><a href="https://blog.islinjw.cn/2022/11/27/FFmpeg%E5%85%A5%E9%97%A8-%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/" target="_blank" rel="noopener">FFmpeg入门 - 格式转换</a></li>
 </ol>
 <p>音视频最好从能够直接看到东西,也更加贴近用户的播放开始学起.</p>
 <h1 id="音视频编解码基础"><a href="#音视频编解码基础" class="headerlink" title="音视频编解码基础"></a>音视频编解码基础</h1><p>我们可以通过http、rtmp或者本地的视频文件去播放视频。这里的”视频”实际上指的是mp4、avi这种既有音频也有视频的文件格式。</p>

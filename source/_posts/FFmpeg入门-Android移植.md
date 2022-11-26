@@ -11,6 +11,7 @@ tags:
 1. [FFmpeg入门 - 视频播放](https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/)
 2. [FFmpeg入门 - rtmp推流](https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/)
 3. [FFmpeg入门 - Android移植](https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/)
+4. [FFmpeg入门 - 格式转换](https://blog.islinjw.cn/2022/11/27/FFmpeg%E5%85%A5%E9%97%A8-%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/)
 
 前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。
 

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>FFmpeg入门 - 格式转换 | LinJW</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,音视频,">
+  
+
+  <meta name="description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  我们现在已经能在安卓上播放视频画面了,但是声音部分还是缺失的,这篇博客就来把视频的音频播放模块也加上。 为了音频和视频可以分别解码播放,我们需要对之前的代码做重构,将媒体流的读取和解码解耦:   MediaReader从文件流中读取出AVPa">
+<meta name="keywords" content="技术相关,Android,音视频">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FFmpeg入门 - 格式转换">
+<meta property="og:url" content="http://139.199.4.241/2022/11/27/FFmpeg入门-格式转换/index.html">
+<meta property="og:site_name" content="LinJW">
+<meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  我们现在已经能在安卓上播放视频画面了,但是声音部分还是缺失的,这篇博客就来把视频的音频播放模块也加上。 为了音频和视频可以分别解码播放,我们需要对之前的代码做重构,将媒体流的读取和解码解耦:   MediaReader从文件流中读取出AVPa">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/dP91ImCn48Nl-olck5tj7oXIM5lK7fJImdgEoQCxk9j8CYqjudztJNH92xsOIoQycVU-WUXEXK3FCAmsK0QUFWiQpWtLpLhfTmXLBpXAgaksGa4yLB-o1iV9RsyGCviTeCNvkxhPnWQgvlG8IOzGJaRRFtaKeoidlw-Yq14fIKjebqEzETVHohAKENBbutrBL_0EZWqjCIZkb84yUDKZhHVBCejlsC2TCmnjiEOQsK_qi56SUsKZxHYKAq_WNIjvKBqt_9-WhUe_EcoKu39eqIfhqItStigbTdyIhE7JSC8uJvbEv_bl-0O0">
+<meta property="og:image" content="http://139.199.4.241/FFmpeg入门格式转换/1.png">
+<meta property="og:image" content="http://139.199.4.241/FFmpeg入门格式转换/2.png">
+<meta property="og:updated_time" content="2022-11-26T16:14:27.873Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="FFmpeg入门 - 格式转换">
+<meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  我们现在已经能在安卓上播放视频画面了,但是声音部分还是缺失的,这篇博客就来把视频的音频播放模块也加上。 为了音频和视频可以分别解码播放,我们需要对之前的代码做重构,将媒体流的读取和解码解耦:   MediaReader从文件流中读取出AVPa">
+<meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/dP91ImCn48Nl-olck5tj7oXIM5lK7fJImdgEoQCxk9j8CYqjudztJNH92xsOIoQycVU-WUXEXK3FCAmsK0QUFWiQpWtLpLhfTmXLBpXAgaksGa4yLB-o1iV9RsyGCviTeCNvkxhPnWQgvlG8IOzGJaRRFtaKeoidlw-Yq14fIKjebqEzETVHohAKENBbutrBL_0EZWqjCIZkb84yUDKZhHVBCejlsC2TCmnjiEOQsK_qi56SUsKZxHYKAq_WNIjvKBqt_9-WhUe_EcoKu39eqIfhqItStigbTdyIhE7JSC8uJvbEv_bl-0O0">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#音频分⽚-plane-与打包-packed"><span class="toc-text">音频分⽚(plane)与打包(packed)</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#音频数据的实际长度"><span class="toc-text">音频数据的实际长度</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#音频格式转换"><span class="toc-text">音频格式转换</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#视频格式转换"><span class="toc-text">视频格式转换</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#AVFrame内存管理机制"><span class="toc-text">AVFrame内存管理机制</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#align"><span class="toc-text">align</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#完整代码"><span class="toc-text">完整代码</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-FFmpeg入门-格式转换" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">FFmpeg入门 - 格式转换</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.11.27</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ol>
+<li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">FFmpeg入门 - 视频播放</a></li>
+<li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/" target="_blank" rel="noopener">FFmpeg入门 - rtmp推流</a></li>
+<li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/" target="_blank" rel="noopener">FFmpeg入门 - Android移植</a></li>
+<li><a href="https://blog.islinjw.cn/2022/11/27/FFmpeg%E5%85%A5%E9%97%A8-%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/" target="_blank" rel="noopener">FFmpeg入门 - 格式转换</a></li>
+</ol>
+<p>我们现在已经能在安卓上播放视频画面了,但是声音部分还是缺失的,这篇博客就来把视频的音频播放模块也加上。</p>
+<p>为了音频和视频可以分别解码播放,我们需要对之前的代码做重构,将媒体流的读取和解码解耦:</p>
+<img src="http://www.plantuml.com/plantuml/svg/dP91ImCn48Nl-olck5tj7oXIM5lK7fJImdgEoQCxk9j8CYqjudztJNH92xsOIoQycVU-WUXEXK3FCAmsK0QUFWiQpWtLpLhfTmXLBpXAgaksGa4yLB-o1iV9RsyGCviTeCNvkxhPnWQgvlG8IOzGJaRRFtaKeoidlw-Yq14fIKjebqEzETVHohAKENBbutrBL_0EZWqjCIZkb84yUDKZhHVBCejlsC2TCmnjiEOQsK_qi56SUsKZxHYKAq_WNIjvKBqt_9-WhUe_EcoKu39eqIfhqItStigbTdyIhE7JSC8uJvbEv_bl-0O0">
+
+<p>MediaReader从文件流中读取出AVPacket交由VideoStreamDecoder和AudioStreamDecoder做视频与音频的解码。我们在MediaReader里加上线程安全机制,使得视频和音频可以分别在各自的工作线程中进行解码。</p>
+<h1 id="音频分⽚-plane-与打包-packed"><a href="#音频分⽚-plane-与打包-packed" class="headerlink" title="音频分⽚(plane)与打包(packed)"></a>音频分⽚(plane)与打包(packed)</h1><p>解码出来的AVFrame,它的data字段放的是视频像素数据或者音频的PCM裸流数据,linesize字段放的是对齐后的画面行长度或者音频的分片长度:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * For video, size in bytes of each picture line.</span><br><span class="line"> * For audio, size in bytes of each plane.</span><br><span class="line"> *</span><br><span class="line"> * For audio, only linesize[0] may be set. For planar audio, each channel</span><br><span class="line"> * plane must be the same size.</span><br><span class="line"> *</span><br><span class="line"> * For video the linesizes should be multiples of the CPUs alignment</span><br><span class="line"> * preference, this is 16 or 32 for modern desktop CPUs.</span><br><span class="line"> * Some code requires such alignment other code can be slower without</span><br><span class="line"> * correct alignment, for yet other it makes no difference.</span><br><span class="line"> *</span><br><span class="line"> * @note The linesize may be larger than the size of usable data -- there</span><br><span class="line"> * may be extra padding present for performance reasons.</span><br><span class="line"> */</span><br><span class="line"> int linesize[AV_NUM_DATA_POINTERS];</span><br></pre></td></tr></table></figure>
+
+<p>视频相关的在之前的<a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/#linesize" target="_blank" rel="noopener">博客</a>中有介绍,音频的话可以看到它只有linesize[0]会被设置,如果有多个分片,每个分片的size都是相等的。</p>
+<p>要理解这里的分片size,先要理解音频数据的两种存储格式分⽚(plane)与打包(packed)。以常见的双声道音频为例子,</p>
+<p>分⽚存储的数据左声道和右声道分开存储,左声道存储在data[0],右声道存储在data[1],他们的数据buffer的size都是linesize[0]。</p>
+<p>打包存储的数据按照LRLRLR…的形式交替存储在data[0]中,这个数据buffer的size是linesize[0]。</p>
+<p>AVSampleFormat枚举音频的格式,带P后缀的格式是分配存储的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">AV_SAMPLE_FMT_U8P,         ///&lt; unsigned 8 bits, planar</span><br><span class="line">AV_SAMPLE_FMT_S16P,        ///&lt; signed 16 bits, planar</span><br><span class="line">AV_SAMPLE_FMT_S32P,        ///&lt; signed 32 bits, planar</span><br><span class="line">AV_SAMPLE_FMT_FLTP,        ///&lt; float, planar</span><br><span class="line">AV_SAMPLE_FMT_DBLP,        ///&lt; double, planar</span><br></pre></td></tr></table></figure>
+
+<p>不带P后缀的格式是打包存储的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">AV_SAMPLE_FMT_U8,          ///&lt; unsigned 8 bits</span><br><span class="line">AV_SAMPLE_FMT_S16,         ///&lt; signed 16 bits</span><br><span class="line">AV_SAMPLE_FMT_S32,         ///&lt; signed 32 bits</span><br><span class="line">AV_SAMPLE_FMT_FLT,         ///&lt; float</span><br><span class="line">AV_SAMPLE_FMT_DBL,         ///&lt; double</span><br></pre></td></tr></table></figure>
+
+<h1 id="音频数据的实际长度"><a href="#音频数据的实际长度" class="headerlink" title="音频数据的实际长度"></a>音频数据的实际长度</h1><p>这里有个坑点备注里面也写的很清楚了,linesize标明的大小可能会大于实际的音视频数据大小,因为可能会有额外的填充。</p>
+<blockquote>
+<ul>
+<li>@note The linesize may be larger than the size of usable data – there</li>
+<li>may be extra padding present for performance reasons.</li>
+</ul>
+</blockquote>
+<p>所以音频数据实际的长度需要用音频的参数计算出来:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">int channelCount = audioStreamDecoder.GetChannelCount();</span><br><span class="line">int bytePerSample = audioStreamDecoder.GetBytePerSample();</span><br><span class="line">int size = frame-&gt;nb_samples * channelCount * bytePerSample;</span><br></pre></td></tr></table></figure>
+
+<h1 id="音频格式转换"><a href="#音频格式转换" class="headerlink" title="音频格式转换"></a>音频格式转换</h1><p>视频之前的demo中已经可以使用OpenGL播放,而音频可以交给OpenSL来播放,之前我写过一篇<a href="https://blog.islinjw.cn/2018/09/01/OpenSLES%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" target="_blank" rel="noopener">《OpenSL ES 学习笔记》</a>详细的使用细节我就不展开介绍了,直接将<a href="https://github.com/bluesky466/OpenSLDemo/blob/master/app/src/main/cpp/opensl_helper.c" target="_blank" rel="noopener">代码</a>拷贝来使用。</p>
+<p>但是由于OpenSLES只支持打包的几种音频格式:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_8	((SLuint16) 0x0008)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_16	((SLuint16) 0x0010)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_20 	((SLuint16) 0x0014)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_24	((SLuint16) 0x0018)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_28 	((SLuint16) 0x001C)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_32	((SLuint16) 0x0020)</span><br></pre></td></tr></table></figure>
+
+<p>这里我们指的AudioStreamDecoder的目标格式为AV_SAMPLE_FMT_S16,如果原始音频格式不是它,则对音频做转码:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">audioStreamDecoder.Init(reader, audioIndex, AVSampleFormat::AV_SAMPLE_FMT_S16);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">bool</span> AudioStreamDecoder::Init(MediaReader *reader, <span class="keyword">int</span> streamIndex, AVSampleFormat sampleFormat) &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">bool</span> result = StreamDecoder::Init(reader, streamIndex);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (sampleFormat == AVSampleFormat::AV_SAMPLE_FMT_NONE) &#123;</span><br><span class="line">        mSampleFormat = mCodecContext-&gt;sample_fmt;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        mSampleFormat = sampleFormat;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mSampleFormat != mCodecContext-&gt;sample_fmt) &#123;</span><br><span class="line">        mSwrContext = swr_alloc_set_opts(</span><br><span class="line">                <span class="literal">NULL</span>,</span><br><span class="line">                mCodecContext-&gt;channel_layout,</span><br><span class="line">                mSampleFormat,</span><br><span class="line">                mCodecContext-&gt;sample_rate,</span><br><span class="line">                mCodecContext-&gt;channel_layout,</span><br><span class="line">                mCodecContext-&gt;sample_fmt,</span><br><span class="line">                mCodecContext-&gt;sample_rate,</span><br><span class="line">                <span class="number">0</span>,</span><br><span class="line">                <span class="literal">NULL</span>);</span><br><span class="line">        swr_init(mSwrContext);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 虽然前面的swr_alloc_set_opts已经设置了这几个参数</span></span><br><span class="line">        <span class="comment">// 但是用于接收的AVFrame不设置这几个参数也会接收不到数据</span></span><br><span class="line">        <span class="comment">// 原因是后面的swr_convert_frame函数会通过av_frame_get_buffer创建数据的buff</span></span><br><span class="line">        <span class="comment">// 而av_frame_get_buffer需要AVFrame设置好这些参数去计算buff的大小</span></span><br><span class="line">        mSwrFrame = av_frame_alloc();</span><br><span class="line">        mSwrFrame-&gt;channel_layout = mCodecContext-&gt;channel_layout;</span><br><span class="line">        mSwrFrame-&gt;sample_rate = mCodecContext-&gt;sample_rate;</span><br><span class="line">        mSwrFrame-&gt;format = mSampleFormat;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">AVFrame *AudioStreamDecoder::NextFrame() &#123;</span><br><span class="line">    AVFrame *frame = StreamDecoder::NextFrame();</span><br><span class="line">    <span class="keyword">if</span> (<span class="literal">NULL</span> == frame) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="literal">NULL</span> == mSwrContext) &#123;</span><br><span class="line">        <span class="keyword">return</span> frame;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    swr_convert_frame(mSwrContext, mSwrFrame, frame);</span><br><span class="line">    <span class="keyword">return</span> mSwrFrame;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里我们使用swr_convert_frame进行转码:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">swr_convert_frame</span><span class="params">(SwrContext *swr,     <span class="comment">// 转码上下文</span></span></span></span><br><span class="line"><span class="function"><span class="params">                      AVFrame *output,     <span class="comment">// 转码后输出到这个AVFrame</span></span></span></span><br><span class="line"><span class="function"><span class="params">                      <span class="keyword">const</span> AVFrame *input <span class="comment">// 原始输入AVFrame</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>这个方法要求输入输出的AVFrame都设置了channel_layout、 sample_rate、format参数,然后回调用av_frame_get_buffer为output创建数据buff:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * ...</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Input and output AVFrames must have channel_layout, sample_rate and format set.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * If the output AVFrame does not have the data pointers allocated the nb_samples</span></span><br><span class="line"><span class="comment"> * field will be set using av_frame_get_buffer()</span></span><br><span class="line"><span class="comment"> * is called to allocate the frame.</span></span><br><span class="line"><span class="comment"> * ...</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">swr_convert_frame</span><span class="params">(SwrContext *swr,</span></span></span><br><span class="line"><span class="function"><span class="params">                      AVFrame *output, <span class="keyword">const</span> AVFrame *input)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>SwrContext为转码的上下文,通过swr_alloc_set_opts和swr_init创建,需要把转码前后的音频channel_layout、 sample_rate、format信息传入:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">struct SwrContext *<span class="title">swr_alloc_set_opts</span><span class="params">(struct SwrContext *s,</span></span></span><br><span class="line"><span class="function"><span class="params">                                      <span class="keyword">int64_t</span> out_ch_layout, <span class="keyword">enum</span> AVSampleFormat out_sample_fmt, <span class="keyword">int</span> out_sample_rate,</span></span></span><br><span class="line"><span class="function"><span class="params">                                      <span class="keyword">int64_t</span>  in_ch_layout, <span class="keyword">enum</span> AVSampleFormat  in_sample_fmt, <span class="keyword">int</span>  in_sample_rate,</span></span></span><br><span class="line"><span class="function"><span class="params">                                      <span class="keyword">int</span> log_offset, <span class="keyword">void</span> *log_ctx)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">swr_init</span><span class="params">(struct SwrContext *s)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<h1 id="视频格式转换"><a href="#视频格式转换" class="headerlink" title="视频格式转换"></a>视频格式转换</h1><p>之前的demo里面我们判断了视频格式不为AV_PIX_FMT_YUV420P则直接报错,这里我们仿照音频转换的例子,判断原始视频格式不为AV_PIX_FMT_YUV420P则使用sws_scale进行格式转换:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> VideoStreamDecoder::Init(MediaReader *reader, <span class="keyword">int</span> streamIndex, AVPixelFormat pixelFormat) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">bool</span> result = StreamDecoder::Init(reader, streamIndex);</span><br><span class="line">    <span class="keyword">if</span> (AVPixelFormat::AV_PIX_FMT_NONE == pixelFormat) &#123;</span><br><span class="line">        mPixelFormat = mCodecContext-&gt;pix_fmt;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        mPixelFormat = pixelFormat;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mPixelFormat != mCodecContext-&gt;pix_fmt) &#123;</span><br><span class="line">        <span class="keyword">int</span> width = mCodecContext-&gt;width;</span><br><span class="line">        <span class="keyword">int</span> height = mCodecContext-&gt;height;</span><br><span class="line"></span><br><span class="line">        mSwrFrame = av_frame_alloc();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 方式一,使用av_frame_get_buffer创建数据存储空间,av_frame_free的时候会自动释放</span></span><br><span class="line">        mSwrFrame-&gt;width = width;</span><br><span class="line">        mSwrFrame-&gt;height = height;</span><br><span class="line">        mSwrFrame-&gt;format = mPixelFormat;</span><br><span class="line">        av_frame_get_buffer(mSwrFrame, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 方式二,使用av_image_fill_arrays指定存储空间,需要我们手动调用av_malloc、av_free去创建、释放空间</span></span><br><span class="line"><span class="comment">//        unsigned char* buffer = (unsigned char *)av_malloc(</span></span><br><span class="line"><span class="comment">//                av_image_get_buffer_size(mPixelFormat, width, height, 16)</span></span><br><span class="line"><span class="comment">//        );</span></span><br><span class="line"><span class="comment">//        av_image_fill_arrays(mSwrFrame-&gt;data, mSwrFrame-&gt;linesize, buffer, mPixelFormat, width, height, 16);</span></span><br><span class="line"></span><br><span class="line">        mSwsContext = sws_getContext(</span><br><span class="line">                mCodecContext-&gt;width, mCodecContext-&gt;height, mCodecContext-&gt;pix_fmt,</span><br><span class="line">                width, height, mPixelFormat, SWS_BICUBIC,</span><br><span class="line">                <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span></span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">AVFrame *VideoStreamDecoder::NextFrame() &#123;</span><br><span class="line">    AVFrame *frame = StreamDecoder::NextFrame();</span><br><span class="line">    <span class="keyword">if</span> (<span class="literal">NULL</span> == frame) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="literal">NULL</span> == mSwsContext) &#123;</span><br><span class="line">        <span class="keyword">return</span> frame;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    sws_scale(mSwsContext, frame-&gt;data,</span><br><span class="line">              frame-&gt;linesize, <span class="number">0</span>, mCodecContext-&gt;height,</span><br><span class="line">              mSwrFrame-&gt;data, mSwrFrame-&gt;linesize);</span><br><span class="line">    <span class="keyword">return</span> mSwrFrame;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>sws_scale看名字虽然是缩放,但它实际上也会对format进行转换,转换的参数由SwsContext提供:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">struct SwsContext *<span class="title">sws_getContext</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">int</span> srcW,                     <span class="comment">// 源图像的宽</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">int</span> srcH,                     <span class="comment">// 源图像的高</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">enum</span> AVPixelFormat srcFormat, <span class="comment">// 源图像的格式</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">int</span> dstW,                     <span class="comment">// 目标图像的宽</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">int</span> dstH,                     <span class="comment">// 目标图像的高</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">enum</span> AVPixelFormat dstFormat, <span class="comment">// 目标图像的格式</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">int</span> flags,                    <span class="comment">// 暂时可忽略</span></span></span></span><br><span class="line"><span class="function"><span class="params">    SwsFilter *srcFilter,         <span class="comment">// 暂时可忽略</span></span></span></span><br><span class="line"><span class="function"><span class="params">    SwsFilter *dstFilter,         <span class="comment">// 暂时可忽略</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">const</span> <span class="keyword">double</span> *param           <span class="comment">// 暂时可忽略</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>sws_scale支持区域转码,可以如我们的demo将整幅图像进行转码,也可以将图像切成多个区域分别转码,这样方便实用多线程加快转码效率:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">sws_scale</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    struct SwsContext *c,             <span class="comment">// 转码上下文</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">const</span> <span class="keyword">uint8_t</span> *<span class="keyword">const</span> srcSlice[],  <span class="comment">// 源画面区域像素数据,对应源AVFrame的data字段</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">const</span> <span class="keyword">int</span> srcStride[],            <span class="comment">// 源画面区域行宽数据,对应源AVFrame的linesize字段</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">int</span> srcSliceY,                    <span class="comment">// 源画面区域起始Y坐标,用于计算应该放到目标图像的哪个位置</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">int</span> srcSliceH,                    <span class="comment">// 源画面区域行数,用于计算应该放到目标图像的哪个位置</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">uint8_t</span> *<span class="keyword">const</span> dst[],             <span class="comment">// 转码后图像数据存储,对应目标AVFrame的data字段</span></span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">const</span> <span class="keyword">int</span> dstStride[]             <span class="comment">// 转码后行宽数据存储,对应目标AVFrame的linesize字段</span></span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>srcSlice和srcStride存储了源图像部分区域的图像数据,srcSliceY和srcSliceH告诉转码器这部分区域的坐标范围,用于计算偏移量将转码结果存放到dst和dstStride中。</p>
+<p>例如下面的代码就将一幅完整的图像分成上下两部分分别进行转码:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> halfHeight = mCodecContext-&gt;height / <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 转码上半部分图像</span></span><br><span class="line"><span class="keyword">uint8_t</span> *dataTop[AV_NUM_DATA_POINTERS] = &#123;</span><br><span class="line">        frame-&gt;data[<span class="number">0</span>],</span><br><span class="line">        frame-&gt;data[<span class="number">1</span>],</span><br><span class="line">        frame-&gt;data[<span class="number">2</span>]</span><br><span class="line">&#125;;</span><br><span class="line">sws_scale(mSwsContext, dataTop,</span><br><span class="line">            frame-&gt;linesize, <span class="number">0</span>,</span><br><span class="line">            halfHeight,</span><br><span class="line">            mSwrFrame-&gt;data, mSwrFrame-&gt;linesize);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 转码下半部分图像</span></span><br><span class="line"><span class="keyword">uint8_t</span> *dataBottom[AV_NUM_DATA_POINTERS] = &#123;</span><br><span class="line">        frame-&gt;data[<span class="number">0</span>] + (frame-&gt;linesize[<span class="number">0</span>] * halfHeight),</span><br><span class="line">        frame-&gt;data[<span class="number">1</span>] + (frame-&gt;linesize[<span class="number">1</span>] * halfHeight),</span><br><span class="line">        frame-&gt;data[<span class="number">2</span>] + (frame-&gt;linesize[<span class="number">2</span>] * halfHeight),</span><br><span class="line">&#125;;</span><br><span class="line">sws_scale(mSwsContext, dataBottom,</span><br><span class="line">            frame-&gt;linesize, halfHeight,</span><br><span class="line">            mCodecContext-&gt;height - halfHeight,</span><br><span class="line">            mSwrFrame-&gt;data, mSwrFrame-&gt;linesize);</span><br></pre></td></tr></table></figure>
+
+<h1 id="AVFrame内存管理机制"><a href="#AVFrame内存管理机制" class="headerlink" title="AVFrame内存管理机制"></a>AVFrame内存管理机制</h1><p>我们创建了一个新的AVFrame用于接收转码后的图像:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">mSwrFrame = av_frame_alloc();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 方式一,使用av_frame_get_buffer创建数据存储空间,av_frame_free的时候会自动释放</span></span><br><span class="line">mSwrFrame-&gt;width = width;</span><br><span class="line">mSwrFrame-&gt;height = height;</span><br><span class="line">mSwrFrame-&gt;format = mPixelFormat;</span><br><span class="line">av_frame_get_buffer(mSwrFrame, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 方式二,使用av_image_fill_arrays指定存储空间,需要我们手动调用av_malloc、av_free去创建、释放buffer的空间</span></span><br><span class="line"><span class="comment">// int bufferSize = av_image_get_buffer_size(mPixelFormat, width, height, 16);</span></span><br><span class="line"><span class="comment">// unsigned char* buffer = (unsigned char *)av_malloc(bufferSize);</span></span><br><span class="line"><span class="comment">// av_image_fill_arrays(mSwrFrame-&gt;data, mSwrFrame-&gt;linesize, buffer, mPixelFormat, width, height, 16);</span></span><br></pre></td></tr></table></figure>
+
+<p>av_frame_alloc创建出来的AVFrame只是一个壳,我们需要为它提供实际存储像素数据和行宽数据的内存空间,如上所示有两种方法:</p>
+<p>1.通过av_frame_get_buffer创建存储空间,data成员的空间实际上是由buf[0]-&gt;data提供的:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">LOGD(<span class="string">"mSwrFrame --&gt; buf : 0x%X~0x%X, data[0]: 0x%X, data[1]: 0x%X, data[2]: 0x%X"</span>,</span><br><span class="line">    mSwrFrame-&gt;buf[<span class="number">0</span>]-&gt;data,</span><br><span class="line">    mSwrFrame-&gt;buf[<span class="number">0</span>]-&gt;data + mSwrFrame-&gt;buf[<span class="number">0</span>]-&gt;size,</span><br><span class="line">    mSwrFrame-&gt;data[<span class="number">0</span>],</span><br><span class="line">    mSwrFrame-&gt;data[<span class="number">1</span>],</span><br><span class="line">    mSwrFrame-&gt;data[<span class="number">2</span>]</span><br><span class="line">);</span><br><span class="line"><span class="comment">// mSwrFrame --&gt; buf : 0x2E6E8AC0~0x2E753F40, data[0]: 0x2E6E8AC0, data[1]: 0x2E7302E0, data[2]: 0x2E742100</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>通过av_image_fill_arrays指定外部存储空间,data成员的空间就是我们指的的外部空间,而buf成员是NULL:</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">LOGD(<span class="string">"mSwrFrame --&gt; buffer : 0x%X~0x%X, buf : 0x%X, data[0]: 0x%X, data[1]: 0x%X, data[2]: 0x%X"</span>,</span><br><span class="line">    buffer,</span><br><span class="line">    buffer + bufferSize,</span><br><span class="line">    mSwrFrame-&gt;buf[<span class="number">0</span>],</span><br><span class="line">    mSwrFrame-&gt;data[<span class="number">0</span>],</span><br><span class="line">    mSwrFrame-&gt;data[<span class="number">1</span>],</span><br><span class="line">    mSwrFrame-&gt;data[<span class="number">2</span>]</span><br><span class="line">);</span><br><span class="line"><span class="comment">// FFmpegDemo: mSwrFrame --&gt; buffer : 0x2DAE4DC0~0x2DB4D5C0, buf : 0x0, data[0]: 0x2DAE4DC0, data[1]: 0x2DB2A780, data[2]: 0x2DB3BEA0</span></span><br></pre></td></tr></table></figure>
+
+<p>而av_frame_free内部会去释放AVFrame里buf的空间,对于data成员它只是简单的把指针赋值为0,所以通过av_frame_get_buffer创建存储空间,而通过av_image_fill_arrays指定外部存储空间需要我们手动调用av_free去释放外部空间。</p>
+<h1 id="align"><a href="#align" class="headerlink" title="align"></a>align</h1><p>细心的同学可能还看到了av_image_get_buffer_size和av_image_fill_arrays都传了个16的align,这里对应的就是之前讲的linesize的字节对齐,会填充数据让linesize变成16、或者32的整数倍:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@param align         the value used in src <span class="keyword">for</span> linesize alignment</span><br></pre></td></tr></table></figure>
+
+<p>这里如果为0会填充失败:</p>
+<img src="/FFmpeg入门格式转换/1.png">
+
+
+<p>而为1不做填充会出现和实际解码中的linesize不一致导致画面异常:</p>
+<img src="/FFmpeg入门格式转换/2.png">
+
+<p>av_frame_get_buffer则比较人性化,它推荐你填0让它自己去判断应该按多少对齐:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">* @param align Required buffer size alignment. If equal to 0, alignment will be</span><br><span class="line">*              chosen automatically for the current CPU. It is highly</span><br><span class="line">*              recommended to pass 0 here unless you know what you are doing.</span><br></pre></td></tr></table></figure>
+
+<h1 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h1><p>完整的demo代码已经放到<a href="https://github.com/bluesky466/FFmpegAndroidDemo/tree/feature_conversion" target="_blank" rel="noopener">Github</a>上,感兴趣的同学可以下载来看看</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
