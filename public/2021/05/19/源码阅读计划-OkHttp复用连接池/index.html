@@ -7,7 +7,7 @@
 <head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
-  <title>源码阅读计划 - OkHttp复用连接池 | LinJW</title>
+  <title>源码阅读计划 - OkHttp复用连接池 | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -20,7 +20,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="源码阅读计划 - OkHttp复用连接池">
 <meta property="og:url" content="http://139.199.4.241/2021/05/19/源码阅读计划-OkHttp复用连接池/index.html">
-<meta property="og:site_name" content="LinJW">
+<meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="蛮久之前写过一篇博客OkHttp源码解析，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。 其实这个库的其他设计也是蛮有意思的，这篇笔记我们就来看看它的Http连接是怎么实现的。 这部分的代码我们从ConnectInterceptor这个拦截器看起，它主要就是负责http的连接。新版本的OkHttp已经用kotlin重写了，所以下面的代码都是kotlin的:">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://139.199.4.241/OkHttp复用连接池/1.png">

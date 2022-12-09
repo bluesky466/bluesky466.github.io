@@ -7,7 +7,7 @@
 <head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
-  <title>Jni多线程与类加载 | LinJW</title>
+  <title>Jni多线程与类加载 | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -20,7 +20,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Jni多线程与类加载">
 <meta property="og:url" content="http://139.199.4.241/2022/06/13/Jni多线程与类加载/index.html">
-<meta property="og:site_name" content="LinJW">
+<meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="在JNI中我们可以通过JNIEnv的FindClass方法查找到java的类然后进行类似反射的调用。 如果通过java代码调用的Jni函数,此时c的函数与Java运行在同一个线程中。无论是在主线程还是java启动的子线程中FindClass都能正常工作。 native子线程加载不了自定义的Class但如果是通过pthread_create之类的方法在native层创建了子线程,则在这个子线程中Fi">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2022-06-13T12:49:17.193Z">

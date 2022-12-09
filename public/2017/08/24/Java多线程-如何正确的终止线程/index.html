@@ -7,7 +7,7 @@
 <head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
-  <title>Java多线程 - 如何正确的终止线程 | LinJW</title>
+  <title>Java多线程 - 如何正确的终止线程 | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -20,7 +20,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java多线程 - 如何正确的终止线程">
 <meta property="og:url" content="http://139.199.4.241/2017/08/24/Java多线程-如何正确的终止线程/index.html">
-<meta property="og:site_name" content="LinJW">
+<meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="最近打算读一下《实战java高并发程序设计》，夯实一下java多线程的知识。接下来应该会写一系列的读书笔记,里面会有多处引用到书中的代码或者文字。本文就是第一篇。 不推荐使用的stop方法Thread.stop()是一个被废弃的方法,不被推荐使用的原因是stop方法太过于暴力，强行把执行到一半的线程终止,并且会立即释放这个线程所有的锁。会破坏了线程中引用对象的一致性。 例如在数据库中维护着一张用户">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.424Z">

@@ -7,7 +7,7 @@
 <head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
-  <title>从源码看安卓应用的启动过程 | LinJW</title>
+  <title>从源码看安卓应用的启动过程 | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -20,7 +20,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="从源码看安卓应用的启动过程">
 <meta property="og:url" content="http://139.199.4.241/2018/03/08/从源码看安卓应用的启动过程/index.html">
-<meta property="og:site_name" content="LinJW">
+<meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="一般来讲安卓中的每个应用都是在一个单独的进程中运行的(当然也能使用android:process指定不同组件运行在不同进程中)。   我们在上图中可以看到，每一个进程都有一个java虚拟机(Dalvik虚拟机/ART虚拟机)实例。如果每次启动一个应用都需要启动一个新的虚拟机，然后初始化一堆的东西，那应用的启动时间将会变得无比漫长。 那有什么办法优化呢？ 假设我们有一个模板进程，每次不需要重新启动，">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://139.199.4.241/从源码看安卓应用的启动过程/1.png">

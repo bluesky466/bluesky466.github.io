@@ -3,7 +3,7 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: LinJW
+title: 编程代码笔记
 subtitle: 什么都想学
 description: 林嘉伟的个人博客
 author: 林嘉伟
@@ -86,5 +86,5 @@ live2d:
 ## Docs: http://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repository: git@203.195.136.226:/home/git/hexo.git
+  repository: git@1.12.247.108:/home/git/hexo.git
   branch: master

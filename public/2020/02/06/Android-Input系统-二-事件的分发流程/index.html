@@ -7,7 +7,7 @@
 <head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
-  <title>Android Input系统(二) 事件的分发流程 | LinJW</title>
+  <title>Android Input系统(二) 事件的分发流程 | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -20,7 +20,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android Input系统(二) 事件的分发流程">
 <meta property="og:url" content="http://139.199.4.241/2020/02/06/Android-Input系统-二-事件的分发流程/index.html">
-<meta property="og:site_name" content="LinJW">
+<meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="上篇笔记说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么: 首先会用haveCommandsLocked判断是否有Command,如果没有的话才去分发事件,如果有的话不分发,而是在下面的runCommandsLoc">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://139.199.4.241/AndroidInput系统二/1.png">

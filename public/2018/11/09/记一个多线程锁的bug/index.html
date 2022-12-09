@@ -7,7 +7,7 @@
 <head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
-  <title>记一个多线程锁的bug | LinJW</title>
+  <title>记一个多线程锁的bug | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -20,7 +20,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="记一个多线程锁的bug">
 <meta property="og:url" content="http://139.199.4.241/2018/11/09/记一个多线程锁的bug/index.html">
-<meta property="og:site_name" content="LinJW">
+<meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="测试报了个问题,说我们的应用在退出之后,立即重新启动会无效,必须等几秒之后才能正常启动。 追踪代码之后发现问题出在对一个资源的获取上。我们的应用在启动的时候需要获取一个设备资源,但是这个设备资源在程序退出之后几秒才被释放。导致在这几秒内重新启动程序的话就会获取设备资源失败。 程序的大概逻辑如下:  获取到设备之后会起一个子线程,不断从设备中读取数据,然后分发给上层 退出的时候需要关闭这个子线程,并">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.448Z">
