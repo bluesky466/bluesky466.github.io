@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>记一个线程阻塞问题的分析过程 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="最近遇到了一个线程阻塞的问题,分析的过程比较有代表性,这里做个总结分享下。 测试报的问题是: 概率性出现开机的前几分钟我们的服务不可用。 查看日志发现开机之后的几分钟之内mqtt库不断在断开、重连broker。MqttCallback.disconnected一直在被调用,而且还能看到发布消息也失败了: 12345612-28 18:27:18.948   812   884 E LinJwDem">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记一个线程阻塞问题的分析过程">
+<meta property="og:url" content="http://139.199.4.241/2022/12/29/记一个线程阻塞问题的分析过程/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="最近遇到了一个线程阻塞的问题,分析的过程比较有代表性,这里做个总结分享下。 测试报的问题是: 概率性出现开机的前几分钟我们的服务不可用。 查看日志发现开机之后的几分钟之内mqtt库不断在断开、重连broker。MqttCallback.disconnected一直在被调用,而且还能看到发布消息也失败了: 12345612-28 18:27:18.948   812   884 E LinJwDem">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2022-12-29T11:51:25.932Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="记一个线程阻塞问题的分析过程">
+<meta name="twitter:description" content="最近遇到了一个线程阻塞的问题,分析的过程比较有代表性,这里做个总结分享下。 测试报的问题是: 概率性出现开机的前几分钟我们的服务不可用。 查看日志发现开机之后的几分钟之内mqtt库不断在断开、重连broker。MqttCallback.disconnected一直在被调用,而且还能看到发布消息也失败了: 12345612-28 18:27:18.948   812   884 E LinJwDem">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Long-monitor-contention"><span class="toc-text">Long monitor contention</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#kill-3-命令"><span class="toc-text">kill -3 命令</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#schedstat"><span class="toc-text">schedstat</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#线程锁定位"><span class="toc-text">线程锁定位</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-记一个线程阻塞问题的分析过程" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">记一个线程阻塞问题的分析过程</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2022.12.29</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近遇到了一个线程阻塞的问题,分析的过程比较有代表性,这里做个总结分享下。</p>
+<p>测试报的问题是: 概率性出现开机的前几分钟我们的服务不可用。</p>
+<p>查看日志发现开机之后的几分钟之内<a href="https://github.com/eclipse/paho.mqtt.java" target="_blank" rel="noopener">mqtt库</a>不断在断开、重连broker。MqttCallback.disconnected一直在被调用,而且还能看到发布消息也失败了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">12-28 18:27:18.948   812   884 E LinJwDemoMqtt: publish failed : 等待来自服务器的响应时超时 (32000)</span><br><span class="line">12-28 18:27:18.948   812   884 E LinJwDemoMqtt: 	at d.c.a.a.a.l(Unknown Source:9)</span><br><span class="line">12-28 18:27:18.948   812   884 E LinJwDemoMqtt: 	at g.b.a.a.a.l.b.a(:4)</span><br><span class="line">12-28 18:27:18.948   812   884 E LinJwDemoMqtt: 	at g.b.a.a.a.k$b.run(:8)</span><br><span class="line">12-28 18:27:18.948   812   884 E LinJwDemoMqtt: 	at java.util.TimerThread.mainLoop(Timer.java:562)</span><br><span class="line">12-28 18:27:18.948   812   884 E LinJwDemoMqtt: 	at java.util.TimerThread.run(Timer.java:512)</span><br></pre></td></tr></table></figure>
+
+<p>过了几分钟之后就恢复了,能够和mqtt broker正常通讯。</p>
+<p>正常情况下断开连接应该是网络问题,但是发生如果是网络问题应该是一直连不上,而不会连接上又断开连接。除非刚开机的时候系统网络模块异常抽风,从日志上看网络是正常的,而且在broker的日志里面看到的是client主动断开的连接:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2022-12-28T18:27:19: Client LinJwDemoMqtt_1672223154916 closed its connection.</span><br></pre></td></tr></table></figure>
+
+<h1 id="Long-monitor-contention"><a href="#Long-monitor-contention" class="headerlink" title="Long monitor contention"></a>Long monitor contention</h1><p>这样看来问题还是出在客户端,仔细翻看<strong>首次出现异常</strong>和<strong>恢复正常</strong>的那段时间的日志,在恢复正常的时候发现了这样的打印: </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Long monitor contention with owner MQTT Call: LinJwDemoMqtt_1672223154916 (1252) at void java.lang.Thread.sleep(java.lang.Object, long, int)(Thread.java:-2) waiters=0 in java.util.List d.d.e.c.k.b.f.f(java.lang.String, java.lang.String) for 270.749s</span><br></pre></td></tr></table></figure>
+
+<p>这行日志的意思是tid为1252的LinJwDemoMqtt_1672223154916线程长期持有了对象的monitor,导致d.d.e.c.k.b.f.f这个方法等待了270.749秒才获取到线程锁。</p>
+<p>这里的monitor指的就是synchronized关键字的底层实现。正常情况对一段代码进行加锁应该是一个短时间的行为,一旦某个线程长时间持有对象锁就容易导致其他线程卡死。monitor会去监控等待锁的时长,如果超过某个阈值(正常是100ms,调试模式下是1s)就会输出上面的Long monitor contention打印提醒我们:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">// https://cs.android.com/android/platform/superproject/+/android-9.0.0_r60:art/runtime/monitor.cc</span><br><span class="line">static constexpr uint64_t kDebugThresholdFudgeFactor = kIsDebugBuild ? 10 : 1;</span><br><span class="line">static constexpr uint64_t kLongWaitMs = 100 * kDebugThresholdFudgeFactor;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line">&#125; else if (wait_ms &gt; kLongWaitMs &amp;&amp; owners_method != nullptr) &#123;</span><br><span class="line">uint32_t pc;</span><br><span class="line">ArtMethod* m = self-&gt;GetCurrentMethod(&amp;pc);</span><br><span class="line">// TODO: We should maybe check that original_owner is still a live thread.</span><br><span class="line">LOG(WARNING) &lt;&lt; &quot;Long &quot;</span><br><span class="line">    &lt;&lt; PrettyContentionInfo(original_owner_name,</span><br><span class="line">                            original_owner_tid,</span><br><span class="line">                            owners_method,</span><br><span class="line">                            owners_dex_pc,</span><br><span class="line">                            num_waiters)</span><br><span class="line">    &lt;&lt; &quot; in &quot; &lt;&lt; ArtMethod::PrettyMethod(m) &lt;&lt; &quot; for &quot;</span><br><span class="line">    &lt;&lt; PrettyDuration(MsToNs(wait_ms));</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>例如下面的代码sleep1会卡住sleep2:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">private void testLongMonitor() &#123;</span><br><span class="line">    new Thread(&quot;TestLongMonitor1&quot;) &#123;</span><br><span class="line">        @Override</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            super.run();</span><br><span class="line">            sleep1();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;.start();</span><br><span class="line"></span><br><span class="line">    new Thread(&quot;TestLongMonitor2&quot;) &#123;</span><br><span class="line">        @Override</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            super.run();</span><br><span class="line">            sleep2();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;.start();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private synchronized void sleep1() &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        Thread.sleep(1000);</span><br><span class="line">    &#125; catch (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private synchronized void sleep2() &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        Thread.sleep(1000);</span><br><span class="line">    &#125; catch (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在进入sleep2的时候就能看到下面的打印:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Long monitor contention with owner TestLongMonitor1 (3457) at void me.linjw.demo.MainActivity.sleep1()(MainActivity.java:41) waiters=0 in void me.linjw.demo.MainActivity.sleep2() for 1s</span><br></pre></td></tr></table></figure>
+
+<p>所以当我们看到这个打印的时候就应该去检查下是否在上锁的代码块里面做了耗时操作。</p>
+<h1 id="kill-3-命令"><a href="#kill-3-命令" class="headerlink" title="kill -3 命令"></a>kill -3 命令</h1><p>再来看看这个日志:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Long monitor contention with owner MQTT Call: LinJwDemoMqtt_1672223154916 (1252) at void java.lang.Thread.sleep(java.lang.Object, long, int)(Thread.java:-2) waiters=0 in java.util.List d.d.e.c.k.b.f.f(java.lang.String, java.lang.String) for 270.749s</span><br></pre></td></tr></table></figure>
+
+<p>让我比较难以理解的是LinJwDemoMqtt_1672223154916这个线程是卡在了java.lang.Thread.sleep这里。难道说我们的代码里面会有一个sleep 270秒的操作?搜索完整个代码都没有找到sleep的调用,于是只能压测复现然后使用”kill -3 {pid}”命令强制打印出进程的堆栈,然后在/data/anr/目录下找到它:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&quot;MQTT Call: LinJwDemoMqtt_1672223154916&quot; prio=5 tid=21 Sleeping</span><br><span class="line">  | group=&quot;main&quot; sCount=1 dsCount=0 flags=1 obj=0x132c06f0 self=0x7d42a40800</span><br><span class="line">  | sysTid=1561 nice=0 cgrp=default sched=0/0 handle=0x7d329144f0</span><br><span class="line">  | state=S schedstat=( 2172565480 1496095545 17833 ) utm=151 stm=64 core=5 HZ=100</span><br><span class="line">  | stack=0x7d32811000-0x7d32813000 stackSize=1041KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  at java.lang.Thread.sleep(Native method)</span><br><span class="line">  - sleeping on &lt;0x07054ef1&gt; (a java.lang.Object)</span><br><span class="line">  at java.lang.Thread.sleep(Thread.java:373)</span><br><span class="line">  - locked &lt;0x07054ef1&gt; (a java.lang.Object)</span><br><span class="line">  at java.lang.Thread.sleep(Thread.java:314)</span><br><span class="line">  at android.net.LocalSocketImpl$SocketOutputStream.flush(LocalSocketImpl.java:185)</span><br><span class="line">  at d.d.e.b.c.b.a(:2)</span><br><span class="line">  at d.d.e.c.k.b.f.g(:-1)</span><br><span class="line">  at d.d.e.c.k.b.f.f(:-1)</span><br><span class="line">  - locked &lt;0x0ab63ad6&gt; (a d.d.e.c.k.b.f)</span><br><span class="line">  at d.d.e.c.k.b.e.a(:-1)</span><br><span class="line">  at d.d.e.c.k.a.a(:2)</span><br><span class="line">  at d.d.e.c.j.d$a.a(:3)</span><br><span class="line">  at d.d.e.c.h.e$a.a(:30)</span><br><span class="line">  at g.b.a.a.a.l.c.d(:12)</span><br><span class="line">  at g.b.a.a.a.l.c.run(:-1)</span><br><span class="line">  at java.lang.Thread.run(Thread.java:764)</span><br></pre></td></tr></table></figure>
+
+<p>发现是卡在了LocalSocket里面,我们的确会使用localsocket做通讯。翻看LocalSocketImpl的源码会找到这样一个丑陋的实现:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">// https://cs.android.com/android/platform/superproject/+/android-9.0.0_r60:frameworks/base/core/java/android/net/LocalSocketImpl.java</span><br><span class="line">public void flush() throws IOException &#123;</span><br><span class="line">    FileDescriptor myFd = fd;</span><br><span class="line">    if (myFd == null) throw new IOException(&quot;socket closed&quot;);</span><br><span class="line"></span><br><span class="line">    // Loop until the output buffer is empty.</span><br><span class="line">    Int32Ref pending = new Int32Ref(0);</span><br><span class="line">    while (true) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            // See linux/net/unix/af_unix.c</span><br><span class="line">            Os.ioctlInt(myFd, OsConstants.TIOCOUTQ, pending);</span><br><span class="line">        &#125; catch (ErrnoException e) &#123;</span><br><span class="line">            throw e.rethrowAsIOException();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (pending.value &lt;= 0) &#123;</span><br><span class="line">            // The output buffer is empty.</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            Thread.sleep(10);</span><br><span class="line">        &#125; catch (InterruptedException ie) &#123;</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有个while true里面去sleep了10ms。但是这里和我们看到的270多秒相差甚远,就算Thread.sleep再怎么有误差也差不了这么多。</p>
+<p>由于是开机的时候出现的,考虑可能是时间同步的锅,可能在sleep前后系统时间改变了。但是翻看日志发现时间是连续的没有出现跳变。</p>
+<h1 id="schedstat"><a href="#schedstat" class="headerlink" title="schedstat"></a>schedstat</h1><p>我连续抓了几次堆栈,发现schedstat值是在增加的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">// 第一次抓取</span><br><span class="line">&quot;MQTT Call: LinJwDemoMqtt_1672223154916&quot; prio=5 tid=21 Sleeping</span><br><span class="line">  | group=&quot;main&quot; sCount=1 dsCount=0 flags=1 obj=0x132c06f0 self=0x7d42a40800</span><br><span class="line">  | sysTid=1561 nice=0 cgrp=default sched=0/0 handle=0x7d329144f0</span><br><span class="line">  | state=S schedstat=( 1808090884 1440374635 15039 ) utm=129 stm=50 core=4 HZ=100</span><br><span class="line"></span><br><span class="line">// 第二次抓取</span><br><span class="line">&quot;MQTT Call: LinJwDemoMqtt_1672223154916&quot; prio=5 tid=21 Sleeping</span><br><span class="line">  | group=&quot;main&quot; sCount=1 dsCount=0 flags=1 obj=0x132c06f0 self=0x7d42a40800</span><br><span class="line">  | sysTid=1561 nice=0 cgrp=default sched=0/0 handle=0x7d329144f0</span><br><span class="line">  | state=S schedstat=( 2391421933 1559350961 20051 ) utm=165 stm=73 core=3 HZ=100</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 第三次抓取</span><br><span class="line">&quot;MQTT Call: LinJwDemoMqtt_1672223154916&quot; prio=5 tid=21 Sleeping</span><br><span class="line">  | group=&quot;main&quot; sCount=1 dsCount=0 flags=1 obj=0x132c06f0 self=0x7d42a40800</span><br><span class="line">  | sysTid=1561 nice=0 cgrp=default sched=0/0 handle=0x7d329144f0</span><br><span class="line">  | state=S schedstat=( 3049001564 1709661634 25792 ) utm=210 stm=94 core=1 HZ=100</span><br></pre></td></tr></table></figure>
+
+<p>这个schedstat其实是Linux里面的东西,从<a href="https://docs.kernel.org/scheduler/sched-stats.html?highlight=schedstat" target="_blank" rel="noopener">文档</a>来看这三个值分别是:</p>
+<ol>
+<li>在cpu上花费的时间（纳秒）</li>
+<li>等待运行队列所花费的时间（纳秒）</li>
+<li>此cpu上运行的时间片数</li>
+</ol>
+<p>我们也可以用cat命令直接读取到:</p>
+<blockquote>
+<p>cat /proc/{pic}/task/{tid}/schedstat</p>
+</blockquote>
+<p>从schedstat来看线程占用的cpu时间片是一直在增加的,所以这个线程并不是一直sleep的。只能说读取owners_method的时候刚好抓到sleep这个方法了。</p>
+<p>由于我们写入的数据是一个很短的字符串,于是结合LocalSocketImpl的源码可以猜测是Os.ioctlInt写入之后pending.value一直大于0。也许是localsocket接收端有问题,又有可能是系统本身在开机的时候某些状态有问题。</p>
+<p>由于复现了几次,时间都是270、280秒,感觉系统本身的问题概率不大。于是写了个简单的测试接收端,发现只要接收端一直不去read数据,发送端flush里的while循环就一直出不来。</p>
+<p>由于我们提供的客户端sdk里面使用okhttp封装了一层localsocket,okhttp的复用连接池里面socket的生存时间是5分钟,在生存时间到了之后就会自动回收socket,触发发送端的flush退出while循环。所以复现的几次都是卡了270、280多秒接近5分钟。从恢复时间点附近也找到了这样的日志作为佐证:</p>
+<p>12-28 18:30:59.832  1852  2770 W System  : A resource failed to call response.body().close(). </p>
+<h1 id="线程锁定位"><a href="#线程锁定位" class="headerlink" title="线程锁定位"></a>线程锁定位</h1><p>从上面我们只能看到其中的一个线程被localsocket堵住了,但是为什么mqtt会不断断开呢,我们从堆栈里面看到这个线程锁了一个0x0ab63ad6对象,在堆栈里搜索它,可以看到后面新启动的mqtt线程都在”waiting to lock &lt;0x0ab63ad6&gt; (a d.d.e.c.k.b.f) held by thread 21”:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">&quot;MQTT Call: LinJwDemoMqtt_1672223188697&quot; prio=5 tid=41 Blocked</span><br><span class="line">  | group=&quot;main&quot; sCount=1 dsCount=0 flags=1 obj=0x13780ef8 self=0x7d42a3fc00</span><br><span class="line">  | sysTid=4307 nice=0 cgrp=default sched=0/0 handle=0x7d30f194f0</span><br><span class="line">  | state=S schedstat=( 9329835 2060251 4 ) utm=0 stm=0 core=2 HZ=100</span><br><span class="line">  | stack=0x7d30e16000-0x7d30e18000 stackSize=1041KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  at d.d.e.c.k.b.f.f(:-1)</span><br><span class="line">  - waiting to lock &lt;0x0ab63ad6&gt; (a d.d.e.c.k.b.f) held by thread 21</span><br><span class="line">  at d.d.e.c.k.b.e.a(:-1)</span><br><span class="line">  at d.d.e.c.k.a.a(:2)</span><br><span class="line">  at d.d.e.c.a.a(:3)</span><br><span class="line">  at d.d.e.c.j.d.a(:24)</span><br><span class="line">  at d.d.e.c.j.b.a(:1)</span><br><span class="line">  at d.d.e.c.h.e$a.a(:11)</span><br><span class="line">  at g.b.a.a.a.l.c.d(:12)</span><br><span class="line">  at g.b.a.a.a.l.c.run(:-1)</span><br><span class="line">  at java.lang.Thread.run(Thread.java:764)</span><br><span class="line"></span><br><span class="line">&quot;MQTT Call: LinJwDemoMqtt_1672223201187&quot; prio=5 tid=42 Blocked</span><br><span class="line">  | group=&quot;main&quot; sCount=1 dsCount=0 flags=1 obj=0x131c10b8 self=0x7d44472000</span><br><span class="line">  | sysTid=4730 nice=0 cgrp=default sched=0/0 handle=0x7d30e134f0</span><br><span class="line">  | state=S schedstat=( 23179915 15908085 274 ) utm=1 stm=0 core=3 HZ=100</span><br><span class="line">  | stack=0x7d30d10000-0x7d30d12000 stackSize=1041KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  at d.d.e.c.k.b.f.f(:-1)</span><br><span class="line">  - waiting to lock &lt;0x0ab63ad6&gt; (a d.d.e.c.k.b.f) held by thread 21</span><br><span class="line">  at d.d.e.c.k.b.e.a(:-1)</span><br><span class="line">  at d.d.e.c.k.a.a(:2)</span><br><span class="line">  at d.d.e.c.a.a(:3)</span><br><span class="line">  at d.d.e.c.j.d.a(:24)</span><br><span class="line">  at d.d.e.c.j.b.a(:1)</span><br><span class="line">  at d.d.e.c.h.e$a.a(:11)</span><br><span class="line">  at g.b.a.a.a.l.c.d(:12)</span><br><span class="line">  at g.b.a.a.a.l.c.run(:-1)</span><br><span class="line">  at java.lang.Thread.run(Thread.java:764)</span><br><span class="line"></span><br><span class="line">&quot;MQTT Call: LinJwDemoMqtt_1672223216180&quot; prio=5 tid=43 Blocked</span><br><span class="line">  | group=&quot;main&quot; sCount=1 dsCount=0 flags=1 obj=0x13782748 self=0x7d44472c00</span><br><span class="line">  | sysTid=4945 nice=0 cgrp=default sched=0/0 handle=0x7d30d0d4f0</span><br><span class="line">  | state=S schedstat=( 9939123 3184420 14 ) utm=0 stm=0 core=3 HZ=100</span><br><span class="line">  | stack=0x7d30c0a000-0x7d30c0c000 stackSize=1041KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  at d.d.e.c.k.b.f.f(:-1)</span><br><span class="line">  - waiting to lock &lt;0x0ab63ad6&gt; (a d.d.e.c.k.b.f) held by thread 21</span><br><span class="line">  at d.d.e.c.k.b.e.a(:-1)</span><br><span class="line">  at d.d.e.c.k.a.a(:2)</span><br><span class="line">  at d.d.e.c.a.a(:3)</span><br><span class="line">  at d.d.e.c.j.d.a(:24)</span><br><span class="line">  at d.d.e.c.j.b.a(:1)</span><br><span class="line">  at d.d.e.c.h.e$a.a(:11)</span><br><span class="line">  at g.b.a.a.a.l.c.d(:12)</span><br><span class="line">  at g.b.a.a.a.l.c.run(:-1)</span><br><span class="line">  at java.lang.Thread.run(Thread.java:764)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>tid=21就是我们之前那个卡在flush的线程。</p>
+<p>也就是说mqtt连接成功之后都会调用到localsocket的写入,写入之前我们的代码里面对代码块进行加锁,然后就都在等第一个线程的flush退出while循环,导致mqtt库接收不到broker的响应自动断开。</p>
+<p>所以现在已经可以定位是提供的sdk的问题,接下来就需要处理sdk里面没有读取的异常情况。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
