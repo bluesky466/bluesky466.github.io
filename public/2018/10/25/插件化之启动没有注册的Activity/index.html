@@ -19,17 +19,17 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="插件化之启动没有注册的Activity">
-<meta property="og:url" content="http://139.199.4.241/2018/10/25/插件化之启动没有注册的Activity/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2018/10/25/插件化之启动没有注册的Activity/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="启动没有在AndroidManifest中注册的Activity是安卓插件化中一个很重要的知识点,只有这样你才能把Activity中分离出来,放到插件中． 启动没有在AndroidManifest中注册的Activity，会涉及到Activity启动流程、反射、动态代理的知识,我觉得就算不学插件化,掌握这些知识也是很有用的． Activity的启动流程为了达到启动没有在AndroidManifes">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/插件化之启动没有注册的Activity/1.png">
-<meta property="og:image" content="http://139.199.4.241/插件化之启动没有注册的Activity/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/插件化之启动没有注册的Activity/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/插件化之启动没有注册的Activity/2.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.444Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="插件化之启动没有注册的Activity">
 <meta name="twitter:description" content="启动没有在AndroidManifest中注册的Activity是安卓插件化中一个很重要的知识点,只有这样你才能把Activity中分离出来,放到插件中． 启动没有在AndroidManifest中注册的Activity，会涉及到Activity启动流程、反射、动态代理的知识,我觉得就算不学插件化,掌握这些知识也是很有用的． Activity的启动流程为了达到启动没有在AndroidManifes">
-<meta name="twitter:image" content="http://139.199.4.241/插件化之启动没有注册的Activity/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/插件化之启动没有注册的Activity/1.png">
 
   
 
@@ -116,6 +116,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -161,7 +171,7 @@
       <p>启动没有在AndroidManifest中注册的Activity是安卓插件化中一个很重要的知识点,只有这样你才能把Activity中分离出来,放到插件中．</p>
 <p>启动没有在AndroidManifest中注册的Activity，会涉及到Activity启动流程、反射、动态代理的知识,我觉得就算不学插件化,掌握这些知识也是很有用的．</p>
 <h1 id="Activity的启动流程"><a href="#Activity的启动流程" class="headerlink" title="Activity的启动流程"></a>Activity的启动流程</h1><p>为了达到启动没有在AndroidManifest中注册的Activity的目的,我们先来分析下Activity的启动流程,看看有没有什么突破口.</p>
-<p>这部分的知识我在<a href="http://blog.islinjw.cn/2018/03/07/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8BActivity%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" target="_blank" rel="noopener">《从源码看Activity生命周期》</a>这篇博客里面其实也有讲过,这里只做大概的讲解,然后做一些补充,感兴趣的同学可以将两篇博客结合起来看看．</p>
+<p>这部分的知识我在<a href="http://blog.islinjw.cn/2018/03/07/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8BActivity%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">《从源码看Activity生命周期》</a>这篇博客里面其实也有讲过,这里只做大概的讲解,然后做一些补充,感兴趣的同学可以将两篇博客结合起来看看．</p>
 <h2 id="抛出ActivityNotFoundException的原因"><a href="#抛出ActivityNotFoundException的原因" class="headerlink" title="抛出ActivityNotFoundException的原因"></a>抛出ActivityNotFoundException的原因</h2><p>如果使用startActivity去启动一个没有在AndroidManifest中注册的Activity,正常情况下是会抛出ActivityNotFoundException的,那这个异常是怎么抛出来的呢?</p>
 <p>我们知道调用Activity.startActivity方法,实际上最后是调用了Instrumentation.execStartActivity:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">public class Instrumentation &#123;</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  public ActivityResult execStartActivity(</span><br><span class="line">                  Context who, IBinder contextThread, IBinder token, Activity target,</span><br><span class="line">                  Intent intent, int requestCode, Bundle options) &#123;</span><br><span class="line">      ...</span><br><span class="line">      int result = ActivityManagerNative.getDefault()</span><br><span class="line">                         .startActivity(whoThread, who.getBasePackageName(), intent,</span><br><span class="line">                                      intent.resolveTypeIfNeeded(who.getContentResolver()),</span><br><span class="line">                                      token, target != null ? target.mEmbeddedID : null,</span><br><span class="line">                                      requestCode, 0, null, null, options);</span><br><span class="line">      checkStartActivityResult(result, intent);</span><br><span class="line">      ...</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  public static void checkStartActivityResult(int res, Object intent) &#123;</span><br><span class="line">        ...</span><br><span class="line">        switch (res) &#123;</span><br><span class="line">              case ActivityManager.START_INTENT_NOT_RESOLVED:</span><br><span class="line">              case ActivityManager.START_CLASS_NOT_FOUND:</span><br><span class="line">                  if (intent instanceof Intent &amp;&amp; ((Intent)intent).getComponent() != null)</span><br><span class="line">                      throw new ActivityNotFoundException(</span><br><span class="line">                              &quot;Unable to find explicit activity class &quot;</span><br><span class="line">                              + ((Intent)intent).getComponent().toShortString()</span><br><span class="line">                              + &quot;; have you declared this activity in your AndroidManifest.xml?&quot;);</span><br><span class="line">                  throw new ActivityNotFoundException(</span><br><span class="line">                          &quot;No Activity found to handle &quot; + intent);</span><br><span class="line">              ...</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -206,7 +216,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Singleton&lt;T&gt; &#123;</span><br><span class="line">    private T mInstance;</span><br><span class="line"></span><br><span class="line">    protected abstract T create();</span><br><span class="line"></span><br><span class="line">    public final T get() &#123;</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            if (mInstance == null) &#123;</span><br><span class="line">                mInstance = create();</span><br><span class="line">            &#125;</span><br><span class="line">            return mInstance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>其实最终的IActivityManager是保存在mInstance这个变量里面的,我们只需要替换这个变量就好,于是就绕过了Singleton没有定义的问题。但是还有这个IActivityManager的定义问题摆在我们面前。</p>
-<p>怎么办呢？答案就是我们可以用动态代理的方法去创建IActivityManager。关于动态代理我之前写过一篇博客 <a href="http://blog.islinjw.cn/2016/05/27/Java%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3%E5%92%8C%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/" target="_blank" rel="noopener">《Java自定义注解和动态代理》</a> ,大家感兴趣的话可以去看看。这里就直接把代码贴上了:</p>
+<p>怎么办呢？答案就是我们可以用动态代理的方法去创建IActivityManager。关于动态代理我之前写过一篇博客 <a href="http://blog.islinjw.cn/2016/05/27/Java%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3%E5%92%8C%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">《Java自定义注解和动态代理》</a> ,大家感兴趣的话可以去看看。这里就直接把代码贴上了:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">// 获取gDefault</span><br><span class="line">Class activityManagerClass = Class.forName(&quot;android.app.ActivityManagerNative&quot;);</span><br><span class="line">Field gDefaultField = activityManagerClass.getDeclaredField(&quot;gDefault&quot;);</span><br><span class="line">gDefaultField.setAccessible(true);</span><br><span class="line">Object gDefault = gDefaultField.get(null);</span><br><span class="line"></span><br><span class="line">//　获取mIntance</span><br><span class="line">Class singletonClass = Class.forName(&quot;android.util.Singleton&quot;);</span><br><span class="line">Field mInstanceField = singletonClass.getDeclaredField(&quot;mInstance&quot;);</span><br><span class="line">mInstanceField.setAccessible(true);</span><br><span class="line">Object mInstance = mInstanceField.get(gDefault);</span><br><span class="line"></span><br><span class="line">// 替换mIntance</span><br><span class="line">Object proxy = Proxy.newProxyInstance(</span><br><span class="line">        mInstance.getClass().getClassLoader(),</span><br><span class="line">        new Class[]&#123;Class.forName(&quot;android.app.IActivityManager&quot;)&#125;,</span><br><span class="line">        new IActivityManagerHandler(mInstance));</span><br><span class="line">mInstanceField.set(gDefault, proxy);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public static class IActivityManagerHandler implements InvocationHandler &#123;</span><br><span class="line">    private Object mOrigin;</span><br><span class="line"></span><br><span class="line">    IActivityManagerHandler(Object origin) &#123;</span><br><span class="line">        mOrigin = origin;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable &#123;</span><br><span class="line">        if (&quot;startActivity&quot;.equals(method.getName())) &#123;</span><br><span class="line">            int index = 0;</span><br><span class="line">            for (int i = 0; i &lt; args.length; i++) &#123;</span><br><span class="line">                if (args[i] instanceof Intent) &#123;</span><br><span class="line">                    index = i;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            Intent raw = (Intent) args[index];</span><br><span class="line"></span><br><span class="line">            Intent intent = new Intent();</span><br><span class="line">            intent.setClassName(raw.getComponent().getPackageName(), StubActivity.class.getName());</span><br><span class="line">            intent.putExtra(&quot;RawIntent&quot;, raw);</span><br><span class="line">            args[index] = intent;</span><br><span class="line">        &#125;</span><br><span class="line">        return method.invoke(mOrigin, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>上面的代码的功能就是创建一个IActivityManager的代理,代理startActivity方法,将启动的Activity的Intent换成启动StubActivity的Intent,并且将原来的Intent保存起来放到RawIntent这个Extra里。</p>
@@ -317,6 +327,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

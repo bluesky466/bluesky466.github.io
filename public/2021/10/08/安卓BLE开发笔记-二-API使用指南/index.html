@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓BLE开发笔记(二) API使用指南">
-<meta property="og:url" content="http://139.199.4.241/2021/10/08/安卓BLE开发笔记-二-API使用指南/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/10/08/安卓BLE开发笔记-二-API使用指南/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="上一篇简单介绍了Ble协议，这篇来看看安卓上的代码具体要怎么写。 权限与功能要在代码中使用蓝牙功能需要先申请到对应的权限，在AndroidManifest.xml文件中添加权限声明 123&amp;lt;uses-permission android:name=&quot;android.permission.BLUETOOTH&quot; /&amp;gt;&amp;lt;uses-permission android:name=&quot;and">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -155,7 +165,7 @@
 
   <div class="article-content">
     
-      <p><a href="https://blog.islinjw.cn/2021/09/29/%E5%AE%89%E5%8D%93BLE%E5%BC%80%E5%8F%91%E7%AC%94%E8%AE%B0-%E4%B8%80-BLE%E5%8D%8F%E8%AE%AE%E5%85%A5%E9%97%A8/" target="_blank" rel="noopener">上一篇</a>简单介绍了Ble协议，这篇来看看安卓上的代码具体要怎么写。</p>
+      <p><a href="https://blog.islinjw.cn/2021/09/29/%E5%AE%89%E5%8D%93BLE%E5%BC%80%E5%8F%91%E7%AC%94%E8%AE%B0-%E4%B8%80-BLE%E5%8D%8F%E8%AE%AE%E5%85%A5%E9%97%A8/">上一篇</a>简单介绍了Ble协议，这篇来看看安卓上的代码具体要怎么写。</p>
 <h1 id="权限与功能"><a href="#权限与功能" class="headerlink" title="权限与功能"></a>权限与功能</h1><p>要在代码中使用蓝牙功能需要先申请到对应的权限，在AndroidManifest.xml文件中添加权限声明</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.BLUETOOTH"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.BLUETOOTH_ADMIN"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.ACCESS_COARSE_LOCATION"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
 
@@ -271,6 +281,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

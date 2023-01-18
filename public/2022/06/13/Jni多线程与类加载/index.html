@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,Android,C&#x2F;C++">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Jni多线程与类加载">
-<meta property="og:url" content="http://139.199.4.241/2022/06/13/Jni多线程与类加载/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2022/06/13/Jni多线程与类加载/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="在JNI中我们可以通过JNIEnv的FindClass方法查找到java的类然后进行类似反射的调用。 如果通过java代码调用的Jni函数,此时c的函数与Java运行在同一个线程中。无论是在主线程还是java启动的子线程中FindClass都能正常工作。 native子线程加载不了自定义的Class但如果是通过pthread_create之类的方法在native层创建了子线程,则在这个子线程中Fi">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -181,7 +191,7 @@
 <p>答案是可以的,但是如果直接将jclass保存到全局引用会出现异常:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">06-11 16:50:16.656  3507  3507 F DEBUG   : Abort message: &apos;java_vm_ext.cc:534] JNI DETECTED ERROR IN APPLICATION: use of deleted local reference 0x75&apos;</span><br></pre></td></tr></table></figure>
 
-<p>我之前写过一篇<a href="https://blog.islinjw.cn/2020/04/08/JNI%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" target="_blank" rel="noopener">JNI内存管理</a>的笔记有讲到相关的知识点,在java线程中FindClass得到的jclass是局部引用,局部引用在退出jni函数回到java代码的时候就被回收了。我们需要创建全局引用或者弱全局引用去保存:</p>
+<p>我之前写过一篇<a href="https://blog.islinjw.cn/2020/04/08/JNI%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">JNI内存管理</a>的笔记有讲到相关的知识点,在java线程中FindClass得到的jclass是局部引用,局部引用在退出jni函数回到java代码的时候就被回收了。我们需要创建全局引用或者弱全局引用去保存:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clazzMainActivity = (jclass) env-&gt;NewGlobalRef(clazz);</span><br></pre></td></tr></table></figure>
 
 <p>之后我们就能在子线程中使用这个jclass通过类似反射的操作调用java代码了:</p>
@@ -250,6 +260,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,Android,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="OpenSL ES 读取蓝牙语音遥控器音频">
-<meta property="og:url" content="http://139.199.4.241/2019/10/23/OpenSLES读取蓝牙语音遥控器音频/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/10/23/OpenSLES读取蓝牙语音遥控器音频/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="最近协助处理一个OpenSL的问题。问题背景和描述如下: 我司的安卓电视需要使用OpenSL从语音遥控器上采集音频,而语音遥控器有两种协议:2.4G和蓝牙。 在2.4G遥控上功能正常,但是使用蓝牙遥控器,没有任何报错,流程也正常跑通,但是读取到的音频数据全部是空数据。 其实OpenSL我之前也只是简单入门而已(笔记在这里),首先想到的是去修改它的设备类型 123pHelper-&amp;gt;device">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -158,7 +168,7 @@
       <p>最近协助处理一个OpenSL的问题。问题背景和描述如下:</p>
 <p>我司的安卓电视需要使用OpenSL从语音遥控器上采集音频,而语音遥控器有两种协议:2.4G和蓝牙。</p>
 <p>在2.4G遥控上功能正常,但是使用蓝牙遥控器,没有任何报错,流程也正常跑通,但是读取到的音频数据全部是空数据。</p>
-<p>其实OpenSL我之前也只是简单入门而已(笔记在<a href="http://blog.islinjw.cn/2018/09/01/OpenSLES%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" target="_blank" rel="noopener">这里</a>),首先想到的是去修改它的设备类型</p>
+<p>其实OpenSL我之前也只是简单入门而已(笔记在<a href="http://blog.islinjw.cn/2018/09/01/OpenSLES%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">这里</a>),首先想到的是去修改它的设备类型</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pHelper-&gt;device.locatorType = SL_DATALOCATOR_IODEVICE;</span><br><span class="line">pHelper-&gt;device.deviceType = SL_IODEVICE_AUDIOINPUT;</span><br><span class="line">pHelper-&gt;device.deviceID = SL_DEFAULTDEVICEID_AUDIOINPUT;</span><br></pre></td></tr></table></figure>
 
 <p>但是查看了下locatorType、deviceType、deviceID可以选择的选项,发现并没有适合的:</p>
@@ -255,6 +265,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

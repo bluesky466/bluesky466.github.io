@@ -19,16 +19,16 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="源码阅读计划 - OkHttp复用连接池">
-<meta property="og:url" content="http://139.199.4.241/2021/05/19/源码阅读计划-OkHttp复用连接池/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/05/19/源码阅读计划-OkHttp复用连接池/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="蛮久之前写过一篇博客OkHttp源码解析，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。 其实这个库的其他设计也是蛮有意思的，这篇笔记我们就来看看它的Http连接是怎么实现的。 这部分的代码我们从ConnectInterceptor这个拦截器看起，它主要就是负责http的连接。新版本的OkHttp已经用kotlin重写了，所以下面的代码都是kotlin的:">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/OkHttp复用连接池/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/OkHttp复用连接池/1.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.447Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="源码阅读计划 - OkHttp复用连接池">
 <meta name="twitter:description" content="蛮久之前写过一篇博客OkHttp源码解析，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。 其实这个库的其他设计也是蛮有意思的，这篇笔记我们就来看看它的Http连接是怎么实现的。 这部分的代码我们从ConnectInterceptor这个拦截器看起，它主要就是负责http的连接。新版本的OkHttp已经用kotlin重写了，所以下面的代码都是kotlin的:">
-<meta name="twitter:image" content="http://139.199.4.241/OkHttp复用连接池/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/OkHttp复用连接池/1.png">
 
   
 
@@ -115,6 +115,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -157,7 +167,7 @@
 
   <div class="article-content">
     
-      <p>蛮久之前写过一篇博客<a href="https://blog.islinjw.cn/2017/12/30/OkHttp%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" target="_blank" rel="noopener">OkHttp源码解析</a>，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。</p>
+      <p>蛮久之前写过一篇博客<a href="https://blog.islinjw.cn/2017/12/30/OkHttp%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">OkHttp源码解析</a>，相信大多数同学也看过或者了解过OkHttp的整体架构使用的是基于责任链模式的拦截器链。</p>
 <p>其实这个库的其他设计也是蛮有意思的，这篇笔记我们就来看看它的Http连接是怎么实现的。</p>
 <p>这部分的代码我们从ConnectInterceptor这个拦截器看起，它主要就是负责http的连接。新版本的OkHttp已经用kotlin重写了，所以下面的代码都是kotlin的:</p>
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">object</span> ConnectInterceptor : Interceptor &#123;</span><br><span class="line">  <span class="meta">@Throws(IOException::class)</span></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">fun</span> <span class="title">intercept</span><span class="params">(chain: <span class="type">Interceptor</span>.<span class="type">Chain</span>)</span></span>: Response &#123;</span><br><span class="line">    <span class="keyword">val</span> realChain = chain <span class="keyword">as</span> RealInterceptorChain</span><br><span class="line">    <span class="keyword">val</span> exchange = realChain.call.initExchange(chain)</span><br><span class="line">    <span class="keyword">val</span> connectedChain = realChain.copy(exchange = exchange)</span><br><span class="line">    <span class="keyword">return</span> connectedChain.proceed(realChain.request)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RealCall</span></span>(...) : Call &#123;</span><br><span class="line">	<span class="keyword">internal</span> <span class="function"><span class="keyword">fun</span> <span class="title">initExchange</span><span class="params">(chain: <span class="type">RealInterceptorChain</span>)</span></span>: Exchange &#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">val</span> codec = exchangeFinder.find(client, chain)</span><br><span class="line">		<span class="keyword">val</span> result = Exchange(<span class="keyword">this</span>, eventListener, exchangeFinder, codec)</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">return</span> result</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -289,6 +299,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

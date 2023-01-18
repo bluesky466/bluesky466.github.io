@@ -19,18 +19,18 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android Input系统(二) 事件的分发流程">
-<meta property="og:url" content="http://139.199.4.241/2020/02/06/Android-Input系统-二-事件的分发流程/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2020/02/06/Android-Input系统-二-事件的分发流程/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="上篇笔记说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么: 首先会用haveCommandsLocked判断是否有Command,如果没有的话才去分发事件,如果有的话不分发,而是在下面的runCommandsLoc">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/AndroidInput系统二/1.png">
-<meta property="og:image" content="http://139.199.4.241/AndroidInput系统二/2.png">
-<meta property="og:image" content="http://139.199.4.241/AndroidInput系统二/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput系统二/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput系统二/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput系统二/3.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.419Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android Input系统(二) 事件的分发流程">
 <meta name="twitter:description" content="上篇笔记说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么: 首先会用haveCommandsLocked判断是否有Command,如果没有的话才去分发事件,如果有的话不分发,而是在下面的runCommandsLoc">
-<meta name="twitter:image" content="http://139.199.4.241/AndroidInput系统二/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/AndroidInput系统二/1.png">
 
   
 
@@ -117,6 +117,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -159,7 +169,7 @@
 
   <div class="article-content">
     
-      <p><a href="http://blog.islinjw.cn/2020/01/23/Android-Input%E7%B3%BB%E7%BB%9F-%E4%B8%80-%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%8E%B7%E5%8F%96%E6%B5%81%E7%A8%8B/" target="_blank" rel="noopener">上篇笔记</a>说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么:</p>
+      <p><a href="http://blog.islinjw.cn/2020/01/23/Android-Input%E7%B3%BB%E7%BB%9F-%E4%B8%80-%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%8E%B7%E5%8F%96%E6%B5%81%E7%A8%8B/">上篇笔记</a>说到InputReader将事件传到InputDispatcher:: mInboundQueue里面并且唤醒了InputDispatcherThread。现在我们来继续看看InputDispatcherThread被唤醒之后干了什么:</p>
 <p>首先会用haveCommandsLocked判断是否有Command,如果没有的话才去分发事件,如果有的话不分发,而是在下面的runCommandsLockedInterruptible里面执行Command:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">void InputDispatcher::dispatchOnce() &#123;</span><br><span class="line">    nsecs_t nextWakeupTime = LONG_LONG_MAX;</span><br><span class="line">    &#123;</span><br><span class="line">        AutoMutex _l(mLock);</span><br><span class="line">        mDispatcherIsAliveCondition.broadcast();</span><br><span class="line"></span><br><span class="line">        if (!haveCommandsLocked()) &#123;</span><br><span class="line">            dispatchOnceInnerLocked(&amp;nextWakeupTime);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (runCommandsLockedInterruptible()) &#123;</span><br><span class="line">            nextWakeupTime = LONG_LONG_MIN;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -297,6 +307,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

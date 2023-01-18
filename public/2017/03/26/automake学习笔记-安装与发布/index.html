@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,编译相关">
 <meta property="og:type" content="article">
 <meta property="og:title" content="automake学习笔记 - 安装与发布">
-<meta property="og:url" content="http://139.199.4.241/2017/03/26/automake学习笔记-安装与发布/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2017/03/26/automake学习笔记-安装与发布/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="系列笔记: 1. automake学习笔记 - helloworld2. automake学习笔记 - 模块化编译3. automake学习笔记 - 安装与发布4. automake学习笔记 - 交叉编译 辛辛苦苦写出来的代码当然是需要发布出来给自己或者别人去使用的。这篇文章就谈一谈发布相关的东西吧。 安装软件在编译完后就需要进行安装。configure生成的Makefile支持install。使">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -156,7 +166,7 @@
   <div class="article-content">
     
       <p>系列笔记:</p>
-<p><a href="https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="noopener">1. automake学习笔记 - helloworld</a><br><a href="https://blog.islinjw.cn/2017/03/21/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%A8%A1%E5%9D%97%E5%8C%96%E7%BC%96%E8%AF%91/" target="_blank" rel="noopener">2. automake学习笔记 - 模块化编译</a><br><a href="https://blog.islinjw.cn/2017/03/26/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8F%91%E5%B8%83/" target="_blank" rel="noopener">3. automake学习笔记 - 安装与发布</a><br><a href="https://blog.islinjw.cn/2017/04/02/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/" target="_blank" rel="noopener">4. automake学习笔记 - 交叉编译</a></p>
+<p><a href="https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/">1. automake学习笔记 - helloworld</a><br><a href="https://blog.islinjw.cn/2017/03/21/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%A8%A1%E5%9D%97%E5%8C%96%E7%BC%96%E8%AF%91/">2. automake学习笔记 - 模块化编译</a><br><a href="https://blog.islinjw.cn/2017/03/26/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8F%91%E5%B8%83/">3. automake学习笔记 - 安装与发布</a><br><a href="https://blog.islinjw.cn/2017/04/02/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/">4. automake学习笔记 - 交叉编译</a></p>
 <p>辛辛苦苦写出来的代码当然是需要发布出来给自己或者别人去使用的。这篇文章就谈一谈发布相关的东西吧。</p>
 <h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>软件在编译完后就需要进行安装。configure生成的Makefile支持install。使用make install 命令就可以将编译出来的软件安装到系统中。</p>
 <p>如果没有做配置，默认会安装到/usr/local中,当然如果需要的话也可以使用configure的–prefix参数指定安装的路径,如在build中执行下面的命令就可以将build目录指定为安装目录:</p>
@@ -320,6 +330,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

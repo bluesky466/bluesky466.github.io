@@ -19,17 +19,17 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="从源码看安卓应用的启动过程">
-<meta property="og:url" content="http://139.199.4.241/2018/03/08/从源码看安卓应用的启动过程/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2018/03/08/从源码看安卓应用的启动过程/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="一般来讲安卓中的每个应用都是在一个单独的进程中运行的(当然也能使用android:process指定不同组件运行在不同进程中)。   我们在上图中可以看到，每一个进程都有一个java虚拟机(Dalvik虚拟机/ART虚拟机)实例。如果每次启动一个应用都需要启动一个新的虚拟机，然后初始化一堆的东西，那应用的启动时间将会变得无比漫长。 那有什么办法优化呢？ 假设我们有一个模板进程，每次不需要重新启动，">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/从源码看安卓应用的启动过程/1.png">
-<meta property="og:image" content="http://139.199.4.241/从源码看安卓应用的启动过程/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/从源码看安卓应用的启动过程/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/从源码看安卓应用的启动过程/2.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.435Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="从源码看安卓应用的启动过程">
 <meta name="twitter:description" content="一般来讲安卓中的每个应用都是在一个单独的进程中运行的(当然也能使用android:process指定不同组件运行在不同进程中)。   我们在上图中可以看到，每一个进程都有一个java虚拟机(Dalvik虚拟机/ART虚拟机)实例。如果每次启动一个应用都需要启动一个新的虚拟机，然后初始化一堆的东西，那应用的启动时间将会变得无比漫长。 那有什么办法优化呢？ 假设我们有一个模板进程，每次不需要重新启动，">
-<meta name="twitter:image" content="http://139.199.4.241/从源码看安卓应用的启动过程/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/从源码看安卓应用的启动过程/1.png">
 
   
 
@@ -116,6 +116,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -181,7 +191,7 @@
 <p>然后就到了ActivityThread.main方法，可以看到在这个方法里面初始化了sMainThreadHandler和Looper。这个就是主线程Handler对应的Looper了:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">    SamplingProfilerIntegration.start();</span><br><span class="line"></span><br><span class="line">    // CloseGuard defaults to true and can be quite spammy. We</span><br><span class="line">    // disable it here, but selectively enable it later (via</span><br><span class="line">    // StrictMode) on debug builds, but using DropBox, not logs.</span><br><span class="line">    CloseGuard.setEnabled(false);</span><br><span class="line"></span><br><span class="line">    Environment.initForCurrentUser();</span><br><span class="line"></span><br><span class="line">    // Set the reporter for event logging in libcore</span><br><span class="line">    EventLogger.setReporter(new EventLoggingReporter());</span><br><span class="line"></span><br><span class="line">    Security.addProvider(new AndroidKeyStoreProvider());</span><br><span class="line"></span><br><span class="line">    Process.setArgV0(&quot;&lt;pre-initialized&gt;&quot;);</span><br><span class="line"></span><br><span class="line">    Looper.prepareMainLooper();</span><br><span class="line"></span><br><span class="line">    ActivityThread thread = new ActivityThread();</span><br><span class="line">    thread.attach(false);</span><br><span class="line"></span><br><span class="line">    if (sMainThreadHandler == null) &#123;</span><br><span class="line">        sMainThreadHandler = thread.getHandler();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    AsyncTask.init();</span><br><span class="line"></span><br><span class="line">    if (false) &#123;</span><br><span class="line">        Looper.myLooper().setMessageLogging(new</span><br><span class="line">        LogPrinter(Log.DEBUG, &quot;ActivityThread&quot;));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Looper.loop();</span><br><span class="line"></span><br><span class="line">    throw new RuntimeException(&quot;Main thread loop unexpectedly exited&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>于是乎一个应用的主线程就这样启动了，接下来就是ActivityManagerService通过Binder机制去让ActivityThread用Hander同步创建主Activity，并且调用Activity生命周期了。这部分最近有写过一篇博客<a href="http://blog.islinjw.cn/2018/03/07/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8BActivity%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" target="_blank" rel="noopener">《从源码看Activity生命周期》</a>感兴趣的同学可以去看看。</p>
+<p>于是乎一个应用的主线程就这样启动了，接下来就是ActivityManagerService通过Binder机制去让ActivityThread用Hander同步创建主Activity，并且调用Activity生命周期了。这部分最近有写过一篇博客<a href="http://blog.islinjw.cn/2018/03/07/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8BActivity%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">《从源码看Activity生命周期》</a>感兴趣的同学可以去看看。</p>
 
     
   </div>
@@ -244,6 +254,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

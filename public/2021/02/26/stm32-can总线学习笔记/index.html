@@ -19,25 +19,25 @@
 <meta name="keywords" content="技术相关,嵌入式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="stm32 can总线学习笔记">
-<meta property="og:url" content="http://139.199.4.241/2021/02/26/stm32-can总线学习笔记/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/02/26/stm32-can总线学习笔记/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="这段时间折腾stm32与树莓派之间的can总线通讯遇到了不少问题,树莓派那端的已经写在树莓派外挂MCP2515模块爬坑记录里面了。这次来总结下CAN总线协议和讲讲stm32如何使用CAN总线。 can总线协议基础首先我们来大概看看CAN总线协议是怎样的。 完整的CAN电路是由CAN控制器和CAN收发器组成的。协议相关的内容由CAN控制器完成。CAN 控制器和CAN收发器用CAN TX和CAN RX">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/1.png">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/2.png">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/3.png">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/4.png">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/5.jpg">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/6.jpg">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/7.jpg">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/8.png">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/9.png">
-<meta property="og:image" content="http://139.199.4.241/stm32can学习笔记/10.png">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/4.png">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/5.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/6.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/7.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/8.png">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/9.png">
+<meta property="og:image" content="https://blog.islinjw.cn/stm32can学习笔记/10.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.434Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="stm32 can总线学习笔记">
 <meta name="twitter:description" content="这段时间折腾stm32与树莓派之间的can总线通讯遇到了不少问题,树莓派那端的已经写在树莓派外挂MCP2515模块爬坑记录里面了。这次来总结下CAN总线协议和讲讲stm32如何使用CAN总线。 can总线协议基础首先我们来大概看看CAN总线协议是怎样的。 完整的CAN电路是由CAN控制器和CAN收发器组成的。协议相关的内容由CAN控制器完成。CAN 控制器和CAN收发器用CAN TX和CAN RX">
-<meta name="twitter:image" content="http://139.199.4.241/stm32can学习笔记/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/stm32can学习笔记/1.png">
 
   
 
@@ -124,6 +124,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -166,7 +176,7 @@
 
   <div class="article-content">
     
-      <p>这段时间折腾stm32与树莓派之间的can总线通讯遇到了不少问题,树莓派那端的已经写在<a href="https://blog.islinjw.cn/2021/02/09/%E6%A0%91%E8%8E%93%E6%B4%BE%E5%A4%96%E6%8C%82MCP2515%E6%A8%A1%E5%9D%97%E7%88%AC%E5%9D%91%E8%AE%B0%E5%BD%95/" target="_blank" rel="noopener">树莓派外挂MCP2515模块爬坑记录</a>里面了。这次来总结下CAN总线协议和讲讲stm32如何使用CAN总线。</p>
+      <p>这段时间折腾stm32与树莓派之间的can总线通讯遇到了不少问题,树莓派那端的已经写在<a href="https://blog.islinjw.cn/2021/02/09/%E6%A0%91%E8%8E%93%E6%B4%BE%E5%A4%96%E6%8C%82MCP2515%E6%A8%A1%E5%9D%97%E7%88%AC%E5%9D%91%E8%AE%B0%E5%BD%95/">树莓派外挂MCP2515模块爬坑记录</a>里面了。这次来总结下CAN总线协议和讲讲stm32如何使用CAN总线。</p>
 <h1 id="can总线协议基础"><a href="#can总线协议基础" class="headerlink" title="can总线协议基础"></a>can总线协议基础</h1><p>首先我们来大概看看CAN总线协议是怎样的。</p>
 <p>完整的CAN电路是由CAN控制器和CAN收发器组成的。协议相关的内容由CAN控制器完成。CAN 控制器和CAN收发器用CAN TX和CAN RX两根线传输TTL电平信号。低电平代表二进制的0,高电平代表二进制的1。</p>
 <p>CAN H 和CAN L就是CAN总线,所有设备的CAN 收发器都会挂在这两根线上。数据通过差分信号在这两个线间传输:</p>
@@ -357,6 +367,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

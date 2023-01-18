@@ -19,17 +19,17 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android签名与渠道包制作-V1版本">
-<meta property="og:url" content="http://139.199.4.241/2021/04/07/Android签名与渠道包制作-V1版本/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/04/07/Android签名与渠道包制作-V1版本/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="系列文章:  Android签名与渠道包制作-V1版本 Android签名与渠道包制作-V2/V3签名原理 Android签名与渠道包制作-V2/V3渠道包原理  偶然发现安卓的签名V3已经出到了版本，想想自己其实也没有太深入了解过v1、v2。本着查漏补缺的想法把三个版本的原理都过了一遍，并且利用签名的原理手撸了渠道包制作的demo。这系列的文章就带大家深入了解下各个版本的签名和渠道包制作原理。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V1版本/1.png">
-<meta property="og:image" content="http://139.199.4.241/Android签名与渠道包制作V1版本/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/Android签名与渠道包制作V1版本/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/Android签名与渠道包制作V1版本/2.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.420Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android签名与渠道包制作-V1版本">
 <meta name="twitter:description" content="系列文章:  Android签名与渠道包制作-V1版本 Android签名与渠道包制作-V2/V3签名原理 Android签名与渠道包制作-V2/V3渠道包原理  偶然发现安卓的签名V3已经出到了版本，想想自己其实也没有太深入了解过v1、v2。本着查漏补缺的想法把三个版本的原理都过了一遍，并且利用签名的原理手撸了渠道包制作的demo。这系列的文章就带大家深入了解下各个版本的签名和渠道包制作原理。">
-<meta name="twitter:image" content="http://139.199.4.241/Android签名与渠道包制作V1版本/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/Android签名与渠道包制作V1版本/1.png">
 
   
 
@@ -116,6 +116,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -160,9 +170,9 @@
     
       <p>系列文章:</p>
 <ul>
-<li><a href="https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V1%E7%89%88%E6%9C%AC/" target="_blank" rel="noopener">Android签名与渠道包制作-V1版本</a></li>
-<li><a href="https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V2-V3%E7%AD%BE%E5%90%8D%E5%8E%9F%E7%90%86/" target="_blank" rel="noopener">Android签名与渠道包制作-V2/V3签名原理</a></li>
-<li><a href="https://blog.islinjw.cn/2021/04/09/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V2-V3%E6%B8%A0%E9%81%93%E5%8C%85%E5%8E%9F%E7%90%86/" target="_blank" rel="noopener">Android签名与渠道包制作-V2/V3渠道包原理</a></li>
+<li><a href="https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V1%E7%89%88%E6%9C%AC/">Android签名与渠道包制作-V1版本</a></li>
+<li><a href="https://blog.islinjw.cn/2021/04/07/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V2-V3%E7%AD%BE%E5%90%8D%E5%8E%9F%E7%90%86/">Android签名与渠道包制作-V2/V3签名原理</a></li>
+<li><a href="https://blog.islinjw.cn/2021/04/09/Android%E7%AD%BE%E5%90%8D%E4%B8%8E%E6%B8%A0%E9%81%93%E5%8C%85%E5%88%B6%E4%BD%9C-V2-V3%E6%B8%A0%E9%81%93%E5%8C%85%E5%8E%9F%E7%90%86/">Android签名与渠道包制作-V2/V3渠道包原理</a></li>
 </ul>
 <p>偶然发现安卓的签名V3已经出到了版本，想想自己其实也没有太深入了解过v1、v2。本着查漏补缺的想法把三个版本的原理都过了一遍，并且利用签名的原理手撸了渠道包制作的demo。这系列的文章就带大家深入了解下各个版本的签名和渠道包制作原理。</p>
 <p>这篇我们先来看看V1版本的原理。</p>
@@ -337,6 +347,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

@@ -19,16 +19,16 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="记一个主线程卡死却没有ANR的BUG">
-<meta property="og:url" content="http://139.199.4.241/2021/09/01/记一个主线程卡死却没有ANR的BUG/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/09/01/记一个主线程卡死却没有ANR的BUG/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="今天测试报了个BUG，分析了一波顺利解决问题。但是感觉中间的一些思路、技巧和知识点比较有意思，所以记录下来。 问题定位与分析首先这个问题是是个概率性问题，在压测整机复位功能的时候出现的。我负责的某个服务在开机的时候会自启动，测试发现某一次复位完成开机之后功能没有办法正常使用，立马叫我过去看。  首先我到的时候现场是还在的，由于这是个Service，ui上看不出异常。所以adb 连接上机器之后使用P">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/一个主线程卡死却没有ANR的BUG/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/一个主线程卡死却没有ANR的BUG/1.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.447Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="记一个主线程卡死却没有ANR的BUG">
 <meta name="twitter:description" content="今天测试报了个BUG，分析了一波顺利解决问题。但是感觉中间的一些思路、技巧和知识点比较有意思，所以记录下来。 问题定位与分析首先这个问题是是个概率性问题，在压测整机复位功能的时候出现的。我负责的某个服务在开机的时候会自启动，测试发现某一次复位完成开机之后功能没有办法正常使用，立马叫我过去看。  首先我到的时候现场是还在的，由于这是个Service，ui上看不出异常。所以adb 连接上机器之后使用P">
-<meta name="twitter:image" content="http://139.199.4.241/一个主线程卡死却没有ANR的BUG/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/一个主线程卡死却没有ANR的BUG/1.png">
 
   
 
@@ -112,6 +112,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -207,7 +217,7 @@
 <p>这种机制打个比方就是歹徒(AMS)在你家装了个定时炸弹，然后威胁你去干一件事，你必须在规定时间内完成然后告诉他停止计时，要不然就会把你家炸上天(ANR)</p>
 <h2 id="KeyDispatchTimeout原理"><a href="#KeyDispatchTimeout原理" class="headerlink" title="KeyDispatchTimeout原理"></a>KeyDispatchTimeout原理</h2><p>Activity的ANR并不是通过上面所说的埋定时炸弹的方式实现的，它有另外一套逻辑。</p>
 <p>前面我们也有说Activity的生命周期是不会触发ANR的，它的ANR实际上是在处理input事件的时候产生的。例如在按键消息或者触摸消息处理里面耗时太久。</p>
-<p>input事件的底层分发逻辑以前写过<a href="https://blog.islinjw.cn/2020/01/23/Android-Input%E7%B3%BB%E7%BB%9F-%E4%B8%80-%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%8E%B7%E5%8F%96%E6%B5%81%E7%A8%8B/" target="_blank" rel="noopener">两篇博客</a>感兴趣的同学可以详细了解下。我们这篇来补充上input事件分发的ANR检测原理。</p>
+<p>input事件的底层分发逻辑以前写过<a href="https://blog.islinjw.cn/2020/01/23/Android-Input%E7%B3%BB%E7%BB%9F-%E4%B8%80-%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%8E%B7%E5%8F%96%E6%B5%81%E7%A8%8B/">两篇博客</a>感兴趣的同学可以详细了解下。我们这篇来补充上input事件分发的ANR检测原理。</p>
 <p>相关代码在native层的InputDispatcher.cpp里面，每个input事件都会唤醒Dispatcher线程进行分发处理，我们以按键消息为例:</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> InputDispatcher::dispatchOnce() &#123;</span><br><span class="line">    ...</span><br><span class="line">    dispatchOnceInnerLocked(&amp;nextWakeupTime);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> InputDispatcher::dispatchOnceInnerLocked(<span class="keyword">nsecs_t</span>* nextWakeupTime) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Ready to start a new event.</span></span><br><span class="line">  <span class="comment">// If we don't already have a pending event, go grab one.</span></span><br><span class="line">    <span class="keyword">if</span> (! mPendingEvent) &#123;</span><br><span class="line">        ...</span><br><span class="line">        resetANRTimeoutsLocked();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (mPendingEvent-&gt;type) &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">case</span> EventEntry::TYPE_KEY: &#123;</span><br><span class="line">            ...</span><br><span class="line">            done = dispatchKeyLocked(currentTime, typedEntry, &amp;dropReason, nextWakeupTime);</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -291,6 +301,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

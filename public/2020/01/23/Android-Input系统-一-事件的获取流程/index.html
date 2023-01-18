@@ -19,18 +19,18 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android Input系统(一) 事件的获取流程">
-<meta property="og:url" content="http://139.199.4.241/2020/01/23/Android-Input系统-一-事件的获取流程/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2020/01/23/Android-Input系统-一-事件的获取流程/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="应用层的事件分发流程看得多了,但是对事件是怎么从底层获取分发的一直不是很了解,刚好临近春节这几天没那么忙,看了下源码(android-8.0.0_r1)和一些博客,这里给大家分享下。 启动与初始化首先framework层的设备事件获取和分发都是在InputManagerService里面进行的,它在SystemServer里面启动: 12345678910111213141516171819202">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/AndroidInput系统一/1.png">
-<meta property="og:image" content="http://139.199.4.241/AndroidInput系统一/2.png">
-<meta property="og:image" content="http://139.199.4.241/AndroidInput系统一/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput系统一/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput系统一/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput系统一/3.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.419Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android Input系统(一) 事件的获取流程">
 <meta name="twitter:description" content="应用层的事件分发流程看得多了,但是对事件是怎么从底层获取分发的一直不是很了解,刚好临近春节这几天没那么忙,看了下源码(android-8.0.0_r1)和一些博客,这里给大家分享下。 启动与初始化首先framework层的设备事件获取和分发都是在InputManagerService里面进行的,它在SystemServer里面启动: 12345678910111213141516171819202">
-<meta name="twitter:image" content="http://139.199.4.241/AndroidInput系统一/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/AndroidInput系统一/1.png">
 
   
 
@@ -114,6 +114,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -201,7 +211,7 @@
 <h2 id="InputDispatcherThread"><a href="#InputDispatcherThread" class="headerlink" title="InputDispatcherThread"></a>InputDispatcherThread</h2><p>ok,我们来看看InputDispatcherThread是怎么实现它的:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputDispatcher.cpp</span><br><span class="line">bool InputDispatcherThread::threadLoop() &#123;</span><br><span class="line">    mDispatcher-&gt;dispatchOnce();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputDispatcher::dispatchOnce() &#123;</span><br><span class="line">    nsecs_t nextWakeupTime = LONG_LONG_MAX;</span><br><span class="line">    ...</span><br><span class="line">    if (!haveCommandsLocked()) &#123;</span><br><span class="line">        dispatchOnceInnerLocked(&amp;nextWakeupTime);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    if (runCommandsLockedInterruptible()) &#123;</span><br><span class="line">        nextWakeupTime = LONG_LONG_MIN;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    nsecs_t currentTime = now();</span><br><span class="line">    int timeoutMillis = toMillisecondTimeoutDelay(currentTime, nextWakeupTime);</span><br><span class="line">    mLooper-&gt;pollOnce(timeoutMillis);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>dispatchOnce去执行消息分发或者运行命令,但是因为一开始并没有读到任何的消息或者命令,所以第一次dispatchOnce并没有做什么实际的工作,于是最后跑到了mLooper::pollOnce,这个方法里面会阻塞住,等待其他线程唤醒mLooper(这块的知识以前有写过一篇<a href="http://blog.islinjw.cn/2019/11/05/%E6%B7%B1%E5%85%A5native%E5%B1%82%E6%AD%BB%E6%8A%A0Handler/" target="_blank" rel="noopener">深入native层死抠Handler</a>,感兴趣的同学可以去看看)</p>
+<p>dispatchOnce去执行消息分发或者运行命令,但是因为一开始并没有读到任何的消息或者命令,所以第一次dispatchOnce并没有做什么实际的工作,于是最后跑到了mLooper::pollOnce,这个方法里面会阻塞住,等待其他线程唤醒mLooper(这块的知识以前有写过一篇<a href="http://blog.islinjw.cn/2019/11/05/%E6%B7%B1%E5%85%A5native%E5%B1%82%E6%AD%BB%E6%8A%A0Handler/">深入native层死抠Handler</a>,感兴趣的同学可以去看看)</p>
 <p>也就是说现在InputDispatcher已经阻塞在那里等待消息的到来，再去进行分发了。而这个消息是哪里来的呢?</p>
 <h2 id="InputReaderThread"><a href="#InputReaderThread" class="headerlink" title="InputReaderThread"></a>InputReaderThread</h2><p>答案就是之前创建的另外一个线程InputReaderThread:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputReader.cpp</span><br><span class="line">bool InputReaderThread::threadLoop() &#123;</span><br><span class="line">    mReader-&gt;loopOnce();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">void InputReader::loopOnce() &#123;</span><br><span class="line">    ...</span><br><span class="line">    size_t count = mEventHub-&gt;getEvents(timeoutMillis, mEventBuffer, EVENT_BUFFER_SIZE);</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    if (count) &#123;</span><br><span class="line">        processEventsLocked(mEventBuffer, count);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    mQueuedListener-&gt;flush();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputReader::processEventsLocked(const RawEvent* rawEvents, size_t count) &#123;</span><br><span class="line">    for (const RawEvent* rawEvent = rawEvents; count;) &#123;</span><br><span class="line">        ...</span><br><span class="line">        int32_t deviceId = rawEvent-&gt;deviceId;</span><br><span class="line">        processEventsForDeviceLocked(deviceId, rawEvent, batchSize);</span><br><span class="line">        ...</span><br><span class="line">        count -= batchSize;</span><br><span class="line">        rawEvent += batchSize;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputReader::processEventsForDeviceLocked(int32_t deviceId,</span><br><span class="line">        const RawEvent* rawEvents, size_t count) &#123;</span><br><span class="line">    ssize_t deviceIndex = mDevices.indexOfKey(deviceId);</span><br><span class="line">    InputDevice* device = mDevices.valueAt(deviceIndex);</span><br><span class="line">    device-&gt;process(rawEvents, count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -315,6 +325,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

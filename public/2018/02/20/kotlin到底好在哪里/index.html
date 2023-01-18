@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,kotlin">
 <meta property="og:type" content="article">
 <meta property="og:title" content="kotlin到底好在哪里">
-<meta property="og:url" content="http://139.199.4.241/2018/02/20/kotlin到底好在哪里/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2018/02/20/kotlin到底好在哪里/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="最近在学kotlin,虽然还没有像其他博主一样立马就爱上它.但是不得不说,kotlin对比起java还是有不少优势的. 1、语法简洁首先是语法比较简洁,能不简单处理的就不啰嗦. 1.1、变量与常量变量通过var关键字定义,常量通过val关键字定义.既支持类型推倒也支持显示声明类型.这样的话定义变量和常量写起来会比java简洁一些: 123var intVar = 1 // 通过取值可以自动推倒出变">
 <meta property="og:locale" content="zh-CN">
@@ -110,6 +110,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -231,7 +241,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fun &lt;T&gt; copy(dest: Array&lt;in T&gt;, src: Array&lt;out T&gt;) &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>直接用in/out这种功能描述是不是比java用super/extends这种类型描述直接了很多?</p>
-<p>泛型这部分参考了《Kotlin极简教程》,这本书真的不错,强烈推荐.而大家如果对java泛型有兴趣的话可以去可空《Effect java》的相关章节或者也可以去看看我之前写的两篇文章 <a href="http://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/" target="_blank" rel="noopener">《java泛型那些事》</a>、<a href="http://blog.islinjw.cn/2018/02/04/%E5%86%8D%E8%B0%88Java%E6%B3%9B%E5%9E%8B/" target="_blank" rel="noopener">《再谈Java泛型》</a></p>
+<p>泛型这部分参考了《Kotlin极简教程》,这本书真的不错,强烈推荐.而大家如果对java泛型有兴趣的话可以去可空《Effect java》的相关章节或者也可以去看看我之前写的两篇文章 <a href="http://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/">《java泛型那些事》</a>、<a href="http://blog.islinjw.cn/2018/02/04/%E5%86%8D%E8%B0%88Java%E6%B3%9B%E5%9E%8B/">《再谈Java泛型》</a></p>
 <h1 id="7、无缝调用java"><a href="#7、无缝调用java" class="headerlink" title="7、无缝调用java"></a>7、无缝调用java</h1><p>当然,一个语言就算做的再好,但是没有一个健全的生态的话是很难被大众接受的.kotlin能够火起来,甚至被谷歌爸爸钦定为安卓的官方推荐语言.一个很重要的原因就是它可以无缝与java相互调用.以前写的java代码不用任何处理就能直接在kotlin中使用,而java也能无缝调用kotlin代码.</p>
 <p>实际上在安卓中,编译的时候kotlin代码就会被编译成java代码,所以它们其实是等价的.</p>
 
@@ -296,6 +306,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

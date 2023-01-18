@@ -19,18 +19,18 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Handler.postDelayed的原理">
-<meta property="og:url" content="http://139.199.4.241/2019/03/02/Handler-postDelayed的原理/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/03/02/Handler-postDelayed的原理/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="大部分同学在回答Handler的原理的时候都能回答出Handler将消息丢到MessageQueue中,然后Looper.loop死循环不断从MessageQueue中拿消息去执行。 这块我之前也有写个文章介绍,如果忘了可以去看看。 但是如果再继续追问Handler.postDelay又是怎么做到的就讲不出来了。这里就给大家讲一讲。 源码解析首先来看看handler里面是怎么处理postDelay">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/Handler.postDelayed的原理/1.png">
-<meta property="og:image" content="http://139.199.4.241/Handler.postDelayed的原理/2.png">
-<meta property="og:image" content="http://139.199.4.241/Handler.postDelayed的原理/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/Handler.postDelayed的原理/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/Handler.postDelayed的原理/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/Handler.postDelayed的原理/3.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.423Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Handler.postDelayed的原理">
 <meta name="twitter:description" content="大部分同学在回答Handler的原理的时候都能回答出Handler将消息丢到MessageQueue中,然后Looper.loop死循环不断从MessageQueue中拿消息去执行。 这块我之前也有写个文章介绍,如果忘了可以去看看。 但是如果再继续追问Handler.postDelay又是怎么做到的就讲不出来了。这里就给大家讲一讲。 源码解析首先来看看handler里面是怎么处理postDelay">
-<meta name="twitter:image" content="http://139.199.4.241/Handler.postDelayed的原理/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/Handler.postDelayed的原理/1.png">
 
   
 
@@ -117,6 +117,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -160,7 +170,7 @@
   <div class="article-content">
     
       <p>大部分同学在回答Handler的原理的时候都能回答出Handler将消息丢到MessageQueue中,然后Looper.loop死循环不断从MessageQueue中拿消息去执行。</p>
-<p>这块我之前也有写个文章介绍,如果忘了可以去<a href="http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/" target="_blank" rel="noopener">看看</a>。</p>
+<p>这块我之前也有写个文章介绍,如果忘了可以去<a href="http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/">看看</a>。</p>
 <p>但是如果再继续追问Handler.postDelay又是怎么做到的就讲不出来了。这里就给大家讲一讲。</p>
 <h1 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h1><p>首先来看看handler里面是怎么处理postDelayed的:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public class Handler &#123;</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">	public final boolean postDelayed(Runnable r, long delayMillis) &#123;</span><br><span class="line">        return sendMessageDelayed(getPostMessage(r), delayMillis);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    public final boolean sendMessageDelayed(Message msg, long delayMillis) &#123;</span><br><span class="line">        ...</span><br><span class="line">        return sendMessageAtTime(msg, SystemClock.uptimeMillis() + delayMillis);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    public boolean sendMessageAtTime(Message msg, long uptimeMillis) &#123;</span><br><span class="line">        MessageQueue queue = mQueue;</span><br><span class="line">        ...</span><br><span class="line">        return enqueueMessage(queue, msg, uptimeMillis);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    private boolean enqueueMessage(MessageQueue queue, Message msg, long uptimeMillis) &#123;</span><br><span class="line">        msg.target = this;</span><br><span class="line">        ...</span><br><span class="line">        return queue.enqueueMessage(msg, uptimeMillis);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -250,6 +260,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Dagger2学习笔记(二)">
-<meta property="og:url" content="http://139.199.4.241/2017/05/17/Dagger2学习笔记-二/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2017/05/17/Dagger2学习笔记-二/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="在上一篇文章我们讲了用于搜索的SearchActivity的实现，这一篇文章我们继续以剩下的两个Activity的实现为例，讲一下Dagger2的其他特性。这两个Activity分别是用了展示SearchActivity搜索的用户的头像和用户名的UserInfoActivity和点击用户头像跳转到的展示用户followers的FollowerActivity。 在我们的Demo中有个叫做UserI">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -155,7 +165,7 @@
 
   <div class="article-content">
     
-      <p>在上一篇<a href="http://blog.islinjw.cn/2017/05/13/Dagger2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%B8%80/" target="_blank" rel="noopener">文章</a>我们讲了用于搜索的SearchActivity的实现，这一篇文章我们继续以剩下的两个Activity的实现为例，讲一下Dagger2的其他特性。这两个Activity分别是用了展示SearchActivity搜索的用户的头像和用户名的UserInfoActivity和点击用户头像跳转到的展示用户followers的FollowerActivity。</p>
+      <p>在上一篇<a href="http://blog.islinjw.cn/2017/05/13/Dagger2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%B8%80/">文章</a>我们讲了用于搜索的SearchActivity的实现，这一篇文章我们继续以剩下的两个Activity的实现为例，讲一下Dagger2的其他特性。这两个Activity分别是用了展示SearchActivity搜索的用户的头像和用户名的UserInfoActivity和点击用户头像跳转到的展示用户followers的FollowerActivity。</p>
 <p>在我们的Demo中有个叫做UserInfoLoader的类，它是用来向github服务器请求用户信息和follower信息的，会在多个actiity中被使用，例如在FollowerPresenter和UserInfoPresenter中都需要注入UserInfoLoader。最简单的方式是我们可以直接使用@Inject注解标注它的构造方法，使得Dagger2可以直接创建它的实例去注入FollowerPresenter和UserInfoPresenter中。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">class UserInfoLoader &#123;</span><br><span class="line">	...</span><br><span class="line">	@Inject</span><br><span class="line">	UserInfoLoader() &#123;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -284,6 +294,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

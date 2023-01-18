@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,Android,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓录制MP3(二) - LAME使用">
-<meta property="og:url" content="http://139.199.4.241/2022/05/30/安卓录制MP3-二-LAME使用/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2022/05/30/安卓录制MP3-二-LAME使用/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="上篇文章介绍了数字音频的基础知识,这篇文章我们来看看代码应该怎么写: 录音PCM第一步我们先用AudioRecord录制PCM音频: 123456789101112131415161718192021222324252627private lateinit var buffer: ByteArrayfun start(audioSource: Int, sampleRate: Int, chann">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -155,7 +165,7 @@
 
   <div class="article-content">
     
-      <p><a href="https://blog.islinjw.cn/2022/05/26/%E5%AE%89%E5%8D%93%E5%BD%95%E5%88%B6MP3-%E4%B8%80-%E6%95%B0%E5%AD%97%E9%9F%B3%E9%A2%91%E5%9F%BA%E7%A1%80/" target="_blank" rel="noopener">上篇文章</a>介绍了数字音频的基础知识,这篇文章我们来看看代码应该怎么写:</p>
+      <p><a href="https://blog.islinjw.cn/2022/05/26/%E5%AE%89%E5%8D%93%E5%BD%95%E5%88%B6MP3-%E4%B8%80-%E6%95%B0%E5%AD%97%E9%9F%B3%E9%A2%91%E5%9F%BA%E7%A1%80/">上篇文章</a>介绍了数字音频的基础知识,这篇文章我们来看看代码应该怎么写:</p>
 <h1 id="录音PCM"><a href="#录音PCM" class="headerlink" title="录音PCM"></a>录音PCM</h1><p>第一步我们先用AudioRecord录制PCM音频:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">private lateinit var buffer: ByteArray</span><br><span class="line"></span><br><span class="line">fun start(audioSource: Int, sampleRate: Int, channelConfig: Int, audioFormat: Int): Boolean &#123;</span><br><span class="line">    ...</span><br><span class="line">    val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)</span><br><span class="line"></span><br><span class="line">    buffer = ByteArray(bufferSize)</span><br><span class="line">    recorder = AudioRecord(audioSource, sampleRate, channelConfig, audioFormat, bufferSize)</span><br><span class="line"></span><br><span class="line">    recorderThread = RecordThread()</span><br><span class="line">    recorderThread?.start()</span><br><span class="line">    return true</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">inner class RecordThread : Thread() &#123;</span><br><span class="line">    override fun run() &#123;</span><br><span class="line">        super.run()</span><br><span class="line"></span><br><span class="line">        var readLen: Int</span><br><span class="line">        recorder?.startRecording()</span><br><span class="line">        while (recorder?.recordingState == AudioRecord.RECORDSTATE_RECORDING) &#123;</span><br><span class="line">            readLen = recorder?.read(buffer, 0, buffer.size) ?: break</span><br><span class="line">            listener.onRecord(buffer, readLen)</span><br><span class="line">        &#125;</span><br><span class="line">        recorder = null</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -166,7 +176,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;uses-permission android:name=&quot;android.permission.RECORD_AUDIO&quot; /&gt;</span><br></pre></td></tr></table></figure>
 
 <h1 id="使用LAME进行MP3编码"><a href="#使用LAME进行MP3编码" class="headerlink" title="使用LAME进行MP3编码"></a>使用LAME进行MP3编码</h1><p>得到PCM裸流之后我们就需要对他进行MP3编码,LAME就是一个开源的MP3音频压缩软件,也是公认有损MP3中压缩效果最好的编码器。</p>
-<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>使用LAME需要自行编译出静态库,首先我们从LAME的<a href="https://lame.sourceforge.io/download.php" target="_blank" rel="noopener">官网</a>下载最新版本的LAME源码。从源码文件目录结构中可以看出它使用AutoMake编译,之前写过几篇AutoMake的<a href="https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="noopener">学习笔记</a>,感兴趣的同学可以看看。</p>
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>使用LAME需要自行编译出静态库,首先我们从LAME的<a href="https://lame.sourceforge.io/download.php" target="_blank" rel="noopener">官网</a>下载最新版本的LAME源码。从源码文件目录结构中可以看出它使用AutoMake编译,之前写过几篇AutoMake的<a href="https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/">学习笔记</a>,感兴趣的同学可以看看。</p>
 <p>或者也可以直接修改Demo工程的<a href="https://github.com/bluesky466/AndroidLameDemo/blob/master/lame/lame-3.100/build-lame.sh" target="_blank" rel="noopener">build-lame.sh</a>。修改开头的NDK路径、安卓版本、abi这几个参数接口直接运行在output目录生成出.a文件和.h文件:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/zsh</span><br><span class="line"></span><br><span class="line">NDK_ROOT=/Users/linjw/Library/Android/sdk/ndk/22.1.7171670</span><br><span class="line">ANDROID_API_VERSION=21</span><br><span class="line">NDK_TOOLCHAIN_ABI_VERSION=4.9</span><br><span class="line">ABIS=(armeabi armeabi-v7a arm64-v8a x86 x86_64)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 
@@ -290,6 +300,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

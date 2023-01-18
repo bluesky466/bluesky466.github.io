@@ -19,17 +19,17 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="深入native层死抠Handler">
-<meta property="og:url" content="http://139.199.4.241/2019/11/05/深入native层死抠Handler/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/11/05/深入native层死抠Handler/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="Handler算是面试里面最大几率被问到的问题了,很多同学也能回答上来一些东西,像什么Looper、MessagerQueue啊(看这里),但是如果想知道一个人是否有专研精神的话,其实handler可以一直往下问。例如postDelayed是怎么实现的?(看这里) 问到了这里其实对于绝大多数面试其实已经够了,但是如果你面的公司比较看重基础或者面试官想看看你是否有专研精神,他可能会继续问Messag">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/深入native层死抠Handler/1.png">
-<meta property="og:image" content="http://139.199.4.241/深入native层死抠Handler/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/深入native层死抠Handler/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/深入native层死抠Handler/2.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.445Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入native层死抠Handler">
 <meta name="twitter:description" content="Handler算是面试里面最大几率被问到的问题了,很多同学也能回答上来一些东西,像什么Looper、MessagerQueue啊(看这里),但是如果想知道一个人是否有专研精神的话,其实handler可以一直往下问。例如postDelayed是怎么实现的?(看这里) 问到了这里其实对于绝大多数面试其实已经够了,但是如果你面的公司比较看重基础或者面试官想看看你是否有专研精神,他可能会继续问Messag">
-<meta name="twitter:image" content="http://139.199.4.241/深入native层死抠Handler/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/深入native层死抠Handler/1.png">
 
   
 
@@ -116,6 +116,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -158,7 +168,7 @@
 
   <div class="article-content">
     
-      <p>Handler算是面试里面最大几率被问到的问题了,很多同学也能回答上来一些东西,像什么Looper、MessagerQueue啊(<a href="http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/" target="_blank" rel="noopener">看这里</a>),但是如果想知道一个人是否有专研精神的话,其实handler可以一直往下问。例如postDelayed是怎么实现的?(<a href="http://blog.islinjw.cn/2019/03/02/Handler-postDelayed%E7%9A%84%E5%8E%9F%E7%90%86/" target="_blank" rel="noopener">看这里</a>)</p>
+      <p>Handler算是面试里面最大几率被问到的问题了,很多同学也能回答上来一些东西,像什么Looper、MessagerQueue啊(<a href="http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/">看这里</a>),但是如果想知道一个人是否有专研精神的话,其实handler可以一直往下问。例如postDelayed是怎么实现的?(<a href="http://blog.islinjw.cn/2019/03/02/Handler-postDelayed%E7%9A%84%E5%8E%9F%E7%90%86/">看这里</a>)</p>
 <p>问到了这里其实对于绝大多数面试其实已经够了,但是如果你面的公司比较看重基础或者面试官想看看你是否有专研精神,他可能会继续问MessageQueue.nativePollOnce</p>
 <ul>
 <li>如何做到等待一段时间?</li>
@@ -289,6 +299,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

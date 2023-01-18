@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,编译相关">
 <meta property="og:type" content="article">
 <meta property="og:title" content="automake学习笔记 - 模块化编译">
-<meta property="og:url" content="http://139.199.4.241/2017/03/21/automake学习笔记-模块化编译/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2017/03/21/automake学习笔记-模块化编译/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="系列笔记: 1. automake学习笔记 - helloworld2. automake学习笔记 - 模块化编译3. automake学习笔记 - 安装与发布4. automake学习笔记 - 交叉编译 一般来说一个工程会由许多不同的模块组成。源码放在一个地方，示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？ 这篇文章就讨论了一下如何使用automak">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -156,7 +166,7 @@
   <div class="article-content">
     
       <p>系列笔记:</p>
-<p><a href="https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="noopener">1. automake学习笔记 - helloworld</a><br><a href="https://blog.islinjw.cn/2017/03/21/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%A8%A1%E5%9D%97%E5%8C%96%E7%BC%96%E8%AF%91/" target="_blank" rel="noopener">2. automake学习笔记 - 模块化编译</a><br><a href="https://blog.islinjw.cn/2017/03/26/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8F%91%E5%B8%83/" target="_blank" rel="noopener">3. automake学习笔记 - 安装与发布</a><br><a href="https://blog.islinjw.cn/2017/04/02/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/" target="_blank" rel="noopener">4. automake学习笔记 - 交叉编译</a></p>
+<p><a href="https://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/">1. automake学习笔记 - helloworld</a><br><a href="https://blog.islinjw.cn/2017/03/21/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%A8%A1%E5%9D%97%E5%8C%96%E7%BC%96%E8%AF%91/">2. automake学习笔记 - 模块化编译</a><br><a href="https://blog.islinjw.cn/2017/03/26/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E5%AE%89%E8%A3%85%E4%B8%8E%E5%8F%91%E5%B8%83/">3. automake学习笔记 - 安装与发布</a><br><a href="https://blog.islinjw.cn/2017/04/02/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/">4. automake学习笔记 - 交叉编译</a></p>
 <p>一般来说一个工程会由许多不同的模块组成。源码放在一个地方，示例代码放到另一个地方，第三方库又放到其他地方。这种时候又应该怎么去使用automake呢？</p>
 <p>这篇文章就讨论了一下如何使用automake去进行模块化编译</p>
 <p>我们还是用easylog来做例子，下面是我们修改后的easylog工程的根目录下的文件:</p>
@@ -165,7 +175,7 @@
 </blockquote>
 <h2 id="src目录"><a href="#src目录" class="headerlink" title="src目录"></a>src目录</h2><p>src目录放的就是库的源代码,我们使用src中的源代码编译出一个库来给其他的程序使用easylog的功能  </p>
 <p>src目录中有下面几个文件log_interface.h，easy_log.h，easy_log.cpp，cout_log_interface.h，cout_log_interface.cpp，Makefile.am。实际上就是除了main.cpp，其他文件都放到了这里来。因为我们提供给别的是一个库而不是一个可执行程序，所以main.cpp可以不需要编译到目标文件中</p>
-<p>.h和.cpp的内容和上一篇<a href="http://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="noopener">文章</a>的内容是一样的。这里的重点其实是Makefile.am。让我们先来看看它的内容:</p>
+<p>.h和.cpp的内容和上一篇<a href="http://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/">文章</a>的内容是一样的。这里的重点其实是Makefile.am。让我们先来看看它的内容:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lib_LTLIBRARIES = libeasylog.la                                                             </span><br><span class="line">libeasylog_la_SOURCES = cout_log_interface.cpp \                                            </span><br><span class="line">                     easy_log.cpp</span><br></pre></td></tr></table></figure>
 
 <p>其实它的内容很简单，就是指定了要编译的库的名字和库的源码。但是有一个问题，我们这里需要编译的是但为什么这里的目标文件是libeasylog.la呢?</p>
@@ -175,7 +185,7 @@
 <p>这里顺便说一点,如果这里需要链接其他的库的话需要用 _LIBADD 去指定。如需要链接libpthread这个库的话就需要这样写:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libeasylog_la_LIBADD = -lpthread</span><br></pre></td></tr></table></figure>
 
-<h2 id="examples目录"><a href="#examples目录" class="headerlink" title="examples目录"></a>examples目录</h2><p>examples目录里面放了这个库的example代码。因为我们的库是要提供给其他人使用的，所以一般除了文档之外，还会有一些例子去帮助使用者了解应该如何去使用我们的库。这个目录中的example.cpp其实就是上一篇<a href="http://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="noopener">文章</a>中的main.cpp：</p>
+<h2 id="examples目录"><a href="#examples目录" class="headerlink" title="examples目录"></a>examples目录</h2><p>examples目录里面放了这个库的example代码。因为我们的库是要提供给其他人使用的，所以一般除了文档之外，还会有一些例子去帮助使用者了解应该如何去使用我们的库。这个目录中的example.cpp其实就是上一篇<a href="http://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/">文章</a>中的main.cpp：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;easy_log.h&quot;</span><br><span class="line">#include &quot;cout_log_interface.h&quot;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    EasyLog log(std::make_shared&lt;COutLogInterface&gt;());</span><br><span class="line">    log.Debug(&quot;test&quot;, &quot;testlog&quot;);</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>这个目录下也有一个Makefile.am，它是用来配置example程序的编译选项的:</p>
@@ -192,7 +202,7 @@
 <p>最后就是configure.ac文件了:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">#                                               -*- Autoconf -*-</span><br><span class="line"># Process this file with autoconf to produce a configure script.</span><br><span class="line"></span><br><span class="line">AC_PREREQ([2.69])</span><br><span class="line">AC_INIT([easylog], [0.0.2], [466474482@qq.com])</span><br><span class="line">AM_INIT_AUTOMAKE([-Wall -Werror foreign])</span><br><span class="line">AC_CONFIG_SRCDIR([src/log_interface.h])</span><br><span class="line">AC_CONFIG_HEADERS([config.h])</span><br><span class="line"></span><br><span class="line">AM_PROG_AR</span><br><span class="line">LT_INIT</span><br><span class="line"></span><br><span class="line"># Checks for programs.</span><br><span class="line">AC_PROG_CXX</span><br><span class="line">AC_PROG_CC</span><br><span class="line">AX_CXX_COMPILE_STDCXX_11</span><br><span class="line"></span><br><span class="line"># Checks for libraries.</span><br><span class="line"></span><br><span class="line"># Checks for header files.</span><br><span class="line"></span><br><span class="line"># Checks for typedefs, structures, and compiler characteristics.</span><br><span class="line"></span><br><span class="line"># Checks for library functions.</span><br><span class="line"></span><br><span class="line">AC_CONFIG_FILES([Makefile</span><br><span class="line">                 examples/Makefile</span><br><span class="line">                 src/Makefile])</span><br><span class="line"></span><br><span class="line">AC_OUTPUT</span><br></pre></td></tr></table></figure>
 
-<p>它和上一篇<a href="http://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/" target="_blank" rel="noopener">文章</a>只有一点点小的不同:</p>
+<p>它和上一篇<a href="http://blog.islinjw.cn/2017/03/17/automake%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-helloworld/">文章</a>只有一点点小的不同:</p>
 <p>一是由于将log_interface.h放到src中了，所以AC_CONFIG_SRCDIR需要改一下</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AC_CONFIG_SRCDIR([src/log_interface.h])</span><br></pre></td></tr></table></figure>
 
@@ -292,6 +302,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

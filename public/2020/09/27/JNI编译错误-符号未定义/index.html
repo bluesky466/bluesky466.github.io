@@ -19,18 +19,18 @@
 <meta name="keywords" content="技术相关,Android,C&#x2F;C++">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JNI编译错误-符号未定义">
-<meta property="og:url" content="http://139.199.4.241/2020/09/27/JNI编译错误-符号未定义/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2020/09/27/JNI编译错误-符号未定义/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="这篇笔记记录了一次编译问题的排查过程，还简单介绍了一些C/C++编译的知识，希望对jni编译错误的排查能有点帮助。 没有接触过C/C++的安卓程序员可能在遇到so库出现编译问题的时候会有点束手无措，如果这个库是公司内部开发的还能丢给负责的同事分析，如果是第三方的开源库可能就需要我们自己去分析了。 Alexa rapidjson符号未定义我司基于亚马逊开源的Alexa应用分为两个工程，一个是avs-">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/JNI编译错误-符号未定义/1.png">
-<meta property="og:image" content="http://139.199.4.241/JNI编译错误-符号未定义/2.png">
-<meta property="og:image" content="http://139.199.4.241/JNI编译错误-符号未定义/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/JNI编译错误-符号未定义/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/JNI编译错误-符号未定义/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/JNI编译错误-符号未定义/3.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.423Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JNI编译错误-符号未定义">
 <meta name="twitter:description" content="这篇笔记记录了一次编译问题的排查过程，还简单介绍了一些C/C++编译的知识，希望对jni编译错误的排查能有点帮助。 没有接触过C/C++的安卓程序员可能在遇到so库出现编译问题的时候会有点束手无措，如果这个库是公司内部开发的还能丢给负责的同事分析，如果是第三方的开源库可能就需要我们自己去分析了。 Alexa rapidjson符号未定义我司基于亚马逊开源的Alexa应用分为两个工程，一个是avs-">
-<meta name="twitter:image" content="http://139.199.4.241/JNI编译错误-符号未定义/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/JNI编译错误-符号未定义/1.png">
 
   
 
@@ -117,6 +117,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -175,7 +185,7 @@
 <p>而且.o文件之间是有依赖关系的，a.o可能调用到b.o的代码，如果调用的代码的实现找不到了，就会出现上面所说的undefined reference错误。</p>
 <p>实际上链接过程中除了.o文件之外还有有动态链接库、静态链接库参与进来。链接库是一些可复用的代码，</p>
 <p>动态链接库、静态链接库windows上对应的是.lib、.dll linux上对应的是.a、.so它们的区别在于静态链接库在链接的时候会和.o文件一起打包到可执行文件中，而动态链接库不会被打包进可执行文件，而是在运行过程中被加载。</p>
-<p>.o文件依赖的代码除了在其他.o文件中，还有可能在静态链接库或者动态链接库中。(关于c/c++的编译我之前有写一篇博客<a href="https://blog.islinjw.cn/2018/07/29/写给安卓程序员的cc-编译入门/" target="_blank" rel="noopener">写给安卓程序员的C/C++编译入门</a>,感兴趣的同学可以去看看)</p>
+<p>.o文件依赖的代码除了在其他.o文件中，还有可能在静态链接库或者动态链接库中。(关于c/c++的编译我之前有写一篇博客<a href="https://blog.islinjw.cn/2018/07/29/写给安卓程序员的cc-编译入门/">写给安卓程序员的C/C++编译入门</a>,感兴趣的同学可以去看看)</p>
 <h1 id="nm命令使用"><a href="#nm命令使用" class="headerlink" title="nm命令使用"></a>nm命令使用</h1><p>出现了上面的错误，我的第一反应是so库没有链接进来。该函数的定义在libAVSCommon.so，查看CMakeLists.txt之后发现该库是有正常链接的:</p>
 <figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">target_link_libraries</span>( AlexaJni AVSCommon)</span><br></pre></td></tr></table></figure>
 
@@ -377,6 +387,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

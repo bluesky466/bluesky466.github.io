@@ -19,22 +19,22 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="可能是全网讲最细的安卓resources.arsc解析教程(一)">
-<meta property="og:url" content="http://139.199.4.241/2019/05/18/可能是全网讲最细的安卓resources-arsc解析教程-一/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/05/18/可能是全网讲最细的安卓resources-arsc解析教程-一/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="aapt工具在编译资源会将一些资源或者资源索引打包成resources.arsc。这个文件以二进制数据的形式记录数据，c/c++加载起来特别方便。 了解resources.arsc的结构对理解安卓的资源加载原理有很重要的帮助。 这几天写resources.arsc解析工具时候在网上搜到了不少的资料、博客，但是它们写的都不是特别的详细，都会漏掉一些东西没有提。导致在实现的时候遇到了很多的坑。这里我希">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/1.png">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/3.png">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/2.png">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/4.png">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/5.png">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/6.png">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/7.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程一/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程一/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程一/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程一/4.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程一/5.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程一/6.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程一/7.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.436Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="可能是全网讲最细的安卓resources.arsc解析教程(一)">
 <meta name="twitter:description" content="aapt工具在编译资源会将一些资源或者资源索引打包成resources.arsc。这个文件以二进制数据的形式记录数据，c/c++加载起来特别方便。 了解resources.arsc的结构对理解安卓的资源加载原理有很重要的帮助。 这几天写resources.arsc解析工具时候在网上搜到了不少的资料、博客，但是它们写的都不是特别的详细，都会漏掉一些东西没有提。导致在实现的时候遇到了很多的坑。这里我希">
-<meta name="twitter:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程一/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程一/1.png">
 
   
 
@@ -118,6 +118,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -287,7 +297,7 @@
 <p>翻译过来就是:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">RES_TABLE_TYPE_SPEC_TYPE,  anim</span><br><span class="line">RES_TABLE_TYPE_TYPE,       anim</span><br><span class="line">RES_TABLE_TYPE_SPEC_TYPE,  attr</span><br><span class="line">RES_TABLE_TYPE_TYPE,       attr</span><br><span class="line">RES_TABLE_TYPE_SPEC_TYPE,  bool</span><br><span class="line">RES_TABLE_TYPE_TYPE,       bool</span><br><span class="line">RES_TABLE_TYPE_TYPE,       bool</span><br><span class="line">RES_TABLE_TYPE_SPEC_TYPE,  color</span><br><span class="line">RES_TABLE_TYPE_TYPE,       color</span><br><span class="line">RES_TABLE_TYPE_TYPE,       color</span><br><span class="line">RES_TABLE_TYPE_TYPE,       color</span><br><span class="line">RES_TABLE_TYPE_SPEC_TYPE,  dimen</span><br><span class="line">RES_TABLE_TYPE_TYPE,       dimen</span><br><span class="line">RES_TABLE_TYPE_TYPE,       dimen</span><br><span class="line">RES_TABLE_TYPE_TYPE,       dimen</span><br><span class="line">RES_TABLE_TYPE_TYPE,       dimen</span><br><span class="line">RES_TABLE_TYPE_TYPE,       dimen</span><br><span class="line">RES_TABLE_TYPE_TYPE,       dimen</span><br><span class="line">RES_TABLE_TYPE_TYPE,       dimen</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 
-<p>好的,因为信息量已经有点大了,本节先到这里。接下来是整个resources.arsc中最重要的资源的具体定义会在下一篇笔记中介绍,完整的demo代码也会在<a href="http://blog.islinjw.cn/2019/05/21/%E5%8F%AF%E8%83%BD%E6%98%AF%E5%85%A8%E7%BD%91%E8%AE%B2%E6%9C%80%E7%BB%86%E7%9A%84%E5%AE%89%E5%8D%93resources-arsc%E8%A7%A3%E6%9E%90%E6%95%99%E7%A8%8B-%E4%BA%8C/" target="_blank" rel="noopener">下一篇博客</a>的末尾给出。</p>
+<p>好的,因为信息量已经有点大了,本节先到这里。接下来是整个resources.arsc中最重要的资源的具体定义会在下一篇笔记中介绍,完整的demo代码也会在<a href="http://blog.islinjw.cn/2019/05/21/%E5%8F%AF%E8%83%BD%E6%98%AF%E5%85%A8%E7%BD%91%E8%AE%B2%E6%9C%80%E7%BB%86%E7%9A%84%E5%AE%89%E5%8D%93resources-arsc%E8%A7%A3%E6%9E%90%E6%95%99%E7%A8%8B-%E4%BA%8C/">下一篇博客</a>的末尾给出。</p>
 
     
   </div>
@@ -350,6 +360,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

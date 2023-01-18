@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,java">
 <meta property="og:type" content="article">
 <meta property="og:title" content="怎样获取Java泛型的具体类型">
-<meta property="og:url" content="http://139.199.4.241/2021/11/20/怎样获取Java泛型的具体类型/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/11/20/怎样获取Java泛型的具体类型/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="之前写过一篇博客介绍过Java泛型的类型擦除机制，实际上Java的泛型是使用所有类的公共父类Object去实现: 1234//错误,泛型的类型被擦除了,T在运行时实际上是Object,不能直接new出来public &amp;lt;T&amp;gt; void foo(T arg) &amp;#123;    return arg != null ? arg : new T();&amp;#125;  那是不是运行的时候就真的无">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -155,7 +165,7 @@
 
   <div class="article-content">
     
-      <p>之前写过一篇<a href="https://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/" target="_blank" rel="noopener">博客</a>介绍过Java泛型的类型擦除机制，实际上Java的泛型是使用所有类的公共父类Object去实现:</p>
+      <p>之前写过一篇<a href="https://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/">博客</a>介绍过Java泛型的类型擦除机制，实际上Java的泛型是使用所有类的公共父类Object去实现:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//错误,泛型的类型被擦除了,T在运行时实际上是Object,不能直接new出来</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">(T arg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> arg != <span class="keyword">null</span> ? arg : <span class="keyword">new</span> T();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>那是不是运行的时候就真的无法获取到泛型使用的实际类型呢？</p>
@@ -291,6 +301,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

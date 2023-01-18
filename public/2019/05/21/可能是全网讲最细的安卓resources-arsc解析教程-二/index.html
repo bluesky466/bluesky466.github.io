@@ -19,17 +19,17 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="可能是全网讲最细的安卓resources.arsc解析教程(二)">
-<meta property="og:url" content="http://139.199.4.241/2019/05/21/可能是全网讲最细的安卓resources-arsc解析教程-二/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/05/21/可能是全网讲最细的安卓resources-arsc解析教程-二/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="上篇博客写到,Package资源剩下的部分是由多组RES_TABLE_TYPE_SPEC_TYPE和RES_TABLE_TYPE_TYPE构成的。 一个RES_TABLE_TYPE_SPEC_TYPE后面跟着一个或者多个RES_TABLE_TYPE_TYPE构成一种类型的资源的描述(例如string类型、bool类型、dimen类型等) RES_TABLE_TYPE_SPEC_TYPE我们接着来看">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程二/1.png">
-<meta property="og:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程二/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程二/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程二/2.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.437Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="可能是全网讲最细的安卓resources.arsc解析教程(二)">
 <meta name="twitter:description" content="上篇博客写到,Package资源剩下的部分是由多组RES_TABLE_TYPE_SPEC_TYPE和RES_TABLE_TYPE_TYPE构成的。 一个RES_TABLE_TYPE_SPEC_TYPE后面跟着一个或者多个RES_TABLE_TYPE_TYPE构成一种类型的资源的描述(例如string类型、bool类型、dimen类型等) RES_TABLE_TYPE_SPEC_TYPE我们接着来看">
-<meta name="twitter:image" content="http://139.199.4.241/可能是全网讲最细的安卓resources_arsc解析教程二/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/可能是全网讲最细的安卓resources_arsc解析教程二/1.png">
 
   
 
@@ -116,6 +116,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -158,7 +168,7 @@
 
   <div class="article-content">
     
-      <p>上篇<a href="http://blog.islinjw.cn/2019/05/18/%E5%8F%AF%E8%83%BD%E6%98%AF%E5%85%A8%E7%BD%91%E8%AE%B2%E6%9C%80%E7%BB%86%E7%9A%84%E5%AE%89%E5%8D%93resources-arsc%E8%A7%A3%E6%9E%90%E6%95%99%E7%A8%8B-%E4%B8%80/" target="_blank" rel="noopener">博客</a>写到,Package资源剩下的部分是由多组RES_TABLE_TYPE_SPEC_TYPE和RES_TABLE_TYPE_TYPE构成的。</p>
+      <p>上篇<a href="http://blog.islinjw.cn/2019/05/18/%E5%8F%AF%E8%83%BD%E6%98%AF%E5%85%A8%E7%BD%91%E8%AE%B2%E6%9C%80%E7%BB%86%E7%9A%84%E5%AE%89%E5%8D%93resources-arsc%E8%A7%A3%E6%9E%90%E6%95%99%E7%A8%8B-%E4%B8%80/">博客</a>写到,Package资源剩下的部分是由多组RES_TABLE_TYPE_SPEC_TYPE和RES_TABLE_TYPE_TYPE构成的。</p>
 <p>一个RES_TABLE_TYPE_SPEC_TYPE后面跟着一个或者多个RES_TABLE_TYPE_TYPE构成一种类型的资源的描述(例如string类型、bool类型、dimen类型等)</p>
 <h1 id="RES-TABLE-TYPE-SPEC-TYPE"><a href="#RES-TABLE-TYPE-SPEC-TYPE" class="headerlink" title="RES_TABLE_TYPE_SPEC_TYPE"></a>RES_TABLE_TYPE_SPEC_TYPE</h1><p>我们接着来看看RES_TABLE_TYPE_SPEC_TYPE的头部结构体:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * A specification of the resources defined by a particular type.</span><br><span class="line"> *</span><br><span class="line"> * There should be one of these chunks for each resource type.</span><br><span class="line"> *</span><br><span class="line"> * This structure is followed by an array of integers providing the set of</span><br><span class="line"> * configuration change flags (ResTable_config::CONFIG_*) that have multiple</span><br><span class="line"> * resources for that configuration.  In addition, the high bit is set if that</span><br><span class="line"> * resource has been made public.</span><br><span class="line"> */</span><br><span class="line">struct ResTable_typeSpec</span><br><span class="line">&#123;</span><br><span class="line">    struct ResChunk_header header;</span><br><span class="line"></span><br><span class="line">    // The type identifier this chunk is holding.  Type IDs start</span><br><span class="line">    // at 1 (corresponding to the value of the type bits in a</span><br><span class="line">    // resource identifier).  0 is invalid.</span><br><span class="line">    uint8_t id;</span><br><span class="line"></span><br><span class="line">    // Must be 0.</span><br><span class="line">    uint8_t res0;</span><br><span class="line">    // Must be 0.</span><br><span class="line">    uint16_t res1;</span><br><span class="line"></span><br><span class="line">    // Number of uint32_t entry configuration masks that follow.</span><br><span class="line">    uint32_t entryCount;</span><br><span class="line"></span><br><span class="line">    enum &#123;</span><br><span class="line">        // Additional flag indicating an entry is public.</span><br><span class="line">        SPEC_PUBLIC = 0x40000000</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
@@ -343,6 +353,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

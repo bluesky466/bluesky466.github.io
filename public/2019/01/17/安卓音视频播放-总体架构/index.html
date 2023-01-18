@@ -19,19 +19,19 @@
 <meta name="keywords" content="技术相关,Android,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓音视频播放 - 总体架构">
-<meta property="og:url" content="http://139.199.4.241/2019/01/17/安卓音视频播放-总体架构/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/01/17/安卓音视频播放-总体架构/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="系列文章:  安卓音视频播放 - 总体架构 安卓音视频播放 - AwesomePlayer 安卓音视频播放 - NuPlayer  安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。 MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的vide">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/1.jpeg">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/2.png">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/3.png">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放架构一/4.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放架构一/1.jpeg">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放架构一/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放架构一/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放架构一/4.png">
 <meta property="og:updated_time" content="2022-05-30T12:47:36.544Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓音视频播放 - 总体架构">
 <meta name="twitter:description" content="系列文章:  安卓音视频播放 - 总体架构 安卓音视频播放 - AwesomePlayer 安卓音视频播放 - NuPlayer  安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。 MediaPlayerMediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的vide">
-<meta name="twitter:image" content="http://139.199.4.241/安卓音视频播放架构一/1.jpeg">
+<meta name="twitter:image" content="https://blog.islinjw.cn/安卓音视频播放架构一/1.jpeg">
 
   
 
@@ -118,6 +118,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -162,9 +172,9 @@
     
       <p>系列文章:</p>
 <ul>
-<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/" target="_blank" rel="noopener">安卓音视频播放 - 总体架构</a></li>
-<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-AwesomePlayer/" target="_blank" rel="noopener">安卓音视频播放 - AwesomePlayer</a></li>
-<li><a href="http://blog.islinjw.cn/2019/01/19/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-NuPlayer/" target="_blank" rel="noopener">安卓音视频播放 - NuPlayer</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/">安卓音视频播放 - 总体架构</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-AwesomePlayer/">安卓音视频播放 - AwesomePlayer</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/19/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-NuPlayer/">安卓音视频播放 - NuPlayer</a></li>
 </ul>
 <p>安卓上我们经常会使用MediaPlayer这个类去播放音频和视频,这篇笔记便从MediaPlayer着手,一层层分析安卓的音视频播放框架。</p>
 <h1 id="MediaPlayer"><a href="#MediaPlayer" class="headerlink" title="MediaPlayer"></a>MediaPlayer</h1><p>MediaPlayer的使用很简单,如果是想要在一个SurfaceView上播放,assets下的video.mp4视频,只需要下面的几行代码就能在手机上看到视频画面了:</p>
@@ -288,6 +298,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

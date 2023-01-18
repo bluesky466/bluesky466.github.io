@@ -12,7 +12,7 @@ timezone:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://139.199.4.241
+url: https://blog.islinjw.cn
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
@@ -88,3 +88,8 @@ deploy:
   type: git
   repository: git@1.12.247.108:/home/git/hexo.git
   branch: master
+
+search:
+  path: search.json
+  source: all # other values: posts, pages
+  trim_html: false

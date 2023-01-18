@@ -19,13 +19,13 @@
 <meta name="keywords" content="技术相关,Android,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FFmpeg入门 - 格式转换">
-<meta property="og:url" content="http://139.199.4.241/2022/11/27/FFmpeg入门-格式转换/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2022/11/27/FFmpeg入门-格式转换/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  我们现在已经能在安卓上播放视频画面了,但是声音部分还是缺失的,这篇博客就来把视频的音频播放模块也加上。 为了音频和视频可以分别解码播放,我们需要对之前的代码做重构,将媒体流的读取和解码解耦:   MediaReader从文件流中读取出AVPa">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/dP91ImCn48Nl-olck5tj7oXIM5lK7fJImdgEoQCxk9j8CYqjudztJNH92xsOIoQycVU-WUXEXK3FCAmsK0QUFWiQpWtLpLhfTmXLBpXAgaksGa4yLB-o1iV9RsyGCviTeCNvkxhPnWQgvlG8IOzGJaRRFtaKeoidlw-Yq14fIKjebqEzETVHohAKENBbutrBL_0EZWqjCIZkb84yUDKZhHVBCejlsC2TCmnjiEOQsK_qi56SUsKZxHYKAq_WNIjvKBqt_9-WhUe_EcoKu39eqIfhqItStigbTdyIhE7JSC8uJvbEv_bl-0O0">
-<meta property="og:image" content="http://139.199.4.241/FFmpeg入门格式转换/1.png">
-<meta property="og:image" content="http://139.199.4.241/FFmpeg入门格式转换/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/FFmpeg入门格式转换/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/FFmpeg入门格式转换/2.png">
 <meta property="og:updated_time" content="2022-11-26T16:14:27.873Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="FFmpeg入门 - 格式转换">
@@ -117,6 +117,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -161,10 +171,10 @@
     
       <p>系列文章:</p>
 <ol>
-<li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">FFmpeg入门 - 视频播放</a></li>
-<li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/" target="_blank" rel="noopener">FFmpeg入门 - rtmp推流</a></li>
-<li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/" target="_blank" rel="noopener">FFmpeg入门 - Android移植</a></li>
-<li><a href="https://blog.islinjw.cn/2022/11/27/FFmpeg%E5%85%A5%E9%97%A8-%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/" target="_blank" rel="noopener">FFmpeg入门 - 格式转换</a></li>
+<li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/">FFmpeg入门 - 视频播放</a></li>
+<li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/">FFmpeg入门 - rtmp推流</a></li>
+<li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/">FFmpeg入门 - Android移植</a></li>
+<li><a href="https://blog.islinjw.cn/2022/11/27/FFmpeg%E5%85%A5%E9%97%A8-%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/">FFmpeg入门 - 格式转换</a></li>
 </ol>
 <p>我们现在已经能在安卓上播放视频画面了,但是声音部分还是缺失的,这篇博客就来把视频的音频播放模块也加上。</p>
 <p>为了音频和视频可以分别解码播放,我们需要对之前的代码做重构,将媒体流的读取和解码解耦:</p>
@@ -174,7 +184,7 @@
 <h1 id="音频分⽚-plane-与打包-packed"><a href="#音频分⽚-plane-与打包-packed" class="headerlink" title="音频分⽚(plane)与打包(packed)"></a>音频分⽚(plane)与打包(packed)</h1><p>解码出来的AVFrame,它的data字段放的是视频像素数据或者音频的PCM裸流数据,linesize字段放的是对齐后的画面行长度或者音频的分片长度:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * For video, size in bytes of each picture line.</span><br><span class="line"> * For audio, size in bytes of each plane.</span><br><span class="line"> *</span><br><span class="line"> * For audio, only linesize[0] may be set. For planar audio, each channel</span><br><span class="line"> * plane must be the same size.</span><br><span class="line"> *</span><br><span class="line"> * For video the linesizes should be multiples of the CPUs alignment</span><br><span class="line"> * preference, this is 16 or 32 for modern desktop CPUs.</span><br><span class="line"> * Some code requires such alignment other code can be slower without</span><br><span class="line"> * correct alignment, for yet other it makes no difference.</span><br><span class="line"> *</span><br><span class="line"> * @note The linesize may be larger than the size of usable data -- there</span><br><span class="line"> * may be extra padding present for performance reasons.</span><br><span class="line"> */</span><br><span class="line"> int linesize[AV_NUM_DATA_POINTERS];</span><br></pre></td></tr></table></figure>
 
-<p>视频相关的在之前的<a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/#linesize" target="_blank" rel="noopener">博客</a>中有介绍,音频的话可以看到它只有linesize[0]会被设置,如果有多个分片,每个分片的size都是相等的。</p>
+<p>视频相关的在之前的<a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/#linesize">博客</a>中有介绍,音频的话可以看到它只有linesize[0]会被设置,如果有多个分片,每个分片的size都是相等的。</p>
 <p>要理解这里的分片size,先要理解音频数据的两种存储格式分⽚(plane)与打包(packed)。以常见的双声道音频为例子,</p>
 <p>分⽚存储的数据左声道和右声道分开存储,左声道存储在data[0],右声道存储在data[1],他们的数据buffer的size都是linesize[0]。</p>
 <p>打包存储的数据按照LRLRLR…的形式交替存储在data[0]中,这个数据buffer的size是linesize[0]。</p>
@@ -194,7 +204,7 @@
 <p>所以音频数据实际的长度需要用音频的参数计算出来:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">int channelCount = audioStreamDecoder.GetChannelCount();</span><br><span class="line">int bytePerSample = audioStreamDecoder.GetBytePerSample();</span><br><span class="line">int size = frame-&gt;nb_samples * channelCount * bytePerSample;</span><br></pre></td></tr></table></figure>
 
-<h1 id="音频格式转换"><a href="#音频格式转换" class="headerlink" title="音频格式转换"></a>音频格式转换</h1><p>视频之前的demo中已经可以使用OpenGL播放,而音频可以交给OpenSL来播放,之前我写过一篇<a href="https://blog.islinjw.cn/2018/09/01/OpenSLES%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" target="_blank" rel="noopener">《OpenSL ES 学习笔记》</a>详细的使用细节我就不展开介绍了,直接将<a href="https://github.com/bluesky466/OpenSLDemo/blob/master/app/src/main/cpp/opensl_helper.c" target="_blank" rel="noopener">代码</a>拷贝来使用。</p>
+<h1 id="音频格式转换"><a href="#音频格式转换" class="headerlink" title="音频格式转换"></a>音频格式转换</h1><p>视频之前的demo中已经可以使用OpenGL播放,而音频可以交给OpenSL来播放,之前我写过一篇<a href="https://blog.islinjw.cn/2018/09/01/OpenSLES%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">《OpenSL ES 学习笔记》</a>详细的使用细节我就不展开介绍了,直接将<a href="https://github.com/bluesky466/OpenSLDemo/blob/master/app/src/main/cpp/opensl_helper.c" target="_blank" rel="noopener">代码</a>拷贝来使用。</p>
 <p>但是由于OpenSLES只支持打包的几种音频格式:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_8	((SLuint16) 0x0008)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_16	((SLuint16) 0x0010)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_20 	((SLuint16) 0x0014)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_24	((SLuint16) 0x0018)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_28 	((SLuint16) 0x001C)</span><br><span class="line">#define SL_PCMSAMPLEFORMAT_FIXED_32	((SLuint16) 0x0020)</span><br></pre></td></tr></table></figure>
 
@@ -312,6 +322,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

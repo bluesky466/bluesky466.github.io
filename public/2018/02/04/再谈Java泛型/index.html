@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,java">
 <meta property="og:type" content="article">
 <meta property="og:title" content="再谈Java泛型">
-<meta property="og:url" content="http://139.199.4.241/2018/02/04/再谈Java泛型/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2018/02/04/再谈Java泛型/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="之前其实已经写过一篇泛型的文章《java泛型那些事》,但是最近在看《Kotlin极简教程》泛型部分拿java和Kotlin对比泛型机制异同的时候,又发现了一些关于java泛型的,我之前不知道的知识。这里再把它们记录下来。 关于泛型通配符关于&amp;lt;? extends T&amp;gt;首先假设有下面的一个list: 1List&amp;lt;? extends Number&amp;gt; list = new Arra">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -155,7 +165,7 @@
 
   <div class="article-content">
     
-      <p>之前其实已经写过一篇泛型的文章<a href="http://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/" target="_blank" rel="noopener">《java泛型那些事》</a>,但是最近在看《Kotlin极简教程》泛型部分拿java和Kotlin对比泛型机制异同的时候,又发现了一些关于java泛型的,我之前不知道的知识。这里再把它们记录下来。</p>
+      <p>之前其实已经写过一篇泛型的文章<a href="http://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/">《java泛型那些事》</a>,但是最近在看《Kotlin极简教程》泛型部分拿java和Kotlin对比泛型机制异同的时候,又发现了一些关于java泛型的,我之前不知道的知识。这里再把它们记录下来。</p>
 <h1 id="关于泛型通配符"><a href="#关于泛型通配符" class="headerlink" title="关于泛型通配符"></a>关于泛型通配符</h1><h2 id="关于-lt-extends-T-gt"><a href="#关于-lt-extends-T-gt" class="headerlink" title="关于&lt;? extends T&gt;"></a>关于&lt;? extends T&gt;</h2><p>首先假设有下面的一个list:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">List&lt;? extends Number&gt; list = new ArrayList&lt;&gt;();</span><br></pre></td></tr></table></figure>
 
@@ -250,6 +260,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

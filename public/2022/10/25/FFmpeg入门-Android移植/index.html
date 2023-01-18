@@ -19,21 +19,21 @@
 <meta name="keywords" content="技术相关,Android,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="FFmpeg入门 - Android移植">
-<meta property="og:url" content="http://139.199.4.241/2022/10/25/FFmpeg入门-Android移植/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2022/10/25/FFmpeg入门-Android移植/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下ND">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/1.png">
-<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/YUV444.png">
-<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/YUV422.png">
-<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/YUV420.png">
-<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/2.png">
-<meta property="og:image" content="http://139.199.4.241/FFmpeg入门Android移植/3.jpeg">
+<meta property="og:image" content="https://blog.islinjw.cn/FFmpeg入门Android移植/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/FFmpeg入门Android移植/YUV444.png">
+<meta property="og:image" content="https://blog.islinjw.cn/FFmpeg入门Android移植/YUV422.png">
+<meta property="og:image" content="https://blog.islinjw.cn/FFmpeg入门Android移植/YUV420.png">
+<meta property="og:image" content="https://blog.islinjw.cn/FFmpeg入门Android移植/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/FFmpeg入门Android移植/3.jpeg">
 <meta property="og:updated_time" content="2022-11-26T16:13:59.498Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="FFmpeg入门 - Android移植">
 <meta name="twitter:description" content="系列文章:  FFmpeg入门 - 视频播放 FFmpeg入门 - rtmp推流 FFmpeg入门 - Android移植 FFmpeg入门 - 格式转换  前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。 FFmpeg编译与集成FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的脚本放到ffmpeg源码根目录,修改下ND">
-<meta name="twitter:image" content="http://139.199.4.241/FFmpeg入门Android移植/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/FFmpeg入门Android移植/1.png">
 
   
 
@@ -120,6 +120,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -164,10 +174,10 @@
     
       <p>系列文章:</p>
 <ol>
-<li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">FFmpeg入门 - 视频播放</a></li>
-<li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/" target="_blank" rel="noopener">FFmpeg入门 - rtmp推流</a></li>
-<li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/" target="_blank" rel="noopener">FFmpeg入门 - Android移植</a></li>
-<li><a href="https://blog.islinjw.cn/2022/11/27/FFmpeg%E5%85%A5%E9%97%A8-%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/" target="_blank" rel="noopener">FFmpeg入门 - 格式转换</a></li>
+<li><a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/">FFmpeg入门 - 视频播放</a></li>
+<li><a href="https://blog.islinjw.cn/2022/09/08/FFmpeg%E5%85%A5%E9%97%A8-rtmp%E6%8E%A8%E6%B5%81/">FFmpeg入门 - rtmp推流</a></li>
+<li><a href="https://blog.islinjw.cn/2022/10/25/FFmpeg%E5%85%A5%E9%97%A8-Android%E7%A7%BB%E6%A4%8D/">FFmpeg入门 - Android移植</a></li>
+<li><a href="https://blog.islinjw.cn/2022/11/27/FFmpeg%E5%85%A5%E9%97%A8-%E6%A0%BC%E5%BC%8F%E8%BD%AC%E6%8D%A2/">FFmpeg入门 - 格式转换</a></li>
 </ol>
 <p>前两篇文章介绍了如何使用ffmpeg推流和拉流,这篇我们来看看怎样将之前的代码移植到安卓上。</p>
 <h1 id="FFmpeg编译与集成"><a href="#FFmpeg编译与集成" class="headerlink" title="FFmpeg编译与集成"></a>FFmpeg编译与集成</h1><p>FFmpeg的安卓交叉编译网上有很多的资料,基本上都是些编译配置而已。可以直接将我的<a href="https://github.com/bluesky466/FFmpegAndroidDemo/blob/master/ffmpeg-4.4.2/build_ffmpeg.sh" target="_blank" rel="noopener">脚本</a>放到ffmpeg源码根目录,修改下NDK的路径和想要编译的ABI之后直接执行。然后就能在android目录里面得到编译好的so和.h</p>
@@ -181,9 +191,9 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">//jni</span><br><span class="line">extern &quot;C&quot; JNIEXPORT void JNICALL</span><br><span class="line">Java_me_linjw_demo_ffmpeg_MainActivity_send(</span><br><span class="line">        JNIEnv *env,</span><br><span class="line">        jobject /* this */,</span><br><span class="line">        jstring srcFile,</span><br><span class="line">        jstring destUrl) &#123;</span><br><span class="line">    const char *src = env-&gt;GetStringUTFChars(srcFile, NULL);</span><br><span class="line">    const char *dest = env-&gt;GetStringUTFChars(destUrl, NULL);</span><br><span class="line">    LOGD(&quot;send: %s -&gt; %s&quot;, src, dest);</span><br><span class="line">    VideoSender::Send(src, dest);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>然后就可以用安卓去推流,在pc上用之前的demo进行播放验证。</p>
-<h1 id="OpenGLES播放FFmpeg"><a href="#OpenGLES播放FFmpeg" class="headerlink" title="OpenGLES播放FFmpeg"></a>OpenGLES播放FFmpeg</h1><p>之前的<a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/" target="_blank" rel="noopener">demo</a>使用SDL2播放视频,但是安卓上更常规的做法是通过OpenGLES去播放。其实之前在做摄像教程的时候已经有介绍过OpenGLES的使用了:</p>
-<p><a href="https://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/" target="_blank" rel="noopener">安卓特效相机(二) EGL基础</a></p>
-<p><a href="https://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/" target="_blank" rel="noopener">安卓特效相机(三) OpenGL ES 特效渲染</a></p>
+<h1 id="OpenGLES播放FFmpeg"><a href="#OpenGLES播放FFmpeg" class="headerlink" title="OpenGLES播放FFmpeg"></a>OpenGLES播放FFmpeg</h1><p>之前的<a href="https://blog.islinjw.cn/2022/09/04/FFmpeg%E5%85%A5%E9%97%A8-%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE/">demo</a>使用SDL2播放视频,但是安卓上更常规的做法是通过OpenGLES去播放。其实之前在做摄像教程的时候已经有介绍过OpenGLES的使用了:</p>
+<p><a href="https://blog.islinjw.cn/2019/09/13/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%BA%8C-EGL%E5%9F%BA%E7%A1%80/">安卓特效相机(二) EGL基础</a></p>
+<p><a href="https://blog.islinjw.cn/2019/09/22/%E5%AE%89%E5%8D%93%E7%89%B9%E6%95%88%E7%9B%B8%E6%9C%BA-%E4%B8%89-OpenGL-ES-%E7%89%B9%E6%95%88%E6%B8%B2%E6%9F%93/">安卓特效相机(三) OpenGL ES 特效渲染</a></p>
 <p>这篇我们就只补充下之前没有提到的部分。</p>
 <h2 id="YUV"><a href="#YUV" class="headerlink" title="YUV"></a>YUV</h2><p>首先有个很重要的知识点在于我们的视频很多情况下解码出来都是<a href="https://zh.wikipedia.org/zh-sg/YUV" target="_blank" rel="noopener">YUV格式</a>的画面而不是安卓应用开发常见的RGB格式。</p>
 <p>YUV是编译true-color颜色空间（color space）的种类，Y’UV, YUV, YCbCr，YPbPr等专有名词都可以称为YUV，彼此有重叠。“Y”表示明亮度（Luminance、Luma），“U”和“V”则是色度、浓度（Chrominance、Chroma）,也就是说通过UV可以选择到一种颜色:</p>
@@ -300,6 +310,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

@@ -19,16 +19,16 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android温故而知新 - ClassLoader">
-<meta property="og:url" content="http://139.199.4.241/2017/09/28/Android温故而知新-ClassLoader/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2017/09/28/Android温故而知新-ClassLoader/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="安卓插件化越来越流行,其中用到的技术不外乎加载外部的资源和加载外部的代码,关于加载外部资源我之前写过一篇文章《安卓皮肤包机制的原理》,感兴趣的同学可以去看一下。 加载外部代码的作用在于热更新。程序主体定义接口,具体实现放在外部。只需要替换外部代码,就能修复bug甚至是更新功能。相比传统的ota手段更加省流量,用户体验也更加的好,毕竟有很多的用户是不喜欢更新的。 这篇文章我想复习一下ClassLoa">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/Android温故而知新-ClassLoader/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/Android温故而知新-ClassLoader/1.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.419Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android温故而知新 - ClassLoader">
 <meta name="twitter:description" content="安卓插件化越来越流行,其中用到的技术不外乎加载外部的资源和加载外部的代码,关于加载外部资源我之前写过一篇文章《安卓皮肤包机制的原理》,感兴趣的同学可以去看一下。 加载外部代码的作用在于热更新。程序主体定义接口,具体实现放在外部。只需要替换外部代码,就能修复bug甚至是更新功能。相比传统的ota手段更加省流量,用户体验也更加的好,毕竟有很多的用户是不喜欢更新的。 这篇文章我想复习一下ClassLoa">
-<meta name="twitter:image" content="http://139.199.4.241/Android温故而知新-ClassLoader/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/Android温故而知新-ClassLoader/1.png">
 
   
 
@@ -115,6 +115,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -157,7 +167,7 @@
 
   <div class="article-content">
     
-      <p>安卓插件化越来越流行,其中用到的技术不外乎加载外部的资源和加载外部的代码,关于加载外部资源我之前写过一篇文章<a href="http://blog.islinjw.cn/2017/08/01/%E5%AE%89%E5%8D%93%E7%9A%AE%E8%82%A4%E5%8C%85%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86/" target="_blank" rel="noopener">《安卓皮肤包机制的原理》</a>,感兴趣的同学可以去看一下。</p>
+      <p>安卓插件化越来越流行,其中用到的技术不外乎加载外部的资源和加载外部的代码,关于加载外部资源我之前写过一篇文章<a href="http://blog.islinjw.cn/2017/08/01/%E5%AE%89%E5%8D%93%E7%9A%AE%E8%82%A4%E5%8C%85%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86/">《安卓皮肤包机制的原理》</a>,感兴趣的同学可以去看一下。</p>
 <p>加载外部代码的作用在于热更新。程序主体定义接口,具体实现放在外部。只需要替换外部代码,就能修复bug甚至是更新功能。相比传统的ota手段更加省流量,用户体验也更加的好,毕竟有很多的用户是不喜欢更新的。</p>
 <p>这篇文章我想复习一下ClassLoader的相关知识,它是加载外部代码的核心原理。</p>
 <p>虽然android自己实现了一个特殊的虚拟机,它的类加载机制和普通的java程序有点区别。但是我还是想从普通的java程序讲起,一方面多知道点东西总是好的,另一方面它们的基本原理是一样的,对我们理解安卓的类加载机制也有很大的帮助。</p>
@@ -391,6 +401,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

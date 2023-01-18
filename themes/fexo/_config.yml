@@ -34,6 +34,9 @@ page_nav:
   - name: 关于
     url: /about/
     target_blank: false
+  - name: 搜索
+    url: /search/
+    target_blank: false
 
 page_nav_style: CIRCLE  # CIRCLE|ROUND_RECT
 
@@ -47,8 +50,8 @@ toolbox:
   text: 盒子
 
 search_slogan:
-  isShow: false # true|fase
-  text: 什么都想学
+  isShow: true # true|fase
+  text: 搜索一下
 
 link_slogan:
   isShow: false # true|fase

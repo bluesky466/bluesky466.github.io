@@ -19,16 +19,16 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android温故而知新 - Java的四种引用">
-<meta property="og:url" content="http://139.199.4.241/2017/07/06/Android温故而知新-Java的四种引用/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2017/07/06/Android温故而知新-Java的四种引用/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="java对象的引用包括强引用，软引用，弱引用，虚引用四种 强引用强引用是最常用的引用,我们在代码中处处可见: 123String str = &amp;quot;hello world&amp;quot;;Map&amp;lt;String, String&amp;gt; map = new HashMap&amp;lt;&amp;gt;();int[] arr = new int[10];  上面的str、map、arr都是强引用。一个对象,">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/Android温故而知新-Java的四种引用/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/Android温故而知新-Java的四种引用/1.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.420Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android温故而知新 - Java的四种引用">
 <meta name="twitter:description" content="java对象的引用包括强引用，软引用，弱引用，虚引用四种 强引用强引用是最常用的引用,我们在代码中处处可见: 123String str = &amp;quot;hello world&amp;quot;;Map&amp;lt;String, String&amp;gt; map = new HashMap&amp;lt;&amp;gt;();int[] arr = new int[10];  上面的str、map、arr都是强引用。一个对象,">
-<meta name="twitter:image" content="http://139.199.4.241/Android温故而知新-Java的四种引用/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/Android温故而知新-Java的四种引用/1.png">
 
   
 
@@ -115,6 +115,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -185,7 +195,7 @@
 <p>弱引用可以用在回调函数中防止内存泄漏。我们来看个典型的例子,也是一个很多人都会犯的错误:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public class DemoActivity extends AppCompatActivity &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void onCreate(@Nullable Bundle savedInstanceState) &#123;</span><br><span class="line">        super.onCreate(savedInstanceState);</span><br><span class="line">        setContentView(R.layout.activity_layout);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 可能会引入内存泄漏</span><br><span class="line">    private final Handler mHandler = new Handler() &#123;</span><br><span class="line">        @Override</span><br><span class="line">        public void handleMessage(Message msg) &#123;</span><br><span class="line">            super.handleMessage(msg);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>不知道大家有没有看过我之前写的一篇<a href="http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/" target="_blank" rel="noopener">关于Handler的博客</a>,如果没有没有看过,而对Handler又不太熟悉的同学可以去看一下。</p>
+<p>不知道大家有没有看过我之前写的一篇<a href="http://blog.islinjw.cn/2017/07/02/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-Handler/">关于Handler的博客</a>,如果没有没有看过,而对Handler又不太熟悉的同学可以去看一下。</p>
 <p>我们知道Handler是和Looper还有MessageQueue一起工作的。当安卓应用启动之后,系统会在主线程创建一个Looper和MessageQueue,它们的生命周期贯穿整个应用的生命周期。</p>
 <p>Handler在发送Message的时候会将Message传到MessageQueue里面去,而Message里面保存着Handler的引用。这样的话如果Message还没有被处理,Handler也不会被回收。</p>
 <p>而这里的Handler是DemoActivity的一个内部类。在java中,非晶体内部匿名类会持有外部类的一个隐式引用,这样就有可能导致外部类无法被垃圾回收。</p>
@@ -278,6 +288,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

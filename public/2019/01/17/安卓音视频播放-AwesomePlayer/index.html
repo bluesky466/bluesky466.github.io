@@ -19,20 +19,20 @@
 <meta name="keywords" content="技术相关,Android,音视频">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓音视频播放 - AwesomePlayer">
-<meta property="og:url" content="http://139.199.4.241/2019/01/17/安卓音视频播放-AwesomePlayer/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/01/17/安卓音视频播放-AwesomePlayer/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="系列文章:  安卓音视频播放 - 总体架构 安卓音视频播放 - AwesomePlayer 安卓音视频播放 - NuPlayer  音视频播放基础流程在讲具体的实现之前我们看一下音视频播放的基础流程:   流程很简单,就是将复用的音视频流解复用出编码后的音频流和编码后的视频流。然后通过音频解码解出PCM数据给音频设备去播放,通过视频解码解出YUV数据给视频设备去播放。 StagefrightPla">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/1.png">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/2.png">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/3.png">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/4.png">
-<meta property="og:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/5.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放-AwesomePlayer/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放-AwesomePlayer/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放-AwesomePlayer/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放-AwesomePlayer/4.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓音视频播放-AwesomePlayer/5.png">
 <meta property="og:updated_time" content="2022-05-30T12:47:35.472Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓音视频播放 - AwesomePlayer">
 <meta name="twitter:description" content="系列文章:  安卓音视频播放 - 总体架构 安卓音视频播放 - AwesomePlayer 安卓音视频播放 - NuPlayer  音视频播放基础流程在讲具体的实现之前我们看一下音视频播放的基础流程:   流程很简单,就是将复用的音视频流解复用出编码后的音频流和编码后的视频流。然后通过音频解码解出PCM数据给音频设备去播放,通过视频解码解出YUV数据给视频设备去播放。 StagefrightPla">
-<meta name="twitter:image" content="http://139.199.4.241/安卓音视频播放-AwesomePlayer/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/安卓音视频播放-AwesomePlayer/1.png">
 
   
 
@@ -119,6 +119,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -163,15 +173,15 @@
     
       <p>系列文章:</p>
 <ul>
-<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/" target="_blank" rel="noopener">安卓音视频播放 - 总体架构</a></li>
-<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-AwesomePlayer/" target="_blank" rel="noopener">安卓音视频播放 - AwesomePlayer</a></li>
-<li><a href="http://blog.islinjw.cn/2019/01/19/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-NuPlayer/" target="_blank" rel="noopener">安卓音视频播放 - NuPlayer</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/">安卓音视频播放 - 总体架构</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-AwesomePlayer/">安卓音视频播放 - AwesomePlayer</a></li>
+<li><a href="http://blog.islinjw.cn/2019/01/19/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-NuPlayer/">安卓音视频播放 - NuPlayer</a></li>
 </ul>
 <h1 id="音视频播放基础流程"><a href="#音视频播放基础流程" class="headerlink" title="音视频播放基础流程"></a>音视频播放基础流程</h1><p>在讲具体的实现之前我们看一下音视频播放的基础流程:</p>
 <img src="/安卓音视频播放-AwesomePlayer/1.png">
 
 <p>流程很简单,就是将复用的音视频流解复用出编码后的音频流和编码后的视频流。然后通过音频解码解出PCM数据给音频设备去播放,通过视频解码解出YUV数据给视频设备去播放。</p>
-<h1 id="StagefrightPlayer"><a href="#StagefrightPlayer" class="headerlink" title="StagefrightPlayer"></a>StagefrightPlayer</h1><p><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/" target="_blank" rel="noopener">上一篇文章</a>有讲到MediaPlayerService会通过MediaPlayerFactory创建Player,其中一个创建的就是StagefrightPlayer.但它实际上是一个空壳,只是简单的调用AwesomePlayer的实现而已:</p>
+<h1 id="StagefrightPlayer"><a href="#StagefrightPlayer" class="headerlink" title="StagefrightPlayer"></a>StagefrightPlayer</h1><p><a href="http://blog.islinjw.cn/2019/01/17/%E5%AE%89%E5%8D%93%E9%9F%B3%E8%A7%86%E9%A2%91%E6%92%AD%E6%94%BE-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84/">上一篇文章</a>有讲到MediaPlayerService会通过MediaPlayerFactory创建Player,其中一个创建的就是StagefrightPlayer.但它实际上是一个空壳,只是简单的调用AwesomePlayer的实现而已:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">//StagefrightPlayer.h</span><br><span class="line">class StagefrightPlayer : public MediaPlayerInterface &#123;</span><br><span class="line">	...</span><br><span class="line">private:</span><br><span class="line">	AwesomePlayer *mPlayer;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//StagefrightPlayer.cpp</span><br><span class="line">status_t StagefrightPlayer::pause() &#123;</span><br><span class="line">    ALOGV(&quot;pause&quot;);</span><br><span class="line"></span><br><span class="line">    return mPlayer-&gt;pause();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">bool StagefrightPlayer::isPlaying() &#123;</span><br><span class="line">    ALOGV(&quot;isPlaying&quot;);</span><br><span class="line">    return mPlayer-&gt;isPlaying();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">status_t StagefrightPlayer::seekTo(int msec) &#123;</span><br><span class="line">    ALOGV(&quot;seekTo %.2f secs&quot;, msec / 1E3);</span><br><span class="line"></span><br><span class="line">    status_t err = mPlayer-&gt;seekTo((int64_t)msec * 1000);</span><br><span class="line"></span><br><span class="line">    return err;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
 
 <p>所以我们直接看AwesomePlayer的实现。</p>
@@ -292,6 +302,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

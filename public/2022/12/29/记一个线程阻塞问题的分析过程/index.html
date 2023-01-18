@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="记一个线程阻塞问题的分析过程">
-<meta property="og:url" content="http://139.199.4.241/2022/12/29/记一个线程阻塞问题的分析过程/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2022/12/29/记一个线程阻塞问题的分析过程/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="最近遇到了一个线程阻塞的问题,分析的过程比较有代表性,这里做个总结分享下。 测试报的问题是: 概率性出现开机的前几分钟我们的服务不可用。 查看日志发现开机之后的几分钟之内mqtt库不断在断开、重连broker。MqttCallback.disconnected一直在被调用,而且还能看到发布消息也失败了: 12345612-28 18:27:18.948   812   884 E LinJwDem">
 <meta property="og:locale" content="zh-CN">
@@ -110,6 +110,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -275,6 +285,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

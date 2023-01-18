@@ -19,17 +19,17 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓广播的底层实现原理">
-<meta property="og:url" content="http://139.199.4.241/2018/02/10/安卓广播的底层实现原理/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2018/02/10/安卓广播的底层实现原理/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="相信广播大家都有用过,也知道安卓广播的一些基础知识,如静态广播、动态广播、粘性广播等等,但相信很多人都不知道系统层面是怎样实现这些广播特性的,这篇文章就让我们来聊一聊安卓广播机制的系统实现原理. 静态广播的注册静态广播是通过PackageManagerService在启动的时候扫描已安装的应用去注册的. 在PackageManagerService的构造方法中,会去扫描应用安装目录,顺序是先扫描系">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/安卓广播的底层实现原理/1.png">
-<meta property="og:image" content="http://139.199.4.241/安卓广播的底层实现原理/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓广播的底层实现原理/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓广播的底层实现原理/2.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.441Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓广播的底层实现原理">
 <meta name="twitter:description" content="相信广播大家都有用过,也知道安卓广播的一些基础知识,如静态广播、动态广播、粘性广播等等,但相信很多人都不知道系统层面是怎样实现这些广播特性的,这篇文章就让我们来聊一聊安卓广播机制的系统实现原理. 静态广播的注册静态广播是通过PackageManagerService在启动的时候扫描已安装的应用去注册的. 在PackageManagerService的构造方法中,会去扫描应用安装目录,顺序是先扫描系">
-<meta name="twitter:image" content="http://139.199.4.241/安卓广播的底层实现原理/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/安卓广播的底层实现原理/1.png">
 
   
 
@@ -113,6 +113,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -288,6 +298,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

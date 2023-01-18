@@ -19,11 +19,11 @@
 <meta name="keywords" content="技术相关,Dart">
 <meta property="og:type" content="article">
 <meta property="og:title" content="深入理解Dart Mixin">
-<meta property="og:url" content="http://139.199.4.241/2022/04/27/深入理解Dart-Mixin/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2022/04/27/深入理解Dart-Mixin/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="假设我们需要实现一个动物世界的功能。Animal作为基类派生出哺乳类、鸟类、鱼类三种类型,各个类型又能派生出具体的动物。每种动物都具有步行、游泳、飞行三种能力中的某几种能力:   由于Java和kotlin都不允许多继承，我们可以将walk、swim、fly定义成interface，让各个具体的动物类去实现这几个接口。在java7里面需要在不同动物类中写同样的实现代码，但如果用java8或者kot">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/深入理解Dart_Mixin/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/深入理解Dart_Mixin/1.png">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1C1">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vMS4eiJZLKgEPIKD1MIClFrz3agkNYIaP8XMUMP80OHWgf5IMfUIaaw80nZ56r8ap4QePpHcPE2WuTS1EvkFBoIr8LSbBJIXJoqo2ghAo09W5DB2ZAp2lHK39KqhJc0fgX05A9JJtSL3IDHaHhX3i7Pa9nQK5gaHxOGzO80usH3GG0">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Iyv9B2vM2CyioN1AB4urLAZcKb3GLaZBppVKq8GnZO3CMYwkP5IbC8QHGcf5IMfU2accE6TavgHWQeIRoSN5bPTVaggGavfMef2VXb1XPGKo5MXcGL5cNec64bXG3oIcf6aD58POPCq5D5S1P08kS-0smGqiBYr8BTA3kDaQrG8Zk0Ma6Mk4nHWZP6C0">
@@ -31,7 +31,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入理解Dart Mixin">
 <meta name="twitter:description" content="假设我们需要实现一个动物世界的功能。Animal作为基类派生出哺乳类、鸟类、鱼类三种类型,各个类型又能派生出具体的动物。每种动物都具有步行、游泳、飞行三种能力中的某几种能力:   由于Java和kotlin都不允许多继承，我们可以将walk、swim、fly定义成interface，让各个具体的动物类去实现这几个接口。在java7里面需要在不同动物类中写同样的实现代码，但如果用java8或者kot">
-<meta name="twitter:image" content="http://139.199.4.241/深入理解Dart_Mixin/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/深入理解Dart_Mixin/1.png">
 
   
 
@@ -115,6 +115,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -280,6 +290,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

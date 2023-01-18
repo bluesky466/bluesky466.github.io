@@ -19,17 +19,17 @@
 <meta name="keywords" content="技术相关,java">
 <meta property="og:type" content="article">
 <meta property="og:title" content="大概优秀的java程序员都要会分析class文件吧">
-<meta property="og:url" content="http://139.199.4.241/2019/03/22/大概优秀的java程序员都要会分析class文件吧/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/03/22/大概优秀的java程序员都要会分析class文件吧/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="相信大家在学java的时候都会听到这样的一些结论:  enum 是一个类 泛型的实现使用了类型擦除技术 非静态内部类持有外部类的引用 需要将自由变量声明成final才能给匿名内部类访问  … 初学的时候的时候可能在书上读过,但是很容易就会忘记,等到踩坑踩多了,就会形成慢慢记住。但是很多的同学也只是记住了而已,对于实际的原理或者原因并不了解。 这篇文章的目的主要就是教会大家查看java的字节码,然后">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/大概优秀的java程序员都要会分析class文件吧/1.png">
-<meta property="og:image" content="http://139.199.4.241/大概优秀的java程序员都要会分析class文件吧/gif1.gif">
+<meta property="og:image" content="https://blog.islinjw.cn/大概优秀的java程序员都要会分析class文件吧/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/大概优秀的java程序员都要会分析class文件吧/gif1.gif">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.438Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="大概优秀的java程序员都要会分析class文件吧">
 <meta name="twitter:description" content="相信大家在学java的时候都会听到这样的一些结论:  enum 是一个类 泛型的实现使用了类型擦除技术 非静态内部类持有外部类的引用 需要将自由变量声明成final才能给匿名内部类访问  … 初学的时候的时候可能在书上读过,但是很容易就会忘记,等到踩坑踩多了,就会形成慢慢记住。但是很多的同学也只是记住了而已,对于实际的原理或者原因并不了解。 这篇文章的目的主要就是教会大家查看java的字节码,然后">
-<meta name="twitter:image" content="http://139.199.4.241/大概优秀的java程序员都要会分析class文件吧/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/大概优秀的java程序员都要会分析class文件吧/1.png">
 
   
 
@@ -113,6 +113,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -242,7 +252,7 @@
 <p>如果看的比较仔细的同学可能会有疑问，为什么举报变量表里一开始位置0就会有个String[]在那呢？</p>
 <p>其实这个字符串数组就是传入的参数args,jvm会把参数都压如举报变量表给方法去使用,如果调用的是非静态方法,还会将该方法的调用对象也一起压入栈中.</p>
 <p>可能有同学一开始会对istore、iload…这些字节码指令的作用不那么熟悉,或者有些指令不知道有什么作用。不过这个没有关系，不需要死记硬背，遇到的时候搜索一下就是了。</p>
-<h1 id="类型擦除的原理"><a href="#类型擦除的原理" class="headerlink" title="类型擦除的原理"></a>类型擦除的原理</h1><p>泛型是java中十分好用且常用的技术,之前也有写过两篇博客 <a href="http://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/" target="_blank" rel="noopener">《java泛型那些事》</a>,<a href="http://blog.islinjw.cn/2018/02/04/%E5%86%8D%E8%B0%88Java%E6%B3%9B%E5%9E%8B/" target="_blank" rel="noopener">《再谈Java泛型》</a>总结过.感兴趣的同学可以去看看.</p>
+<h1 id="类型擦除的原理"><a href="#类型擦除的原理" class="headerlink" title="类型擦除的原理"></a>类型擦除的原理</h1><p>泛型是java中十分好用且常用的技术,之前也有写过两篇博客 <a href="http://blog.islinjw.cn/2018/01/06/java%E6%B3%9B%E5%9E%8B%E9%82%A3%E4%BA%9B%E4%BA%8B/">《java泛型那些事》</a>,<a href="http://blog.islinjw.cn/2018/02/04/%E5%86%8D%E8%B0%88Java%E6%B3%9B%E5%9E%8B/">《再谈Java泛型》</a>总结过.感兴趣的同学可以去看看.</p>
 <p>这里我们就从编译出来的class文件里面看看泛型的实现:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class Test &#123;                                                              </span><br><span class="line">    public static void main(String[] args) &#123;                                     </span><br><span class="line">        foo(1);                                                                  </span><br><span class="line">    &#125;                                                                            </span><br><span class="line"></span><br><span class="line">    public static &lt;T&gt; T foo(T a)&#123;                                                </span><br><span class="line">        return a;                                                                </span><br><span class="line">    &#125;                                                                            </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -365,6 +375,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

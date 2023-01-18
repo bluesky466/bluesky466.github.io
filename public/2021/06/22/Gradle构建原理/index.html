@@ -19,18 +19,18 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Gradle构建原理">
-<meta property="og:url" content="http://139.199.4.241/2021/06/22/Gradle构建原理/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/06/22/Gradle构建原理/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="Gradle的构建的三个阶段根据Gradle的官方文档,Gradle的构建分成三个阶段:  Initialization (初始化)  Gradle允许multi-project，也就是android studio里面的项目+模块的形式。安卓项目被称为Root Project，而每个模块其实都是一个子project。Root Project肯定是要参与编译的，但Gradle是怎么知道哪些子Proj">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://139.199.4.241/Gradle构建原理/1.jpeg">
-<meta property="og:image" content="http://139.199.4.241/Gradle构建原理/2.jpeg">
-<meta property="og:image" content="http://139.199.4.241/Gradle构建原理/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/Gradle构建原理/1.jpeg">
+<meta property="og:image" content="https://blog.islinjw.cn/Gradle构建原理/2.jpeg">
+<meta property="og:image" content="https://blog.islinjw.cn/Gradle构建原理/3.png">
 <meta property="og:updated_time" content="2022-02-07T05:47:21.423Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Gradle构建原理">
 <meta name="twitter:description" content="Gradle的构建的三个阶段根据Gradle的官方文档,Gradle的构建分成三个阶段:  Initialization (初始化)  Gradle允许multi-project，也就是android studio里面的项目+模块的形式。安卓项目被称为Root Project，而每个模块其实都是一个子project。Root Project肯定是要参与编译的，但Gradle是怎么知道哪些子Proj">
-<meta name="twitter:image" content="http://139.199.4.241/Gradle构建原理/1.jpeg">
+<meta name="twitter:image" content="https://blog.islinjw.cn/Gradle构建原理/1.jpeg">
 
   
 
@@ -114,6 +114,16 @@
             target="_self"
             >
             关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
           </a>
         </li>
       
@@ -242,7 +252,7 @@
 <p>android方法配置了一些安卓相关的配置项，但是实际上Gradle并不是专门给安卓使用的，为什么Project里面会有android这个方法呢?</p>
 <p>答案就在apply方法传入的插件。</p>
 <p>Gradle执行com.android.application这个插件的时候会将Project的对象传给插件，插件内部就能为这个Project新增一些拓展方法和Task。我们熟悉的build、assemble、assembleDebug这些Task都是在这个插件里面定义的。</p>
-<p>插件的原理我就不细讲了，刚兴趣的同学可以看<a href="https://blog.islinjw.cn/2019/04/14/%E4%B8%80%E8%B5%B7%E5%85%A5%E9%97%A8gradle%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99%E4%B8%80/" target="_blank" rel="noopener">这篇笔记</a>，这里只简单举个添加拓展方法的例子:</p>
+<p>插件的原理我就不细讲了，刚兴趣的同学可以看<a href="https://blog.islinjw.cn/2019/04/14/%E4%B8%80%E8%B5%B7%E5%85%A5%E9%97%A8gradle%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99%E4%B8%80/">这篇笔记</a>，这里只简单举个添加拓展方法的例子:</p>
 <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// app build.gradle</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建自定义类</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyExt</span> &#123;</span></span><br><span class="line">    String data1</span><br><span class="line">    String data2</span><br><span class="line"></span><br><span class="line">    MyExt() &#123;</span><br><span class="line">        <span class="keyword">this</span>.data1 = <span class="literal">null</span></span><br><span class="line">        <span class="keyword">this</span>.data2 = <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> data1(String data1) &#123;</span><br><span class="line">        <span class="keyword">this</span>.data1 = data1</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">void</span> data2(String data2) &#123;</span><br><span class="line">        <span class="keyword">this</span>.data2 = data2</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//实例化对象</span></span><br><span class="line">MyExt ext = <span class="keyword">new</span> MyExt()</span><br><span class="line"></span><br><span class="line"><span class="comment">//为project拓展myExt方法</span></span><br><span class="line">project.extensions.add(<span class="string">"myExt"</span>, ext)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 下面的myExt实际是project.myExt省略project对象，函数调用的圆括号也被省略了</span></span><br><span class="line">myExt &#123;</span><br><span class="line">    data1(<span class="string">"111"</span>)</span><br><span class="line">    data2(<span class="string">"222"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">println(myExt.data1)</span><br><span class="line">println(myExt.data2)</span><br></pre></td></tr></table></figure>
     
   </div>
@@ -305,6 +315,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="安卓IPC机制之LocalSocket">
-<meta property="og:url" content="http://139.199.4.241/2021/11/13/安卓IPC机制之LocalSocket/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/11/13/安卓IPC机制之LocalSocket/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="LocalSocket作为安卓提供的一种IPC机制，可能应用层的同学比较陌生，我实际也是在这段时间做项目使用到才注意到它并去了解的。不过实际上framework层里面被频繁使用到了，例如我很久前写的博客从源码看安卓应用的启动过程里面提到其他进程和Zygote进程之间的通信使用的是LocalSocket。 那么LocalSocket和Socket到底有什么不同呢？官方文档里面其实提到了它其实是基于U">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -155,7 +165,7 @@
 
   <div class="article-content">
     
-      <p>LocalSocket作为安卓提供的一种IPC机制，可能应用层的同学比较陌生，我实际也是在这段时间做项目使用到才注意到它并去了解的。不过实际上framework层里面被频繁使用到了，例如我很久前写的博客<a href="https://blog.islinjw.cn/2018/03/08/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8B%E5%AE%89%E5%8D%93%E5%BA%94%E7%94%A8%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/" target="_blank" rel="noopener">从源码看安卓应用的启动过程</a>里面提到其他进程和Zygote进程之间的通信使用的是LocalSocket。</p>
+      <p>LocalSocket作为安卓提供的一种IPC机制，可能应用层的同学比较陌生，我实际也是在这段时间做项目使用到才注意到它并去了解的。不过实际上framework层里面被频繁使用到了，例如我很久前写的博客<a href="https://blog.islinjw.cn/2018/03/08/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8B%E5%AE%89%E5%8D%93%E5%BA%94%E7%94%A8%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/">从源码看安卓应用的启动过程</a>里面提到其他进程和Zygote进程之间的通信使用的是LocalSocket。</p>
 <p>那么LocalSocket和Socket到底有什么不同呢？<a href="https://developer.android.com/reference/android/net/LocalServerSocket" target="_blank" rel="noopener">官方文档</a>里面其实提到了它其实是基于UNIX-domain socket的:</p>
 <blockquote>
 <p>Non-standard class for creating an inbound UNIX-domain socket in the Linux abstract namespace.</p>
@@ -321,6 +331,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         

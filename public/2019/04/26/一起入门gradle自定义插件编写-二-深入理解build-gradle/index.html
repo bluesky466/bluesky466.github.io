@@ -19,7 +19,7 @@
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="一起入门gradle自定义插件编写(二) - 深入理解build.gradle">
-<meta property="og:url" content="http://139.199.4.241/2019/04/26/一起入门gradle自定义插件编写-二-深入理解build-gradle/index.html">
+<meta property="og:url" content="https://blog.islinjw.cn/2019/04/26/一起入门gradle自定义插件编写-二-深入理解build-gradle/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="这篇博客我们来通过groovy的语法去深入理解build.gradle的底层实现。 通过分析build.gradle里面的实现原理,我们在写自己的自定义gradle插件的时候就能使用同样的配置方法了。 在上一篇博客里面提到,在gradle文件里面默认使用的都是project这个对象的方法或者属性,并且分析了apply方法的完整形式: 1project.apply([&amp;apos;plugin&amp;apo">
 <meta property="og:locale" content="zh-CN">
@@ -113,6 +113,16 @@
           </a>
         </li>
       
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
     </ul>
   </div>
 
@@ -157,7 +167,7 @@
     
       <p>这篇博客我们来通过groovy的语法去深入理解build.gradle的底层实现。</p>
 <p>通过分析build.gradle里面的实现原理,我们在写自己的自定义gradle插件的时候就能使用同样的配置方法了。</p>
-<p>在上一篇<a href="http://blog.islinjw.cn/2019/04/14/%E4%B8%80%E8%B5%B7%E5%85%A5%E9%97%A8gradle%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99%E4%B8%80/" target="_blank" rel="noopener">博客</a>里面提到,在gradle文件里面默认使用的都是project这个对象的方法或者属性,并且分析了apply方法的完整形式:</p>
+<p>在上一篇<a href="http://blog.islinjw.cn/2019/04/14/%E4%B8%80%E8%B5%B7%E5%85%A5%E9%97%A8gradle%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8F%92%E4%BB%B6%E7%BC%96%E5%86%99%E4%B8%80/">博客</a>里面提到,在gradle文件里面默认使用的都是project这个对象的方法或者属性,并且分析了apply方法的完整形式:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">project.apply([&apos;plugin&apos;: &apos;com.android.application&apos;])</span><br></pre></td></tr></table></figure>
 
 <p>其实android,和dependencies代码块也是一样的,省略了project对象,添加上之后变成这样:</p>
@@ -295,6 +305,16 @@
               target="_self"
               >
               关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
             </a>
           </li>
         
