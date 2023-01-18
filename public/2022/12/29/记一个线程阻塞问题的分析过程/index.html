@@ -29,6 +29,8 @@
 <meta name="twitter:description" content="最近遇到了一个线程阻塞的问题,分析的过程比较有代表性,这里做个总结分享下。 测试报的问题是: 概率性出现开机的前几分钟我们的服务不可用。 查看日志发现开机之后的几分钟之内mqtt库不断在断开、重连broker。MqttCallback.disconnected一直在被调用,而且还能看到发布消息也失败了: 12345612-28 18:27:18.948   812   884 E LinJwDem">
 
   
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
 
   
     <link rel="icon" href="/favicon.ico">
@@ -120,6 +122,16 @@
             target="_self"
             >
             搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
           </a>
         </li>
       
@@ -295,6 +307,16 @@
               target="_self"
               >
               搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
             </a>
           </li>
         

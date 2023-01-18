@@ -93,3 +93,8 @@ search:
   path: search.json
   source: all # other values: posts, pages
   trim_html: false
+
+feed:
+  type: atom
+  path: atom.xml
+  limit: false

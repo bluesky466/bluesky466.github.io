@@ -37,6 +37,9 @@ page_nav:
   - name: 搜索
     url: /search/
     target_blank: false
+  - name: RSS
+    url: /atom.xml
+    target_blank: false
 
 page_nav_style: CIRCLE  # CIRCLE|ROUND_RECT
 
@@ -153,3 +156,5 @@ project:
     name: Cocos2dxUsefulClasses
     url: https://github.com/bluesky466/Cocos2dxUsefulClasses
     intro: some easy and userful classes for cocos2d-x 2.2.3 and cocos2d-x 3.2
+
+rss: /atom.xml
