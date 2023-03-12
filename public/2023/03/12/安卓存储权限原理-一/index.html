@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓存储权限原理(一) | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="上篇博客介绍了FileProvider是如何跨应用访问文件的。这两篇博客我们来讲讲安卓是如何控制文件的访问权限的。 内部储存由于安卓基于Linux,所以最简单的应用文件访问权限控制方法就是使用Linux的文件权限机制.例如应用的私有目录就是这么实现的。 安卓系统为每个安卓的应用都分配了一个用户和用户组,我们可以通过ps命令查看运行中的应用对应的用户: 1234USER           PID">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓存储权限原理(一)">
+<meta property="og:url" content="https://blog.islinjw.cn/2023/03/12/安卓存储权限原理-一/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="上篇博客介绍了FileProvider是如何跨应用访问文件的。这两篇博客我们来讲讲安卓是如何控制文件的访问权限的。 内部储存由于安卓基于Linux,所以最简单的应用文件访问权限控制方法就是使用Linux的文件权限机制.例如应用的私有目录就是这么实现的。 安卓系统为每个安卓的应用都分配了一个用户和用户组,我们可以通过ps命令查看运行中的应用对应的用户: 1234USER           PID">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2023-03-12T14:40:25.140Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓存储权限原理(一)">
+<meta name="twitter:description" content="上篇博客介绍了FileProvider是如何跨应用访问文件的。这两篇博客我们来讲讲安卓是如何控制文件的访问权限的。 内部储存由于安卓基于Linux,所以最简单的应用文件访问权限控制方法就是使用Linux的文件权限机制.例如应用的私有目录就是这么实现的。 安卓系统为每个安卓的应用都分配了一个用户和用户组,我们可以通过ps命令查看运行中的应用对应的用户: 1234USER           PID">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#内部储存"><span class="toc-text">内部储存</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#SharedUserId"><span class="toc-text">SharedUserId</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Android-8外部存储"><span class="toc-text">Android 8外部存储</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#mnt-runtime目录"><span class="toc-text">/mnt/runtime目录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#group"><span class="toc-text">group</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#mask"><span class="toc-text">mask</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#storage-emulated原理"><span class="toc-text">/storage/emulated原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#间接挂载"><span class="toc-text">间接挂载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#运行时权限"><span class="toc-text">运行时权限</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#缺点"><span class="toc-text">缺点</span></a></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓存储权限原理-一" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓存储权限原理(一)</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2023.03.12</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>上篇<a href="https://blog.islinjw.cn/2023/02/23/FileProvider%E7%9A%84%E4%B8%80%E4%BA%9B%E4%BA%8B/">博客</a>介绍了FileProvider是如何跨应用访问文件的。这两篇博客我们来讲讲安卓是如何控制文件的访问权限的。</p>
+<h1 id="内部储存"><a href="#内部储存" class="headerlink" title="内部储存"></a>内部储存</h1><p>由于安卓基于Linux,所以最简单的应用文件访问权限控制方法就是使用Linux的文件权限机制.例如应用的私有目录就是这么实现的。</p>
+<p>安卓系统为每个安卓的应用都分配了一个用户和用户组,我们可以通过ps命令查看运行中的应用对应的用户:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">USER           PID  PPID     VSZ    RSS WCHAN            ADDR S NAME</span><br><span class="line">...</span><br><span class="line">u0_a66        2685  1085 3914640  70688 SyS_epoll_wait      0 S me.linw.demo</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>这里的u0_a66指的是应用的user name,它表示该应用是user 0(这里指的是安卓多用户模式下的主用户,和前面讲的Linux用户不是同一个概念)下面的应用id是66.由于通应用程序的user id都是从10000开始,所以这个应用的user id是10066.可以从/data/system/packages.list文件中确认:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">me.linw.demo 10066 1 /data/user/0/me.linw.demo default:targetSdkVersion=30 3003</span><br></pre></td></tr></table></figure>
+
+<p>应用的私有文件例如SharedPreferences数据文件等存放在<code>/data/data/${包名}/</code>目录下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># ls -l /data/data/ | grep me.linw.demo</span><br><span class="line">drwx------ 5 u0_a66 u0_a66 4096 2023-03-07 19:32 me.linw.demo</span><br></pre></td></tr></table></figure>
+
+<p>可以看到安卓系统给应用创建了一个权限为700的目录,文件的owner和group都只属于这个应用,这样就保证了每个应用的私有目录只有自己可以访问。</p>
+<h2 id="SharedUserId"><a href="#SharedUserId" class="headerlink" title="SharedUserId"></a>SharedUserId</h2><p>当然也可以在AndroidManifest.xml里面配置android:sharedUserId让他们是用同一个User:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;</span><br><span class="line">    package=&quot;me.linw.demo2&quot;</span><br><span class="line">    android:sharedUserId=&quot;test.same.user&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;</span><br><span class="line">    package=&quot;me.linw.demo&quot;</span><br><span class="line">    android:sharedUserId=&quot;test.same.user&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这样的话两个应用的user就是一样的,就能相互访问私有目录了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">drwx------ 4 u0_a66 u0_a66 4096 2023-03-10 17:07 me.linw.demo2</span><br><span class="line">drwx------ 5 u0_a66 u0_a66 4096 2023-03-10 16:53 me.linw.demo</span><br></pre></td></tr></table></figure>
+
+<h1 id="Android-8外部存储"><a href="#Android-8外部存储" class="headerlink" title="Android 8外部存储"></a>Android 8外部存储</h1><p>外部存储的文件系统几经变更,从早期的FUSE到Android 8改为性能更优的SDCardFS,再到Android 11上为了更细的管理文件权限又换回FUSE,各个安卓版本的实现细节也稍有差异。过于老旧的版本也没有学习的必要,这里只拿比较有代表性的Android 8和Android 11进行介绍。</p>
+<p>安卓11以前的外部存储权限控制做的比较粗糙。应用申请了WREAD_EXTERNAL_STORAGE、WRITE_EXTERNAL_STORAGE就可以对外部存储进行读写。</p>
+<p>这个外部存储一般指的是<code>/storage/emulated/</code>目录,它为每个用户分配了一个子目录。例如<code>0</code>子目录就是user 0(主用户)的外部存储目录.</p>
+<p>这里我们用一个shellExec在进程里面执行命令协助我们理解外部存储的管理原理:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">shellExec</span><span class="params">(String shell)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    InputStream is = Runtime.getRuntime().exec(shell).getInputStream();</span><br><span class="line">    BufferedReader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(is));</span><br><span class="line">    StringBuilder sb = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">    <span class="keyword">char</span>[] buff = <span class="keyword">new</span> <span class="keyword">char</span>[<span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">int</span> ch;</span><br><span class="line">    <span class="keyword">while</span> ((ch = reader.read(buff)) != -<span class="number">1</span>) &#123;</span><br><span class="line">        sb.append(buff, <span class="number">0</span>, ch);</span><br><span class="line">    &#125;</span><br><span class="line">    reader.close();</span><br><span class="line">    Log.d(<span class="string">"ExecShell"</span>, shell);</span><br><span class="line">    Log.d(<span class="string">"ExecShell"</span>, sb.toString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>申请READ_EXTERNAL_STORAGE权限之后执行<code>ls -l /storage/emulated/0/</code>就可以看到熟悉的外部存储目录结构:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">shellExec("ls -l /storage/emulated/0/");</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: ls -l /storage/emulated/0/</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: total 40</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2022-04-24 20:25 Alarms</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 3 root everybody 4096 2023-03-08 14:13 Android</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2022-04-24 20:25 DCIM</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2023-03-07 19:49 Download</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2022-04-24 20:25 Movies</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2022-04-24 20:25 Music</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2022-04-24 20:25 Notifications</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2023-03-07 19:46 Pictures</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2022-04-24 20:25 Podcasts</span><br><span class="line">03-11 17:02:26.861  3411  3411 D ExecShell: drwxr-x--- 2 root everybody 4096 2022-04-24 20:25 Ringtones</span><br></pre></td></tr></table></figure>
+
+<p>这里可以看到虽然这些目录的user是root,但是所属的group是everybody,即所有人对这些目录都有<code>r-x</code>的权限可读可进入文件夹。</p>
+<p>而如果申请了WRITE_EXTERNAL_STORAGE权限之后再执行<code>ls -l /storage/emulated/0/</code>就会看见group的权限变成了<code>rwx</code>可读可写可进入文件夹。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: ls -l /storage/emulated/0/</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: total 40</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2022-04-24 20:25 Alarms</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 3 root everybody 4096 2023-03-08 14:13 Android</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2022-04-24 20:25 DCIM</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2023-03-07 19:49 Download</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2022-04-24 20:25 Movies</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2022-04-24 20:25 Music</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2022-04-24 20:25 Notifications</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2023-03-07 19:46 Pictures</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2022-04-24 20:25 Podcasts</span><br><span class="line">03-11 17:10:44.146  3646  3646 D ExecShell: drwxrwx--- 2 root everybody 4096 2022-04-24 20:25 Ringtones</span><br></pre></td></tr></table></figure>
+
+<p>也就是说不同的权限下应用看到/storage/emulated/0/的文件权限是不一样的,这一点又是怎么做的的呢?</p>
+<h2 id="mnt-runtime目录"><a href="#mnt-runtime目录" class="headerlink" title="/mnt/runtime目录"></a>/mnt/runtime目录</h2><p>这里先介绍/mnt/runtime下的三个目录:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mount | grep /mnt/runtime</span><br><span class="line">/data/media on /mnt/runtime/default/emulated type sdcardfs (rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid)</span><br><span class="line">/data/media on /mnt/runtime/read/emulated type sdcardfs (rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=9997,multiuser,mask=23,derive_gid)</span><br><span class="line">/data/media on /mnt/runtime/write/emulated type sdcardfs (rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=9997,multiuser,mask=7,derive_gid)</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>/mnt/runtime/default/emulated</code>、<code>/mnt/runtime/read/emulated</code>、<code>/mnt/runtime/write/emulated</code>都挂载了<code>/data/media</code>。只不过他们的gid、和mask不尽相同。</p>
+<h3 id="group"><a href="#group" class="headerlink" title="group"></a>group</h3><p>其实这三个目录都是通过bind mount机制挂载的<code>/data/media</code>目录,gid指的是挂载之后修改文件系统下文件的group:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"># ls -l /data/media</span><br><span class="line">total 8</span><br><span class="line">drwxrwx--- 12 media_rw media_rw 4096 2023-03-11 16:51 0</span><br><span class="line">drwxrwxr-x  2 media_rw media_rw 4096 1970-01-01 08:00 obb</span><br><span class="line"></span><br><span class="line"># ls -l /mnt/runtime/default/emulated</span><br><span class="line">total 8</span><br><span class="line">drwxrwx--x 12 root sdcard_rw 4096 2023-03-11 16:51 0</span><br><span class="line">drwxrwx--x  2 root sdcard_rw 4096 1970-01-01 08:00 obb</span><br><span class="line"></span><br><span class="line"># ls -l /mnt/runtime/read/emulated</span><br><span class="line">total 8</span><br><span class="line">drwxr-x--- 12 root everybody 4096 2023-03-11 16:51 0</span><br><span class="line">drwxr-x---  2 root everybody 4096 1970-01-01 08:00 obb</span><br><span class="line"></span><br><span class="line"># ls -l /mnt/runtime/write/emulated</span><br><span class="line">total 8</span><br><span class="line">drwxrwx--- 12 root everybody 4096 2023-03-11 16:51 0</span><br><span class="line">drwxrwx---  2 root everybody 4096 1970-01-01 08:00 obb</span><br></pre></td></tr></table></figure>
+
+<p>可以看到原本<code>/data/media</code>下的文件group是media_rw(id=1023),但挂载之后<code>/mnt/runtime/default/emulated</code>的group是sdcard_rw(id=1015),<code>/mnt/runtime/read/emulated</code>、<code>/mnt/runtime/write/emulated</code>的group是everybody(id=9997)。</p>
+<p>这些group的id可以在android_filesystem_config.h看到:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">// http://androidxref.com/8.0.0_r4/xref/system/core/include/private/android_filesystem_config.h</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line">#define AID_SDCARD_RW 1015       /* external storage write access */</span><br><span class="line">...</span><br><span class="line">#define AID_MEDIA_RW 1023        /* internal media storage write access */</span><br><span class="line">...</span><br><span class="line">#define AID_EVERYBODY 9997 /* shared between all apps in the same profile */</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<h3 id="mask"><a href="#mask" class="headerlink" title="mask"></a>mask</h3><p>而mask则是用来重新定义文件的rwx权限的,挂载后文件的权限通过<code>0775 &amp; ~mask</code>计算得到(注意这里的0775指定是8进制的775,即十进制的509),所以</p>
+<p><code>/mnt/runtime/default/emulated</code>的权限为<code>0775 &amp; ~6</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0775 =  111111101 = 111111101</span><br><span class="line">~6   = ~000000110 = 111111001 </span><br><span class="line">------------------------------</span><br><span class="line">                    111111001 = rwxrwx--x</span><br></pre></td></tr></table></figure>
+
+<p><code>/mnt/runtime/read/emulated</code>的权限为<code>0775 &amp; ~23</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0775 =  111111101 = 111111101</span><br><span class="line">~23  = ~000010111 = 111101000</span><br><span class="line">------------------------------</span><br><span class="line">                    111101000 = rwxr-x---</span><br></pre></td></tr></table></figure>
+
+<p><code>/mnt/runtime/default/emulated</code>的权限为<code>0775 &amp; ~7</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0775 =  111111101 = 111111101</span><br><span class="line">~7   = ~000000111 = 111111000</span><br><span class="line">------------------------------</span><br><span class="line">                    111111000 = rwxrwx---</span><br></pre></td></tr></table></figure>
+
+<p>综上所述:</p>
+<ul>
+<li>在<code>/mnt/runtime/default/emulated</code> : 普通应用由于不在media_rw组,只有进入子目录的权限,并不能读写。</li>
+<li>在<code>/mnt/runtime/read/emulated</code> : 普通应用属于everybody组,有r-x权限</li>
+<li>在<code>/mnt/runtime/default/emulated</code> : 普通应用属于everybody组,有rwx权限</li>
+</ul>
+<h2 id="storage-emulated原理"><a href="#storage-emulated原理" class="headerlink" title="/storage/emulated原理"></a>/storage/emulated原理</h2><p>我们通过<code>mount</code>命令可以看到<code>/storage/emulated</code>实际上也是挂载了<code>/data/media</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">03-11 17:13:36.495  3778  3778 D ExecShell: mount</span><br><span class="line">...</span><br><span class="line">03-11 17:13:36.495  3778  3778 D ExecShell: /data/media on /storage/emulated type sdcardfs (rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=9997,multiuser,mask=7,derive_gid)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>实际上<code>/storage/emulated</code>是通过挂载前面所说的三个目录去间接挂载<code>/data/media</code>的。也是通过挂载这三个目录去控制不同的访问权限的。</p>
+<p>在Zygote进程fork应用进程的时候会通过Linux的bind mount机制为应用在私有挂载空间挂载<code>/storage</code>目录:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// http://androidxref.com/8.0.0_r4/xref/frameworks/base/core/jni/com_android_internal_os_Zygote.cpp</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Create a private mount namespace and bind mount appropriate emulated</span></span><br><span class="line"><span class="comment">// storage for the given user.</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> bool <span class="title">MountEmulatedStorage</span><span class="params">(uid_t uid, jint mount_mode,</span></span></span><br><span class="line"><span class="function"><span class="params">        bool force_mount_namespace)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// See storage config details at http://source.android.com/tech/storage/</span></span><br><span class="line"></span><br><span class="line">    String8 storageSource;</span><br><span class="line">    <span class="keyword">if</span> (mount_mode == MOUNT_EXTERNAL_DEFAULT) &#123;</span><br><span class="line">        storageSource = <span class="string">"/mnt/runtime/default"</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mount_mode == MOUNT_EXTERNAL_READ) &#123;</span><br><span class="line">        storageSource = <span class="string">"/mnt/runtime/read"</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mount_mode == MOUNT_EXTERNAL_WRITE) &#123;</span><br><span class="line">        storageSource = <span class="string">"/mnt/runtime/write"</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!force_mount_namespace) &#123;</span><br><span class="line">        <span class="comment">// Sane default of no storage visible</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Create a second private mount namespace for our process</span></span><br><span class="line">    <span class="keyword">if</span> (unshare(CLONE_NEWNS) == -<span class="number">1</span>) &#123;</span><br><span class="line">        ALOGW(<span class="string">"Failed to unshare(): %s"</span>, strerror(errno));</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (TEMP_FAILURE_RETRY(mount(storageSource.string(), <span class="string">"/storage"</span>,</span><br><span class="line">            NULL, MS_BIND | MS_REC | MS_SLAVE, NULL)) == -<span class="number">1</span>) &#123;</span><br><span class="line">        ALOGW(<span class="string">"Failed to mount %s to /storage: %s"</span>, storageSource.string(), strerror(errno));</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>系统根据应用的外部存储权限传入不同的mount_mode:</p>
+<ul>
+<li>没有权限挂载<code>/mnt/runtime/default</code></li>
+<li>有READ_EXTERNAL_STORAGE权限挂载<code>/mnt/runtime/read</code></li>
+<li>有WRITE_EXTERNAL_STORAGE权限挂载<code>/mnt/runtime/write</code></li>
+</ul>
+<p>由于使用了unshare所以挂载的<code>/storage</code>实际是在应用的私有挂载空间,即每个应用挂载的<code>/storage</code>是仅自己可见其他应用不可见的。</p>
+<p>而这里使用了MS_REC参数,所以会递归挂载子目录,即:<code>/mnt/runtime/default</code>挂载到<code>/storage</code>的同时<code>/mnt/runtime/default/emulated</code>也会挂载到<code>/storage/emulated</code></p>
+<p>PS:</p>
+<p>虽然应用挂载之后对<code>/storage/emulated/</code>有权限，但是并没有<code>/mnt/runtime</code>的权限,所以并不能直接访问绕过权限管理机制:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># ls -l /mnt | grep runtime</span><br><span class="line">drwx------ 5 root   root     100 1970-01-01 08:00 runtime</span><br></pre></td></tr></table></figure>
+
+<h3 id="间接挂载"><a href="#间接挂载" class="headerlink" title="间接挂载"></a>间接挂载</h3><p><code>/mnt/runtime/default</code>、<code>/mnt/runtime/read</code>、<code>/mnt/runtime/write</code>这三个目录是挂载的<code>/data/media</code>,所以最终<code>/storage/emulated</code>实际挂载的也是<code>/data/media</code>.</p>
+<p>由于bind mount的特性,并不能看到间接挂载的过程。例如我们可以将<code>/mnt/runtime/default/emulated</code>通过bind mount挂载到<code>/data/test/</code>,然后用<code>mount</code>命令可以看到<code>/data/test</code>也是挂载了<code>/data/media</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># mount --bind /mnt/runtime/default/emulated  /data/test</span><br><span class="line"># mount | grep /data/test</span><br><span class="line">/data/media on /data/test type sdcardfs (rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid)</span><br></pre></td></tr></table></figure>
+
+<h3 id="运行时权限"><a href="#运行时权限" class="headerlink" title="运行时权限"></a>运行时权限</h3><p>Android 6之后导入了运行时权限,READ_EXTERNAL_STORAGE和WRITE_EXTERNAL_STORAGE需要在运行时申请.所以应用在第一次启动的时候还没有外部存储的权限,挂载的是<code>/mnt/runtime/default</code>.当运行时权限申请成功之后就会触发StorageManagerInternalImpl.onExternalStoragePolicyChanged然后去给这个应用重新挂载<code>/storage/emulated</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">// http://androidxref.com/8.0.0_r4/xref/frameworks/base/services/core/java/com/android/server/StorageManagerService.java</span><br><span class="line">private final class StorageManagerInternalImpl extends StorageManagerInternal &#123;</span><br><span class="line">    ...</span><br><span class="line">    @Override</span><br><span class="line">    public void onExternalStoragePolicyChanged(int uid, String packageName) &#123;</span><br><span class="line">        final int mountMode = getExternalStorageMountMode(uid, packageName);</span><br><span class="line">        remountUidExternalStorage(uid, mountMode);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private void remountUidExternalStorage(int uid, int mode) &#123;</span><br><span class="line">    waitForReady();</span><br><span class="line"></span><br><span class="line">    String modeName = &quot;none&quot;;</span><br><span class="line">    switch (mode) &#123;</span><br><span class="line">        case Zygote.MOUNT_EXTERNAL_DEFAULT: &#123;</span><br><span class="line">            modeName = &quot;default&quot;;</span><br><span class="line">        &#125; break;</span><br><span class="line"></span><br><span class="line">        case Zygote.MOUNT_EXTERNAL_READ: &#123;</span><br><span class="line">            modeName = &quot;read&quot;;</span><br><span class="line">        &#125; break;</span><br><span class="line"></span><br><span class="line">        case Zygote.MOUNT_EXTERNAL_WRITE: &#123;</span><br><span class="line">            modeName = &quot;write&quot;;</span><br><span class="line">        &#125; break;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    try &#123;</span><br><span class="line">        mConnector.execute(&quot;volume&quot;, &quot;remount_uid&quot;, uid, modeName);</span><br><span class="line">    &#125; catch (NativeDaemonConnectorException e) &#123;</span><br><span class="line">        Slog.w(TAG, &quot;Failed to remount UID &quot; + uid + &quot; as &quot; + modeName + &quot;: &quot; + e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最终会调用到VolumeManager::remountUid从proc查找应用进程对应的私有挂载空间,重新根据权限挂载<code>/storage</code>:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// http://androidxref.com/8.0.0_r4/xref/system/vold/VolumeManager.cpp</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> VolumeManager::remountUid(<span class="keyword">uid_t</span> uid, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; mode) &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!(dir = opendir(<span class="string">"/proc"</span>))) &#123;</span><br><span class="line">        PLOG(ERROR) &lt;&lt; <span class="string">"Failed to opendir"</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 遍历/proc的子目录</span></span><br><span class="line">    <span class="keyword">while</span> ((de = readdir(dir))) &#123;</span><br><span class="line">        pidFd = <span class="number">-1</span>;</span><br><span class="line">        nsFd = <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">        pidFd = openat(dirfd(dir), de-&gt;d_name, O_RDONLY | O_DIRECTORY | O_CLOEXEC);</span><br><span class="line">        <span class="keyword">if</span> (pidFd &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">goto</span> next;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (fstat(pidFd, &amp;sb) != <span class="number">0</span>) &#123;</span><br><span class="line">            PLOG(WARNING) &lt;&lt; <span class="string">"Failed to stat "</span> &lt;&lt; de-&gt;d_name;</span><br><span class="line">            <span class="keyword">goto</span> next;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对比uid,查找uid对应的进程目录</span></span><br><span class="line">        <span class="keyword">if</span> (sb.st_uid != uid) &#123;</span><br><span class="line">            <span class="keyword">goto</span> next;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 读取私有挂载空间的id</span></span><br><span class="line">        nsFd = openat(pidFd, <span class="string">"ns/mnt"</span>, O_RDONLY); <span class="comment">// not O_CLOEXEC</span></span><br><span class="line">        <span class="keyword">if</span> (nsFd &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            PLOG(WARNING) &lt;&lt; <span class="string">"Failed to open namespace for "</span> &lt;&lt; de-&gt;d_name;</span><br><span class="line">            <span class="keyword">goto</span> next;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 开启子进程实现并发</span></span><br><span class="line">        <span class="keyword">if</span> (!(child = fork())) &#123;</span><br><span class="line">            <span class="comment">// 进入应用进程的私有挂载空间</span></span><br><span class="line">            <span class="keyword">if</span> (setns(nsFd, CLONE_NEWNS) != <span class="number">0</span>) &#123;</span><br><span class="line">                PLOG(ERROR) &lt;&lt; <span class="string">"Failed to setns for "</span> &lt;&lt; de-&gt;d_name;</span><br><span class="line">                _exit(<span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 解除/storage挂载</span></span><br><span class="line">            unmount_tree(<span class="string">"/storage"</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 根据权限挂载对应目录</span></span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">string</span> storageSource;</span><br><span class="line">            <span class="keyword">if</span> (mode == <span class="string">"default"</span>) &#123;</span><br><span class="line">                storageSource = <span class="string">"/mnt/runtime/default"</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mode == <span class="string">"read"</span>) &#123;</span><br><span class="line">                storageSource = <span class="string">"/mnt/runtime/read"</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mode == <span class="string">"write"</span>) &#123;</span><br><span class="line">                storageSource = <span class="string">"/mnt/runtime/write"</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// Sane default of no storage visible</span></span><br><span class="line">                _exit(<span class="number">0</span>);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//重新挂载/storage</span></span><br><span class="line">            <span class="keyword">if</span> (TEMP_FAILURE_RETRY(mount(storageSource.c_str(), <span class="string">"/storage"</span>,</span><br><span class="line">                    <span class="literal">NULL</span>, MS_BIND | MS_REC, <span class="literal">NULL</span>)) == <span class="number">-1</span>) &#123;</span><br><span class="line">                PLOG(ERROR) &lt;&lt; <span class="string">"Failed to mount "</span> &lt;&lt; storageSource &lt;&lt; <span class="string">" for "</span></span><br><span class="line">                        &lt;&lt; de-&gt;d_name;</span><br><span class="line">                _exit(<span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line"></span><br><span class="line">            _exit(<span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (child == <span class="number">-1</span>) &#123;</span><br><span class="line">            PLOG(ERROR) &lt;&lt; <span class="string">"Failed to fork"</span>;</span><br><span class="line">            <span class="keyword">goto</span> next;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            TEMP_FAILURE_RETRY(waitpid(child, <span class="literal">nullptr</span>, <span class="number">0</span>));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">next:</span><br><span class="line">        close(nsFd);</span><br><span class="line">        close(pidFd);</span><br><span class="line">    &#125;</span><br><span class="line">    closedir(dir);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><p>这种权限管理的方式比较粗犷,一旦获取了读写的权限就能对外部存储的任意目录进行读写,例如应用的外部存储路径<code>/storage/emulated/0/Android/data/${包名}/</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">shellExec(&quot;ls -l /storage/emulated/0/Android/data&quot;);</span><br><span class="line"></span><br><span class="line">03-12 18:48:12.809  2934  2934 D ExecShell: ls -l /storage/emulated/0/Android/data</span><br><span class="line">03-12 18:48:12.809  2934  2934 D ExecShell: total 4</span><br><span class="line">03-12 18:48:12.809  2934  2934 D ExecShell: drwxrwx--- 3 u0_a15 everybody 4096 2023-03-12 18:47 com.android.launcher3</span><br></pre></td></tr></table></figure>
+
+<p>获取到读取权限之后就能对其他应用的外部存储路径进行读写了。因此一些敏感的信息一般不会写入到Context下面方法获取出来的路径:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> File <span class="title">getExternalFilesDir</span><span class="params">(String type)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> File[] <span class="title">getExternalFilesDirs</span><span class="params">(String type)</span> </span></span><br><span class="line"><span class="function"><span class="keyword">public</span> File <span class="title">getExternalCacheDir</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"><span class="keyword">public</span> File[] <span class="title">getExternalCacheDirs</span><span class="params">()</span> </span></span><br><span class="line"><span class="function"><span class="keyword">public</span> File[] <span class="title">getExternalMediaDirs</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
