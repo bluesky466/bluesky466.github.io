@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>TextureView清除摄像头最后一帧画面的原理探究 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="最近协助一个摄像头相关的项目遇到了一个有意思的问题，这里记录一下。 原问题大概是使用TextureView预览摄像头,关闭摄像头之后画面会残留最后一帧,需要把他清除。我一开始使用的方式是获取Surface的Canvas去将整个画布画上黑色来实现清除画面: 123Canvas canvas = mPreviewSurface.lockCanvas(null);canvas.drawColor(Col">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TextureView清除摄像头最后一帧画面的原理探究">
+<meta property="og:url" content="https://blog.islinjw.cn/2023/06/08/TextureView清除摄像头最后一帧画面的原理探究/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="最近协助一个摄像头相关的项目遇到了一个有意思的问题，这里记录一下。 原问题大概是使用TextureView预览摄像头,关闭摄像头之后画面会残留最后一帧,需要把他清除。我一开始使用的方式是获取Surface的Canvas去将整个画布画上黑色来实现清除画面: 123Canvas canvas = mPreviewSurface.lockCanvas(null);canvas.drawColor(Col">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.islinjw.cn/TextureView清除摄像头最后一帧画面的原理探究/bufferqueue.png">
+<meta property="og:updated_time" content="2023-06-08T00:43:24.405Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TextureView清除摄像头最后一帧画面的原理探究">
+<meta name="twitter:description" content="最近协助一个摄像头相关的项目遇到了一个有意思的问题，这里记录一下。 原问题大概是使用TextureView预览摄像头,关闭摄像头之后画面会残留最后一帧,需要把他清除。我一开始使用的方式是获取Surface的Canvas去将整个画布画上黑色来实现清除画面: 123Canvas canvas = mPreviewSurface.lockCanvas(null);canvas.drawColor(Col">
+<meta name="twitter:image" content="https://blog.islinjw.cn/TextureView清除摄像头最后一帧画面的原理探究/bufferqueue.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#消费者生产者模型"><span class="toc-text">消费者生产者模型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#CameraDevice-close之后才能lockCanvas"><span class="toc-text">CameraDevice.close之后才能lockCanvas</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#lockCanvas-amp-unlockCanvasAndPost"><span class="toc-text">lockCanvas &amp; unlockCanvasAndPost</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#GLES-disconnect"><span class="toc-text">GLES disconnect</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#区分connect-api"><span class="toc-text">区分connect api</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-TextureView清除摄像头最后一帧画面的原理探究" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">TextureView清除摄像头最后一帧画面的原理探究</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2023.06.08</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近协助一个摄像头相关的项目遇到了一个有意思的问题，这里记录一下。</p>
+<p>原问题大概是使用TextureView预览摄像头,关闭摄像头之后画面会残留最后一帧,需要把他清除。我一开始使用的方式是获取Surface的Canvas去将整个画布画上黑色来实现清除画面:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Canvas canvas = mPreviewSurface.lockCanvas(<span class="keyword">null</span>);</span><br><span class="line">canvas.drawColor(Color.BLACK);</span><br><span class="line">mPreviewSurface.unlockCanvasAndPost(canvas);</span><br></pre></td></tr></table></figure>
+
+<p>但是遇到了下面的问题:</p>
+<ol>
+<li>CameraDevice.close之前lockCanvas会抛出IllegalArgumentException</li>
+<li>在CameraDevice.close之后lockCanvas虽然可以清除画面,但是再次打开调用CameraDevice.createCaptureSession会失败,回调onConfigureFailed</li>
+</ol>
+<p>在网上搜索了下<a href="https://stackoverflow.com/questions/24902114/mediaplayer-cannot-render-to-textureview-after-image-render/24914966#24914966" target="_blank" rel="noopener">stackoverflow</a>上fadden大神是这么解释的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">You can&apos;t do this, due to a limitation of the Android app framework (as of Android 4.4 at least).</span><br><span class="line"></span><br><span class="line">The SurfaceTexture that underlies the TextureView is a buffer consumer. The MediaPlayer is one example of a buffer producer, Canvas is another. Once you attach a producer, you have to detach it before you can attach a second producer.</span><br><span class="line"></span><br><span class="line">The trouble is that there is no way to detach a software-based (Canvas) buffer producer. There could be, but isn&apos;t. So once you draw with Canvas, you&apos;re stuck. (There&apos;s a note to that effect here.)</span><br><span class="line"></span><br><span class="line">You can detach a GLES producer. For example, in one of Grafika&apos;s video player classes you can find a clearSurface() method that clears the surface to black using GLES. Note the EGL context and window are created and explicitly released within the scope of the method. You could expand the method to show an image instead.</span><br></pre></td></tr></table></figure>
+
+<p>大概意思就是TextureView作为一个画面的消费者,可以绑定到不同的画面生产者(Canvas是其中一种,另外像MediaPlayer、Camera这些也可以作为画面生产者)。一旦连接上一个生产者之后就不能再次连接其他的生产者了,而Canvas这个生产者比较野蛮,并没有提供解除绑定的方法。所以一旦TextureView绑定到Canvas之后，MediaPlayer、Camera就不能再使用这个Surface区显示画面了。</p>
+<p>然后他提供的解决方法是参考<a href="https://github.com/google/grafika/blob/b1df331e89cffeab621f02b102d4c2c25eb6088a/app/src/main/java/com/android/grafika/PlayMovieSurfaceActivity.java#L255" target="_blank" rel="noopener">Grafika</a>使用OpenGL去做清除。</p>
+<h1 id="消费者生产者模型"><a href="#消费者生产者模型" class="headerlink" title="消费者生产者模型"></a>消费者生产者模型</h1><p>消费者生产者模型在安卓的图像系统里面还是比较重要的一个东西,从<a href="https://source.android.com/docs/core/graphics?hl=zh-cn" target="_blank" rel="noopener">官方文档</a>的介绍里面我们可以大概看出整个工作流程:</p>
+<img src="/TextureView清除摄像头最后一帧画面的原理探究/bufferqueue.png">
+
+<ul>
+<li>Producer 如Camera、视频解码器、OpenGL ES、Canvas等调用dequeue从BufferQueue里面获取一个空白Buffer,然后使用Buffer做绘制,绘制完成之后调用queue把Buffer交还给BufferQueue。</li>
+<li>Consumer 如SurfaceFlinger调用acquire从BufferQueue里面获取一个绘制好的Buffer,然后进行画面的渲染,渲染完成之后调用release把Buffer交还给BufferQueue作为空白Buffer。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Canvas canvas = mPreviewSurface.lockCanvas(<span class="keyword">null</span>);</span><br><span class="line">canvas.drawColor(Color.BLACK);</span><br><span class="line">mPreviewSurface.unlockCanvasAndPost(canvas);</span><br></pre></td></tr></table></figure>
+
+<p>用上面的lockCanvas来举例。在代码中Producer具体为IGraphicBufferProducer接口,在Surface构造的时候传入,在connect的的时候去连接:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line">Surface::Surface(<span class="keyword">const</span> sp&lt;IGraphicBufferProducer&gt;&amp; bufferProducer, <span class="keyword">bool</span> controlledByApp,</span><br><span class="line">                 <span class="keyword">const</span> sp&lt;IBinder&gt;&amp; surfaceControlHandle)</span><br><span class="line">      : mGraphicBufferProducer(bufferProducer),</span><br><span class="line">      ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> Surface::connect(</span><br><span class="line">        <span class="keyword">int</span> api, <span class="keyword">const</span> sp&lt;IProducerListener&gt;&amp; listener, <span class="keyword">bool</span> reportBufferRemoval) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">int</span> err = mGraphicBufferProducer-&gt;connect(listener, api, mProducerControlledByApp, &amp;output);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后Surface.lockCanvas调用到native层的nativeLockCanvas去用Surface::lock来dequeueBuffer获取Buffer提供给Canvas绘制:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/base/core/jni/android_view_Surface.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> jlong <span class="title">nativeLockCanvas</span><span class="params">(JNIEnv* env, jclass clazz,</span></span></span><br><span class="line"><span class="function"><span class="params">        jlong nativeObject, jobject canvasObj, jobject dirtyRectObj)</span> </span>&#123;</span><br><span class="line">    ANativeWindow_Buffer buffer;</span><br><span class="line">    <span class="keyword">status_t</span> err = surface-&gt;lock(&amp;buffer, dirtyRectPtr);</span><br><span class="line">    ...</span><br><span class="line">    graphics::<span class="function">Canvas <span class="title">canvas</span><span class="params">(env, canvasObj)</span></span>;</span><br><span class="line">    canvas.setBuffer(&amp;buffer, <span class="keyword">static_cast</span>&lt;<span class="keyword">int32_t</span>&gt;(surface-&gt;getBuffersDataSpace()));</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> Surface::lock(</span><br><span class="line">        ANativeWindow_Buffer* outBuffer, ARect* inOutDirtyBounds)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> err = dequeueBuffer(&amp;out, &amp;fenceFd);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> Surface::dequeueBuffer(<span class="keyword">android_native_buffer_t</span>** buffer, <span class="keyword">int</span>* fenceFd) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> result = mGraphicBufferProducer-&gt;dequeueBuffer(&amp;buf, &amp;fence, dqInput.width,</span><br><span class="line">                                                            dqInput.height, dqInput.format,</span><br><span class="line">                                                            dqInput.usage, &amp;mBufferAge,</span><br><span class="line">                                                            dqInput.getTimestamps ?</span><br><span class="line">                                                            &amp;frameTimestamps : <span class="literal">nullptr</span>);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而Surface.unlockCanvasAndPost会调用native层的nativeUnlockCanvasAndPost去调用Surface::unlockAndPost去queueBuffer:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/base/core/jni/android_view_Surface.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">nativeUnlockCanvasAndPost</span><span class="params">(JNIEnv* env, jclass clazz,</span></span></span><br><span class="line"><span class="function"><span class="params">        jlong nativeObject, jobject canvasObj)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// detach the canvas from the surface</span></span><br><span class="line">    graphics::<span class="function">Canvas <span class="title">canvas</span><span class="params">(env, canvasObj)</span></span>;</span><br><span class="line">    canvas.setBuffer(<span class="literal">nullptr</span>, ADATASPACE_UNKNOWN);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// unlock surface</span></span><br><span class="line">    <span class="keyword">status_t</span> err = surface-&gt;unlockAndPost();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> Surface::unlockAndPost()</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    err = queueBuffer(mLockedBuffer.get(), fd);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> Surface::queueBuffer(<span class="keyword">android_native_buffer_t</span>* buffer, <span class="keyword">int</span> fenceFd) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> err = mGraphicBufferProducer-&gt;queueBuffer(i, input, &amp;output);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样不断循环lockCanvas、绘制Canvas、unlockCanvasAndPost就能往SurfaceFlinger这个Consumer不断提供画面去渲染了。</p>
+<p>虽然大概的原因和解决方法都讲清楚了,但是我还是有三点疑问:</p>
+<ol>
+<li>需要在CameraDevice.close之后才能lockCanvas是不是意味着CameraDevice.close里面会做解绑</li>
+<li>调用unlockCanvasAndPost为什么没有解除Canvas这个内容生产者的绑定?</li>
+<li>GLES可以解除绑定,那它又是怎么解除的呢?</li>
+</ol>
+<h1 id="CameraDevice-close之后才能lockCanvas"><a href="#CameraDevice-close之后才能lockCanvas" class="headerlink" title="CameraDevice.close之后才能lockCanvas"></a>CameraDevice.close之后才能lockCanvas</h1><p>网上搜索没有找到答案,那就只能自己分析源码了,首先我们从unlockCanvasAndPost之后再次createCaptureSession会失败的日志入手看看能不能找到什么有用的信息:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">06-06 18:55:13.130 28137 25285 E BufferQueueProducer: [SurfaceTexture-0-28137-0](id:6de900000001,api:2,p:28137,c:28137) connect: already connected (cur=2 req=4)</span><br><span class="line">06-06 18:55:13.130  1905  8873 E Camera3-OutputStream: configureConsumerQueueLocked: Unable to connect to native window for stream 0</span><br><span class="line">06-06 18:55:13.130  1905  8873 E Camera3-Stream: finishConfiguration: Unable to configure stream 0 queue: Invalid argument (-22)</span><br><span class="line">06-06 18:55:13.130  1905  8873 E Camera3-Device: Camera 0: configureStreamsLocked: Can&apos;t finish configuring output stream 0: Invalid argument (</span><br><span class="line">-22)</span><br><span class="line">06-06 18:55:13.130  1047  1365 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 6838 went down</span><br><span class="line">06-06 18:55:13.130  1905  8873 D CameraService: CameraPerf: setpriority success, tid is 8873, priority is 0</span><br><span class="line">06-06 18:55:13.130  1905  8873 E CameraDeviceClient: endConfigure: Camera 0: Unsupported set of inputs/outputs provided</span><br></pre></td></tr></table></figure>
+
+<p>从日志里面可以看到在Camera3OutputStream::configureConsumerQueueLocked里面会去调用Surface::connect: </p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/av/services/camera/libcameraservice/device3/Camera3OutputStream.h</span></span><br><span class="line">sp&lt;Surface&gt; mConsumer;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/av/services/camera/libcameraservice/device3/Camera3OutputStream.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> Camera3OutputStream::configureConsumerQueueLocked(<span class="keyword">bool</span> allowPreviewRespace) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Configure consumer-side ANativeWindow interface. The listener may be used</span></span><br><span class="line">    <span class="comment">// to notify buffer manager (if it is used) of the returned buffers.</span></span><br><span class="line">    res = mConsumer-&gt;connect(NATIVE_WINDOW_API_CAMERA,</span><br><span class="line">            <span class="comment">/*reportBufferRemoval*/</span><span class="literal">true</span>,</span><br><span class="line">            <span class="comment">/*listener*/</span>mBufferProducerListener);</span><br><span class="line">    <span class="keyword">if</span> (res != OK) &#123;</span><br><span class="line">        ALOGE(<span class="string">"%s: Unable to connect to native window for stream %d"</span>,</span><br><span class="line">                __FUNCTION__, mId);</span><br><span class="line">        <span class="keyword">return</span> res;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而在Surface::connect里面会调用BufferQueueProducer::connect:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line"><span class="keyword">int</span> Surface::connect(<span class="keyword">int</span> api) &#123;</span><br><span class="line">    <span class="keyword">static</span> sp&lt;IProducerListener&gt; listener = <span class="keyword">new</span> StubProducerListener();</span><br><span class="line">    <span class="keyword">return</span> connect(api, listener);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> Surface::connect(<span class="keyword">int</span> api, <span class="keyword">const</span> sp&lt;IProducerListener&gt;&amp; listener) &#123;</span><br><span class="line">    <span class="keyword">return</span> connect(api, listener, <span class="literal">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> Surface::connect(</span><br><span class="line">        <span class="keyword">int</span> api, <span class="keyword">const</span> sp&lt;IProducerListener&gt;&amp; listener, <span class="keyword">bool</span> reportBufferRemoval) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">int</span> err = mGraphicBufferProducer-&gt;connect(listener, api, mProducerControlledByApp, &amp;output);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在BufferQueueProducer::connect里面会判断如果mCore-&gt;mConnectedApi不为BufferQueueCore::NO_CONNECTED_API(即已经connect过了)就不能再connect:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/include/gui/BufferQueueProducer.h</span></span><br><span class="line">sp&lt;BufferQueueCore&gt; mCore;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/BufferQueueProducer.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> BufferQueueProducer::connect(<span class="keyword">const</span> sp&lt;IProducerListener&gt;&amp; listener,</span><br><span class="line">        <span class="keyword">int</span> api, <span class="keyword">bool</span> producerControlledByApp, QueueBufferOutput *output) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (mCore-&gt;mConnectedApi != BufferQueueCore::NO_CONNECTED_API) &#123;</span><br><span class="line">        BQ_LOGE(<span class="string">"connect: already connected (cur=%d req=%d)"</span>,</span><br><span class="line">                mCore-&gt;mConnectedApi, api);</span><br><span class="line">        <span class="keyword">return</span> BAD_VALUE;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    mCore-&gt;mConnectedApi = api;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以我们看到的already connected日志就是从这里打印的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">06-06 18:55:13.130 28137 25285 E BufferQueueProducer: [SurfaceTexture-0-28137-0](id:6de900000001,api:2,p:28137,c:28137) connect: already connected (cur=2 req=4)</span><br></pre></td></tr></table></figure>
+
+<p>connect api的类型有下面几种,所以从日志上我们可以分析出,SurfaceTexture已经connect到NATIVE_WINDOW_API_CPU了,不能再connect到NATIVE_WINDOW_API_CAMERA:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/nativewindow/include/system/window.h</span></span><br><span class="line"><span class="comment">/* parameter for NATIVE_WINDOW_[API_][DIS]CONNECT */</span></span><br><span class="line"><span class="keyword">enum</span> &#123;</span><br><span class="line">    <span class="comment">/* Buffers will be queued by EGL via eglSwapBuffers after being filled using</span></span><br><span class="line"><span class="comment">     * OpenGL ES.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    NATIVE_WINDOW_API_EGL = <span class="number">1</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Buffers will be queued after being filled using the CPU</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    NATIVE_WINDOW_API_CPU = <span class="number">2</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Buffers will be queued by Stagefright after being filled by a video</span></span><br><span class="line"><span class="comment">     * decoder.  The video decoder can either be a software or hardware decoder.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    NATIVE_WINDOW_API_MEDIA = <span class="number">3</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Buffers will be queued by the the camera HAL.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    NATIVE_WINDOW_API_CAMERA = <span class="number">4</span>,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>而在CameraDevice.close里面会调用Camera3OutputStream::disconnectLocked最终会调用到BufferQueueProducer::disconnect将mCore-&gt;mConnectedApi赋值回BufferQueueCore::NO_CONNECTED_API:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/av/services/camera/libcameraservice/device3/Camera3OutputStream.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> Camera3OutputStream::disconnectLocked() &#123;</span><br><span class="line">    ...</span><br><span class="line">    ALOGV(<span class="string">"%s: disconnecting stream %d from native window"</span>, __FUNCTION__, getId());</span><br><span class="line"></span><br><span class="line">    res = native_window_api_disconnect(mConsumer.get(),</span><br><span class="line">                                       NATIVE_WINDOW_API_CAMERA);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/nativewindow/include/system/window.h</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">native_window_api_disconnect</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        struct ANativeWindow* window, <span class="keyword">int</span> api)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> window-&gt;perform(window, NATIVE_WINDOW_API_DISCONNECT, api);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line"><span class="keyword">int</span> Surface::perform(<span class="keyword">int</span> operation, va_list args)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">case</span> NATIVE_WINDOW_API_DISCONNECT:</span><br><span class="line">        res = dispatchDisconnect(args);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> Surface::dispatchDisconnect(va_list args) &#123;</span><br><span class="line">    <span class="keyword">int</span> api = va_arg(args, <span class="keyword">int</span>);</span><br><span class="line">    <span class="keyword">return</span> disconnect(api);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> Surface::disconnect(<span class="keyword">int</span> api, IGraphicBufferProducer::DisconnectMode mode) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">int</span> err = mGraphicBufferProducer-&gt;disconnect(api, mode);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/BufferQueueProducer.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> BufferQueueProducer::disconnect(<span class="keyword">int</span> api, DisconnectMode mode) &#123;</span><br><span class="line">    ...</span><br><span class="line">    mCore-&gt;mConnectedApi = BufferQueueCore::NO_CONNECTED_API;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以在CameraDevice.close之后mCore-&gt;mConnectedApi被赋值成了BufferQueueCore::NO_CONNECTED_API,lockCanvas再去BufferQueueProducer::connect就不会失败。</p>
+<h1 id="lockCanvas-amp-unlockCanvasAndPost"><a href="#lockCanvas-amp-unlockCanvasAndPost" class="headerlink" title="lockCanvas &amp; unlockCanvasAndPost"></a>lockCanvas &amp; unlockCanvasAndPost</h1><p>Surface.lockCanvas最终会去到Surface::lock里调用Surface::connect(NATIVE_WINDOW_API_CPU):</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/base/core/jni/android_view_Surface.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> jlong <span class="title">nativeLockCanvas</span><span class="params">(JNIEnv* env, jclass clazz,</span></span></span><br><span class="line"><span class="function"><span class="params">        jlong nativeObject, jobject canvasObj, jobject dirtyRectObj)</span> </span>&#123;</span><br><span class="line">    sp&lt;Surface&gt; surface(<span class="keyword">reinterpret_cast</span>&lt;Surface *&gt;(nativeObject));</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> err = surface-&gt;lock(&amp;buffer, dirtyRectPtr);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> Surface::lock(</span><br><span class="line">        ANativeWindow_Buffer* outBuffer, ARect* inOutDirtyBounds)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (!mConnectedToCpu) &#123;</span><br><span class="line">        <span class="keyword">int</span> err = Surface::connect(NATIVE_WINDOW_API_CPU);</span><br><span class="line">        <span class="keyword">if</span> (err) &#123;</span><br><span class="line">            <span class="keyword">return</span> err;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// we're intending to do software rendering from this point</span></span><br><span class="line">        setUsage(GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>后面的流程就和Camera3OutputStream::configureConsumerQueueLocked里面调用Surface::connect类似了,最终会调用BufferQueueProducer::connect把mCore-&gt;mConnectedApi赋值成NATIVE_WINDOW_API_CPU。但是稍有不同的是在Surface::connect里面会判断这个connect api,将mConnectedToCpu赋值为true:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line"><span class="keyword">int</span> Surface::connect(</span><br><span class="line">        <span class="keyword">int</span> api, <span class="keyword">const</span> sp&lt;IProducerListener&gt;&amp; listener, <span class="keyword">bool</span> reportBufferRemoval) &#123;</span><br><span class="line">    <span class="keyword">int</span> err = mGraphicBufferProducer-&gt;connect(listener, api, mProducerControlledByApp, &amp;output);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (!err &amp;&amp; api == NATIVE_WINDOW_API_CPU) &#123;</span><br><span class="line">        mConnectedToCpu = <span class="literal">true</span>;</span><br><span class="line">        <span class="comment">// Clear the dirty region in case we're switching from a non-CPU API</span></span><br><span class="line">        mDirtyRegion.clear();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以之后unlockCanvasAndPost没有disconnect BufferQueueProducer也不会在再次调用Surface.lockCanvas的时候造成重复Surface::connect(NATIVE_WINDOW_API_CPU)的问题:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/base/core/jni/android_view_Surface.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">nativeUnlockCanvasAndPost</span><span class="params">(JNIEnv* env, jclass clazz,</span></span></span><br><span class="line"><span class="function"><span class="params">        jlong nativeObject, jobject canvasObj)</span> </span>&#123;</span><br><span class="line">    sp&lt;Surface&gt; surface(<span class="keyword">reinterpret_cast</span>&lt;Surface *&gt;(nativeObject));</span><br><span class="line">    <span class="keyword">if</span> (!isSurfaceValid(surface)) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// detach the canvas from the surface</span></span><br><span class="line">    graphics::<span class="function">Canvas <span class="title">canvas</span><span class="params">(env, canvasObj)</span></span>;</span><br><span class="line">    canvas.setBuffer(<span class="literal">nullptr</span>, ADATASPACE_UNKNOWN);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// unlock surface</span></span><br><span class="line">    <span class="keyword">status_t</span> err = surface-&gt;unlockAndPost();</span><br><span class="line">    <span class="keyword">if</span> (err &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        jniThrowException(env, IllegalArgumentException, <span class="literal">NULL</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> Surface::unlockAndPost()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (mLockedBuffer == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        ALOGE(<span class="string">"Surface::unlockAndPost failed, no locked buffer"</span>);</span><br><span class="line">        <span class="keyword">return</span> INVALID_OPERATION;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> fd = <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">status_t</span> err = mLockedBuffer-&gt;unlockAsync(&amp;fd);</span><br><span class="line">    ALOGE_IF(err, <span class="string">"failed unlocking buffer (%p)"</span>, mLockedBuffer-&gt;handle);</span><br><span class="line"></span><br><span class="line">    err = queueBuffer(mLockedBuffer.get(), fd);</span><br><span class="line">    ALOGE_IF(err, <span class="string">"queueBuffer (handle=%p) failed (%s)"</span>,</span><br><span class="line">            mLockedBuffer-&gt;handle, strerror(-err));</span><br><span class="line"></span><br><span class="line">    mPostedBuffer = mLockedBuffer;</span><br><span class="line">    mLockedBuffer = <span class="literal">nullptr</span>;</span><br><span class="line">    <span class="keyword">return</span> err;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的代码也可以看出来Surface.unlockCanvasAndPost只是将Canvas从Surface上分离,但是BufferQueueProducer没有disconnect,它的mCore-&gt;mConnectedApi还是NATIVE_WINDOW_API_CPU。于是再次连接Camera的时候去connect NATIVE_WINDOW_API_CAMERA就会失败。</p>
+<p>NATIVE_WINDOW_API_CPU的类型只有在Surface析构的时候才会去disconnect:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/Surface.cpp</span></span><br><span class="line">Surface::~Surface() &#123;</span><br><span class="line">    <span class="keyword">if</span> (mConnectedToCpu) &#123;</span><br><span class="line">        Surface::disconnect(NATIVE_WINDOW_API_CPU);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="GLES-disconnect"><a href="#GLES-disconnect" class="headerlink" title="GLES disconnect"></a>GLES disconnect</h1><p>实际上GLES是靠EGL14.eglDestroySurface去调用BufferQueueProducer::disconnect的,如果没有调用,再次去连接摄像头也会失败:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">06-06 20:13:59.940 29586 25849 E BufferQueueProducer: [SurfaceTexture-0-29586-0](id:739200000001,api:1,p:29586,c:29586) connect: already connected (cur=1 req=4)</span><br></pre></td></tr></table></figure>
+
+<p>这次就是NATIVE_WINDOW_API_EGL已连接,请求NATIVE_WINDOW_API_CAMERA连接失败了。</p>
+<h1 id="区分connect-api"><a href="#区分connect-api" class="headerlink" title="区分connect api"></a>区分connect api</h1><p>为什么需要区分connect api呢? 这是由于不同api的connect类型可能会有些不一样的处理逻辑,例如BufferQueueProducer::queueBuffer里就对NATIVE_WINDOW_API_EGL类型做了判断:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/libs/gui/BufferQueueProducer.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> BufferQueueProducer::queueBuffer(<span class="keyword">int</span> slot,</span><br><span class="line">        <span class="keyword">const</span> QueueBufferInput &amp;input, QueueBufferOutput *output) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Wait without lock held</span></span><br><span class="line">    <span class="keyword">if</span> (connectedApi == NATIVE_WINDOW_API_EGL) &#123;</span><br><span class="line">        <span class="comment">// Waiting here allows for two full buffers to be queued but not a</span></span><br><span class="line">        <span class="comment">// third. In the event that frames take varying time, this makes a</span></span><br><span class="line">        <span class="comment">// small trade-off in favor of latency rather than throughput.</span></span><br><span class="line">        lastQueuedFence-&gt;waitForever(<span class="string">"Throttling EGL Production"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
