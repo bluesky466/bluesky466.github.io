@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Windows调试技巧案例-ffmpeg&amp;wave播放音频卡死问题 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Windows,">
+  
+
+  <meta name="description" content="最近在windows上开发音视频,遇到了读流卡死的问题.定位过程中学到了一些Windows上的程序调试技巧,这里记录一下。 WinDbg查看线程堆栈最近的这个项目使用ffmpeg播放外部设备的音视频流,在播放的过程中强行拔掉外部设备和pc的硬件连接,会出现音频流卡死在av_read_frame的现象。卡死问题在安卓上可以用kill -3命令输出进程堆栈,在Windows上没有类似的命令而是需要使用">
+<meta name="keywords" content="技术相关,Windows">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows调试技巧案例-ffmpeg&amp;wave播放音频卡死问题">
+<meta property="og:url" content="https://blog.islinjw.cn/2023/08/31/Windows调试技巧案例-ffmpeg-wave播放音频卡死问题/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="最近在windows上开发音视频,遇到了读流卡死的问题.定位过程中学到了一些Windows上的程序调试技巧,这里记录一下。 WinDbg查看线程堆栈最近的这个项目使用ffmpeg播放外部设备的音视频流,在播放的过程中强行拔掉外部设备和pc的硬件连接,会出现音频流卡死在av_read_frame的现象。卡死问题在安卓上可以用kill -3命令输出进程堆栈,在Windows上没有类似的命令而是需要使用">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/1.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/2.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/3.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/4.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/5.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/6.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/7.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/8.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/9.jpg">
+<meta property="og:updated_time" content="2023-08-31T12:04:23.818Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Windows调试技巧案例-ffmpeg&amp;wave播放音频卡死问题">
+<meta name="twitter:description" content="最近在windows上开发音视频,遇到了读流卡死的问题.定位过程中学到了一些Windows上的程序调试技巧,这里记录一下。 WinDbg查看线程堆栈最近的这个项目使用ffmpeg播放外部设备的音视频流,在播放的过程中强行拔掉外部设备和pc的硬件连接,会出现音频流卡死在av_read_frame的现象。卡死问题在安卓上可以用kill -3命令输出进程堆栈,在Windows上没有类似的命令而是需要使用">
+<meta name="twitter:image" content="https://blog.islinjw.cn/Windows调试技巧案例-播放音频卡死问题/1.jpg">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#WinDbg查看线程堆栈"><span class="toc-text">WinDbg查看线程堆栈</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Visual-Studio远程调试"><span class="toc-text">Visual Studio远程调试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#调试机"><span class="toc-text">调试机</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#开发机"><span class="toc-text">开发机</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#问题定位"><span class="toc-text">问题定位</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#解决方案一"><span class="toc-text">解决方案一</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#解决方案二"><span class="toc-text">解决方案二</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#WinDbg分析线程死锁"><span class="toc-text">WinDbg分析线程死锁</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Windows调试技巧案例-ffmpeg-wave播放音频卡死问题" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Windows调试技巧案例-ffmpeg&amp;wave播放音频卡死问题</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2023.08.31</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近在windows上开发音视频,遇到了读流卡死的问题.定位过程中学到了一些Windows上的程序调试技巧,这里记录一下。</p>
+<h1 id="WinDbg查看线程堆栈"><a href="#WinDbg查看线程堆栈" class="headerlink" title="WinDbg查看线程堆栈"></a>WinDbg查看线程堆栈</h1><p>最近的这个项目使用ffmpeg播放外部设备的音视频流,在播放的过程中强行拔掉外部设备和pc的硬件连接,会出现音频流卡死在<code>av_read_frame</code>的现象。卡死问题在安卓上可以用<code>kill -3</code>命令输出进程堆栈,在Windows上没有类似的命令而是需要使用<a href="https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/" target="_blank" rel="noopener">WinDbg</a>去调试。</p>
+<p>可以直接使用它打开exe程序或者attach到已经打开的进程对程序进行调试:</p>
+<img src="/Windows调试技巧案例-播放音频卡死问题/1.jpg">
+
+
+<p>将编译时生成的pdb文件放到exe程序的同级目录为WinDbg提供符号表信息,在问题出现的时候就可以点击Break按钮然后在命令行输入框里面输入<code>~*k</code>命令打印出进程的所有线程堆栈,我们只要找到卡死的线程分析其堆栈看具体卡死在什么地方即可。</p>
+<p>这里的<code>~</code>指线程信息,<code>*</code>指所有线程,<code>k</code>指打印堆栈,所以<code>~*k</code>指打印所有线程的堆栈。类似的可以用<code>~8k</code>打印序号为8的线程的堆栈,更多的命令可以查看<a href="https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/commands" target="_blank" rel="noopener">官方文档</a></p>
+<p>从我们这个案例举例,序号为8,Id为1278.1680的线程在audio_player.cpp的第228行调用了<code>av_read_frame</code>然后最终卡死在ffmpeg的dshow.c的第1862行:</p>
+<img src="/Windows调试技巧案例-播放音频卡死问题/2.jpg">
+
+<p>所以我们打开dshow.c的源码看1862行为什么会卡死:</p>
+<img src="/Windows调试技巧案例-播放音频卡死问题/3.jpg">
+
+<p>可以看到1862行是在<code>dshow_read_packet</code>的while循环,我一开始以为是卡在了等待mutex锁上,但是从ffmpeg的源码上看只有另外一个<code>callback</code>函数里面会去抢占这个锁:</p>
+<img src="/Windows调试技巧案例-播放音频卡死问题/4.jpg">
+
+<p>但是搜索所有的线程堆栈都没有调用到这个<code>callback</code>函数的。</p>
+<p>我们需要先定位到它是怎么卡死的才能针对性的去分析如何解决问题,既然堆栈里面看不到,那么我们还有下面的手动去继续分析:</p>
+<ol>
+<li>在ffmpeg源码里面添加日志打印 - 我们使用的conan去依赖的ffmpeg,修改源码的方式又需要自己编译然后修改依赖配置比较麻烦</li>
+<li>使用WinDbg添加断点单步调试 - 使用起来不是很方便</li>
+<li>在调试机上部署开发环境,使用Visual Studio添加断点单步调试 - 配置环境的耗时比较大</li>
+<li>使用Visual Studio远程调试在开发机上远程单步调试开发机的程序 - 比较合适</li>
+</ol>
+<h1 id="Visual-Studio远程调试"><a href="#Visual-Studio远程调试" class="headerlink" title="Visual Studio远程调试"></a>Visual Studio远程调试</h1><p>综合考虑下来我选择使用Visual Studio远程调试功能去调试。</p>
+<h3 id="调试机"><a href="#调试机" class="headerlink" title="调试机"></a>调试机</h3><p>根据<a href="https://learn.microsoft.com/zh-cn/visualstudio/debugger/remote-debugging?view=vs-2022" target="_blank" rel="noopener">官方文档</a>,我们可以从VS的安装目录拷贝<code>Program Files\Microsoft Visual Studio 17.0\Common7\IDE\Remote Debugger</code>到调试机上执行msvsmon.exe打开调试服务,而且为了方便我们可以直接配置成无身份认证:</p>
+<img src="/Windows调试技巧案例-播放音频卡死问题/5.jpg">
+
+<img src="/Windows调试技巧案例-播放音频卡死问题/6.jpg">
+
+
+<h3 id="开发机"><a href="#开发机" class="headerlink" title="开发机"></a>开发机</h3><p>开发机需要和调试机在同一个局域网,然后配置远程调试器:</p>
+<img src="/Windows调试技巧案例-播放音频卡死问题/7.jpg">
+
+<p>注意这里的远程命令、工作目录指的都是调试机上的文件路径,而且每次修改编译完成之后VS并不会自动帮我们把新生成的exe文件传输到调试机,所以要么每次重新编译之后手动拷贝exe到开发机,要么弄一个共享目录将编译的目标exe配置生成到共享目录。</p>
+<p>完成配置之后就可以在vs上选择远程Windows调试器执行exe,然后像本地调试一样添加断点、查看堆栈、查看变量值等:</p>
+<img src="/Windows调试技巧案例-播放音频卡死问题/8.jpg">
+
+<h3 id="问题定位"><a href="#问题定位" class="headerlink" title="问题定位"></a>问题定位</h3><p>从单步调试的代码执行流程来看,是我之前对堆栈的分析有问题,卡在dshow.c的第1862行并不是卡在下一行等待mutex锁,而是卡在while的末尾等待进入下次while循环,即卡住1879行的WaitForMultipleObjects上。如果细心点的话也能发现,堆栈实际是卡在WaitForMultipleObjects而不是WaitForSingleObject:</p>
+<img src="/Windows调试技巧案例-播放音频卡死问题/9.jpg">
+
+<p>这个问题实际其实只涉及到<code>callback</code>和<code>dshow_read_packet</code>两个函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">callback(<span class="keyword">void</span> *priv_data, <span class="keyword">int</span> index, <span class="keyword">uint8_t</span> *buf, <span class="keyword">int</span> buf_size, <span class="keyword">int64_t</span> time, <span class="keyword">enum</span> dshowDeviceType devtype)</span><br><span class="line">&#123;</span><br><span class="line">    AVFormatContext *s = priv_data;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dshow_ctx</span> *<span class="title">ctx</span> = <span class="title">s</span>-&gt;<span class="title">priv_data</span>;</span></span><br><span class="line">    PacketListEntry **ppktl, *pktl_next;</span><br><span class="line"></span><br><span class="line"><span class="comment">//    dump_videohdr(s, vdhdr);</span></span><br><span class="line"></span><br><span class="line">    WaitForSingleObject(ctx-&gt;mutex, INFINITE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(shall_we_drop(s, index, devtype))</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line"></span><br><span class="line">    pktl_next = av_mallocz(<span class="keyword">sizeof</span>(*pktl_next));</span><br><span class="line">    <span class="keyword">if</span>(!pktl_next)</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(av_new_packet(&amp;pktl_next-&gt;pkt, buf_size) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        av_free(pktl_next);</span><br><span class="line">        <span class="keyword">goto</span> fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pktl_next-&gt;pkt.stream_index = index;</span><br><span class="line">    pktl_next-&gt;pkt.pts = time;</span><br><span class="line">    <span class="built_in">memcpy</span>(pktl_next-&gt;pkt.data, buf, buf_size);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(ppktl = &amp;ctx-&gt;pktl ; *ppktl ; ppktl = &amp;(*ppktl)-&gt;next);</span><br><span class="line">    *ppktl = pktl_next;</span><br><span class="line">    ctx-&gt;curbufsize[index] += buf_size;</span><br><span class="line"></span><br><span class="line">    SetEvent(ctx-&gt;event[<span class="number">1</span>]);</span><br><span class="line">    ReleaseMutex(ctx-&gt;mutex);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">fail:</span><br><span class="line">    ReleaseMutex(ctx-&gt;mutex);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">dshow_read_packet</span><span class="params">(AVFormatContext *s, AVPacket *pkt)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dshow_ctx</span> *<span class="title">ctx</span> = <span class="title">s</span>-&gt;<span class="title">priv_data</span>;</span></span><br><span class="line">    PacketListEntry *pktl = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (!ctx-&gt;eof &amp;&amp; !pktl) &#123;</span><br><span class="line">        WaitForSingleObject(ctx-&gt;mutex, INFINITE);</span><br><span class="line">        pktl = ctx-&gt;pktl;</span><br><span class="line">        <span class="keyword">if</span> (pktl) &#123;</span><br><span class="line">            *pkt = pktl-&gt;pkt;</span><br><span class="line">            ctx-&gt;pktl = ctx-&gt;pktl-&gt;next;</span><br><span class="line">            av_free(pktl);</span><br><span class="line">            ctx-&gt;curbufsize[pkt-&gt;stream_index] -= pkt-&gt;size;</span><br><span class="line">        &#125;</span><br><span class="line">        ResetEvent(ctx-&gt;event[<span class="number">1</span>]);</span><br><span class="line">        ReleaseMutex(ctx-&gt;mutex);</span><br><span class="line">        <span class="keyword">if</span> (!pktl) &#123;</span><br><span class="line">            <span class="keyword">if</span> (dshow_check_event_queue(ctx-&gt;media_event) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                ctx-&gt;eof = <span class="number">1</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (s-&gt;flags &amp; AVFMT_FLAG_NONBLOCK) &#123;</span><br><span class="line">                <span class="keyword">return</span> AVERROR(EAGAIN);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                WaitForMultipleObjects(<span class="number">2</span>, ctx-&gt;event, <span class="number">0</span>, INFINITE);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ctx-&gt;eof ? AVERROR(EIO) : pkt-&gt;size;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>callback</code>会在工作线程读取音频数据,放到<code>ctx-&gt;pktl</code>,而<code>dshow_read_packet</code>里面的while循环回去判断<code>ctx-&gt;pktl</code>是否有数据,这里的mutex锁就是为了解决两个线程的同步问题。</p>
+<p>如果判断还没有数据而且没有读取到eof,就会根据AVFormatContext::flags判断是否为阻塞读取,非阻塞直接返回again的错误码让调用方重试,如果是阻塞就等待数据填充的信号量。</p>
+<p>这个信号量是在<code>callback</code>里面填充完成之后通过SetEvent发送的,而由于我们已经把设备拔掉了,所以永远不会有callback的回调,于是<code>dshow_read_packet</code>就卡死了。</p>
+<h3 id="解决方案一"><a href="#解决方案一" class="headerlink" title="解决方案一"></a>解决方案一</h3><p>解决的方式有两种,一是创建看门狗线程,在读取超时之后手动唤醒:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 原始的priv_data数据结构</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">dshow_ctx</span> &#123;</span></span><br><span class="line">    <span class="keyword">const</span> AVClass *<span class="class"><span class="keyword">class</span>;</span></span><br><span class="line"></span><br><span class="line">    IGraphBuilder *graph;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">char</span> *device_name[<span class="number">2</span>];</span><br><span class="line">    <span class="keyword">char</span> *device_unique_name[<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> video_device_number;</span><br><span class="line">    <span class="keyword">int</span> audio_device_number;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span>   list_options;</span><br><span class="line">    <span class="keyword">int</span>   list_devices;</span><br><span class="line">    <span class="keyword">int</span>   audio_buffer_size;</span><br><span class="line">    <span class="keyword">int</span>   crossbar_video_input_pin_number;</span><br><span class="line">    <span class="keyword">int</span>   crossbar_audio_input_pin_number;</span><br><span class="line">    <span class="keyword">char</span> *video_pin_name;</span><br><span class="line">    <span class="keyword">char</span> *audio_pin_name;</span><br><span class="line">    <span class="keyword">int</span>   show_video_device_dialog;</span><br><span class="line">    <span class="keyword">int</span>   show_audio_device_dialog;</span><br><span class="line">    <span class="keyword">int</span>   show_video_crossbar_connection_dialog;</span><br><span class="line">    <span class="keyword">int</span>   show_audio_crossbar_connection_dialog;</span><br><span class="line">    <span class="keyword">int</span>   show_analog_tv_tuner_dialog;</span><br><span class="line">    <span class="keyword">int</span>   show_analog_tv_tuner_audio_dialog;</span><br><span class="line">    <span class="keyword">char</span> *audio_filter_load_file;</span><br><span class="line">    <span class="keyword">char</span> *audio_filter_save_file;</span><br><span class="line">    <span class="keyword">char</span> *video_filter_load_file;</span><br><span class="line">    <span class="keyword">char</span> *video_filter_save_file;</span><br><span class="line">    <span class="keyword">int</span>   use_video_device_timestamps;</span><br><span class="line"></span><br><span class="line">    IBaseFilter *device_filter[<span class="number">2</span>];</span><br><span class="line">    IPin        *device_pin[<span class="number">2</span>];</span><br><span class="line">    DShowFilter *capture_filter[<span class="number">2</span>];</span><br><span class="line">    DShowPin    *capture_pin[<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">    HANDLE mutex;</span><br><span class="line">    HANDLE event[<span class="number">2</span>]; <span class="comment">/* event[0] is set by DirectShow</span></span><br><span class="line"><span class="comment">                      * event[1] is set by callback() */</span></span><br><span class="line">    PacketListEntry *pktl;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> eof;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int64_t</span> curbufsize[<span class="number">2</span>];</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> video_frame_num;</span><br><span class="line"></span><br><span class="line">    IMediaControl *control;</span><br><span class="line">    IMediaEvent *media_event;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">enum</span> AVPixelFormat pixel_format;</span><br><span class="line">    <span class="keyword">enum</span> AVCodecID video_codec_id;</span><br><span class="line">    <span class="keyword">char</span> *framerate;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> requested_width;</span><br><span class="line">    <span class="keyword">int</span> requested_height;</span><br><span class="line">    AVRational requested_framerate;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> sample_rate;</span><br><span class="line">    <span class="keyword">int</span> sample_size;</span><br><span class="line">    <span class="keyword">int</span> channels;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 计算priv_data数据偏移,去除无用的符号依赖</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">PrivDataOffsetHelper</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span>* pointer_place_holder[<span class="number">20</span>];</span><br><span class="line">    <span class="keyword">int</span> int_place_holder[<span class="number">14</span>];</span><br><span class="line"></span><br><span class="line">    HANDLE mutex;</span><br><span class="line">    HANDLE event[<span class="number">2</span>]; </span><br><span class="line">    <span class="keyword">char</span> *pktl;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 看门狗设置</span></span><br><span class="line">watch_dog_timer_.expires_after(<span class="number">2</span>s);</span><br><span class="line">watch_dog_timer_.async_wait([<span class="keyword">this</span>](<span class="keyword">const</span> boost::system::error_code&amp; code) &#123;</span><br><span class="line">    <span class="keyword">if</span> (code == boost::asio::error::operation_aborted) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    LOGW(<span class="string">"FORCE WAKEUP FOR WATCH DOG!!!"</span>);</span><br><span class="line"></span><br><span class="line">    format_context_-&gt;flags |= AVFMT_FLAG_NONBLOCK;</span><br><span class="line">    <span class="keyword">auto</span> ctx = (PrivDataOffsetHelper*)format_context_-&gt;priv_data;</span><br><span class="line">    ctx-&gt;pktl = <span class="literal">nullptr</span>;</span><br><span class="line">    SetEvent(ctx-&gt;event[<span class="number">1</span>]);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> error = av_read_frame(format_context_, packet);</span><br><span class="line">watch_dog_timer_.cancel();</span><br></pre></td></tr></table></figure>
+
+<p>这种方式最大的问题在于如果以后更新ffmpeg的时候priv_data的数据结构改变了,内存偏移也变了的话就会出现野指针。它是一种无奈的做法,如果按我一开始想的是卡在mutex上,而外部设备拔出之后的确没有办法从锁的触发流程上规避的话就只能用这种硬编码方式主动调用ReleaseMutex。</p>
+<h3 id="解决方案二"><a href="#解决方案二" class="headerlink" title="解决方案二"></a>解决方案二</h3><p>这里实际上使用非阻塞的方式去读取去解决会更加合适一点:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// 打开AVFormatContext之后设置AVFMT_FLAG_NONBLOCK</span></span><br><span class="line"><span class="keyword">auto</span> error = avformat_open_input(&amp;format_context_, device.second.data(), iformat, &amp;options);</span><br><span class="line">format_context_-&gt;flags |= AVFMT_FLAG_NONBLOCK;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用非阻塞的方式不断读取</span></span><br><span class="line"><span class="keyword">auto</span> error = av_read_frame(format_context_, packet);</span><br><span class="line"><span class="keyword">auto</span> start = <span class="built_in">std</span>::chrono::high_resolution_clock::now();</span><br><span class="line"><span class="keyword">while</span> (!exit_ &amp;&amp; error == AVERROR(EAGAIN)) &#123;</span><br><span class="line">	<span class="comment">// 如果读取的时间超过阈值就代表已经拔出设备</span></span><br><span class="line">    <span class="keyword">auto</span> now = <span class="built_in">std</span>::chrono::high_resolution_clock::now();</span><br><span class="line">    <span class="keyword">auto</span> duration = <span class="built_in">std</span>::chrono::duration_cast&lt;<span class="built_in">std</span>::chrono::milliseconds&gt;(now - start);</span><br><span class="line">    <span class="keyword">if</span> (duration.count() &gt;= kReadFrameTimeout) &#123;</span><br><span class="line">        LOGW(<span class="string">"read frame timeout"</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 暂停10ms防止空转耗费cpu</span></span><br><span class="line">    <span class="built_in">std</span>::this_thread::sleep_for(<span class="built_in">std</span>::chrono::milliseconds(<span class="number">10</span>));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 重新尝试读取</span></span><br><span class="line">    error = av_read_frame(format_context_, packet);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="WinDbg分析线程死锁"><a href="#WinDbg分析线程死锁" class="headerlink" title="WinDbg分析线程死锁"></a>WinDbg分析线程死锁</h1><p>本来以为问题已经解决了,但是在自检的时候又发现了另外的死锁现象:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">   8  Id: 1d2c.3f14 Suspend: 1 Teb: 0000000a`5f55f000 Unfrozen</span><br><span class="line"> # Child-SP          RetAddr               : Args to Child                                                           : Call Site</span><br><span class="line">00 0000000a`5fefe0e8 00007ffc`d57a30ce     : 00000001`960a9301 000001e5`2feed570 000001e5`2feed570 000001e5`2feed570 : ntdll!NtWaitForSingleObject+0x14</span><br><span class="line">01 0000000a`5fefe0f0 00007ffc`d1d21985     : 000001e5`2d26fe20 00000000`00000200 00000001`00000000 00000000`000018a4 : KERNELBASE!WaitForSingleObjectEx+0x8e</span><br><span class="line">02 0000000a`5fefe190 00007ffc`9609fabe     : 000001e5`2d437a00 00000000`00000030 00007ffc`960b0e38 000001e5`2d26fe20 : wdmaud!wodMessage+0x235</span><br><span class="line">03 0000000a`5fefe330 00007ffc`960a0ae9     : 000001e5`2d26fe20 000001e5`2d26fe20 000001e5`2d437a00 00000000`00000030 : winmmbase!waveMessage+0x9a</span><br><span class="line">04 0000000a`5fefe370 00007ffc`d1f42ba1     : 000001e5`2d2d5240 00000000`00000030 000001e5`26218098 00000000`00000000 : winmmbase!waveOutWrite+0x79</span><br><span class="line">05 0000000a`5fefe3a0 00007ffc`d1f43e80     : 00000000`00000000 00000000`00000000 00000000`00000030 00007ffc`960a1db0 : msacm32!mapWaveWriteBuffer+0x69</span><br><span class="line">06 0000000a`5fefe3e0 00007ffc`9609fabe     : 000001e5`2d2b3e50 00000000`00000030 00007ffc`960b0e38 000001e5`26218098 : msacm32!wodMessage+0xd0</span><br><span class="line">07 0000000a`5fefe430 00007ffc`960a0ae9     : 000001e5`2d26fe20 000001e5`26218098 000001e5`2d2b3e50 00000000`00000030 : winmmbase!waveMessage+0x9a</span><br><span class="line">08 0000000a`5fefe470 00007ff6`1012c5f6     : 000001e5`26217fd0 0000000a`5fefe840 0000000a`5feffd08 00000000`0000022c : winmmbase!waveOutWrite+0x79</span><br><span class="line">09 0000000a`5fefe4a0 00007ff6`1012c432     : 000001e5`26215db0 000001e5`2ff2b920 0000000a`00015888 0000000a`5fefea18 : XXXXXXX!AudioPlayer::Play+0xd6 [C:\Users\user\workspace\XXXXXXX\src\audio\audio_player.cpp @ 410]</span><br></pre></td></tr></table></figure>
+
+<p>这里卡死在Windows原生的waveOutWrite里面,由于没有源码,所以也没有办法调试。搜索了下资料,发现WinDbg其实是可以用<code>!locks</code>命令打印被持有的线程锁的信息:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">0:015&gt; !locks</span><br><span class="line"></span><br><span class="line">CritSec +2d2b3e28 at 000001e52d2b3e28</span><br><span class="line">WaiterWoken        No</span><br><span class="line">LockCount          1</span><br><span class="line">RecursionCount     1</span><br><span class="line">OwningThread       3f14</span><br><span class="line">EntryCount         0</span><br><span class="line">ContentionCount    1</span><br><span class="line">*** Locked</span><br><span class="line"></span><br><span class="line">Scanned 27 critical sections</span><br></pre></td></tr></table></figure>
+
+<p>这里的输出代表着有线程进入了临界区在等待3f14线程持有的2d2b3e28锁。</p>
+<p>我们通过<code>~</code>命令输出线程信息,找到3f14的线程序号是8:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">0:015&gt; ~</span><br><span class="line">   0  Id: 1d2c.47f4 Suspend: 1 Teb: 0000000a`5f54f000 Unfrozen</span><br><span class="line">   1  Id: 1d2c.4cc Suspend: 1 Teb: 0000000a`5f5bb000 Unfrozen</span><br><span class="line">   2  Id: 1d2c.2cec Suspend: 1 Teb: 0000000a`5f46e000 Unfrozen</span><br><span class="line">   3  Id: 1d2c.150c Suspend: 1 Teb: 0000000a`5f470000 Unfrozen</span><br><span class="line">   4  Id: 1d2c.2260 Suspend: 1 Teb: 0000000a`5f557000 Unfrozen</span><br><span class="line">   5  Id: 1d2c.31c8 Suspend: 1 Teb: 0000000a`5f559000 Unfrozen</span><br><span class="line">   6  Id: 1d2c.d58 Suspend: 1 Teb: 0000000a`5f55b000 Unfrozen</span><br><span class="line">   7  Id: 1d2c.1010 Suspend: 1 Teb: 0000000a`5f55d000 Unfrozen</span><br><span class="line">   8  Id: 1d2c.3f14 Suspend: 1 Teb: 0000000a`5f55f000 Unfrozen</span><br><span class="line">   9  Id: 1d2c.33f0 Suspend: 1 Teb: 0000000a`5f561000 Unfrozen</span><br><span class="line">  10  Id: 1d2c.21b4 Suspend: 1 Teb: 0000000a`5f563000 Unfrozen</span><br><span class="line">  11  Id: 1d2c.2a68 Suspend: 1 Teb: 0000000a`5f565000 Unfrozen</span><br><span class="line">  12  Id: 1d2c.227c Suspend: 1 Teb: 0000000a`5f567000 Unfrozen</span><br><span class="line">  13  Id: 1d2c.3be0 Suspend: 1 Teb: 0000000a`5f569000 Unfrozen</span><br><span class="line">  14  Id: 1d2c.2364 Suspend: 1 Teb: 0000000a`5f56b000 Unfrozen</span><br><span class="line">. 15  Id: 1d2c.455c Suspend: 1 Teb: 0000000a`5f474000 Unfrozen</span><br><span class="line">  16  Id: 1d2c.154c Suspend: 1 Teb: 0000000a`5f472000 Unfrozen</span><br><span class="line">  21  Id: 1d2c.3f2c Suspend: 1 Teb: 0000000a`5f5a3000 Unfrozen</span><br><span class="line">  22  Id: 1d2c.46b8 Suspend: 1 Teb: 0000000a`5f47e000 Unfrozen</span><br><span class="line">  28  Id: 1d2c.12fc Suspend: 1 Teb: 0000000a`5f492000 Unfrozen</span><br><span class="line">  30  Id: 1d2c.15cc Suspend: 1 Teb: 0000000a`5f496000 Unfrozen</span><br></pre></td></tr></table></figure>
+
+<p>然后使用<code>~8k</code>命令输出序号为8的线程堆栈,可以发现这个线程就是一开始我们看到的卡死的waveOutWrite线程:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">0:015&gt; ~8k</span><br><span class="line"> # Child-SP          RetAddr               Call Site</span><br><span class="line">00 0000000a`5fefe0e8 00007ffc`d57a30ce     ntdll!NtWaitForSingleObject+0x14</span><br><span class="line">01 0000000a`5fefe0f0 00007ffc`d1d21985     KERNELBASE!WaitForSingleObjectEx+0x8e</span><br><span class="line">02 0000000a`5fefe190 00007ffc`9609fabe     wdmaud!wodMessage+0x235</span><br><span class="line">03 0000000a`5fefe330 00007ffc`960a0ae9     winmmbase!waveMessage+0x9a</span><br><span class="line">04 0000000a`5fefe370 00007ffc`d1f42ba1     winmmbase!waveOutWrite+0x79</span><br><span class="line">05 0000000a`5fefe3a0 00007ffc`d1f43e80     msacm32!mapWaveWriteBuffer+0x69</span><br><span class="line">06 0000000a`5fefe3e0 00007ffc`9609fabe     msacm32!wodMessage+0xd0</span><br><span class="line">07 0000000a`5fefe430 00007ffc`960a0ae9     winmmbase!waveMessage+0x9a</span><br><span class="line">08 0000000a`5fefe470 00007ff6`1012c5f6     winmmbase!waveOutWrite+0x79</span><br><span class="line">09 0000000a`5fefe4a0 00007ff6`1012c432     XXXXXXX!AudioPlayer::Play+0xd6 [C:\Users\user\workspace\XXXXXXX\src\audio\audio_player.cpp @ 410]</span><br></pre></td></tr></table></figure>
+
+<p>这个线程卡持有了2d2b3e28锁之后卡在了WaitForSingleObject,导致其他线程无法获取2d2b3e28锁。一般死锁就是两个线程相互持有对方的锁导致的,所以我们需要找到哪个线程想要获取2d2b3e28锁。可以用<code>~*kv</code>命令打印打印线程堆栈并显示传递给每个函数的前三个参数,然后搜索2d2b3e28:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">  21  Id: 1d2c.3f2c Suspend: 1 Teb: 0000000a`5f5a3000 Unfrozen</span><br><span class="line"> # Child-SP          RetAddr               : Args to Child                                                           : Call Site</span><br><span class="line">00 0000000a`60bff6a8 00007ffc`d7d338bd     : 000001e5`261e0000 000001e5`2ff56a80 000001e5`28c13cd0 00007ffc`d1d5e000 : ntdll!NtWaitForAlertByThreadId+0x14</span><br><span class="line">01 0000000a`60bff6b0 00007ffc`d7d33772     : 00000000`00000000 00000000`00000000 0000000a`60bff798 000001e5`2d2b3e30 : ntdll!RtlpWaitOnAddressWithTimeout+0x81</span><br><span class="line">02 0000000a`60bff6e0 00007ffc`d7d3358d     : 000001e5`看这里-----&gt; 2d2b3e28 &lt;-----看这里 00000000`00001722 00000000`00000000 00007ffc`d7cf5ba1 : ntdll!RtlpWaitOnAddress+0xae</span><br><span class="line">03 0000000a`60bff750 00007ffc`d7cffcb4     : 0000b9bb`eef11ce8 000001e5`261e0000 00000000`fffffffa 00000000`00000000 : ntdll!RtlpWaitOnCriticalSection+0xfd</span><br><span class="line">04 0000000a`60bff830 00007ffc`d7cffae2     : 0000000a`60bff8d0 000001e5`2ff56ac0 000001e5`2d2b3e50 00000000`00000000 : ntdll!RtlpEnterCriticalSectionContended+0x1c4</span><br><span class="line">05 0000000a`60bff890 00007ffc`9609fa57     : 000001e5`2d2b3e00 00007ffc`960a1db0 000001e5`2feed580 00000000`00000000 : ntdll!RtlEnterCriticalSection+0x42</span><br><span class="line">06 0000000a`60bff8c0 00007ffc`960a0a26     : 000001e5`28c0a7b0 00000000`000003bd 00000000`00000030 000001e5`2d2b3e50 : winmmbase!waveMessage+0x33</span><br><span class="line">07 0000000a`60bff900 00007ff6`1012e74c     : 00000000`00000000 000001e5`2d2b3e50 00000000`00000000 00007ffc`d7cf5ba1 : winmmbase!waveOutUnprepareHeader+0x76</span><br><span class="line">08 0000000a`60bff930 00007ffc`960955ff     : 000001e5`2d2b3e50 00007ffc`000003bd 000001e5`26215dd0 000001e5`28c0a7b0 : XXXXXXX!`anonymous namespace&apos;::WaveOutProc+0x5c [C:\Users\user\workspace\XXXXXXX\src\audio\audio_player.cpp @ 109] </span><br><span class="line">09 0000000a`60bff980 00007ffc`d1f41043     : 000001e5`2d2d5240 00000000`000003bd 000001e5`28c0a7b0 000001e5`28c3b930 : winmmbase!DriverCallback+0x9f</span><br><span class="line">0a 0000000a`60bff9c0 00007ffc`d1f4123c     : 000001e5`2d4532d0 000001e5`261e0000 00000000`00000002 00000000`00000000 : msacm32!mapWaveDriverCallback+0x3b</span><br><span class="line">0b 0000000a`60bffa10 00007ffc`960955ff     : 00000000`00000000 00000000`000003bd 000001e5`2d437a00 00000000`00000000 : msacm32!mapWaveCallback+0x1dc</span><br><span class="line">0c 0000000a`60bffa40 00007ffc`d1d23ce4     : 000001e5`28c3b930 00000000`00000002 00000000`00000000 00000000`00000808 : winmmbase!DriverCallback+0x9f</span><br><span class="line">0d 0000000a`60bffa80 00007ffc`d1d235c6     : 000001e5`28c13cd0 00000000`0002b110 00007ffc`d1d5e000 00000000`00000000 : wdmaud!CWaveHandle::Work+0x324</span><br><span class="line">0e 0000000a`60bffb00 00007ffc`d1d23410     : 000001e5`2d215a60 000001e5`2d215a60 00000000`00000000 00000000`00000000 : wdmaud!CWorker::_ThreadProc+0x186</span><br><span class="line">0f 0000000a`60bffd80 00007ffc`d6b37614     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : wdmaud!CWorker::_StaticThreadProc+0x40</span><br><span class="line">10 0000000a`60bffdb0 00007ffc`d7d226b1     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : KERNEL32!BaseThreadInitThunk+0x14</span><br><span class="line">11 0000000a`60bffde0 00000000`00000000     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : ntdll!RtlUserThreadStart+0x21</span><br></pre></td></tr></table></figure>
+
+<p>发现在audio_player.cpp的第109行,调用了waveOutUnprepareHeader,在里面传入2d2b3e28给RtlpWaitOnAddress函数去等待这个锁。</p>
+<p>这里实际上是waveOutOpen注册的callback函数,我在里面去释放播放数据的缓存:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> CALLBACK <span class="title">WaveOutProc</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">   HWAVEOUT  hwo,</span></span></span><br><span class="line"><span class="function"><span class="params">   UINT      msg,</span></span></span><br><span class="line"><span class="function"><span class="params">   DWORD_PTR instance,</span></span></span><br><span class="line"><span class="function"><span class="params">   DWORD_PTR param1,</span></span></span><br><span class="line"><span class="function"><span class="params">   DWORD_PTR param2</span></span></span><br><span class="line"><span class="function"><span class="params">)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(WOM_DONE == msg) &#123;</span><br><span class="line">        <span class="keyword">auto</span> hdr = (WAVEHDR*)param1;</span><br><span class="line">        <span class="keyword">auto</span> handle_ptr = (HWAVEOUT*)instance;</span><br><span class="line">        av_free(hdr-&gt;lpData);</span><br><span class="line">        waveOutUnprepareHeader(*handle_ptr, hdr, <span class="keyword">sizeof</span>(WAVEHDR));</span><br><span class="line">        <span class="keyword">delete</span> hdr;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> ret = waveOutOpen(&amp;wave_out_handle_, WAVE_MAPPER, &amp;wfx, (DWORD_PTR) WaveOutProc, (DWORD_PTR) &amp;wave_out_handle_, CALLBACK_FUNCTION);</span><br></pre></td></tr></table></figure>
+
+<p>从堆栈上看这个callback是在子线程中回调的,所以结合现象我们可以大概分析出</p>
+<ol>
+<li>wave有一条工作线程和一个线程锁</li>
+<li>waveOutWrite会获取线程锁,然后往工作线程丢入任务,然后等待任务完成的信号量</li>
+<li>callback也是在工作线程中回调的,我们在里面调用waveOutUnprepareHeader,这里面也需要获取线程锁</li>
+<li>由于线程锁已经被waveOutWrite持有,所以callback会卡住,即工作线程会阻塞等待线程锁</li>
+<li>而waveOutWrite又需要等待工作线程去执行丢入的任务</li>
+<li>于是发生了死锁</li>
+</ol>
+<p>从<a href="https://learn.microsoft.com/en-us/previous-versions/dd743869(v=vs.85)" target="_blank" rel="noopener">官方文档</a>里面其实也可以看到在callback里面调用其他wave函数会造成死锁(Calling other wave functions will cause deadlock.),只能怪我自己没有仔细阅读文档了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Applications should not call any system-defined functions from inside a callback function, except for EnterCriticalSection, LeaveCriticalSection, midiOutLongMsg, midiOutShortMsg, OutputDebugString, PostMessage, PostThreadMessage, SetEvent, timeGetSystemTime, timeGetTime, timeKillEvent, and timeSetEvent. Calling other wave functions will cause deadlock.</span><br></pre></td></tr></table></figure>
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
