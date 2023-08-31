@@ -324,7 +324,13 @@ Scanned 27 critical sections
 
 这里的输出代表着有线程进入了临界区在等待3f14线程持有的2d2b3e28锁。
 
-我们通过`~`命令输出线程信息,找到3f14的线程序号是8:
+如果出现了`Unable to resolve ntdll!RtlCriticalSectionList`的错误提示则说明找不到Windows源码的符号表,根据[官方文档](https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/symbol-path)我们可以用`.sympath srv*https://msdl.microsoft.com/download/symbols`命令或者在设置页面配置微软符号服务器地址:
+
+
+{% img /Windows调试技巧案例-播放音频卡死问题/10.jpg %}
+
+
+接着我们通过`~`命令输出线程信息,找到3f14的线程序号是8:
 
 ```
 
