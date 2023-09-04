@@ -291,18 +291,16 @@ while (!exit_ && error == AVERROR(EAGAIN)) {
 本来以为问题已经解决了,但是在自检的时候又发现了另外的死锁现象:
 
 ```
-   8  Id: 1d2c.3f14 Suspend: 1 Teb: 0000000a`5f55f000 Unfrozen
- # Child-SP          RetAddr               : Args to Child                                                           : Call Site
-00 0000000a`5fefe0e8 00007ffc`d57a30ce     : 00000001`960a9301 000001e5`2feed570 000001e5`2feed570 000001e5`2feed570 : ntdll!NtWaitForSingleObject+0x14
-01 0000000a`5fefe0f0 00007ffc`d1d21985     : 000001e5`2d26fe20 00000000`00000200 00000001`00000000 00000000`000018a4 : KERNELBASE!WaitForSingleObjectEx+0x8e
-02 0000000a`5fefe190 00007ffc`9609fabe     : 000001e5`2d437a00 00000000`00000030 00007ffc`960b0e38 000001e5`2d26fe20 : wdmaud!wodMessage+0x235
-03 0000000a`5fefe330 00007ffc`960a0ae9     : 000001e5`2d26fe20 000001e5`2d26fe20 000001e5`2d437a00 00000000`00000030 : winmmbase!waveMessage+0x9a
-04 0000000a`5fefe370 00007ffc`d1f42ba1     : 000001e5`2d2d5240 00000000`00000030 000001e5`26218098 00000000`00000000 : winmmbase!waveOutWrite+0x79
-05 0000000a`5fefe3a0 00007ffc`d1f43e80     : 00000000`00000000 00000000`00000000 00000000`00000030 00007ffc`960a1db0 : msacm32!mapWaveWriteBuffer+0x69
-06 0000000a`5fefe3e0 00007ffc`9609fabe     : 000001e5`2d2b3e50 00000000`00000030 00007ffc`960b0e38 000001e5`26218098 : msacm32!wodMessage+0xd0
-07 0000000a`5fefe430 00007ffc`960a0ae9     : 000001e5`2d26fe20 000001e5`26218098 000001e5`2d2b3e50 00000000`00000030 : winmmbase!waveMessage+0x9a
-08 0000000a`5fefe470 00007ff6`1012c5f6     : 000001e5`26217fd0 0000000a`5fefe840 0000000a`5feffd08 00000000`0000022c : winmmbase!waveOutWrite+0x79
-09 0000000a`5fefe4a0 00007ff6`1012c432     : 000001e5`26215db0 000001e5`2ff2b920 0000000a`00015888 0000000a`5fefea18 : XXXXXXX!AudioPlayer::Play+0xd6 [C:\Users\user\workspace\XXXXXXX\src\audio\audio_player.cpp @ 410] 
+00 0000000a`5fefe0e8 00007ffc`d57a30ce     ntdll!NtWaitForSingleObject+0x14
+01 0000000a`5fefe0f0 00007ffc`d1d21985     KERNELBASE!WaitForSingleObjectEx+0x8e
+02 0000000a`5fefe190 00007ffc`9609fabe     wdmaud!wodMessage+0x235
+03 0000000a`5fefe330 00007ffc`960a0ae9     winmmbase!waveMessage+0x9a
+04 0000000a`5fefe370 00007ffc`d1f42ba1     winmmbase!waveOutWrite+0x79
+05 0000000a`5fefe3a0 00007ffc`d1f43e80     msacm32!mapWaveWriteBuffer+0x69
+06 0000000a`5fefe3e0 00007ffc`9609fabe     msacm32!wodMessage+0xd0
+07 0000000a`5fefe430 00007ffc`960a0ae9     winmmbase!waveMessage+0x9a
+08 0000000a`5fefe470 00007ff6`1012c5f6     winmmbase!waveOutWrite+0x79
+09 0000000a`5fefe4a0 00007ff6`1012c432     XXXXXXX!AudioPlayer::Play+0xd6 [C:\Users\user\workspace\XXXXXXX\src\audio\audio_player.cpp @ 410] 
 ```
 
 这里卡死在Windows原生的waveOutWrite里面,由于没有源码,所以也没有办法调试。搜索了下资料,发现WinDbg其实是可以用`!locks`命令打印被持有的线程锁的信息:
@@ -378,28 +376,8 @@ Scanned 27 critical sections
 
 这个线程卡持有了2d2b3e28锁之后卡在了WaitForSingleObject,导致其他线程无法获取2d2b3e28锁。一般死锁就是两个线程相互持有对方的锁导致的,所以我们需要找到哪个线程想要获取2d2b3e28锁。可以用`~*kv`命令打印打印线程堆栈并显示传递给每个函数的前三个参数,然后搜索2d2b3e28:
 
-```
-  21  Id: 1d2c.3f2c Suspend: 1 Teb: 0000000a`5f5a3000 Unfrozen
- # Child-SP          RetAddr               : Args to Child                                                           : Call Site
-00 0000000a`60bff6a8 00007ffc`d7d338bd     : 000001e5`261e0000 000001e5`2ff56a80 000001e5`28c13cd0 00007ffc`d1d5e000 : ntdll!NtWaitForAlertByThreadId+0x14
-01 0000000a`60bff6b0 00007ffc`d7d33772     : 00000000`00000000 00000000`00000000 0000000a`60bff798 000001e5`2d2b3e30 : ntdll!RtlpWaitOnAddressWithTimeout+0x81
-02 0000000a`60bff6e0 00007ffc`d7d3358d     : 000001e5`看这里-----> 2d2b3e28 <-----看这里 00000000`00001722 00000000`00000000 00007ffc`d7cf5ba1 : ntdll!RtlpWaitOnAddress+0xae
-03 0000000a`60bff750 00007ffc`d7cffcb4     : 0000b9bb`eef11ce8 000001e5`261e0000 00000000`fffffffa 00000000`00000000 : ntdll!RtlpWaitOnCriticalSection+0xfd
-04 0000000a`60bff830 00007ffc`d7cffae2     : 0000000a`60bff8d0 000001e5`2ff56ac0 000001e5`2d2b3e50 00000000`00000000 : ntdll!RtlpEnterCriticalSectionContended+0x1c4
-05 0000000a`60bff890 00007ffc`9609fa57     : 000001e5`2d2b3e00 00007ffc`960a1db0 000001e5`2feed580 00000000`00000000 : ntdll!RtlEnterCriticalSection+0x42
-06 0000000a`60bff8c0 00007ffc`960a0a26     : 000001e5`28c0a7b0 00000000`000003bd 00000000`00000030 000001e5`2d2b3e50 : winmmbase!waveMessage+0x33
-07 0000000a`60bff900 00007ff6`1012e74c     : 00000000`00000000 000001e5`2d2b3e50 00000000`00000000 00007ffc`d7cf5ba1 : winmmbase!waveOutUnprepareHeader+0x76
-08 0000000a`60bff930 00007ffc`960955ff     : 000001e5`2d2b3e50 00007ffc`000003bd 000001e5`26215dd0 000001e5`28c0a7b0 : XXXXXXX!`anonymous namespace'::WaveOutProc+0x5c [C:\Users\user\workspace\XXXXXXX\src\audio\audio_player.cpp @ 109] 
-09 0000000a`60bff980 00007ffc`d1f41043     : 000001e5`2d2d5240 00000000`000003bd 000001e5`28c0a7b0 000001e5`28c3b930 : winmmbase!DriverCallback+0x9f
-0a 0000000a`60bff9c0 00007ffc`d1f4123c     : 000001e5`2d4532d0 000001e5`261e0000 00000000`00000002 00000000`00000000 : msacm32!mapWaveDriverCallback+0x3b
-0b 0000000a`60bffa10 00007ffc`960955ff     : 00000000`00000000 00000000`000003bd 000001e5`2d437a00 00000000`00000000 : msacm32!mapWaveCallback+0x1dc
-0c 0000000a`60bffa40 00007ffc`d1d23ce4     : 000001e5`28c3b930 00000000`00000002 00000000`00000000 00000000`00000808 : winmmbase!DriverCallback+0x9f
-0d 0000000a`60bffa80 00007ffc`d1d235c6     : 000001e5`28c13cd0 00000000`0002b110 00007ffc`d1d5e000 00000000`00000000 : wdmaud!CWaveHandle::Work+0x324
-0e 0000000a`60bffb00 00007ffc`d1d23410     : 000001e5`2d215a60 000001e5`2d215a60 00000000`00000000 00000000`00000000 : wdmaud!CWorker::_ThreadProc+0x186
-0f 0000000a`60bffd80 00007ffc`d6b37614     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : wdmaud!CWorker::_StaticThreadProc+0x40
-10 0000000a`60bffdb0 00007ffc`d7d226b1     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : KERNEL32!BaseThreadInitThunk+0x14
-11 0000000a`60bffde0 00000000`00000000     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : ntdll!RtlUserThreadStart+0x21
-```
+
+{% img /Windows调试技巧案例-播放音频卡死问题/11.jpg %}
 
 发现在audio\_player.cpp的第109行,调用了waveOutUnprepareHeader,在里面传入2d2b3e28给RtlpWaitOnAddress函数去等待这个锁。
 
