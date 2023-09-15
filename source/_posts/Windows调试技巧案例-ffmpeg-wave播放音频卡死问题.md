@@ -75,79 +75,7 @@ tags:
 
 这个问题实际其实只涉及到`callback`和`dshow_read_packet`两个函数:
 
-```c
-static void
-callback(void *priv_data, int index, uint8_t *buf, int buf_size, int64_t time, enum dshowDeviceType devtype)
-{
-    AVFormatContext *s = priv_data;
-    struct dshow_ctx *ctx = s->priv_data;
-    PacketListEntry **ppktl, *pktl_next;
-
-//    dump_videohdr(s, vdhdr);
-
-    WaitForSingleObject(ctx->mutex, INFINITE);
-
-    if(shall_we_drop(s, index, devtype))
-        goto fail;
-
-    pktl_next = av_mallocz(sizeof(*pktl_next));
-    if(!pktl_next)
-        goto fail;
-
-    if(av_new_packet(&pktl_next->pkt, buf_size) < 0) {
-        av_free(pktl_next);
-        goto fail;
-    }
-
-    pktl_next->pkt.stream_index = index;
-    pktl_next->pkt.pts = time;
-    memcpy(pktl_next->pkt.data, buf, buf_size);
-
-    for(ppktl = &ctx->pktl ; *ppktl ; ppktl = &(*ppktl)->next);
-    *ppktl = pktl_next;
-    ctx->curbufsize[index] += buf_size;
-
-    SetEvent(ctx->event[1]);
-    ReleaseMutex(ctx->mutex);
-
-    return;
-fail:
-    ReleaseMutex(ctx->mutex);
-    return;
-}
-```
-
-```c
-static int dshow_read_packet(AVFormatContext *s, AVPacket *pkt)
-{
-    struct dshow_ctx *ctx = s->priv_data;
-    PacketListEntry *pktl = NULL;
-
-    while (!ctx->eof && !pktl) {
-        WaitForSingleObject(ctx->mutex, INFINITE);
-        pktl = ctx->pktl;
-        if (pktl) {
-            *pkt = pktl->pkt;
-            ctx->pktl = ctx->pktl->next;
-            av_free(pktl);
-            ctx->curbufsize[pkt->stream_index] -= pkt->size;
-        }
-        ResetEvent(ctx->event[1]);
-        ReleaseMutex(ctx->mutex);
-        if (!pktl) {
-            if (dshow_check_event_queue(ctx->media_event) < 0) {
-                ctx->eof = 1;
-            } else if (s->flags & AVFMT_FLAG_NONBLOCK) {
-                return AVERROR(EAGAIN);
-            } else {
-                WaitForMultipleObjects(2, ctx->event, 0, INFINITE);
-            }
-        }
-    }
-
-    return ctx->eof ? AVERROR(EIO) : pkt->size;
-}
-```
+{% img /Windows调试技巧案例-播放音频卡死问题/12.jpg %}
 
 `callback`会在工作线程读取音频数据,放到`ctx->pktl`,而`dshow_read_packet`里面的while循环回去判断`ctx->pktl`是否有数据,这里的mutex锁就是为了解决两个线程的同步问题。
 
@@ -155,74 +83,16 @@ static int dshow_read_packet(AVFormatContext *s, AVPacket *pkt)
 
 这个信号量是在`callback`里面填充完成之后通过SetEvent发送的,而由于我们已经把设备拔掉了,所以永远不会有callback的回调,于是`dshow_read_packet`就卡死了。
 
+PS: 这里的链表插入算法和Linus在TED上说的[有品味的链表删除代码](https://riboseyim.gitbook.io/perf/linus#hua-ti-si-lun-pin-wei)有异曲同工之意，大佬的世界果然是类似的
+
 
 ### 解决方案一
 
 解决的方式有两种,一是创建看门狗线程,在读取超时之后手动唤醒:
 
+{% img /Windows调试技巧案例-播放音频卡死问题/13.jpg %}
+
 ```c++
-// 原始的priv_data数据结构
-struct dshow_ctx {
-    const AVClass *class;
-
-    IGraphBuilder *graph;
-
-    char *device_name[2];
-    char *device_unique_name[2];
-
-    int video_device_number;
-    int audio_device_number;
-
-    int   list_options;
-    int   list_devices;
-    int   audio_buffer_size;
-    int   crossbar_video_input_pin_number;
-    int   crossbar_audio_input_pin_number;
-    char *video_pin_name;
-    char *audio_pin_name;
-    int   show_video_device_dialog;
-    int   show_audio_device_dialog;
-    int   show_video_crossbar_connection_dialog;
-    int   show_audio_crossbar_connection_dialog;
-    int   show_analog_tv_tuner_dialog;
-    int   show_analog_tv_tuner_audio_dialog;
-    char *audio_filter_load_file;
-    char *audio_filter_save_file;
-    char *video_filter_load_file;
-    char *video_filter_save_file;
-    int   use_video_device_timestamps;
-
-    IBaseFilter *device_filter[2];
-    IPin        *device_pin[2];
-    DShowFilter *capture_filter[2];
-    DShowPin    *capture_pin[2];
-
-    HANDLE mutex;
-    HANDLE event[2]; /* event[0] is set by DirectShow
-                      * event[1] is set by callback() */
-    PacketListEntry *pktl;
-
-    int eof;
-
-    int64_t curbufsize[2];
-    unsigned int video_frame_num;
-
-    IMediaControl *control;
-    IMediaEvent *media_event;
-
-    enum AVPixelFormat pixel_format;
-    enum AVCodecID video_codec_id;
-    char *framerate;
-
-    int requested_width;
-    int requested_height;
-    AVRational requested_framerate;
-
-    int sample_rate;
-    int sample_size;
-    int channels;
-};
-
 // 计算priv_data数据偏移,去除无用的符号依赖
 struct PrivDataOffsetHelper {
     char* pointer_place_holder[20];
