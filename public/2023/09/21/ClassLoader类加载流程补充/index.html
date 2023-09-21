@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>ClassLoader类加载流程补充 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的时候可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ClassLoader类加载流程补充">
+<meta property="og:url" content="https://blog.islinjw.cn/2023/09/21/ClassLoader类加载流程补充/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的时候可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2023-09-21T00:37:44.070Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ClassLoader类加载流程补充">
+<meta name="twitter:description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的时候可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#findClass流程"><span class="toc-text">findClass流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Tinker热修复原理"><span class="toc-text">Tinker热修复原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#其他热修复方案"><span class="toc-text">其他热修复方案</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Robust"><span class="toc-text">1.Robust:</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-AndFix"><span class="toc-text">2.AndFix</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-ClassLoader类加载流程补充" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">ClassLoader类加载流程补充</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2023.09.21</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>之前写过一篇ClassLoader的<a href="https://blog.islinjw.cn/2017/09/28/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-ClassLoader/">笔记</a>介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。</p>
+<p>最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的时候可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。</p>
+<h1 id="findClass流程"><a href="#findClass流程" class="headerlink" title="findClass流程"></a>findClass流程</h1><p>安卓应用启动后的默认ClassLoader是PathClassLoader,而findClass方法实际是在父类BaseDexClassLoader里面定义的。</p>
+<p>BaseDexClassLoader.findClass里面实际是调用DexPathList.findClass去加载的类:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-platform-13.0.0_r6:libcore/dalvik/src/main/java/dalvik/system/BaseDexClassLoader.java</span></span><br><span class="line">...</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> DexPathList pathList;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; findClass(String name) <span class="keyword">throws</span> ClassNotFoundException &#123;</span><br><span class="line">    ...</span><br><span class="line">    List&lt;Throwable&gt; suppressedExceptions = <span class="keyword">new</span> ArrayList&lt;Throwable&gt;();</span><br><span class="line">    Class c = pathList.findClass(name, suppressedExceptions);</span><br><span class="line">    <span class="keyword">if</span> (c != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> c;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而DexPathList.findClass则是遍历dexElements去调用内部类Element的findClass最终调用DexFile.loadClassBinaryName:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">https:<span class="comment">//cs.android.com/android/platform/superproject/+/android-platform-13.0.0_r6:libcore/dalvik/src/main/java/dalvik/system/DexPathList.java</span></span><br><span class="line">...</span><br><span class="line"><span class="keyword">private</span> Element[] dexElements;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">public</span> Class&lt;?&gt; findClass(String name, List&lt;Throwable&gt; suppressed) &#123;</span><br><span class="line">    <span class="keyword">for</span> (Element element : dexElements) &#123;</span><br><span class="line">        Class&lt;?&gt; clazz = element.findClass(name, definingContext, suppressed);</span><br><span class="line">        <span class="keyword">if</span> (clazz != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> clazz;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Element</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> DexFile dexFile;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">public</span> Class&lt;?&gt; findClass(String name, ClassLoader definingContext,</span><br><span class="line">            List&lt;Throwable&gt; suppressed) &#123;</span><br><span class="line">        <span class="keyword">return</span> dexFile != <span class="keyword">null</span> ? dexFile.loadClassBinaryName(name, definingContext, suppressed)</span><br><span class="line">                : <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而DexFile.loadClassBinaryName最终会调用到DexFile.defineClassNative去到native层解析dex创建类:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-platform-13.0.0_r6:libcore/dalvik/src/main/java/dalvik/system/DexFile.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Class <span class="title">loadClassBinaryName</span><span class="params">(String name, ClassLoader loader, List&lt;Throwable&gt; suppressed)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> defineClass(name, loader, mCookie, <span class="keyword">this</span>, suppressed);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Class <span class="title">defineClass</span><span class="params">(String name, ClassLoader loader, Object cookie,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 DexFile dexFile, List&lt;Throwable&gt; suppressed)</span> </span>&#123;</span><br><span class="line">    Class result = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        result = defineClassNative(name, loader, cookie, dexFile);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoClassDefFoundError e) &#123;</span><br><span class="line">        <span class="keyword">if</span> (suppressed != <span class="keyword">null</span>) &#123;</span><br><span class="line">            suppressed.add(e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">        <span class="keyword">if</span> (suppressed != <span class="keyword">null</span>) &#123;</span><br><span class="line">            suppressed.add(e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> Class <span class="title">defineClassNative</span><span class="params">(String name, ClassLoader loader, Object cookie,</span></span></span><br><span class="line"><span class="function"><span class="params">                                                  DexFile dexFile)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> ClassNotFoundException, NoClassDefFoundError</span>;</span><br></pre></td></tr></table></figure>
+
+<p>可以大概总结为BaseDexClassLoader委托DexPathList去加载类,而DexPathList内部有个Element数组,每个Element代表一个dex文件,DexPathList去加载类的原理则是遍历Element数组,看类在哪个dex可以加载出来。</p>
+<h1 id="Tinker热修复原理"><a href="#Tinker热修复原理" class="headerlink" title="Tinker热修复原理"></a>Tinker热修复原理</h1><p>知道了类加载的流程之后,热修复的原理实际上也比较好理解: 用外部dex创建Element,插入到Element数组最前面。这样的话在findClass的时候就会优先加载外部dex的类,而不是apk内部的类了。</p>
+<p>不过这里还有个小问题,如何用外部dex创建Element?</p>
+<p>答案是我们可以用DexClassLoader加载dex让它帮我们生成Element,然后用反射获取。</p>
+<p>获取到了之后也是比较顺理成章的用反射插入到默认的ClassLoader的pathList的Element数组最前面:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 用DexClassLoader加载外部dex，并获取Element数组</span></span><br><span class="line">val dexClassLoader = DexClassLoader(dexFile.path, context.cacheDir.path, <span class="keyword">null</span>, context.classLoader)</span><br><span class="line">val newPathList = getDeclaredField(dexClassLoader, BaseDexClassLoader::class.java, "pathList")!!</span><br><span class="line">val newDexElements = getDeclaredField(newPathList, <span class="string">"dalvik.system.DexPathList"</span>, <span class="string">"dexElements"</span>)!!</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取进程原本的Element数组</span></span><br><span class="line">val oldPathList = getDeclaredField(context.classLoader, BaseDexClassLoader::class.java, "pathList")!!</span><br><span class="line">val oldDexElements = getDeclaredField(oldPathList, <span class="string">"dalvik.system.DexPathList"</span>, <span class="string">"dexElements"</span>)!!</span><br><span class="line"></span><br><span class="line"><span class="comment">// 合并两个Element数组,把DexClassLoader的Element数组放在前面</span></span><br><span class="line">val combineArray = combineDexArray(newDexElements, oldDexElements)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 修改进程原本的Element数组为合并的新数组</span></span><br><span class="line">setDeclaredField(oldPathList, <span class="string">"dalvik.system.DexPathList"</span>, <span class="string">"dexElements"</span>, combineArray)</span><br></pre></td></tr></table></figure>
+
+<p>完整的代码已经上传到<a href="https://github.com/bluesky466/HotfixDemo" target="_blank" rel="noopener">GitHub</a>,demo里面DemoUtils.getString返回的是”this is a bug”,而我修改成”bug fix”编译出jar之后用dx工具转换成hotfix.dex放到assets:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fun</span> <span class="title">getString</span><span class="params">()</span></span>: String &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"this is a bug"</span></span><br><span class="line">    <span class="comment">// return "bug fix"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在Application.onCreate里面加载这个dex:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> patch = File(cacheDir, HOTFIX_DEX)</span><br><span class="line">assets.<span class="keyword">open</span>(HOTFIX_DEX).use &#123; src -&gt;</span><br><span class="line">    patch.outputStream().use &#123; dest -&gt;</span><br><span class="line">        FileUtils.copy(src, dest)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">PatchLoader.loadPatch(<span class="keyword">this</span>, patch)</span><br></pre></td></tr></table></figure>
+
+<p>最终在MainActivity里面读取出来的就是修复后的”bug fix”:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">findViewById&lt;TextView&gt;(R.id.label).text = DemoUtils.getString()</span><br></pre></td></tr></table></figure>
+
+<p>Tinker的核心原理就是这样的。不过这里还有个细节就是外部dex的加载是在Application里面执行的,单如果需要修复Application的bug怎么办?</p>
+<p>它的解决方法是把Applcation的逻辑都挪到ApplicationLike里面,由Tinker加载完dex之后再在Application去调用ApplicationLike的生命周期回调。</p>
+<h1 id="其他热修复方案"><a href="#其他热修复方案" class="headerlink" title="其他热修复方案"></a>其他热修复方案</h1><p>除了修改Element数组方案之外还有其他的热修复方案可以参考下。</p>
+<h2 id="1-Robust"><a href="#1-Robust" class="headerlink" title="1.Robust:"></a>1.<a href="https://tech.meituan.com/2017/03/17/android-autopatch.html" target="_blank" rel="noopener">Robust</a>:</h2><p>使用插桩技术在每个类的每个方法最前面插入判断代码,如果有加载外部dex就反射执行外部dex对应的方法然后返回:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DemoClass</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 插桩生成</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> ChangeQuickRedirect changeQuickRedirect;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">foo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    	<span class="comment">// 插桩生成</span></span><br><span class="line">        <span class="keyword">if</span> (changeQuickRedirect != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// 使用changeQuickRedirect去调用外部dex里面的DemoClass.foo方法</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-AndFix"><a href="#2-AndFix" class="headerlink" title="2.AndFix"></a>2.AndFix</h2><p>从前面Tinker的原理我们可以看到类最终是由DexFile.defineClassNative在native层加载的,实际上java层的类和方法会对应native层的一堆指针,阿里的AndFix就是直接在native层把旧类的指针直接替换成外部dex新类的指针。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
