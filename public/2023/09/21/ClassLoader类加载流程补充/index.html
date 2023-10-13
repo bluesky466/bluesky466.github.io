@@ -15,18 +15,18 @@
     <meta name="keywords" content="技术相关,Android,">
   
 
-  <meta name="description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的时候可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安">
+  <meta name="description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的是可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安卓">
 <meta name="keywords" content="技术相关,Android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ClassLoader类加载流程补充">
 <meta property="og:url" content="https://blog.islinjw.cn/2023/09/21/ClassLoader类加载流程补充/index.html">
 <meta property="og:site_name" content="编程代码笔记">
-<meta property="og:description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的时候可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安">
+<meta property="og:description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的是可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安卓">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2023-09-21T00:37:44.070Z">
+<meta property="og:updated_time" content="2023-10-13T00:27:47.075Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ClassLoader类加载流程补充">
-<meta name="twitter:description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的时候可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安">
+<meta name="twitter:description" content="之前写过一篇ClassLoader的笔记介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。 最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的是可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。 findClass流程安卓">
 
   
     <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
@@ -178,7 +178,7 @@
   <div class="article-content">
     
       <p>之前写过一篇ClassLoader的<a href="https://blog.islinjw.cn/2017/09/28/Android%E6%B8%A9%E6%95%85%E8%80%8C%E7%9F%A5%E6%96%B0-ClassLoader/">笔记</a>介绍了如何用ClassLoader去加载外部dex包,但是那个场景更多是插件化的场景,主要讲的是双亲委托的流程。</p>
-<p>最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的时候可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。</p>
+<p>最近的项目里面涉及到了一点热修复的需求,如果用插件化的做法新增接口层或者改用反射调用代价比较大,更希望的是可以用外部dex的类直接替换apk内部的类。整个原理也比较简单,这里先把之前漏讲的findClass流程讲一下。</p>
 <h1 id="findClass流程"><a href="#findClass流程" class="headerlink" title="findClass流程"></a>findClass流程</h1><p>安卓应用启动后的默认ClassLoader是PathClassLoader,而findClass方法实际是在父类BaseDexClassLoader里面定义的。</p>
 <p>BaseDexClassLoader.findClass里面实际是调用DexPathList.findClass去加载的类:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-platform-13.0.0_r6:libcore/dalvik/src/main/java/dalvik/system/BaseDexClassLoader.java</span></span><br><span class="line">...</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> DexPathList pathList;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; findClass(String name) <span class="keyword">throws</span> ClassNotFoundException &#123;</span><br><span class="line">    ...</span><br><span class="line">    List&lt;Throwable&gt; suppressedExceptions = <span class="keyword">new</span> ArrayList&lt;Throwable&gt;();</span><br><span class="line">    Class c = pathList.findClass(name, suppressedExceptions);</span><br><span class="line">    <span class="keyword">if</span> (c != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> c;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
