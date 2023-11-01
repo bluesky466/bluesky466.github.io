@@ -237,7 +237,7 @@ private boolean applyOomAdjLSP(ProcessRecord app, boolean doingAll, long now,
 }
 ```
 
-updateAppFreezeStateLSP里面判断adj > CACHED\_APP\_MIN\_ADJ(900)的时候就会去调用freezeAppAsyncLSP, 进程的adj在900 ~ 999代表它只有不可见的activity,可以随时被干掉,所以我们去冻结它也不会有影响:
+updateAppFreezeStateLSP里面判断adj >= CACHED\_APP\_MIN\_ADJ(900)的时候就会去调用freezeAppAsyncLSP, 进程的adj在900 ~ 999代表它只有不可见的activity,可以随时被干掉,所以我们去冻结它也不会有影响:
 
 ```java
 // https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/am/OomAdjuster.java
