@@ -313,7 +313,7 @@ private void freezeProcess(final ProcessRecord proc) {
 public static final native void setProcessFrozen(int pid, int uid, boolean frozen);
 ```
 
-总结一下就是,如果进程的oom adj大于CACHED\_APP\_MIN\_ADJ,就会启动一个10分钟的定时器,在10分钟之内如果进程的oom adj一直没有变化就会冻结进程。
+总结一下就是,如果进程的oom adj大于CACHED\_APP\_MIN\_ADJ,就会启动一个10分钟的定时器,在10分钟之内如果进程的oom adj一直没有变回小于CACHED\_APP\_MIN\_ADJ就会冻结进程。
 
 ## 解冻流程
 
@@ -328,27 +328,18 @@ void setState(State state, String reason) {
     switch (state) {
         ...
         case STARTED:
-            // Update process info while making an activity from invisible to visible, to make
-            // sure the process state is updated to foreground.
-            if (app != null) {
-                app.updateProcessInfo(false /* updateServiceConnectionActivities */,
-                        true /* activityChange */, true /* updateOomAdj */,
-                        true /* addPendingTopUid */);
-            }
-            final ContentCaptureManagerInternal contentCaptureService =
-                    LocalServices.getService(ContentCaptureManagerInternal.class);
-            if (contentCaptureService != null) {
-                contentCaptureService.notifyActivityEvent(mUserId, mActivityComponent,
-                        ActivityEvent.TYPE_ACTIVITY_STARTED);
-            }
-            break;
+            ...
+            app.updateProcessInfo(false /* updateServiceConnectionActivities */,
+                    true /* activityChange */, true /* updateOomAdj */,
+                    true /* addPendingTopUid */);
+            ...
         ...
     }
     ...
 }
 ```
 
-最终也是会去到OomAdjuster.updateAppFreezeStateLSP,调用链路在上面的冻结流程里面已经追过,这里就省略了。可以看到如果adj小于CACHED\_APP\_MIN\_ADJ怎会嗲用CachedAppOptimizer.unfreezeAppLSP进行解冻:
+最终也是会去到OomAdjuster.updateAppFreezeStateLSP,调用链路在上面的冻结流程里面已经追过,这里就省略了。可以看到如果adj小于CACHED\_APP\_MIN\_ADJ就会调用CachedAppOptimizer.unfreezeAppLSP进行解冻:
 
 
 ```java
