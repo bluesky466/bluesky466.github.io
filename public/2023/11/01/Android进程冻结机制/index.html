@@ -24,7 +24,7 @@
 <meta property="og:description" content="奇怪的ANR今天遇到了个很有意思的anr问题, 应用出现了anr: 127696:08-29 14:12:59.564898  7904  8341 I WindowManager: ANR in Window&amp;#123;3b0709 u0 me.linjw.demo.anr&amp;#125;. Reason:3b0709 me.linjw.demo.anr (server) is not respon">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/Aov9B4bLK79CBiaiooofL4X9BIufogzKKaWiLe09ka34k8eXQb-is_TyxxgdwsOzcxxjwSmLEazx6vzsjBsSDF_fXBwdRRkVxvxyOl_ivokwmMOu5wK2DOLavgOMmVG_xLZmSkOIk7wmCfVKd5HqPUX6kHMbfbQbmbsnV35G1P9qQ5uQH05Nj5QiWcvAVdcUhXs67z3u2hf0DKXkLB1IoC_FLKXCoLAmirLmTdJsS7M9Tmm8YFVrz8jtTF7YGbOBqWjn550R8XGwDd11HK4AOCu2Ae47Cj0BHILFzkv_kcywt3eRRBR1DODC0deBmtgaS4DnGrihwPOXcmMr3m00">
-<meta property="og:updated_time" content="2023-11-01T12:40:03.297Z">
+<meta property="og:updated_time" content="2023-11-02T09:56:11.273Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android进程冻结机制">
 <meta name="twitter:description" content="奇怪的ANR今天遇到了个很有意思的anr问题, 应用出现了anr: 127696:08-29 14:12:59.564898  7904  8341 I WindowManager: ANR in Window&amp;#123;3b0709 u0 me.linjw.demo.anr&amp;#125;. Reason:3b0709 me.linjw.demo.anr (server) is not respon">
@@ -189,7 +189,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">08-29 14:11:45.807967 26859 27815 V MessageEncoder: ... // 正常执行任务的打印</span><br><span class="line">08-29 14:11:45.809835 26859 26859 D FloatView: ... // 正常执行任务的打印,任务没有执行完,后面应该还有打印但实际没有</span><br><span class="line">08-29 14:11:45.884625  7904  8331 D ActivityManager: freezing 26859 me.linjw.demo.anr</span><br><span class="line">08-29 14:11:45.885503  7904  8331 I am_freeze: [26859,me.linjw.demo.anr]</span><br><span class="line">08-29 14:12:59.660658  7904 27946 I am_anr  : [0,26859,me.linjw.demo.anr,545832517,Input dispatching timed out (3b0709 me.linjw.demo.anr (server) is not responding. Waited 5001ms for FocusEvent(hasFocus=false))]</span><br></pre></td></tr></table></figure>
 
 <p>由于进程被冻结了,所以处理不了Input消息所以anr,由于进程被冻结了,所以anr的时候让进程去dump堆栈的请求也不会被处理。</p>
-<h1 id="Freeze"><a href="#Freeze" class="headerlink" title="Freeze"></a>Freeze</h1><p>很多的进程在退出前台之后会长期在后台占用内存、cpu,影响用户体验。在内存不足的时候会触发lmk清除内存,但是如果内存充足的情况下为了加速应用的切换速度,是不会杀死后台进程的。为了解决应用在后台默默消化cpu资源的问题,高版本的安卓实现了一套冻结进程的机制。</p>
+<h1 id="Freeze"><a href="#Freeze" class="headerlink" title="Freeze"></a>Freeze</h1><p>很多的进程在退出前台之后会长期在后台占用内存、cpu,影响用户体验。在内存不足的时候会触发lmk清除内存,但是如果内存充足的情况下为了加速应用的切换速度,是不会杀死后台进程的。为了解决应用在后台默默消化cpu资源的问题,高版本的安卓实现了一套<a href="https://source.android.com/docs/core/perf/cached-apps-freezer?hl=zh-cn" target="_blank" rel="noopener">冻结进程机制</a>,在Android 11以后支持。</p>
 <p>我们可以在开发者选项里面找到”Suspend execution for cached apps”条目去控制后台进程冻结功能的开关,也可以用命令去控制:</p>
 <blockquote>
 <p>adb shell settings put global cached_apps_freezer &lt;enabled|disabled|default&gt;</p>
