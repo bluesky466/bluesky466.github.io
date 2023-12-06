@@ -135,14 +135,14 @@ class InvokerTest {
 
     @Test
     fun testNoParamFun() {
-        // 配置调用context.getFilesDir()返回File("/data/user/0/com.cvte.udi.proxy/files")
-        every { context.filesDir } returns File("/data/user/0/com.cvte.udi.proxy/files")
+        // 配置调用context.getFilesDir()返回File("/data/user/0/me.linjw.demo/files")
+        every { context.filesDir } returns File("/data/user/0/me.linjw.demo/files")
 
         // 实际调用我们需要测试的方法
         val path = invoker.invoke("context.getFilesDir().getAbsolutePath()")
 
         // 校验测试方法的返回值是否如预期
-        assertEquals("/data/user/0/com.cvte.udi.proxy/files", path)
+        assertEquals("/data/user/0/me.linjw.demo/files", path)
     }
 }
 ```
