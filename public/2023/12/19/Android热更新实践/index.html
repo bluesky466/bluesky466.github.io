@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android热更新实践 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="前段时间一个小工具使用往ClassLoader的DexPathList的Element数组前面插入热修复dex的方式实现了热加载外部代码。 但是偶然发现安卓会有预加载class的机制,在插入Element数组之前就已经把class预加载到ClassLoader,不会再加载外部dex的class。 在网上搜索了下发现Tinker在AndroidN上就遇到过,还输出了技术文档。总结下如果我修复这个问题">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android热更新实践">
+<meta property="og:url" content="https://blog.islinjw.cn/2023/12/19/Android热更新实践/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="前段时间一个小工具使用往ClassLoader的DexPathList的Element数组前面插入热修复dex的方式实现了热加载外部代码。 但是偶然发现安卓会有预加载class的机制,在插入Element数组之前就已经把class预加载到ClassLoader,不会再加载外部dex的class。 在网上搜索了下发现Tinker在AndroidN上就遇到过,还输出了技术文档。总结下如果我修复这个问题">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/S_GDLj2rKt1CBiaiooof3CaeIarCqNCiACZ9J4uioSpFWuWeM2aaPgRaA1GdPwIcbEQaEWC5IrA3KulACfDJkGZg1jhW0JIYE3KlnJUrk3WnFPNB0zDQe8gCnBmKDDC1">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/IqmgBYbAJ2vHICv9B2vMSCxFAqcjAE52uOKN9HOKf1Of09cfUIbmOOLgBWKWq8NpSvqIYrEvQg6Q7GiASZAJ4qioy_FGTK8DHBN5CxSW1wSLGQd5-QL5oQd52hbm9j0cD0VgsY4R1W00">
+<meta property="og:updated_time" content="2023-12-19T12:09:16.797Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android热更新实践">
+<meta name="twitter:description" content="前段时间一个小工具使用往ClassLoader的DexPathList的Element数组前面插入热修复dex的方式实现了热加载外部代码。 但是偶然发现安卓会有预加载class的机制,在插入Element数组之前就已经把class预加载到ClassLoader,不会再加载外部dex的class。 在网上搜索了下发现Tinker在AndroidN上就遇到过,还输出了技术文档。总结下如果我修复这个问题">
+<meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/S_GDLj2rKt1CBiaiooof3CaeIarCqNCiACZ9J4uioSpFWuWeM2aaPgRaA1GdPwIcbEQaEWC5IrA3KulACfDJkGZg1jhW0JIYE3KlnJUrk3WnFPNB0zDQe8gCnBmKDDC1">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Application代码替换"><span class="toc-text">Application代码替换</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#四大组件代码替换"><span class="toc-text">四大组件代码替换</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#so库替换"><span class="toc-text">so库替换</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#资源替换"><span class="toc-text">资源替换</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android热更新实践" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android热更新实践</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2023.12.19</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>前段时间一个小工具使用<a href="https://blog.islinjw.cn/2023/09/21/ClassLoader%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B%E8%A1%A5%E5%85%85/">往ClassLoader的DexPathList的Element数组前面插入热修复dex</a>的方式实现了热加载外部代码。</p>
+<p>但是偶然发现安卓会有预加载class的机制,在插入Element数组之前就已经把class预加载到ClassLoader,不会再加载外部dex的class。</p>
+<p>在网上搜索了下发现Tinker在AndroidN上就遇到过,还输出了<a href="https://github.com/WeMobileDev/article/blob/master/Android_N%E6%B7%B7%E5%90%88%E7%BC%96%E8%AF%91%E4%B8%8E%E5%AF%B9%E7%83%AD%E8%A1%A5%E4%B8%81%E5%BD%B1%E5%93%8D%E8%A7%A3%E6%9E%90.md" target="_blank" rel="noopener">技术文档</a>。总结下如果我修复这个问题可以用下面的方式:</p>
+<ol>
+<li>直接导入Tinker</li>
+<li>将热加载相关的代码抽离出一个最小dex,在启动的时候只加载这个dex其他类都通过这个dex里面的逻辑通过ClassLoader去动态加载</li>
+<li>运行时直接替换ClassLoader为我们自定义的ClassLoader</li>
+</ol>
+<p>由于Tinker有一定的接入成本,有很多我们不需要的功能和安卓版本的适配逻辑,最小dex的方式实现起来又比较复杂。加上我们并不是需要在线热更新,只是为了提升不可remount的量产软件的调试效率,所以选择了第三种方案。实际实现起来加上各种配置需求和注释总共也就300来行代码。</p>
+<h1 id="Application代码替换"><a href="#Application代码替换" class="headerlink" title="Application代码替换"></a>Application代码替换</h1><p>替换ClassLoader的思想很简单,如果我的Application是由自定义ClassLoader加载的,那么它所用的的所有类也会由自定义ClassLoader加载。于是我们只需要定义一个包含Application各种可重写方法的ApplicationLike类替代原生的Application,然后在HotfixApplication使用自定义ClassLoader去加载调用它即可:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationLike</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">attachBaseContext</span><span class="params">(Context base)</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onTerminate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onConfigurationChanged</span><span class="params">(Configuration newConfig)</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onLowMemory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onTrimMemory</span><span class="params">(<span class="keyword">int</span> level)</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HotfixApplication</span> <span class="keyword">extends</span> <span class="title">Application</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Object mApplicationLike = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">attachBaseContext</span><span class="params">(Context base)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.attachBaseContext(base);</span><br><span class="line">        mApplicationLike = loadFromHotfix();</span><br><span class="line">        invokeApplicationLike("attachBaseContext", new Class&lt;?&gt;[]&#123;Context.class&#125;, new Object[]&#123;base&#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate();</span><br><span class="line">        invokeApplicationLike(<span class="string">"onCreate"</span>, <span class="keyword">new</span> Class&lt;?&gt;[]&#123;&#125;, <span class="keyword">new</span> Object[]&#123;&#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onTerminate</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onTerminate();</span><br><span class="line">        invokeApplicationLike(<span class="string">"onTerminate"</span>, <span class="keyword">new</span> Class&lt;?&gt;[]&#123;&#125;, <span class="keyword">new</span> Object[]&#123;&#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onConfigurationChanged</span><span class="params">(Configuration newConfig)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onConfigurationChanged(newConfig);</span><br><span class="line">        invokeApplicationLike("onConfigurationChanged", new Class&lt;?&gt;[]&#123;Configuration.class&#125;, new Object[]&#123;newConfig&#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onLowMemory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onLowMemory();</span><br><span class="line">        invokeApplicationLike(<span class="string">"onLowMemory"</span>, <span class="keyword">new</span> Class&lt;?&gt;[]&#123;&#125;, <span class="keyword">new</span> Object[]&#123;&#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onTrimMemory</span><span class="params">(<span class="keyword">int</span> level)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onTrimMemory(level);</span><br><span class="line">        invokeApplicationLike(<span class="string">"onTrimMemory"</span>, <span class="keyword">new</span> Class&lt;?&gt;[]&#123;Integer.TYPE&#125;, <span class="keyword">new</span> Object[]&#123;level&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="四大组件代码替换"><a href="#四大组件代码替换" class="headerlink" title="四大组件代码替换"></a>四大组件代码替换</h1><p>但是这样会有个问题,虽然ApplicationLike使用的是热更新的代码,但四大组件是由安卓用默认的ClassLoader去加载使用的原本的代码,这样就造成Application和四大组件的ClassLoader不一致出现各种意料之外的问题。所以我们需要将默认的ClassLoader也替换成我们的自定义ClassLoader。</p>
+<p>我看了下<a href="https://github.com/Tencent/tinker/blob/978005e3826db4cfca9868e2035f871d348ca20e/tinker-android/tinker-android-loader/src/main/java/com/tencent/tinker/loader/NewClassLoaderInjector.java#L126" target="_blank" rel="noopener">Tinker的实现</a>发现在我们的安卓13的平台上并没有生效,应该不止这里还有其他的地方需要配合。由于Tinker代码比较多暂时没有找到还有哪些地方需要配合修改,于是我正向从安卓源码去分析看可以在哪里hook替换。</p>
+<p>以Service为例子,当AMS需要启动应用的Service的时候都会通过aidl调用到应用进程的ActivityThread.ApplicationThread.scheduleCreateService,然后应用在里面通过handler同步到主线程去调用handleCreateService:</p>
+<img src="http://www.plantuml.com/plantuml/svg/S_GDLj2rKt1CBiaiooof3CaeIarCqNCiACZ9J4uioSpFWuWeM2aaPgRaA1GdPwIcbEQaEWC5IrA3KulACfDJkGZg1jhW0JIYE3KlnJUrk3WnFPNB0zDQe8gCnBmKDDC1">
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/app/ActivityThread.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ActivityThread</span> <span class="keyword">extends</span> <span class="title">ClientTransactionHandler</span></span></span><br><span class="line"><span class="class">        <span class="keyword">implements</span> <span class="title">ActivityThreadInternal</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationThread</span> <span class="keyword">extends</span> <span class="title">IApplicationThread</span>.<span class="title">Stub</span> </span>&#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">scheduleCreateService</span><span class="params">(IBinder token,</span></span></span><br><span class="line"><span class="function"><span class="params">		        ServiceInfo info, CompatibilityInfo compatInfo, <span class="keyword">int</span> processState)</span> </span>&#123;</span><br><span class="line">		    updateProcessState(processState, <span class="keyword">false</span>);</span><br><span class="line">		    CreateServiceData s = <span class="keyword">new</span> CreateServiceData();</span><br><span class="line">		    s.token = token;</span><br><span class="line">		    s.info = info;</span><br><span class="line">		    s.compatInfo = compatInfo;</span><br><span class="line"></span><br><span class="line">		    sendMessage(H.CREATE_SERVICE, s);</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	<span class="class"><span class="keyword">class</span> <span class="title">H</span> <span class="keyword">extends</span> <span class="title">Handler</span> </span>&#123;</span><br><span class="line">		...</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>&#123;</span><br><span class="line">			...</span><br><span class="line">				<span class="keyword">case</span> CREATE_SERVICE:</span><br><span class="line">		            <span class="keyword">if</span> (Trace.isTagEnabled(Trace.TRACE_TAG_ACTIVITY_MANAGER)) &#123;</span><br><span class="line">		                Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER,</span><br><span class="line">		                        (<span class="string">"serviceCreate: "</span> + String.valueOf(msg.obj)));</span><br><span class="line">		            &#125;</span><br><span class="line">		            handleCreateService((CreateServiceData)msg.obj);</span><br><span class="line">		            Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);</span><br><span class="line">		            <span class="keyword">break</span>;</span><br><span class="line">			...</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>handleCreateService内会在mPackages里面根据包名获取缓存的LoadedApk,然后使用getClassLoader获取ClassLoader去实例化Service:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> ArrayMap&lt;String, WeakReference&lt;LoadedApk&gt;&gt; mPackages = <span class="keyword">new</span> ArrayMap&lt;&gt;();</span><br><span class="line">...</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">handleCreateService</span><span class="params">(CreateServiceData data)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    LoadedApk packageInfo = getPackageInfoNoCheck(</span><br><span class="line">            data.info.applicationInfo, data.compatInfo);</span><br><span class="line">    Service service = <span class="keyword">null</span>;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">final</span> java.lang.ClassLoader cl;</span><br><span class="line">    <span class="keyword">if</span> (data.info.splitName != <span class="keyword">null</span>) &#123;</span><br><span class="line">        cl = packageInfo.getSplitClassLoader(data.info.splitName);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        cl = packageInfo.getClassLoader();</span><br><span class="line">    &#125;</span><br><span class="line">    service = packageInfo.getAppFactory()</span><br><span class="line">            .instantiateService(cl, data.info.name, data.intent);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> LoadedApk <span class="title">getPackageInfoNoCheck</span><span class="params">(ApplicationInfo ai,</span></span></span><br><span class="line"><span class="function"><span class="params">        CompatibilityInfo compatInfo)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> getPackageInfo(ai, compatInfo, <span class="keyword">null</span>, <span class="keyword">false</span>, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="function"><span class="keyword">private</span> LoadedApk <span class="title">getPackageInfo</span><span class="params">(ApplicationInfo aInfo, CompatibilityInfo compatInfo,</span></span></span><br><span class="line"><span class="function"><span class="params">            ClassLoader baseLoader, <span class="keyword">boolean</span> securityViolation, <span class="keyword">boolean</span> includeCode,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">boolean</span> registerPackage)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> getPackageInfo(aInfo, compatInfo, baseLoader, securityViolation, includeCode,</span><br><span class="line">            registerPackage, <span class="comment">/*isSdkSandbox=*/</span><span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="function"><span class="keyword">private</span> LoadedApk <span class="title">getPackageInfo</span><span class="params">(ApplicationInfo aInfo, CompatibilityInfo compatInfo,</span></span></span><br><span class="line"><span class="function"><span class="params">        ClassLoader baseLoader, <span class="keyword">boolean</span> securityViolation, <span class="keyword">boolean</span> includeCode,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">boolean</span> registerPackage, <span class="keyword">boolean</span> isSdkSandbox)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">boolean</span> differentUser = (UserHandle.myUserId() != UserHandle.getUserId(aInfo.uid));</span><br><span class="line">    <span class="keyword">synchronized</span> (mResourcesManager) &#123;</span><br><span class="line">        WeakReference&lt;LoadedApk&gt; ref;</span><br><span class="line">        <span class="keyword">if</span> (differentUser || isSdkSandbox) &#123;</span><br><span class="line">            <span class="comment">// Caching not supported across users and for sdk sandboxes</span></span><br><span class="line">            ref = <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (includeCode) &#123;</span><br><span class="line">            ref = mPackages.get(aInfo.packageName);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ref = mResourcePackages.get(aInfo.packageName);</span><br><span class="line">        &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以我们只需要hook替换掉自身包名的LoadedApk的ClassLoader即可,注意自定义ClassLoader的父ClassLoader<strong>不能</strong>设置成原ClassLoader,而应该设置成原ClassLoader的父ClassLoader,要不然自定义的ClassLoader不会生效:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">loadHotfixClassLoader</span><span class="params">(Application context, File hotfixApk)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    sHotfixClassLoader = <span class="keyword">new</span> PathClassLoader(</span><br><span class="line">            hotfixApk.getAbsolutePath(),</span><br><span class="line">            libraryPathBuilder.toString(),</span><br><span class="line">            ClassLoader.getSystemClassLoader());</span><br><span class="line">    Class&lt;?&gt; activityThreadClass = Class.forName(<span class="string">"android.app.ActivityThread"</span>);</span><br><span class="line">    Field threadField = activityThreadClass.getDeclaredField(<span class="string">"sCurrentActivityThread"</span>);</span><br><span class="line">    threadField.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">    Object sCurrentActivityThread = threadField.get(<span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">    Field packagesField = activityThreadClass.getDeclaredField(<span class="string">"mPackages"</span>);</span><br><span class="line">    packagesField.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">    sLoadedApk = ((Map&lt;String, WeakReference&lt;LoadedApk&gt;&gt;) packagesField.get(sCurrentActivityThread))</span><br><span class="line">            .get(context.getPackageName())</span><br><span class="line">            .get();</span><br><span class="line"></span><br><span class="line">    Field classLoaderField = LoadedApk.class.getDeclaredField("mClassLoader");</span><br><span class="line">    classLoaderField.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">    classLoaderField.set(sLoadedApk, sHotfixClassLoader);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="so库替换"><a href="#so库替换" class="headerlink" title="so库替换"></a>so库替换</h1><p>创建自定义的PathClassLoader的时候需要将原本的so加载路径传给自定义的ClassLoader,要不然复用不了原本的so,当热修复目录没有so的时候报会找不到so的异常。然后我们将热修复目录插到so加载目录的最前面,优先从此处加载so:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> List&lt;File&gt; <span class="title">getOriginNativeLibraryDirectories</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        ClassLoader oldClassLoader = HotfixUtils<span class="class">.<span class="keyword">class</span>.<span class="title">getClassLoader</span>()</span>;</span><br><span class="line">        <span class="keyword">final</span> Field pathListField = findField(</span><br><span class="line">                Class.forName(<span class="string">"dalvik.system.BaseDexClassLoader"</span>, <span class="keyword">false</span>, oldClassLoader),</span><br><span class="line">                <span class="string">"pathList"</span>);</span><br><span class="line">        <span class="keyword">final</span> Object oldPathList = pathListField.get(oldClassLoader);</span><br><span class="line">        <span class="keyword">final</span> Field nativeLibraryDirectoriesField = findField(oldPathList.getClass(), <span class="string">"nativeLibraryDirectories"</span>);</span><br><span class="line">        <span class="keyword">return</span> (List&lt;File&gt;) nativeLibraryDirectoriesField.get(oldPathList);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">        Log.e(Contract.TAG, <span class="string">"getOriginNativeLibraryDirectories failed"</span>, t);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">loadHotfixClassLoader</span><span class="params">(Application context, File hotfixApk)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        List&lt;File&gt; libDirs = getOriginNativeLibraryDirectories(); <span class="comment">// 获取原ClassLoader的so加载目录</span></span><br><span class="line">        libDirs.add(<span class="number">0</span>, hotfixApk.getParentFile()); <span class="comment">// 将热修复目录插到第一个so加载目录,优先从此处加载so</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 生成so加载路径参数用于后面创建自定义PathClassLoader</span></span><br><span class="line">        <span class="keyword">final</span> StringBuilder libraryPathBuilder = <span class="keyword">new</span> StringBuilder();</span><br><span class="line">        <span class="keyword">boolean</span> isFirstItem = <span class="keyword">true</span>;</span><br><span class="line">        <span class="keyword">for</span> (File libDir : libDirs) &#123;</span><br><span class="line">            <span class="keyword">if</span> (libDir == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (isFirstItem) &#123;</span><br><span class="line">                isFirstItem = <span class="keyword">false</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                libraryPathBuilder.append(File.pathSeparator);</span><br><span class="line">            &#125;</span><br><span class="line">            libraryPathBuilder.append(libDir.getAbsolutePath());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        sHotfixClassLoader = <span class="keyword">new</span> PathClassLoader(</span><br><span class="line">                hotfixApk.getAbsolutePath(),</span><br><span class="line">                libraryPathBuilder.toString(),</span><br><span class="line">                ClassLoader.getSystemClassLoader());</span><br><span class="line">        ...</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">        Log.e(Contract.TAG, <span class="string">"loadHotfixClassLoader failed"</span>, t);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另外由于打开了seliunx的时候不允许system app从其他路径加载so,所以需要热更新so的时候需要用’setenforce 0’关闭selinux:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">12-18 01:22:28.928 15724 15724 W binder:15724_3: type=1400 audit(0.0:47690): avc: denied &#123; execute &#125; for path="/data/data/me.linjw.demo.hotfix/cache/libnative.so" dev="dm-37" ino=66339 scontext=u:r:system_app:s0 tcontext=u:object_r:system_app_data_file:s0 tclass=file permissive=0</span><br><span class="line">12-18 01:22:28.934 15724 15739 E AndroidRuntime: FATAL EXCEPTION: binder:15724_3</span><br><span class="line">12-18 01:22:28.934 15724 15739 E AndroidRuntime: Process: me.linjw.demo.hotfix, PID: 15724</span><br><span class="line">12-18 01:22:28.934 15724 15739 E AndroidRuntime: java.lang.UnsatisfiedLinkError: dlopen failed: couldn't map "/data/data/me.linjw.demo.hotfix/cache/libnative.so" segment 1: Permission denied</span><br></pre></td></tr></table></figure>
+
+<h1 id="资源替换"><a href="#资源替换" class="headerlink" title="资源替换"></a>资源替换</h1><p>我们可以<a href="https://blog.islinjw.cn/2017/08/01/%E5%AE%89%E5%8D%93%E7%9A%AE%E8%82%A4%E5%8C%85%E6%9C%BA%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86/#%E6%96%B9%E6%B3%95%E4%BA%8C">使用AssetManager创建外部apk的Resources</a>用于加载外部apk的资源:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Resources <span class="title">loadHotfixResources</span><span class="params">(Context context, File hotfixApk)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Method method = AssetManager.class.getDeclaredMethod("addAssetPath", String.class);</span><br><span class="line">        AssetManager assetManager = AssetManager<span class="class">.<span class="keyword">class</span>.<span class="title">newInstance</span>()</span>;</span><br><span class="line">        method.invoke(assetManager, hotfixApk.getAbsolutePath());</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Resources(</span><br><span class="line">                assetManager,</span><br><span class="line">                context.getResources().getDisplayMetrics(),</span><br><span class="line">                context.getResources().getConfiguration()</span><br><span class="line">        );</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">        Log.e(Contract.TAG, <span class="string">"loadHotfixResources failed "</span>, t);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>插件化里面可能会直接使用这个Resources去获取资源,但是这里为了减少接入方的工作量,会考虑直接替换掉原本进程的Resources。这样一来不需要修改任何业务代码就能实现运行的时候加载的是外部apk的资源。</p>
+<p>以Application为例子,它的资源最终都是从mBase这个ContextImpl的mResources获取的:</p>
+<img src="http://www.plantuml.com/plantuml/svg/IqmgBYbAJ2vHICv9B2vMSCxFAqcjAE52uOKN9HOKf1Of09cfUIbmOOLgBWKWq8NpSvqIYrEvQg6Q7GiASZAJ4qioy_FGTK8DHBN5CxSW1wSLGQd5-QL5oQd52hbm9j0cD0VgsY4R1W00">
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/content/Context.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Context</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> Resources <span class="title">getResources</span><span class="params">()</span></span>;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> String <span class="title">getString</span><span class="params">(@StringRes <span class="keyword">int</span> resId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> getResources().getString(resId);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/app/Application.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Application</span> <span class="keyword">extends</span> <span class="title">ContextWrapper</span> <span class="keyword">implements</span> <span class="title">ComponentCallbacks2</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/content/ContextWrapper.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ContextWrapper</span> <span class="keyword">extends</span> <span class="title">Context</span> </span>&#123;</span><br><span class="line">    <span class="meta">@UnsupportedAppUsage</span></span><br><span class="line">    Context mBase;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Resources <span class="title">getResources</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mBase.getResources();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/app/ContextImpl.java</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ContextImpl</span> <span class="keyword">extends</span> <span class="title">Context</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">private</span> <span class="meta">@NonNull</span> Resources mResources;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Resources <span class="title">getResources</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mResources;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以我们通过反射将HotfixResources替换给Application,就能实现在Application里面获取的资源都是外部包的资源:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">replaceResource</span><span class="params">(Application context)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (sResources == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Field fieldBase = ContextWrapper.class.getDeclaredField("mBase");</span><br><span class="line">        fieldBase.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">        Object base = fieldBase.get(context);</span><br><span class="line">        Field fieldResources = Class.forName(<span class="string">"android.app.ContextImpl"</span>).getDeclaredField(<span class="string">"mResources"</span>);</span><br><span class="line">        fieldResources.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">        fieldResources.set(base, sResources);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">        Log.e(Contract.TAG, <span class="string">"replaceResource failed"</span>, t);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>四大组件也是类似的hook创建流程替换Resources,这里就不详细讲解了。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
