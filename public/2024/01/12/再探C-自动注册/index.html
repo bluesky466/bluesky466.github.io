@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>再探C++自动注册 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,C++,">
+  
+
+  <meta name="description" content="最近的c++项目里面需要使用配置文件配置的值去决定运行时具体实例化的类。如果是java或者kotlin直接使用反射去创建就好,但是c++里没有类似的东西所以只能通过一些取巧的方式实现。 早年间有研究过GTest的测试用例注册机制,其原理是利用类的静态成员变量在初始化的时候在它构造函数里面执行注册代码。 包括我们部门现在更常用的Catch2也是类似的,只不过它用的是全局的Catch::AutoReg">
+<meta name="keywords" content="技术相关,C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="再探C++自动注册">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/01/12/再探C-自动注册/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="最近的c++项目里面需要使用配置文件配置的值去决定运行时具体实例化的类。如果是java或者kotlin直接使用反射去创建就好,但是c++里没有类似的东西所以只能通过一些取巧的方式实现。 早年间有研究过GTest的测试用例注册机制,其原理是利用类的静态成员变量在初始化的时候在它构造函数里面执行注册代码。 包括我们部门现在更常用的Catch2也是类似的,只不过它用的是全局的Catch::AutoReg">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2024-01-12T14:11:24.804Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="再探C++自动注册">
+<meta name="twitter:description" content="最近的c++项目里面需要使用配置文件配置的值去决定运行时具体实例化的类。如果是java或者kotlin直接使用反射去创建就好,但是c++里没有类似的东西所以只能通过一些取巧的方式实现。 早年间有研究过GTest的测试用例注册机制,其原理是利用类的静态成员变量在初始化的时候在它构造函数里面执行注册代码。 包括我们部门现在更常用的Catch2也是类似的,只不过它用的是全局的Catch::AutoReg">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#全局变量的初始化顺序不确定"><span class="toc-text">全局变量的初始化顺序不确定</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#静态库依赖的情况下不会自动注册"><span class="toc-text">静态库依赖的情况下不会自动注册</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#enable-shared-from-this的问题"><span class="toc-text">enable_shared_from_this的问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#完整代码"><span class="toc-text">完整代码</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-再探C-自动注册" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">再探C++自动注册</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.01.12</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近的c++项目里面需要使用配置文件配置的值去决定运行时具体实例化的类。如果是java或者kotlin直接使用反射去创建就好,但是c++里没有类似的东西所以只能通过一些取巧的方式实现。</p>
+<p>早年间有<a href="https://blog.islinjw.cn/2016/02/15/GTest%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90-%E6%B5%8B%E8%AF%95%E4%BB%A3%E7%A0%81%E7%9A%84%E6%B3%A8%E5%86%8C/">研究过GTest的测试用例注册机制</a>,其原理是利用类的静态成员变量在初始化的时候在它构造函数里面执行注册代码。</p>
+<p>包括我们部门现在更常用的<a href="https://github.com/catchorg/Catch2" target="_blank" rel="noopener">Catch2</a>也是类似的,只不过它用的是全局的Catch::AutoReg const常量而不是类静态成员变量:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> TEST_CASE( ... ) INTERNAL_CATCH_TESTCASE( __VA_ARGS__ )</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> INTERNAL_CATCH_TESTCASE2( TestName, ... ) \</span></span><br><span class="line">        <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">TestName</span><span class="params">()</span></span>; \</span><br><span class="line">        CATCH_INTERNAL_START_WARNINGS_SUPPRESSION \</span><br><span class="line">        CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS \</span><br><span class="line">        CATCH_INTERNAL_SUPPRESS_UNUSED_VARIABLE_WARNINGS \</span><br><span class="line">        <span class="keyword">namespace</span>&#123; <span class="keyword">const</span> Catch::<span class="function">AutoReg <span class="title">INTERNAL_CATCH_UNIQUE_NAME</span><span class="params">( autoRegistrar )</span><span class="params">( Catch::makeTestInvoker( &amp;TestName ), CATCH_INTERNAL_LINEINFO, Catch::StringRef(), Catch::NameAndTags&#123; __VA_ARGS__ &#125; )</span></span>; &#125; <span class="comment">/* NOLINT */</span> \</span><br><span class="line">        CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION \</span><br><span class="line">        <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">TestName</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    <span class="meta">#<span class="meta-keyword">define</span> INTERNAL_CATCH_TESTCASE( ... ) \</span></span></span><br><span class="line"><span class="function">        <span class="title">INTERNAL_CATCH_TESTCASE2</span><span class="params">( INTERNAL_CATCH_UNIQUE_NAME( CATCH2_INTERNAL_TEST_ ), __VA_ARGS__ )</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line">struct AutoReg : Detail::NonCopyable &#123;</span><br><span class="line">    AutoReg( Detail::<span class="built_in">unique_ptr</span>&lt;ITestInvoker&gt; invoker, SourceLineInfo <span class="keyword">const</span>&amp; lineInfo, StringRef classOrMethod, NameAndTags <span class="keyword">const</span>&amp; nameAndTags ) <span class="keyword">noexcept</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">AutoReg::AutoReg( Detail::<span class="built_in">unique_ptr</span>&lt;ITestInvoker&gt; invoker, SourceLineInfo <span class="keyword">const</span>&amp; lineInfo, StringRef classOrMethod, NameAndTags <span class="keyword">const</span>&amp; nameAndTags ) <span class="keyword">noexcept</span> &#123;</span><br><span class="line">    CATCH_TRY &#123;</span><br><span class="line">        getMutableRegistryHub()</span><br><span class="line">                .registerTest(</span><br><span class="line">                    makeTestCaseInfo(</span><br><span class="line">                        extractClassName( classOrMethod ),</span><br><span class="line">                        nameAndTags,</span><br><span class="line">                        lineInfo),</span><br><span class="line">                    CATCH_MOVE(invoker)</span><br><span class="line">                );</span><br><span class="line">    &#125; CATCH_CATCH_ALL &#123;</span><br><span class="line">        <span class="comment">// Do not throw when constructing global objects, instead register the exception to be processed later</span></span><br><span class="line">        getMutableRegistryHub().registerStartupException();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以我们可以类似的去定义一个AutoRegister类在构造函数里面将类的工厂函数注册给Factory:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// factory.h</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IComponent&gt; (*CreatorFunc)();</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Factory</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">static</span> Factory&amp; <span class="title">Instance</span><span class="params">()</span></span>;</span><br><span class="line">	</span><br><span class="line">	Factory();</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">RegisterCreatorFunc</span><span class="params">(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; name, CreatorFunc func)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IComponent&gt; Create(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; name);</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">map</span>&lt;<span class="built_in">std</span>::<span class="built_in">string</span>, CreatorFunc&gt; creators_;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AutoRegister</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	AutoRegister(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; name, CreatorFunc func);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// factory.cpp</span></span><br><span class="line"><span class="keyword">void</span> Factory::RegisterCreatorFunc(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; name, CreatorFunc func) &#123;</span><br><span class="line">	creators_[name] = func;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IComponent&gt; Factory::Create(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; name) &#123;</span><br><span class="line">	<span class="keyword">auto</span> it = creators_.find(name);</span><br><span class="line">    <span class="keyword">if</span> (it == creators_.end()) &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;<span class="string">"Unknown : "</span> &lt;&lt; name &lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">auto</span> instance = it-&gt;second();</span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">AutoRegister::AutoRegister(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; name, CreatorFunc func) &#123;</span><br><span class="line">    Factory::Instance().RegisterCreatorFunc(name, func);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义一个宏去协助声明全局变量:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> AUTO_REGISTER(NAME) \</span></span><br><span class="line"><span class="keyword">static</span> <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IComponent&gt; __##NAME##_ComponentCreatorFunc()&#123;<span class="keyword">return</span> <span class="built_in">std</span>::make_shared&lt;NAME&gt;();&#125; \</span><br><span class="line"><span class="keyword">const</span> AutoRegister __##NAME##_ComponentRegister(#NAME, __##NAME##_ComponentCreatorFunc);</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IComponent&gt; (*CreatorFunc)();</span><br></pre></td></tr></table></figure>
+
+<p>最后只需要在定义IComponent子类的时候使用AUTO_REGISTER注明一下需要自动注册即可:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// component_a.h</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ComponentA</span> :</span> <span class="keyword">public</span> IComponent &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">Init</span><span class="params">()</span> override</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">AUTO_REGISTER(ComponentA)</span><br><span class="line"></span><br><span class="line"><span class="comment">// component_a.cpp</span></span><br><span class="line"><span class="keyword">void</span> ComponentA::Init() &#123;</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"ComponentA::Init()"</span> &lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原理和实现都比较简单,无法是利用全局变量在main函数执行前初始化的机制,在全局变量的构造函数里面做事情。但实际使用的时候会有不少的坑。</p>
+<h1 id="全局变量的初始化顺序不确定"><a href="#全局变量的初始化顺序不确定" class="headerlink" title="全局变量的初始化顺序不确定"></a>全局变量的初始化顺序不确定</h1><p>正如我之前的<a href="https://blog.islinjw.cn/2016/02/15/GTest%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90-%E6%B5%8B%E8%AF%95%E4%BB%A3%E7%A0%81%E7%9A%84%E6%B3%A8%E5%86%8C/#%E4%B8%80%E7%A7%8D%E6%9C%89%E9%97%AE%E9%A2%98%E7%9A%84%E6%96%B9%E6%B3%95">博客</a>讨论的全局变量的初始化顺序时是不能确定的。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> kGlobalStr = <span class="string">"GlobalStr"</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> GLOBAL_STR <span class="meta-string">"GLOBAL_STR"</span></span></span><br><span class="line"></span><br><span class="line">Factory&amp; Factory::Instance() &#123;</span><br><span class="line">	<span class="keyword">static</span> Factory instance;</span><br><span class="line">	<span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Factory::Factory() &#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"kGlobalStr : "</span> &lt;&lt; kGlobalStr &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"GLOBAL_STR : "</span> &lt;&lt; GLOBAL_STR &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>单例的instance我们可以通过局部静态变量的方式保证在第一次调用Factory::Instance的时候会初始化,但是如果在Factory的构造函数里面使用了其他的全局变量可能就会拿到还未初始化的变量:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kGlobalStr :</span><br><span class="line">GLOBAL_STR : GLOBAL_STR</span><br></pre></td></tr></table></figure>
+
+<p>我们可以用宏或者再写个函数把全局变量变成局部静态变量包在函数里面去解决。</p>
+<h1 id="静态库依赖的情况下不会自动注册"><a href="#静态库依赖的情况下不会自动注册" class="headerlink" title="静态库依赖的情况下不会自动注册"></a>静态库依赖的情况下不会自动注册</h1><p>还有另外一个问题是如果我们的组件是放在静态库里面去依赖的话,没有include的全局变量不会初始化:</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">add_library</span>(<span class="variable">$&#123;PROJECT_NAME&#125;</span>-Lib STATIC</span><br><span class="line">    ../factory.cpp</span><br><span class="line">    ../component_a.cpp</span><br><span class="line">    ../component_b.cpp</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">add_executable</span>(<span class="variable">$&#123;PROJECT_NAME&#125;</span></span><br><span class="line">    ../main.cpp</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">target_link_libraries</span>(<span class="variable">$&#123;PROJECT_NAME&#125;</span> <span class="variable">$&#123;PROJECT_NAME&#125;</span>-Lib)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"factory.h"</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"component_b.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span> </span>&#123;</span><br><span class="line">	<span class="comment">// 没有#include "component_a.h", 静态库依赖的时候ComponentA没有自动注册</span></span><br><span class="line">	<span class="keyword">auto</span> a = Factory::Instance().Create(<span class="string">"ComponentA"</span>);</span><br><span class="line">	<span class="keyword">if</span>(a != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">		a-&gt;Init(); </span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 有#include "component_a.h", 静态库依赖的时候ComponentB有自动注册</span></span><br><span class="line">	<span class="keyword">auto</span> b = Factory::Instance().Create(<span class="string">"ComponentB"</span>);</span><br><span class="line">	<span class="keyword">if</span>(b != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">		b-&gt;Init(); </span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kGlobalStr :</span><br><span class="line">GLOBAL_STR : GLOBAL_STR</span><br><span class="line">Unknown : ComponentA</span><br><span class="line">ComponentB::Init() - 0x600001848288</span><br></pre></td></tr></table></figure>
+
+<p>在我们的事件项目中把Catch2编写的测试用例改成静态库依赖同样也会出现Catch2找不到测试用例的问题,网上没有找到什么太清晰的解答,但是chatgpt给了下面的回答:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">关于全局静态变量的初始化行为，C和C++标准并没有明确规定。具体的行为可能会因编译器和链接器的实现而有所不同。</span><br><span class="line"></span><br><span class="line">然而，根据常见的编译器和链接器的实践，可以得出以下一般性规则：</span><br><span class="line"></span><br><span class="line">1. 静态库：</span><br><span class="line">   - 在静态库中，未被引用的全局静态变量通常不会被初始化。</span><br><span class="line">   - 这是因为链接器会进行优化，只将被引用的目标文件和符号与主程序进行链接，未被引用的目标文件和符号会被优化掉。</span><br><span class="line"></span><br><span class="line">2. 源码依赖：</span><br><span class="line">   - 在源码依赖的情况下，全局静态变量通常会被初始化，无论是否被引用。</span><br><span class="line">   - 这是因为编译器会对源码进行逐行解析和编译，将所有的全局静态变量初始化代码转换为可执行的指令。</span><br><span class="line"></span><br><span class="line">虽然没有明确的权威文件规定这些行为，但这些规则是根据广泛的实践和经验总结得出的。</span><br><span class="line"></span><br><span class="line">如果您对特定编译器和链接器的行为有疑问，建议查阅它们的官方文档或相关规范，以了解更具体的行为和规定。不同的编译器和链接器可能会有不同的实现和行为。</span><br></pre></td></tr></table></figure>
+
+<p>在mac上使用nm名搜索符合表,也的确可以看到没有__ComponentA_ComponentRegister这个符号:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">nm ./Demo| grep -e ComponentA_ComponentRegister -e ComponentB_ComponentRegister</span><br><span class="line">0000000100010040 b __ZL30__ComponentB_ComponentRegister</span><br><span class="line">0000000100010000 b __ZL30__ComponentB_ComponentRegister</span><br></pre></td></tr></table></figure>
+
+<h1 id="enable-shared-from-this的问题"><a href="#enable-shared-from-this的问题" class="headerlink" title="enable_shared_from_this的问题"></a>enable_shared_from_this的问题</h1><p>这个问题和自动注册没有直接关系,但是设计不好可能会遇到所以就放一起了。假如我们的工厂函数返回值不是shared_ptr<icomponent>而是IComponent*,那么子类在使用enable_shared_from_this的时候就会出现问题:</icomponent></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// factory.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> AUTO_REGISTER(NAME) \</span></span><br><span class="line"><span class="keyword">static</span> IComponent* __##NAME##_ComponentCreatorFunc()&#123;<span class="keyword">return</span> <span class="keyword">new</span> NAME();&#125; \</span><br><span class="line"><span class="keyword">const</span> AutoRegister __##NAME##_ComponentRegister(#NAME, __##NAME##_ComponentCreatorFunc);</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> IComponent* (*CreatorFunc)();</span><br><span class="line"></span><br><span class="line"><span class="comment">// factory.cpp</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IComponent&gt; Factory::Create(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; name) &#123;</span><br><span class="line">	<span class="keyword">auto</span> it = creators_.find(name);</span><br><span class="line">    <span class="keyword">if</span> (it == creators_.end()) &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">cout</span>&lt;&lt;<span class="string">"Unknown : "</span> &lt;&lt; name &lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">auto</span> instance = it-&gt;second();</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IComponent&gt;(instance);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// component_b.h</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ComponentB</span> :</span> <span class="keyword">public</span> IComponent, <span class="keyword">public</span> <span class="built_in">std</span>::enable_shared_from_this&lt;ComponentB&gt; &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">Init</span><span class="params">()</span> override</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">AUTO_REGISTER(ComponentB)</span><br><span class="line"></span><br><span class="line"><span class="comment">// component_b.cpp</span></span><br><span class="line"><span class="keyword">void</span> ComponentB::Init() &#123;</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"ComponentB::Init() - "</span> &lt;&lt; <span class="keyword">this</span>-&gt;shared_from_this() &lt;&lt;<span class="built_in">std</span>::<span class="built_in">endl</span>; <span class="comment">// 抛出bad_weak_ptr异常</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用到ComponentB::Init之后就会抛出异常:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">libc++abi: terminating with uncaught exception of type std::__1::bad_weak_ptr: bad_weak_ptr</span><br></pre></td></tr></table></figure>
+
+<p>从源码来看用裸指针创建shared_ptr的时候会调用__enable_weak_this:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> _<span class="title">Yp</span>&gt;</span></span><br><span class="line"><span class="class">    <span class="title">explicit</span> <span class="title">shared_ptr</span>(_<span class="title">Yp</span>* __<span class="title">p</span>,</span></span><br><span class="line"><span class="class">                        <span class="title">typename</span> <span class="title">enable_if</span>&lt;__compatible_with&lt;_Yp, element_type&gt;::value, __nat&gt;:</span>:type = __nat());</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> _<span class="title">Tp</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">template</span>&lt;class _Yp&gt;</span></span><br><span class="line"><span class="class"><span class="title">shared_ptr</span>&lt;_Tp&gt;:</span>:<span class="built_in">shared_ptr</span>(_Yp* __p,</span><br><span class="line">                            <span class="keyword">typename</span> enable_if&lt;__compatible_with&lt;_Yp, element_type&gt;::value, __nat&gt;::type)</span><br><span class="line">    : __ptr_(__p)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">unique_ptr</span>&lt;_Yp&gt; __hold(__p);</span><br><span class="line">    <span class="keyword">typedef</span> <span class="keyword">typename</span> __shared_ptr_default_allocator&lt;_Yp&gt;::type _AllocT;</span><br><span class="line">    <span class="keyword">typedef</span> __shared_ptr_pointer&lt;_Yp*, __shared_ptr_default_delete&lt;_Tp, _Yp&gt;, _AllocT &gt; _CntrlBlk;</span><br><span class="line">    __cntrl_ = <span class="keyword">new</span> _CntrlBlk(__p, __shared_ptr_default_delete&lt;_Tp, _Yp&gt;(), _AllocT());</span><br><span class="line">    __hold.release();</span><br><span class="line">    __enable_weak_this(__p, __p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只有裸指针的类型是enable_shared_from_this的时候才会去初始化它的__weak_this_:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> _<span class="title">Yp</span>, <span class="title">class</span> _<span class="title">OrigPtr</span>&gt;</span></span><br><span class="line"><span class="class">    _<span class="title">LIBCPP_INLINE_VISIBILITY</span></span></span><br><span class="line"><span class="class">    <span class="title">typename</span> <span class="title">enable_if</span>&lt;is_convertible&lt;_OrigPtr*,</span></span><br><span class="line"><span class="class">                                      const enable_shared_from_this&lt;_Yp&gt;*</span></span><br><span class="line"><span class="class">    &gt;::value,</span></span><br><span class="line"><span class="class">        void&gt;:</span>:type</span><br><span class="line">    __enable_weak_this(<span class="keyword">const</span> enable_shared_from_this&lt;_Yp&gt;* __e,</span><br><span class="line">                       _OrigPtr* __ptr) _NOEXCEPT</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">typedef</span> <span class="keyword">typename</span> remove_cv&lt;_Yp&gt;::type _RawYp;</span><br><span class="line">        <span class="keyword">if</span> (__e &amp;&amp; __e-&gt;__weak_this_.expired())</span><br><span class="line">        &#123;</span><br><span class="line">            __e-&gt;__weak_this_ = <span class="built_in">shared_ptr</span>&lt;_RawYp&gt;(*<span class="keyword">this</span>,</span><br><span class="line">                <span class="keyword">const_cast</span>&lt;_RawYp*&gt;(<span class="keyword">static_cast</span>&lt;<span class="keyword">const</span> _Yp*&gt;(__ptr)));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">_LIBCPP_INLINE_VISIBILITY <span class="keyword">void</span> __enable_weak_this(...) _NOEXCEPT &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说如果子类继承了enable_shared_from_this,但是转换成非enable_shared_from_this的基类指针去创建shared_ptr由于已经不是enable_shared_from_this,所以根据入参会匹配到<code>_LIBCPP_INLINE_VISIBILITY void __enable_weak_this(...) _NOEXCEPT {}</code>这个空实现。未对__weak_this_赋值。</p>
+<p>所以在子类里面调用<code>this-&gt;shared\_from\_this()</code>就会因为__r.__cntrl_为0抛出bad_weak_ptr异常:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// enable_shared_from_this:</span></span><br><span class="line">hared_ptr&lt;_Tp <span class="keyword">const</span>&gt; shared_from_this() <span class="keyword">const</span></span><br><span class="line">        &#123;<span class="keyword">return</span> <span class="built_in">shared_ptr</span>&lt;<span class="keyword">const</span> _Tp&gt;(__weak_this_);&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// shared_ptr:</span></span><br><span class="line"><span class="keyword">template</span>&lt;<span class="class"><span class="keyword">class</span> _<span class="title">Tp</span>&gt;</span></span><br><span class="line"><span class="class"><span class="title">template</span>&lt;class _Yp&gt;</span></span><br><span class="line"><span class="class"><span class="title">shared_ptr</span>&lt;_Tp&gt;:</span>:<span class="built_in">shared_ptr</span>(<span class="keyword">const</span> weak_ptr&lt;_Yp&gt;&amp; __r,</span><br><span class="line">                            <span class="keyword">typename</span> enable_if&lt;is_convertible&lt;_Yp*, element_type*&gt;::value, __nat&gt;::type)</span><br><span class="line">    : __ptr_(__r.__ptr_),</span><br><span class="line">      __cntrl_(__r.__cntrl_ ? __r.__cntrl_-&gt;lock() : __r.__cntrl_)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (__cntrl_ == <span class="number">0</span>)</span><br><span class="line">        __throw_bad_weak_ptr();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从这个案例我们得到的教训就是使用智能指针就都是用智能指针,不要和裸指针混着用,哪天就踩坑了。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>技术选型的时候要充分了解技术的原理和可能出现的问题，然后根据具体业务场景去考虑是否合适。</p>
+<p>例如这里的自动注册技术用于单元测试的测试用例注册是合适的，在单元测试的场景里不会遇到全局变量初始化问题，正常情况下也不会把测试用例写在单独的静态库里而是直接编译测试的可执行程序。</p>
+<p>而对我们这个项目的场景就不合适了，因为两者我们都实际有可能遇到问题。当然可以在文档里面写明最佳实践方式，但是一旦不小心后人就会踩坑。</p>
+<p>所以我会选择稳妥点，在一处地方集中手动编写注册代码。虽然这样每加一个组件除了.h和.cpp还需要再在另外的地方添加注册代码，但起码不会留意料之外的坑。</p>
+<h1 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h1><p>完整的demo代码可以见<a href="https://github.com/bluesky466/CppAutoRegisterDemo" target="_blank" rel="noopener">Github</a></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
