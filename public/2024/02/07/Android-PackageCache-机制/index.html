@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Android PackageCache 机制 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="今天突然接到bug说系统ota之后必现无法使用并且重启无法恢复,从日志上看个上个月往项目里面导入了热更新的机制用于方便调试相关,惊出一身冷汗: 123E AndroidRuntime: Process: com.xx.xx.xx, PID: 2012E AndroidRuntime: java.lang.RuntimeException: Unable to instantiate applica">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android PackageCache 机制">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/02/07/Android-PackageCache-机制/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="今天突然接到bug说系统ota之后必现无法使用并且重启无法恢复,从日志上看个上个月往项目里面导入了热更新的机制用于方便调试相关,惊出一身冷汗: 123E AndroidRuntime: Process: com.xx.xx.xx, PID: 2012E AndroidRuntime: java.lang.RuntimeException: Unable to instantiate applica">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2024-02-07T03:57:02.818Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android PackageCache 机制">
+<meta name="twitter:description" content="今天突然接到bug说系统ota之后必现无法使用并且重启无法恢复,从日志上看个上个月往项目里面导入了热更新的机制用于方便调试相关,惊出一身冷汗: 123E AndroidRuntime: Process: com.xx.xx.xx, PID: 2012E AndroidRuntime: java.lang.RuntimeException: Unable to instantiate applica">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#package-cache"><span class="toc-text">package cache</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#系统FINGERPRINT"><span class="toc-text">系统FINGERPRINT</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#apk变更检查"><span class="toc-text">apk变更检查</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android-PackageCache-机制" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android PackageCache 机制</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.02.07</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>今天突然接到bug说系统ota之后<strong>必现无法使用并且重启无法恢复</strong>,从日志上看个上个月往项目里面导入了<a href="https://blog.islinjw.cn/2023/12/19/Android%E7%83%AD%E6%9B%B4%E6%96%B0%E5%AE%9E%E8%B7%B5/">热更新</a>的机制用于方便调试相关,惊出一身冷汗:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">E AndroidRuntime: Process: com.xx.xx.xx, PID: 2012</span><br><span class="line">E AndroidRuntime: java.lang.RuntimeException: Unable to instantiate application com.xx.xx.xx.XXApplication package</span><br><span class="line">com.xx.xx.xx: java.lang.ClassCastException: com.xx.xx.xx.XxApplication cannot be cast to android.app.Application</span><br></pre></td></tr></table></figure>
+
+<p>我们在新版本里将Application改成了HotfixApplication,然后原本的com.xx.xx.xx.XxApplication父类改成了自定义的ApplicationLike和android.app.Application没有关系。所以如果启动进程的时候用com.xx.xx.xx.XxApplication去启动的确是会出现转换问题的。</p>
+<p>但是问题在于我们已经修改了AndroidManifest.xml,这样意味着系统ota之后系统有些缓存没有清理导致读取到的还是旧的信息。这个问题虽然应用端可以规避,但是整个系统的ota机制应该还是哪个地方出现了问题,其他第三方的应用也会遇到同样的问题,需要深入定位下根因。</p>
+<h1 id="package-cache"><a href="#package-cache" class="headerlink" title="package cache"></a>package cache</h1><p>为了加快开机速度,安卓在解析完一次应用信息之后会在/data/system/package_cache/{FINGERPRINT}下保存,每个应用保存成一个文件里面包括了应用的权限、Application的name等信息。除非应用有变更才会去刷新应用的缓存信息({FINGERPRINT}是根据系统信息计算的md5,用于对比确认是不是同一个版本的rom),这样可以不用每次开机都去解压apk解析应用信息:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">console:/data/system/package_cache/d529b6afb8a5a0c7a5b626efbac421ba14e3ea55 #</span><br><span class="line">ls</span><br><span class="line">AndroidRemoteRs232-16             NetworkPermissionConfig-16</span><br><span class="line">AutoTestServer-16                 NetworkStack-16</span><br><span class="line">BasicDreams-16                    OsuLogin-16</span><br><span class="line">Bluetooth-16                      PacProcessor-16</span><br><span class="line">BluetoothMidiService-16           PackageInstaller-16</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/pm/parsing/PackageParser2.java;l=157</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ParsedPackage <span class="title">parsePackage</span><span class="params">(File packageFile, <span class="keyword">int</span> flags, <span class="keyword">boolean</span> useCaches,</span></span></span><br><span class="line"><span class="function"><span class="params">        List&lt;File&gt; frameworkSplits)</span> <span class="keyword">throws</span> PackageManagerException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (useCaches &amp;&amp; mCacher != <span class="keyword">null</span>) &#123;</span><br><span class="line">        ParsedPackage parsed = mCacher.getCachedResult(packageFile, flags);</span><br><span class="line">        <span class="keyword">if</span> (parsed != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> parsed;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    ParseResult&lt;ParsingPackage&gt; result = parsingUtils.parsePackage(input, packageFile, flags,</span><br><span class="line">            frameworkSplits);</span><br><span class="line">    ...</span><br><span class="line">    ParsedPackage parsed = (ParsedPackage) result.getResult().hideAsParsed();</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (mCacher != <span class="keyword">null</span>) &#123;</span><br><span class="line">        mCacher.cacheResult(packageFile, flags, parsed);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> parsed;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/pm/parsing/PackageCacher.java;l=188</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">cacheResult</span><span class="params">(File packageFile, <span class="keyword">int</span> flags, ParsedPackage parsed)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">final</span> String cacheKey = getCacheKey(packageFile, flags);</span><br><span class="line">        <span class="keyword">final</span> File cacheFile = <span class="keyword">new</span> File(mCacheDir, cacheKey);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (cacheFile.exists()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!cacheFile.delete()) &#123;</span><br><span class="line">                Slog.e(TAG, <span class="string">"Unable to delete cache file: "</span> + cacheFile);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">byte</span>[] cacheEntry = toCacheEntry(parsed);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (cacheEntry == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> (FileOutputStream fos = <span class="keyword">new</span> FileOutputStream(cacheFile)) &#123;</span><br><span class="line">            fos.write(cacheEntry);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException ioe) &#123;</span><br><span class="line">            Slog.w(TAG, <span class="string">"Error writing cache entry."</span>, ioe);</span><br><span class="line">            cacheFile.delete();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        Slog.w(TAG, <span class="string">"Error saving package cache."</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面使用的mCacher这个缓存目录是在PackageManagerService启动的时候调用PackageManagerServiceUtils.preparePackageParserCache去创建的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/pm/PackageManagerService.java;l=1986</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">PackageManagerService</span><span class="params">(PackageManagerServiceInjector injector, <span class="keyword">boolean</span> onlyCore,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">boolean</span> factoryTest, <span class="keyword">final</span> String buildFingerprint, <span class="keyword">final</span> <span class="keyword">boolean</span> isEngBuild,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">final</span> <span class="keyword">boolean</span> isUserDebugBuild, <span class="keyword">final</span> <span class="keyword">int</span> sdkVersion, <span class="keyword">final</span> String incrementalVersion)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	mCacheDir = PackageManagerServiceUtils.preparePackageParserCache(</span><br><span class="line">	                    mIsEngBuild, mIsUserDebugBuild, mIncrementalVersion);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/pm/PackageManagerServiceUtils.java;l=1309</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="meta">@Nullable</span> <span class="function">File <span class="title">preparePackageParserCache</span><span class="params">(<span class="keyword">boolean</span> forEngBuild,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">boolean</span> isUserDebugBuild, String incrementalVersion)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">	<span class="comment">// The base directory for the package parser cache lives under /data/system/.</span></span><br><span class="line">    <span class="keyword">final</span> File cacheBaseDir = Environment.getPackageCacheDirectory();</span><br><span class="line">    <span class="keyword">if</span> (!FileUtils.createDir(cacheBaseDir)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// There are several items that need to be combined together to safely</span></span><br><span class="line">    <span class="comment">// identify cached items. In particular, changing the value of certain</span></span><br><span class="line">    <span class="comment">// feature flags should cause us to invalidate any caches.</span></span><br><span class="line">    <span class="keyword">final</span> String cacheName = FORCE_PACKAGE_PARSED_CACHE_ENABLED ? <span class="string">"debug"</span></span><br><span class="line">            : PackagePartitions.FINGERPRINT;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Reconcile cache directories, keeping only what we'd actually use.</span></span><br><span class="line">    <span class="keyword">for</span> (File cacheDir : FileUtils.listFilesOrEmpty(cacheBaseDir)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (Objects.equals(cacheName, cacheDir.getName())) &#123;</span><br><span class="line">            Slog.d(TAG, <span class="string">"Keeping known cache "</span> + cacheDir.getName());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            Slog.d(TAG, <span class="string">"Destroying unknown cache "</span> + cacheDir.getName());</span><br><span class="line">            FileUtils.deleteContentsAndDir(cacheDir);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Return the versioned package cache directory.</span></span><br><span class="line">    File cacheDir = FileUtils.createDir(cacheBaseDir, cacheName);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> cacheDir;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="系统FINGERPRINT"><a href="#系统FINGERPRINT" class="headerlink" title="系统FINGERPRINT"></a>系统FINGERPRINT</h1><p>从preparePackageParserCache的代码可以看出来其实是在Environment.getPackageCacheDirectory()下的PackagePartitions.FINGERPRINT子目录。</p>
+<p>从Environment代码可以看出来Environment.getPackageCacheDirectory()返回的实际就是<code>/data/system/package_cache/</code>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/os/Environment.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DIR_ANDROID_DATA_PATH = getDirectoryPath(ENV_ANDROID_DATA, <span class="string">"/data"</span>);</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> File DIR_ANDROID_DATA = <span class="keyword">new</span> File(DIR_ANDROID_DATA_PATH);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> File <span class="title">getPackageCacheDirectory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> File(getDataSystemDirectory(), <span class="string">"package_cache"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> File <span class="title">getDataSystemDirectory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> File(getDataDirectory(), <span class="string">"system"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> File <span class="title">getDataDirectory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> DIR_ANDROID_DATA;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而PackagePartitions.FINGERPRINT则是通过是一堆ro.xxxxx..build.fingerprint的属性计算出来的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/content/pm/PackagePartitions.java</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ArrayList&lt;SystemPartition&gt; SYSTEM_PARTITIONS =</span><br><span class="line">        <span class="keyword">new</span> ArrayList&lt;&gt;(Arrays.asList(</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getRootDirectory(),</span><br><span class="line">                        PARTITION_SYSTEM, Partition.PARTITION_NAME_SYSTEM,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">false</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getVendorDirectory(),</span><br><span class="line">                        PARTITION_VENDOR, Partition.PARTITION_NAME_VENDOR,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getOdmDirectory(),</span><br><span class="line">                        PARTITION_ODM, Partition.PARTITION_NAME_ODM,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getOemDirectory(),</span><br><span class="line">                        PARTITION_OEM, Partition.PARTITION_NAME_OEM,</span><br><span class="line">                        <span class="keyword">false</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getProductDirectory(),</span><br><span class="line">                        PARTITION_PRODUCT, Partition.PARTITION_NAME_PRODUCT,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getSystemExtDirectory(),</span><br><span class="line">                        PARTITION_SYSTEM_EXT, Partition.PARTITION_NAME_SYSTEM_EXT,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>)));</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String FINGERPRINT = getFingerprint();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">getFingerprint</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> String[] digestProperties = <span class="keyword">new</span> String[SYSTEM_PARTITIONS.size() + <span class="number">1</span>];</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; SYSTEM_PARTITIONS.size(); i++) &#123;</span><br><span class="line">        <span class="keyword">final</span> String partitionName = SYSTEM_PARTITIONS.get(i).getName();</span><br><span class="line">        digestProperties[i] = <span class="string">"ro."</span> + partitionName + <span class="string">".build.fingerprint"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    digestProperties[SYSTEM_PARTITIONS.size()] = <span class="string">"ro.build.fingerprint"</span>; <span class="comment">// build fingerprint</span></span><br><span class="line">    <span class="keyword">return</span> SystemProperties.digestOf(digestProperties);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从这里可以大概猜测到PackagePartitions.FINGERPRINT在ota前后没有变化导致使用的还是旧的缓存目录,读取的应用信息里还是旧的Application name。</p>
+<p>幸亏是必现的问题,我们刷回旧的rom看看缓存目录,然后再进行OTA对比新的缓存目录发现的确没有改变。</p>
+<p>因为之前测试是说重启不能恢复的,这个时候只要手动删除这个缓存目录然后重启发现就能恢复正常了,确认就是这个缓存的问题。</p>
+<p>再看这堆参与计算的属性里其中有个属性ro.build.version.incremental按道理ota之后需要改变,改变之后PackagePartitions.FINGERPRINT就会改变,从而使用新的缓存目录并且删除旧的缓存目录,但是从OTA前后读取出来看它并没有改变过。</p>
+<p>好吧,那就是系统的锅了,找了系统组的大佬确认这个是有特殊的需求临时的调试软件,的确就是需要固定FINGERPRINT。正式生产的rom里面FINGERPRINT是会变的,虚惊一场……</p>
+<h1 id="apk变更检查"><a href="#apk变更检查" class="headerlink" title="apk变更检查"></a>apk变更检查</h1><p>由于我们这个应用配置了<code>android:persistent=&quot;true&quot;</code>,不能<code>install -r</code>之前我们调试都是<code>remount</code>之后推到机器里面的,为什么之前调试的时候没有遇到呢?</p>
+<p>我尝试了下修改信息之后<code>adb push</code>替换预装路径<code>/system_ext/app/XXX/XXX.apk</code>重启之后缓存的确没有修改。从日志上看实际系统已经发现它改变了,但是看起来是重新安装的时候忽略掉了所以没有更新缓存:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">02-06 21:52:24.909   836   836 I PackageManager: /system_ext/app/XXX changed; collecting certs</span><br><span class="line">02-06 21:52:24.981   836   836 W PackageManager: Failed to scan /system_ext/app/XXX: Application package com.xx.xx.xx already installed.  Skipping duplicate.</span><br></pre></td></tr></table></figure>
+
+<p>而我之前的调试手法都是先<code>rm -r /system_ext/app/XXX/</code>删掉预装目录,然后直接将编译的apk<code>adb push</code>到<code>/system_ext/app/</code>下,这种情况下替换<code>/system_ext/app/XXX.apk</code>可以发现缓存是会更新的,日志上看的确发现应用改变之后没有安装失败的提示:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">02-06 21:48:59.906   839   839 I PackageManager: /system_ext/app/XXX.apk changed; collecting certs</span><br></pre></td></tr></table></figure>
+
+<p>从代码上看应该是在扫描预装路径的时候就put到了mPm.mPackages导致后面不能重复安装,而<code>/system_ext/app/XXX.apk</code>非预装的路径则没有这个问题:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/pm/InstallPackageHelper.java;l=4176</span></span><br><span class="line"><span class="comment">// A package name must be unique; don't allow duplicates</span></span><br><span class="line"><span class="keyword">if</span> ((scanFlags &amp; SCAN_NEW_INSTALL) == <span class="number">0</span></span><br><span class="line">        &amp;&amp; mPm.mPackages.containsKey(pkg.getPackageName())) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> PackageManagerException(INSTALL_FAILED_DUPLICATE_PACKAGE,</span><br><span class="line">            <span class="string">"Application package "</span> + pkg.getPackageName()</span><br><span class="line">                    + <span class="string">" already installed.  Skipping duplicate."</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我升级到正式生产的rom去验证,发现正式生产的rom里面直接替换<code>/system_ext/app/XXX/XXX.apk</code>也是能更新缓存的,意味着这个临时软件有什么奇怪的配置导致了这个现象,具体的代码和配置太多不好找,但是能确认的是当apk被直接替换之后系统可以通过修改时间确认apk已经变更然后刷新缓存的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/pm/ScanPackageUtils.java;l=934</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">collectCertificatesLI</span><span class="params">(PackageSetting ps, ParsedPackage parsedPackage,</span></span></span><br><span class="line"><span class="function"><span class="params">        Settings.VersionInfo settingsVersionForPackage, <span class="keyword">boolean</span> forceCollect,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">boolean</span> skipVerify, <span class="keyword">boolean</span> isPreNMR1Upgrade)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> PackageManagerException </span>&#123;</span><br><span class="line">    <span class="comment">// When upgrading from pre-N MR1, verify the package time stamp using the package</span></span><br><span class="line">    <span class="comment">// directory and not the APK file.</span></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">long</span> lastModifiedTime = isPreNMR1Upgrade</span><br><span class="line">            ? <span class="keyword">new</span> File(parsedPackage.getPath()).lastModified()</span><br><span class="line">            : getLastModifiedTime(parsedPackage);</span><br><span class="line">    <span class="keyword">if</span> (ps != <span class="keyword">null</span> &amp;&amp; !forceCollect</span><br><span class="line">            &amp;&amp; ps.getPathString().equals(parsedPackage.getPath())</span><br><span class="line">            &amp;&amp; ps.getLastModifiedTime() == lastModifiedTime</span><br><span class="line">            &amp;&amp; !ReconcilePackageUtils.isCompatSignatureUpdateNeeded(settingsVersionForPackage)</span><br><span class="line">            &amp;&amp; !ReconcilePackageUtils.isRecoverSignatureUpdateNeeded(</span><br><span class="line">            settingsVersionForPackage)) &#123;</span><br><span class="line">        。。。</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Slog.i(TAG, parsedPackage.getPath() + <span class="string">" changed; collecting certs"</span></span><br><span class="line">                + (forceCollect ? <span class="string">" (forced)"</span> : <span class="string">""</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
