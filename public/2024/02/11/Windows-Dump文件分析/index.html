@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Windows Dump文件分析 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Windows,">
+  
+
+  <meta name="description" content="dump文件获取Windows上处理程序crash的问题可以通过分析dump文件来定位问题。那怎么拿到dump文件呢?有几种方式可以获取。 注册表配置dump文件生成目录像我司生产的整机可以根据Windows官方文档在出厂的时候就预埋注册表HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps">
+<meta name="keywords" content="技术相关,Windows">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows Dump文件分析">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/02/11/Windows-Dump文件分析/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="dump文件获取Windows上处理程序crash的问题可以通过分析dump文件来定位问题。那怎么拿到dump文件呢?有几种方式可以获取。 注册表配置dump文件生成目录像我司生产的整机可以根据Windows官方文档在出厂的时候就预埋注册表HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.islinjw.cn/WindowsDump文件分析/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/WindowsDump文件分析/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/WindowsDump文件分析/3.png">
+<meta property="og:image" content="https://blog.islinjw.cn/WindowsDump文件分析/4.png">
+<meta property="og:image" content="https://blog.islinjw.cn/WindowsDump文件分析/5.png">
+<meta property="og:updated_time" content="2024-02-11T02:40:15.977Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Windows Dump文件分析">
+<meta name="twitter:description" content="dump文件获取Windows上处理程序crash的问题可以通过分析dump文件来定位问题。那怎么拿到dump文件呢?有几种方式可以获取。 注册表配置dump文件生成目录像我司生产的整机可以根据Windows官方文档在出厂的时候就预埋注册表HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps">
+<meta name="twitter:image" content="https://blog.islinjw.cn/WindowsDump文件分析/1.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#dump文件获取"><span class="toc-text">dump文件获取</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#注册表配置dump文件生成目录"><span class="toc-text">注册表配置dump文件生成目录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用MiniDumpWriteDump生成dump文件"><span class="toc-text">使用MiniDumpWriteDump生成dump文件</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#dump文件分析"><span class="toc-text">dump文件分析</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Windows-Dump文件分析" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Windows Dump文件分析</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.02.11</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="dump文件获取"><a href="#dump文件获取" class="headerlink" title="dump文件获取"></a>dump文件获取</h1><p>Windows上处理程序crash的问题可以通过分析dump文件来定位问题。那怎么拿到dump文件呢?有几种方式可以获取。</p>
+<h2 id="注册表配置dump文件生成目录"><a href="#注册表配置dump文件生成目录" class="headerlink" title="注册表配置dump文件生成目录"></a>注册表配置dump文件生成目录</h2><p>像我司生产的整机可以根据<a href="https://learn.microsoft.com/zh-cn/windows/win32/wer/collecting-user-mode-dumps" target="_blank" rel="noopener">Windows官方文档</a>在出厂的时候就预埋注册表<code>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps</code>配置dump文件生成的路径:</p>
+<img src="/WindowsDump文件分析/1.png">
+
+<p>像这里配置到了<code>%localappdata%\CrashDumps</code>由于<code>%localappdata%</code>是个环境变量,所以当程序崩溃的时候会不同的用户会在存在不同的目录下产生dump文件,系统服务和普通应用的目录也不一样:</p>
+<ul>
+<li>普通应用 : <code>C:\Users\你的用户名\AppData\Local\CrashDumps</code></li>
+<li>系统服务 : <code>C:\Windows\system32\config\systemprofile\AppData\Local\CrashDumps</code></li>
+</ul>
+<p>它也支持在<code>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps</code>下添加子项,为指定的exe进行单独配置:</p>
+<img src="/WindowsDump文件分析/2.png">
+
+<p>像这样的Demo2.exe就会在<code>D:\dump2</code>下生成dump文件。</p>
+<p>而像windows出现蓝屏的情况重启之后就可以看<code>C:\WINDOWS\MEMORY.DMP</code>这个dump文件了,像我们这段时间做的项目,有个驱动引发蓝屏的问题就是看这个dump文件去定位分析的。</p>
+<h2 id="使用MiniDumpWriteDump生成dump文件"><a href="#使用MiniDumpWriteDump生成dump文件" class="headerlink" title="使用MiniDumpWriteDump生成dump文件"></a>使用MiniDumpWriteDump生成dump文件</h2><p>我们也可以使用<a href="https://learn.microsoft.com/zh-cn/windows/win32/api/errhandlingapi/nf-errhandlingapi-setunhandledexceptionfilter" target="_blank" rel="noopener">SetUnhandledExceptionFilter</a>注册异常处理函数,在函数里面调用<a href="https://learn.microsoft.com/zh-cn/windows/win32/api/minidumpapiset/nf-minidumpapiset-minidumpwritedump" target="_blank" rel="noopener">MiniDumpWriteDump</a>生成dump文件:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;DbgHelp.h&gt; </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> comment(lib,<span class="meta-string">"DbgHelp.lib"</span>)  </span></span><br><span class="line"></span><br><span class="line"><span class="function">LONG <span class="title">ApplicationCrashHandler</span><span class="params">(EXCEPTION_POINTERS* pException)</span> </span>&#123;</span><br><span class="line">    HANDLE hDumpFile = CreateFileW(<span class="string">L"DemoDump.dmp"</span>, GENERIC_WRITE, <span class="number">0</span>, <span class="literal">NULL</span>, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, <span class="literal">NULL</span>);</span><br><span class="line">    MINIDUMP_EXCEPTION_INFORMATION dumpInfo;</span><br><span class="line">    dumpInfo.ExceptionPointers = pException;</span><br><span class="line">    dumpInfo.ThreadId = GetCurrentThreadId();</span><br><span class="line">    dumpInfo.ClientPointers = TRUE;</span><br><span class="line">    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hDumpFile, MiniDumpNormal, &amp;dumpInfo, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">    CloseHandle(hDumpFile);</span><br><span class="line">    <span class="keyword">return</span> EXCEPTION_EXECUTE_HANDLER;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//注册异常处理函数  </span></span><br><span class="line">    SetUnhandledExceptionFilter((LPTOP_LEVEL_EXCEPTION_FILTER)ApplicationCrashHandler);</span><br><span class="line"></span><br><span class="line">    ... <span class="comment">// 业务代码</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码虽然可以打出dump文件,但是里面的信息比较少,如果想要打出更多的信息可以参考<a href="https://github.com/Arnavion/crashdump" target="_blank" rel="noopener">crashdump</a></p>
+<h1 id="dump文件分析"><a href="#dump文件分析" class="headerlink" title="dump文件分析"></a>dump文件分析</h1><p>拿到dump文件之后就要看看如何分析了,这里写一个简单的demo:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Data</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span>* str;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">foo</span><span class="params">(Data* data)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">strlen</span>(data-&gt;str)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Data data = &#123; <span class="literal">nullptr</span> &#125;;</span><br><span class="line">    foo(&amp;data);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以使用WinDbg去打开dump文件:</p>
+<img src="/WindowsDump文件分析/3.png">
+
+<p>注意将pdb文件放到符号目录下,例如我这里配置的是D盘:</p>
+<img src="/WindowsDump文件分析/4.png">
+
+<p>然后就可以用<code>!analyze -v</code>命令先让WinDbg简单分析一下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">ExceptionAddress: 00007ffdcf587cc1 (ucrtbased!strlen+0x0000000000000031)</span><br><span class="line">   ExceptionCode: c0000005 (Access violation)</span><br><span class="line">  ExceptionFlags: 00000000</span><br><span class="line">NumberParameters: 2</span><br><span class="line">   Parameter[0]: 0000000000000000</span><br><span class="line">   Parameter[1]: 0000000000000000</span><br><span class="line">Attempt to read from address 0000000000000000</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>例如从上面的信息我们可以看到奔溃的原因是strlen里面读取了空指针。</p>
+<p>然后使用<code>kb</code>命令调用堆栈查看完整调用链路:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">0:000&gt; kb</span><br><span class="line"> # RetAddr               : Args to Child                                                           : Call Site</span><br><span class="line">00 00007ffe`aaf9ffe9     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : ntdll!NtWaitForMultipleObjects+0x14</span><br><span class="line">01 00007ffe`aaf9feee     : 00000000`000000bc 00000000`00000096 00000000`d000022d 00000000`d000022d : KERNELBASE!WaitForMultipleObjectsEx+0xe9</span><br><span class="line">02 00007ffe`acc527f7     : 00000000`00000000 00000000`00000001 0000008c`ec2fee00 00000000`00000096 : KERNELBASE!WaitForMultipleObjects+0xe</span><br><span class="line">03 00007ffe`acc52236     : 00000000`00000000 00000000`00000000 00000000`00000003 00007ffe`acbe0000 : kernel32!WerpReportFaultInternal+0x587</span><br><span class="line">04 00007ffe`ab09cafb     : 00000000`00000000 0000008c`ec2ffec0 00000000`00000001 00007ffd`cf512e59 : kernel32!WerpReportFault+0xbe</span><br><span class="line">05 00007ffe`adaf8abd     : 00000000`0005aa79 00007ffe`adbb2b34 00000000`00000000 00007ffe`ada70b5a : KERNELBASE!UnhandledExceptionFilter+0x3db</span><br><span class="line">06 00007ffe`adadf197     : 0000008c`ec2feed0 00000000`00000000 0000008c`ec2fee88 0000008c`ec2ff470 : ntdll!RtlUserThreadStart$filt$0+0xac</span><br><span class="line">07 00007ffe`adaf441f     : 00000000`00000000 0000008c`ec2ff3d0 0000008c`ec2ffab0 0000008c`ec2ffab0 : ntdll!_C_specific_handler+0x97</span><br><span class="line">08 00007ffe`ada6e466     : 0000008c`ec2ffab0 00007ffe`ada50000 00007ffe`adaaaa58 00007ffe`adbdebf8 : ntdll!RtlpExecuteHandlerForException+0xf</span><br><span class="line">09 00007ffe`adaf340e     : 000001b5`00250000 00000000`00000000 00000000`00000000 00007ffd`00000000 : ntdll!RtlDispatchException+0x286</span><br><span class="line">0a 00007ffd`cf587cc1     : 00007ff7`8d053837 cccccccc`cccccccc 00007ffd`cf4b0dab 00000000`00000000 : ntdll!KiUserExceptionDispatch+0x2e</span><br><span class="line">0b 00007ff7`8d053837     : cccccccc`cccccccc 00007ffd`cf4b0dab 00000000`00000000 00007ff7`8d052367 : ucrtbased!strlen+0x31 [minkernel\crts\ucrt\src\appcrt\string\amd64\strlen.asm @ 70] </span><br><span class="line">0c 00007ff7`8d05389a     : 0000008c`ec2ffd48 00000000`00000000 00000000`00000000 00007ffd`cf4b0769 : Demo!foo+0x17 [C:\Users\user\workspace\CppAutoRegisterDemo\main.cpp @ 11] </span><br><span class="line">0d 00007ff7`8d05c7c9     : 00000000`00000001 00007ffd`cf5322a3 00000000`00000000 00007ff7`8d05bc4d : Demo!main+0x2a [C:\Users\user\workspace\CppAutoRegisterDemo\main.cpp @ 18] </span><br><span class="line">0e 00007ff7`8d05c6ae     : 00007ff7`8d065000 00007ff7`8d065350 00000000`00000000 00000000`00000000 : Demo!invoke_main+0x39 [D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl @ 79] </span><br><span class="line">0f 00007ff7`8d05c56e     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : Demo!__scrt_common_main_seh+0x12e [D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl @ 288] </span><br><span class="line">10 00007ff7`8d05c85e     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : Demo!__scrt_common_main+0xe [D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl @ 331] </span><br><span class="line">11 00007ffe`acbf257d     : 0000008c`ec07d000 00000000`00000000 00000000`00000000 00000000`00000000 : Demo!mainCRTStartup+0xe [D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_main.cpp @ 17] </span><br><span class="line">12 00007ffe`adaaaa58     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : kernel32!BaseThreadInitThunk+0x1d</span><br><span class="line">13 00000000`00000000     : 00000000`00000000 00000000`00000000 00000000`00000000 00000000`00000000 : ntdll!RtlUserThreadStart+0x28</span><br></pre></td></tr></table></figure>
+
+<p>从这一行可以看到foo的frame id是0c:</p>
+<blockquote>
+<p>0c 00007ff7<code>8d05389a     : 0000008c</code>ec2ffd48 00000000<code>00000000 00000000</code>00000000 00007ffd`cf4b0769 : Demo!foo+0x17 [C:\Users\user\workspace\CppAutoRegisterDemo\main.cpp @ 11] </p>
+</blockquote>
+<p>所以我们可以用<code>.frame 0c</code>查看这个frame的信息:</p>
+<img src="/WindowsDump文件分析/5.png">
+
+<p>从Locals信息里面可以看到data这个指针的值是0x0000008cec2ffd48,而data-&gt;str的值则为0x0，所以我们就能定位出是data-&gt;str空指针导致strlen出现异常。</p>
+<p>有时候奔溃也可能和多线程还有锁相关，使用到的WinDbg命令可以参考我之前的<a href="https://blog.islinjw.cn/2023/08/31/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-ffmpeg-wave%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/">博客</a></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
