@@ -33,7 +33,7 @@ private fun onCreateSse(uuid: String): Response {
 ```
 
 
-但是有开发发现这个sse总是会在接收到某一个url的post请求后不久因为IOException而断开,一开始我以为是http server和client的socket io断开了,仔细看异常才发现是PipedInputStream.read抛出的`IOException("Pipe broken")`:
+但是有开发发现这个sse总是会在接收到某一个url的post请求后几秒内因为IOException而断开,一开始我以为是http server和client的socket io断开了,仔细看异常才发现是PipedInputStream.read抛出的`IOException("Pipe broken")`:
 
 ```java
 // https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:libcore/ojluni/src/main/java/java/io/PipedInputStream.java
@@ -99,7 +99,7 @@ synchronized void receive(byte b[], int off, int len)  throws IOException {
 }
 ```
 
-从抛出异常的条件`if ((writeSide != null) && (!writeSide.isAlive()) && (--trials < 0))`看,应该就是写入端的线程已经退出了。但我们的写入端其实是注册了binder的回调给到其他进程,在binder回调里面写入的。难道是binder线程池的线程被回收了导致的?但是从复现手法来看只有接收到那一个url的post请求会导致断开,其他url的post请求则PipedInputStream能一直正常工作。按道理如果是binder线程回收的原因,应该是不会区分nanohttpd里的url处理才对。
+从抛出异常的条件`if ((writeSide != null) && (!writeSide.isAlive()) && (--trials < 0))`看,应该就是写入端的线程已经退出了。但我们的写入端其实是注册了binder的回调给到其他进程,在binder回调里面写入的。难道是binder线程池的线程被回收了导致的?但是从复现手法来看只有接收到那一个url的post请求会导致断开,其他url的post请求则PipedInputStream能一直正常工作。按道理binder线程并不会那么快就被回收,而且如果是binder线程回收的原因,应该是不会区分nanohttpd里的url处理才对。
 
 于是我在`output.write`前添加堆栈打印确认pid然后在断开后用`kill -3`强制打印进程全部线程堆栈到`/data/anr`目录,发现写入的线程的确在断开后退出了,但是从堆栈上我看到一些奇怪的东西:
 
@@ -151,9 +151,11 @@ protected Thread createThread(ClientHandler clientHandler) {
 01-31 09:27:54.801 9805 11368 D testtest:	at xx.xx.xx.xx.binder.aidl.IServer$Stub$Proxy.sendRequest(IServer.iava:167) // 这里是client端调用service端的方法
 ```
 
-其实从这个结果来看是挺合常理的,我调用的方法内部会触发listener回调,那么这个回调和调用的方法在同一个线程执行。但问题是现在使用的是aidl跨进程调用的另外一个进程的方法,回调也是另外一个进程回调回来的,安卓是如何实现调用和回调在同一个线程的呢?
+理清楚问题发生的原因之后解决的方法就很容易想到了,直接用Handler post到主线程去写入就好。
 
 # binder的请求流程
+
+其实从这个结果来看是挺合常理的,我调用的方法内部会触发listener回调,那么这个回调和调用的方法在同一个线程执行。但问题是现在使用的是aidl跨进程调用的另外一个进程的方法,回调也是另外一个进程回调回来的,安卓是如何实现调用和回调在同一个线程的呢?
 
 由于堆栈上只有java的信息,要想解答这个问题我们还需要深入看看BinderProxy.transactNative这个native方法是如何实现跨进程调用的:
 
@@ -407,7 +409,17 @@ protected:
 void IPCThreadState::joinThreadPool(bool isMain)
 {
     ...
-    result = getAndExecuteCommand();
+    status_t result;
+    do {
+    	...
+    	result = getAndExecuteCommand();
+    	...
+        // Let this thread exit the thread pool if it is no longer
+        // needed and it is not the main process thread.
+        if(result == TIMED_OUT && !isMain) {
+            break;
+        }
+    } while (result != -ECONNREFUSED && result != -EBADF);
     ...
 }
 
