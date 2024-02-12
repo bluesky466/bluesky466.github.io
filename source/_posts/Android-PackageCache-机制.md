@@ -236,7 +236,7 @@ if ((scanFlags & SCAN_NEW_INSTALL) == 0
 }
 ```
 
-我升级到正式生产的rom去验证,发现正式生产的rom里面直接替换`/system_ext/app/XXX/XXX.apk`也是能更新缓存的,意味着这个临时软件有什么奇怪的配置导致了这个现象,具体的代码和配置太多不好找,但是能确认的是当apk被直接替换之后系统可以通过修改时间确认apk已经变更然后刷新缓存的:
+我升级到正式生产的rom去验证,发现正式生产的rom里面直接替换`/system_ext/app/XXX/XXX.apk`也是能更新缓存的,意味着这个临时软件有什么奇怪的配置导致了这个现象,从系统哥那了解到这个奇葩需求的详情来看这里应该也是需求之一。由于具体的代码和配置太多不好找就不去探究哪个配置引起的了,但是能确认的是当apk被直接替换之后系统可以通过修改时间确认apk已经变更然后刷新缓存的:
 
 ```java
 // https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/pm/ScanPackageUtils.java;l=934
