@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Binder请求处理流程探究 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="前段时间遇到个蛮有意思的bug,趁着春节有空刨根问底记录下来。 背景是我们有个调试工具运行在安卓机器上用于局域网内远程调试机器,其实就是用nanohttpd接收http的请求进行转发。 其中有个功能是通过sse的方式实现往client的转发通知,我们的实现方式是client调用get请求,server返回一个text/event-stream类型的无限大response,它的body是PipedI">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Binder请求处理流程探究">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/02/12/Binder请求处理流程探究/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="前段时间遇到个蛮有意思的bug,趁着春节有空刨根问底记录下来。 背景是我们有个调试工具运行在安卓机器上用于局域网内远程调试机器,其实就是用nanohttpd接收http的请求进行转发。 其中有个功能是通过sse的方式实现往client的转发通知,我们的实现方式是client调用get请求,server返回一个text/event-stream类型的无限大response,它的body是PipedI">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2024-02-12T11:15:32.302Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Binder请求处理流程探究">
+<meta name="twitter:description" content="前段时间遇到个蛮有意思的bug,趁着春节有空刨根问底记录下来。 背景是我们有个调试工具运行在安卓机器上用于局域网内远程调试机器,其实就是用nanohttpd接收http的请求进行转发。 其中有个功能是通过sse的方式实现往client的转发通知,我们的实现方式是client调用get请求,server返回一个text/event-stream类型的无限大response,它的body是PipedI">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#binder的请求流程"><span class="toc-text">binder的请求流程</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Binder请求处理流程探究" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Binder请求处理流程探究</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.02.12</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>前段时间遇到个蛮有意思的bug,趁着春节有空刨根问底记录下来。</p>
+<p>背景是我们有个调试工具运行在安卓机器上用于局域网内远程调试机器,其实就是用<a href="https://github.com/NanoHttpd/nanohttpd" target="_blank" rel="noopener">nanohttpd</a>接收http的请求进行转发。</p>
+<p>其中有个功能是通过sse的方式实现往client的转发通知,我们的实现方式是client调用get请求,server返回一个<code>text/event-stream</code>类型的无限大response,它的body是PipedInputStream类型,当有消息需要转发的时候就往对应的PipedOutputStream写入:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> fun <span class="title">onCreateSse</span><span class="params">(uuid: String)</span>: Response </span>&#123;</span><br><span class="line">    val input = PipedInputStream()</span><br><span class="line">    val output = PipedOutputStream(input)</span><br><span class="line">    val handler = ISseHandler &#123; event, data -&gt;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            output.write(<span class="string">"event: $event\ndata: $&#123;data&#125;\n\n"</span>.toByteArray())</span><br><span class="line">        &#125; <span class="keyword">catch</span> (e: IOException) &#123;</span><br><span class="line">            notifyHandlers.remove(uuid)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    notifyHandlers[uuid] = handler</span><br><span class="line">    <span class="keyword">return</span> newFixedLengthResponse(Response.Status.OK, <span class="string">"text/event-stream"</span>, input, -<span class="number">1</span>)</span><br><span class="line">        .apply &#123;</span><br><span class="line">            addHeader(<span class="string">"Cache-Control"</span>, <span class="string">"no-cache"</span>)</span><br><span class="line">            addHeader(<span class="string">"Access-Control-Allow-Origin"</span>, <span class="string">"*"</span>)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是有开发发现这个sse总是会在接收到某一个url的post请求后不久因为IOException而断开,一开始我以为是http server和client的socket io断开了,仔细看异常才发现是PipedInputStream.read抛出的<code>IOException(&quot;Pipe broken&quot;)</code>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:libcore/ojluni/src/main/java/java/io/PipedInputStream.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">int</span> <span class="title">read</span><span class="params">()</span>  <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    readSide = Thread.currentThread();</span><br><span class="line">    <span class="keyword">int</span> trials = <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">while</span> (in &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">if</span> ((writeSide != <span class="keyword">null</span>) &amp;&amp; (!writeSide.isAlive()) &amp;&amp; (--trials &lt; <span class="number">0</span>)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"Pipe broken"</span>); <span class="comment">//就是这里抛出异常了!!!</span></span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        wait(<span class="number">1000</span>);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> ret = buffer[out++] &amp; <span class="number">0xFF</span>;</span><br><span class="line">    <span class="keyword">if</span> (out &gt;= buffer.length) &#123;</span><br><span class="line">        out = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (in == out) &#123;</span><br><span class="line">        <span class="comment">/* now empty */</span></span><br><span class="line">        in = -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的代码可以看到PipedInputStream的原理其实很暴力,不断wait 1秒等待PipedOutputStream写入数据,当数据写入的时候会执行到PipedInputStream.receive,这里面会赋值writeSide和in:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:libcore/ojluni/src/main/java/java/io/PipedInputStream.java</span></span><br><span class="line"><span class="function"><span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">receive</span><span class="params">(<span class="keyword">byte</span> b[], <span class="keyword">int</span> off, <span class="keyword">int</span> len)</span>  <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    checkStateForReceive();</span><br><span class="line">    writeSide = Thread.currentThread();</span><br><span class="line">    <span class="keyword">int</span> bytesToTransfer = len;</span><br><span class="line">    <span class="keyword">while</span> (bytesToTransfer &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (in == out)</span><br><span class="line">            awaitSpace();</span><br><span class="line">        <span class="keyword">int</span> nextTransferAmount = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">if</span> (out &lt; in) &#123;</span><br><span class="line">            nextTransferAmount = buffer.length - in;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (in &lt; out) &#123;</span><br><span class="line">            <span class="keyword">if</span> (in == -<span class="number">1</span>) &#123;</span><br><span class="line">                in = out = <span class="number">0</span>;</span><br><span class="line">                nextTransferAmount = buffer.length - in;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                nextTransferAmount = out - in;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (nextTransferAmount &gt; bytesToTransfer)</span><br><span class="line">            nextTransferAmount = bytesToTransfer;</span><br><span class="line">        <span class="keyword">assert</span>(nextTransferAmount &gt; <span class="number">0</span>);</span><br><span class="line">        System.arraycopy(b, off, buffer, in, nextTransferAmount);</span><br><span class="line">        bytesToTransfer -= nextTransferAmount;</span><br><span class="line">        off += nextTransferAmount;</span><br><span class="line">        in += nextTransferAmount;</span><br><span class="line">        <span class="keyword">if</span> (in &gt;= buffer.length) &#123;</span><br><span class="line">            in = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从抛出异常的条件<code>if ((writeSide != null) &amp;&amp; (!writeSide.isAlive()) &amp;&amp; (--trials &lt; 0))</code>看,应该就是写入端的线程已经退出了。但我们的写入端其实是注册了binder的回调给到其他进程,在binder回调里面写入的。难道是binder线程池的线程被回收了导致的?但是从复现手法来看只有接收到那一个url的post请求会导致断开,其他url的post请求则PipedInputStream能一直正常工作。按道理如果是binder线程回收的原因,应该是不会区分nanohttpd里的url处理才对。</p>
+<p>于是我在<code>output.write</code>前添加堆栈打印确认pid然后在断开后用<code>kill -3</code>强制打印进程全部线程堆栈到<code>/data/anr</code>目录,发现写入的线程的确在断开后退出了,但是从堆栈上我看到一些奇怪的东西:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at xx.xx.xx.xx.HttpServer.lambda$vSE0qxyqGQt4NJp3RjyeRZx9JR8(Unknown Source:0)</span><br><span class="line">...</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at xx.xx.xx.xx.xx.BinderEventHelper$1.onEvent(BinderEventHelper.java:53)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at xx.xx.xx.xx.binder.aidl.IEventListener$Stub.onTransact(IEventListener.java:63)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at android.os.Binder.execTransactInternal(Binder.java:1179)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at android.os.Binder.execTransact(Binder.java: 1143)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at android.os.BinderProxy.transactNative(Native Method)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at android.os.BinderProxy.transact(BinderProxy.java:571)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at xx.xx.xx.xx.binder.aidl.IServer$Stub$Proxy.sendRequest(IServer.iava:167)</span><br><span class="line">...</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at xx.xx.xx.xx.HttpServer.serve(HttpServer.kt:116)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at org.nanohttpd.protocols.http.HTTPSession.execute(HTTPSession.java:142)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at org.nanohttpd.protocols.http.ClientHandler.run(ClientHandler.java:12)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at java.lang.Thread.run(Thread.java:920)</span><br></pre></td></tr></table></figure>
+
+<p>onEvent这个aidl回调居然不是在binder线程中回调的,而是在nanohttpd的线程中回调的。而这条线程则是在DefaultAsyncRunner里面直接new的Thread:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://github.com/NanoHttpd/nanohttpd/blob/efb2ebf85a2b06f7c508aba9eaad5377e3a01e81/core/src/main/java/org/nanohttpd/protocols/http/threading/DefaultAsyncRunner.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">exec</span><span class="params">(ClientHandler clientHandler)</span> </span>&#123;</span><br><span class="line">    ++<span class="keyword">this</span>.requestCount;</span><br><span class="line">    <span class="keyword">this</span>.running.add(clientHandler);</span><br><span class="line">    createThread(clientHandler).start();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> Thread <span class="title">createThread</span><span class="params">(ClientHandler clientHandler)</span> </span>&#123;</span><br><span class="line">    Thread t = <span class="keyword">new</span> Thread(clientHandler);</span><br><span class="line">    t.setDaemon(<span class="keyword">true</span>);</span><br><span class="line">    t.setName(<span class="string">"NanoHttpd Request Processor (#"</span> + <span class="keyword">this</span>.requestCount + <span class="string">")"</span>);</span><br><span class="line">    <span class="keyword">return</span> t;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样的线程在执行完Runnable的run方法之后就退出了,无怪乎PipedInputStream.read里面wait 1秒之后会判断到writeSide线程退出而抛出IOException。</p>
+<p>而再看仔细点,我们其实是在这个线程里使用aidl去调用其他进程的方法,只不过这个方法刚好会引发aidl的回调,而这个回调就在同一个线程回到了,所以也只有处理这一个url的请求的时候会引发IOException,毕竟其他请求不会调用到这个aidl的方法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at xx.xx.xx.xx.binder.aidl.IEventListener$Stub.onTransact(IEventListener.java:63) // 这里是service端回调client端注册的linstener</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at android.os.Binder.execTransactInternal(Binder.java:1179)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at android.os.Binder.execTransact(Binder.java: 1143)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at android.os.BinderProxy.transactNative(Native Method)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at android.os.BinderProxy.transact(BinderProxy.java:571)</span><br><span class="line">01-31 09:27:54.801 9805 11368 D testtest:	at xx.xx.xx.xx.binder.aidl.IServer$Stub$Proxy.sendRequest(IServer.iava:167) // 这里是client端调用service端的方法</span><br></pre></td></tr></table></figure>
+
+<p>其实从这个结果来看是挺合常理的,我调用的方法内部会触发listener回调,那么这个回调和调用的方法在同一个线程执行。但问题是现在使用的是aidl跨进程调用的另外一个进程的方法,回调也是另外一个进程回调回来的,安卓是如何实现调用和回调在同一个线程的呢?</p>
+<h1 id="binder的请求流程"><a href="#binder的请求流程" class="headerlink" title="binder的请求流程"></a>binder的请求流程</h1><p>由于堆栈上只有java的信息,要想解答这个问题我们还需要深入看看BinderProxy.transactNative这个native方法是如何实现跨进程调用的:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/jni/android_util_Binder.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> jboolean <span class="title">android_os_BinderProxy_transact</span><span class="params">(JNIEnv* env, jobject obj,</span></span></span><br><span class="line"><span class="function"><span class="params">        jint code, jobject dataObj, jobject replyObj, jint flags)</span> <span class="comment">// throws RemoteException</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    IBinder* target = getBPNativeData(env, obj)-&gt;mObject.get();</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">status_t</span> err = target-&gt;transact(code, *data, reply, flags);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/native/libs/binder/BpBinder.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> BpBinder::transact(</span><br><span class="line">    <span class="keyword">uint32_t</span> code, <span class="keyword">const</span> Parcel&amp; data, Parcel* reply, <span class="keyword">uint32_t</span> flags)</span><br><span class="line">&#123;</span><br><span class="line">	...</span><br><span class="line">	status = IPCThreadState::self()-&gt;transact(binderHandle(), code, data, reply, flags);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/native/libs/binder/IPCThreadState.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> IPCThreadState::transact(<span class="keyword">int32_t</span> handle,</span><br><span class="line">                                  <span class="keyword">uint32_t</span> code, <span class="keyword">const</span> Parcel&amp; data,</span><br><span class="line">                                  Parcel* reply, <span class="keyword">uint32_t</span> flags)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    err = writeTransactionData(BC_TRANSACTION, flags, handle, code, data, <span class="literal">nullptr</span>); <span class="comment">// 写入数据</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 等待响应</span></span><br><span class="line">    <span class="keyword">if</span> (reply) &#123;</span><br><span class="line">        err = waitForResponse(reply);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Parcel fakeReply;</span><br><span class="line">        err = waitForResponse(&amp;fakeReply);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到BinderProxy.transactNative最终是调用到IPCThreadState去实现的,从IPCThreadState的名字还有获取的方式<code>IPCThreadState::self()</code>可以知道它是和线程绑定的。而它的writeTransactionData负责发送请求,时间就是往mOut里面写入BC_TRANSACTION这个cmd和各种调用参数打包成的binder_transaction_data:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/native/libs/binder/IPCThreadState.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> IPCThreadState::writeTransactionData(<span class="keyword">int32_t</span> cmd, <span class="keyword">uint32_t</span> binderFlags,</span><br><span class="line">    <span class="keyword">int32_t</span> handle, <span class="keyword">uint32_t</span> code, <span class="keyword">const</span> Parcel&amp; data, <span class="keyword">status_t</span>* statusBuffer)</span><br><span class="line">&#123;</span><br><span class="line">    binder_transaction_data tr;</span><br><span class="line"></span><br><span class="line">    tr.target.ptr = <span class="number">0</span>; <span class="comment">/* Don't pass uninitialized stack data to a remote process */</span></span><br><span class="line">    tr.target.handle = handle;</span><br><span class="line">    tr.code = code;</span><br><span class="line">    tr.flags = binderFlags;</span><br><span class="line">    tr.cookie = <span class="number">0</span>;</span><br><span class="line">    tr.sender_pid = <span class="number">0</span>;</span><br><span class="line">    tr.sender_euid = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">status_t</span> err = data.errorCheck();</span><br><span class="line">    <span class="keyword">if</span> (err == NO_ERROR) &#123;</span><br><span class="line">        tr.data_size = data.ipcDataSize();</span><br><span class="line">        tr.data.ptr.buffer = data.ipcData();</span><br><span class="line">        tr.offsets_size = data.ipcObjectsCount()*<span class="keyword">sizeof</span>(<span class="keyword">binder_size_t</span>);</span><br><span class="line">        tr.data.ptr.offsets = data.ipcObjects();</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (statusBuffer) &#123;</span><br><span class="line">        tr.flags |= TF_STATUS_CODE;</span><br><span class="line">        *statusBuffer = err;</span><br><span class="line">        tr.data_size = <span class="keyword">sizeof</span>(<span class="keyword">status_t</span>);</span><br><span class="line">        tr.data.ptr.buffer = <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">uintptr_t</span>&gt;(statusBuffer);</span><br><span class="line">        tr.offsets_size = <span class="number">0</span>;</span><br><span class="line">        tr.data.ptr.offsets = <span class="number">0</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> (mLastError = err);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mOut.writeInt32(cmd);</span><br><span class="line">    mOut.write(&amp;tr, <span class="keyword">sizeof</span>(tr));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> NO_ERROR;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>service端接收到BC_TRANSACTION这个cmd就会回调到aidl Stub的onTransact然后返回,client则是在IPCThreadState::waitForResponse里面等待返回:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/native/libs/binder/IPCThreadState.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> IPCThreadState::waitForResponse(Parcel *reply, <span class="keyword">status_t</span> *acquireResult)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> cmd;</span><br><span class="line">    <span class="keyword">int32_t</span> err;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((err=talkWithDriver()) &lt; NO_ERROR) <span class="keyword">break</span>;</span><br><span class="line">        err = mIn.errorCheck();</span><br><span class="line">        <span class="keyword">if</span> (err &lt; NO_ERROR) <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">if</span> (mIn.dataAvail() == <span class="number">0</span>) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">        cmd = (<span class="keyword">uint32_t</span>)mIn.readInt32();</span><br><span class="line"></span><br><span class="line">        IF_LOG_COMMANDS() &#123;</span><br><span class="line">            alog &lt;&lt; <span class="string">"Processing waitForResponse Command: "</span></span><br><span class="line">                &lt;&lt; getReturnString(cmd) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">switch</span> (cmd) &#123;</span><br><span class="line">        <span class="keyword">case</span> BR_ONEWAY_SPAM_SUSPECT:</span><br><span class="line">            ...</span><br><span class="line">        <span class="keyword">case</span> BR_TRANSACTION_COMPLETE:</span><br><span class="line">            ...</span><br><span class="line">        <span class="keyword">case</span> BR_DEAD_REPLY:</span><br><span class="line">            ...</span><br><span class="line">        <span class="keyword">case</span> BR_FAILED_REPLY:</span><br><span class="line">            ...</span><br><span class="line">        <span class="keyword">case</span> BR_FROZEN_REPLY:</span><br><span class="line">            ...</span><br><span class="line">        <span class="keyword">case</span> BR_ACQUIRE_RESULT:</span><br><span class="line">            ...</span><br><span class="line">        <span class="keyword">case</span> BR_REPLY:</span><br><span class="line">            &#123;</span><br><span class="line">                binder_transaction_data tr;</span><br><span class="line">                err = mIn.read(&amp;tr, <span class="keyword">sizeof</span>(tr));</span><br><span class="line">                ALOG_ASSERT(err == NO_ERROR, <span class="string">"Not enough command data for brREPLY"</span>);</span><br><span class="line">                <span class="keyword">if</span> (err != NO_ERROR) <span class="keyword">goto</span> finish;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (reply) &#123;</span><br><span class="line">                    <span class="keyword">if</span> ((tr.flags &amp; TF_STATUS_CODE) == <span class="number">0</span>) &#123;</span><br><span class="line">                        reply-&gt;ipcSetDataReference(</span><br><span class="line">                            <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">uint8_t</span>*&gt;(tr.data.ptr.buffer),</span><br><span class="line">                            tr.data_size,</span><br><span class="line">                            <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">binder_size_t</span>*&gt;(tr.data.ptr.offsets),</span><br><span class="line">                            tr.offsets_size/<span class="keyword">sizeof</span>(<span class="keyword">binder_size_t</span>),</span><br><span class="line">                            freeBuffer);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        err = *<span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">status_t</span>*&gt;(tr.data.ptr.buffer);</span><br><span class="line">                        freeBuffer(<span class="literal">nullptr</span>,</span><br><span class="line">                            <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">uint8_t</span>*&gt;(tr.data.ptr.buffer),</span><br><span class="line">                            tr.data_size,</span><br><span class="line">                            <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">binder_size_t</span>*&gt;(tr.data.ptr.offsets),</span><br><span class="line">                            tr.offsets_size/<span class="keyword">sizeof</span>(<span class="keyword">binder_size_t</span>));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    freeBuffer(<span class="literal">nullptr</span>,</span><br><span class="line">                        <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">uint8_t</span>*&gt;(tr.data.ptr.buffer),</span><br><span class="line">                        tr.data_size,</span><br><span class="line">                        <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> <span class="keyword">binder_size_t</span>*&gt;(tr.data.ptr.offsets),</span><br><span class="line">                        tr.offsets_size/<span class="keyword">sizeof</span>(<span class="keyword">binder_size_t</span>));</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">goto</span> finish;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            err = executeCommand(cmd);</span><br><span class="line">            <span class="keyword">if</span> (err != NO_ERROR) <span class="keyword">goto</span> finish;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>正常情况会直接读取到BR_REPLY,然后就填充返回数据回到java层,但是如果service端的onTransact里面又回调回client端的方法,由于<code>IPCThreadState::self()</code>会获取到同一个IPCThreadState,然后写入的cmd是BC_TRANSACTION而不是响应的BR_REPLY。这个时候就会去到default的executeCommand里面处理回调到client端listener Stub的onTransact:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/native/libs/binder/IPCThreadState.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> IPCThreadState::executeCommand(<span class="keyword">int32_t</span> cmd)</span><br><span class="line">&#123;</span><br><span class="line">    BBinder* obj;</span><br><span class="line">    RefBase::weakref_type* refs;</span><br><span class="line">    <span class="keyword">status_t</span> result = NO_ERROR;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> ((<span class="keyword">uint32_t</span>)cmd) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">case</span> BR_TRANSACTION:</span><br><span class="line">        &#123;</span><br><span class="line">            ...</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        ALOGE(<span class="string">"*** BAD COMMAND %d received from Binder driver\n"</span>, cmd);</span><br><span class="line">        result = UNKNOWN_ERROR;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (result != NO_ERROR) &#123;</span><br><span class="line">        mLastError = result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以整个流程就是在IPCThreadState::transact里面调用service端方法,然后读取service端的返回发现读取出来的是回调client的listener于是进行回调。这样一来的确调用service端方法和回调client的listener都是在IPCThreadState::transact这个函数里面完成的就在同一个线程。</p>
+<p>而处理完listener的回调之后由于waitForResponse里面是个<code>while(1)</code>,所以就会继续去读取调用service端方法的返回了:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/native/libs/binder/IPCThreadState.cpp</span></span><br><span class="line"><span class="keyword">status_t</span> IPCThreadState::waitForResponse(Parcel *reply, <span class="keyword">status_t</span> *acquireResult)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">uint32_t</span> cmd;</span><br><span class="line">    <span class="keyword">int32_t</span> err;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123; <span class="comment">// 这里是个while(1)</span></span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">switch</span> (cmd) &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">case</span> BR_REPLY:</span><br><span class="line">            &#123;</span><br><span class="line">                ... <span class="comment">// 2.再读取service方法的返回</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">goto</span> finish; <span class="comment">// 3.最后退出waitForResponse</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            err = executeCommand(cmd); <span class="comment">// 1.先处理BR_TRANSACTION回调client的listener</span></span><br><span class="line">            <span class="keyword">if</span> (err != NO_ERROR) <span class="keyword">goto</span> finish;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>顺带一提,service端binder线程池里最终也是通过executeCommand去处理BC_TRANSACTION这个cmd的:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/native/libs/binder/ProcessState.cpp</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PoolThread</span> :</span> <span class="keyword">public</span> Thread</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">PoolThread</span><span class="params">(<span class="keyword">bool</span> isMain)</span></span></span><br><span class="line">        : mIsMain(isMain)</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">bool</span> <span class="title">threadLoop</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        IPCThreadState::self()-&gt;joinThreadPool(mIsMain);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">bool</span> mIsMain;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/native/libs/binder/IPCThreadState.cpp</span></span><br><span class="line"><span class="keyword">void</span> IPCThreadState::joinThreadPool(<span class="keyword">bool</span> isMain)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    result = getAndExecuteCommand();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">status_t</span> IPCThreadState::getAndExecuteCommand()</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">	result = executeCommand(cmd);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再结合我之前的另外一篇<a href="https://blog.islinjw.cn/2019/06/22/binder%E6%9C%BA%E5%88%B6%E6%B7%B1%E5%85%A5%E6%8E%A2%E7%A9%B6/">binder机制深入探究</a>博客对数据传输的分析,整个binder的跨进程请求流程就清晰了。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
