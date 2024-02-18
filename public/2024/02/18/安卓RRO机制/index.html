@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓RRO机制 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="年前和组内的小伙伴讨论过一个需求的RRO实现方案。我其实之前对RRO也只是处于大概了解的程度,并没有实际去操作过,趁着过年这段时间有空也写了个demo实际验证了下。 由于官方文档实际上对整个RRO机制已经讲的比较清楚了,我这里只做一些补充。 RRO的默认状态根据官方文档的介绍普通的RRO默认是停用状态的,类似国内的系统主题包其实下载安装之后是没有启用的,需要程序用OverlayManager.se">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓RRO机制">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/02/18/安卓RRO机制/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="年前和组内的小伙伴讨论过一个需求的RRO实现方案。我其实之前对RRO也只是处于大概了解的程度,并没有实际去操作过,趁着过年这段时间有空也写了个demo实际验证了下。 由于官方文档实际上对整个RRO机制已经讲的比较清楚了,我这里只做一些补充。 RRO的默认状态根据官方文档的介绍普通的RRO默认是停用状态的,类似国内的系统主题包其实下载安装之后是没有启用的,需要程序用OverlayManager.se">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2024-02-18T14:50:24.032Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓RRO机制">
+<meta name="twitter:description" content="年前和组内的小伙伴讨论过一个需求的RRO实现方案。我其实之前对RRO也只是处于大概了解的程度,并没有实际去操作过,趁着过年这段时间有空也写了个demo实际验证了下。 由于官方文档实际上对整个RRO机制已经讲的比较清楚了,我这里只做一些补充。 RRO的默认状态根据官方文档的介绍普通的RRO默认是停用状态的,类似国内的系统主题包其实下载安装之后是没有启用的,需要程序用OverlayManager.se">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#RRO的默认状态"><span class="toc-text">RRO的默认状态</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#静态-RRO"><span class="toc-text">静态 RRO</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OverlayConfig"><span class="toc-text">OverlayConfig</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#overlay命令"><span class="toc-text">overlay命令</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#idmap"><span class="toc-text">idmap</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#新增资源"><span class="toc-text">新增资源</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#完整Demo"><span class="toc-text">完整Demo</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓RRO机制" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓RRO机制</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.02.18</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>年前和组内的小伙伴讨论过一个需求的RRO实现方案。我其实之前对RRO也只是处于大概了解的程度,并没有实际去操作过,趁着过年这段时间有空也写了个demo实际验证了下。</p>
+<p>由于<a href="https://source.android.com/docs/core/architecture/rros?hl=zh-cn" target="_blank" rel="noopener">官方文档</a>实际上对整个RRO机制已经讲的比较清楚了,我这里只做一些补充。</p>
+<h1 id="RRO的默认状态"><a href="#RRO的默认状态" class="headerlink" title="RRO的默认状态"></a>RRO的默认状态</h1><p>根据官方文档的介绍普通的RRO默认是停用状态的,类似国内的系统主题包其实下载安装之后是没有启用的,需要程序用<a href="https://source.android.com/docs/core/architecture/rros?hl=zh-cn#enabling-disabling-overlays" target="_blank" rel="noopener">OverlayManager.setEnable</a>去启动它。</p>
+<p>但我们是需要预装默认启用的,有下面两种方式可以实现</p>
+<h3 id="静态-RRO"><a href="#静态-RRO" class="headerlink" title="静态 RRO"></a>静态 RRO</h3><p>第一种是使用<a href="https://source.android.com/docs/core/architecture/rros?hl=zh-cn#static-rros" target="_blank" rel="noopener">静态 RRO</a>,即将manifest里面的<code>android:isStatic</code>设置成true。</p>
+<p>这种方式<strong>预装</strong>的overlay包会默认启用,而且不能用命令或者程序去禁用它(如果是用pm install去安装的话不会生效,还是默认停用需要用命令或者程序去启用)</p>
+<p>这种方式比较适合运行时不会改变的客制化需求(俗称换皮)。</p>
+<h3 id="OverlayConfig"><a href="#OverlayConfig" class="headerlink" title="OverlayConfig"></a>OverlayConfig</h3><p>第二种是使用<a href="https://source.android.com/docs/core/architecture/rros?hl=zh-cn#using-overlayconfig" target="_blank" rel="noopener">OverlayConfig</a>,在机器的<code>/{partition}/overlay/config/config.xml</code>里面添加配置:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">config</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">merge</span> <span class="attr">path</span>=<span class="string">"OEM-common-rros-config.xml"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">overlay</span> <span class="attr">package</span>=<span class="string">"com.oem.overlay.device"</span> <span class="attr">mutable</span>=<span class="string">"false"</span> <span class="attr">enabled</span>=<span class="string">"true"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">overlay</span> <span class="attr">package</span>=<span class="string">"com.oem.green.theme"</span> <span class="attr">enabled</span>=<span class="string">"true"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">config</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里的<code>enabled</code>配置默认是否启用(默认为false),<code>mutable</code>配置运行时是否可修改(默认为true),如果配置成<code>mutable=&quot;false&quot; enabled=&quot;true&quot;</code>则和<code>android:isStatic</code>设置成true使用静态 RRO效果一样。</p>
+<p>然后需要将overlay apk预装到<code>/{partition}/overlay/</code>目录下,由于OverlayConfigParser是在xml上级的overlay里面扫描overlay apk,如果不预装在这个路径的话就会报错:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">E Zygote  : System zygote died with fatal exception</span><br><span class="line">E Zygote  : java.lang.ExceptionInInitializerError</span><br><span class="line">E Zygote  :      at java.lang.Class.classForName(Native Method)</span><br><span class="line">E Zygote  :      at java.lang.Class.forName(Class.java:454)</span><br><span class="line">E Zygote  :      at com.android.internal.os.ZygoteInit.preloadClasses(ZygoteInit.java:301)</span><br><span class="line">E Zygote  :      at com.android.internal.os.ZygoteInit.preload(ZygoteInit.java:140)</span><br><span class="line">E Zygote  :      at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:889)</span><br><span class="line">E Zygote  : Caused by: java.lang.IllegalStateException: overlay me.linjw.demo.overlay.overlay not present in partition /vendor/overlay in /vendor/overlay/config/config.xml at START_TAG (empty) &lt;overlay package=&apos;me.linjw.demo.overlay.overlay&apos; enabled=&apos;true&apos;&gt;@2:66 in java.io.FileReader@583e450</span><br><span class="line">E Zygote  :      at com.android.internal.content.om.OverlayConfigParser.parseOverlay(OverlayConfigParser.java:372)</span><br><span class="line">E Zygote  :      at com.android.internal.content.om.OverlayConfigParser.readConfigFile(OverlayConfigParser.java:249)</span><br><span class="line">E Zygote  :      at com.android.internal.content.om.OverlayConfigParser.getConfigurations(OverlayConfigParser.java:220)</span><br><span class="line">E Zygote  :      at com.android.internal.content.om.OverlayConfig.&lt;init&gt;(OverlayConfig.java:152)</span><br><span class="line">E Zygote  :      at com.android.internal.content.om.OverlayConfig.getZygoteInstance(OverlayConfig.java:218)</span><br><span class="line">E Zygote  :      at android.content.res.AssetManager.createSystemAssetsInZygoteLocked(AssetManager.java:252)</span><br><span class="line">E Zygote  :      at android.content.res.AssetManager.getSystem(AssetManager.java:276)</span><br><span class="line">E Zygote  :      at android.content.res.Resources.&lt;init&gt;(Resources.java:347)</span><br><span class="line">E Zygote  :      at android.content.res.Resources.getSystem(Resources.java:236)</span><br><span class="line">E Zygote  :      at com.android.internal.telephony.GsmAlphabet.enableCountrySpecificEncodings(GsmAlphabet.java:1090)</span><br><span class="line">E Zygote  :      at com.android.internal.telephony.GsmAlphabet.&lt;clinit&gt;(GsmAlphabet.java:1495)</span><br><span class="line">E Zygote  :      ... 5 more</span><br></pre></td></tr></table></figure>
+
+<p><code>partition</code>可以是下面的值,如果有多个overlay apk对同一个资源做overlay,优先级从低到高:</p>
+<ul>
+<li>system</li>
+<li>vendor</li>
+<li>odm</li>
+<li>oem</li>
+<li>product</li>
+<li>system_ext</li>
+</ul>
+<p>我这里的和<a href="https://source.android.com/docs/core/architecture/rros?hl=zh-cn#overlay-precedence" target="_blank" rel="noopener">官方文档</a>里面写的优先级odm、oem反了,这是因为我看安卓13的实现代码里面定义是这样的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/com/android/internal/content/om/OverlayConfig.java;l=132</span></span><br><span class="line">partitions = <span class="keyword">new</span> ArrayList&lt;&gt;(</span><br><span class="line">                      PackagePartitions.getOrderedPartitions(OverlayPartition::<span class="keyword">new</span>));</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/content/pm/PackagePartitions.java</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The list of all system partitions that may contain packages in ascending order of</span></span><br><span class="line"><span class="comment"> * specificity (the more generic, the earlier in the list a partition appears).</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ArrayList&lt;SystemPartition&gt; SYSTEM_PARTITIONS =</span><br><span class="line">        <span class="keyword">new</span> ArrayList&lt;&gt;(Arrays.asList(</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getRootDirectory(),</span><br><span class="line">                        PARTITION_SYSTEM, Partition.PARTITION_NAME_SYSTEM,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">false</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getVendorDirectory(),</span><br><span class="line">                        PARTITION_VENDOR, Partition.PARTITION_NAME_VENDOR,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getOdmDirectory(),</span><br><span class="line">                        PARTITION_ODM, Partition.PARTITION_NAME_ODM,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getOemDirectory(),</span><br><span class="line">                        PARTITION_OEM, Partition.PARTITION_NAME_OEM,</span><br><span class="line">                        <span class="keyword">false</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getProductDirectory(),</span><br><span class="line">                        PARTITION_PRODUCT, Partition.PARTITION_NAME_PRODUCT,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>),</span><br><span class="line">                <span class="keyword">new</span> SystemPartition(Environment.getSystemExtDirectory(),</span><br><span class="line">                        PARTITION_SYSTEM_EXT, Partition.PARTITION_NAME_SYSTEM_EXT,</span><br><span class="line">                        <span class="keyword">true</span> <span class="comment">/* containsPrivApp */</span>, <span class="keyword">true</span> <span class="comment">/* containsOverlay */</span>)));</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Returns a list in which the elements are products of the specified function applied to the</span></span><br><span class="line"><span class="comment"> * list of &#123;<span class="doctag">@link</span> #SYSTEM_PARTITIONS&#125; in increasing specificity order.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">ArrayList&lt;T&gt; <span class="title">getOrderedPartitions</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        @NonNull Function&lt;SystemPartition, T&gt; producer)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ArrayList&lt;T&gt; out = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>, n = SYSTEM_PARTITIONS.size(); i &lt; n; i++) &#123;</span><br><span class="line">        <span class="keyword">final</span> T v = producer.apply(SYSTEM_PARTITIONS.get(i));</span><br><span class="line">        <span class="keyword">if</span> (v != <span class="keyword">null</span>)  &#123;</span><br><span class="line">            out.add(v);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> out;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="overlay命令"><a href="#overlay命令" class="headerlink" title="overlay命令"></a>overlay命令</h1><p>根据<a href="https://source.android.com/docs/core/architecture/rros?hl=zh-cn#debugging-overlays" target="_blank" rel="noopener">官方文档</a>在调试阶段可以用shell命令去调试overlay。有时候对具体命令的使用有疑问的话可以直接看它的实现代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/om/OverlayManagerShellCommand.java;l=61</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">onCommand</span><span class="params">(@Nullable <span class="keyword">final</span> String cmd)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (cmd == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> handleDefaultCommands(cmd);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">final</span> PrintWriter err = getErrPrintWriter();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">switch</span> (cmd) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"list"</span>:</span><br><span class="line">                <span class="keyword">return</span> runList();</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"enable"</span>:</span><br><span class="line">                <span class="keyword">return</span> runEnableDisable(<span class="keyword">true</span>);</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"disable"</span>:</span><br><span class="line">                <span class="keyword">return</span> runEnableDisable(<span class="keyword">false</span>);</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"enable-exclusive"</span>:</span><br><span class="line">                <span class="keyword">return</span> runEnableExclusive();</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"set-priority"</span>:</span><br><span class="line">                <span class="keyword">return</span> runSetPriority();</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"lookup"</span>:</span><br><span class="line">                <span class="keyword">return</span> runLookup();</span><br><span class="line">            <span class="keyword">case</span> <span class="string">"fabricate"</span>:</span><br><span class="line">                <span class="keyword">return</span> runFabricate();</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="keyword">return</span> handleDefaultCommands(cmd);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IllegalArgumentException e) &#123;</span><br><span class="line">        err.println(<span class="string">"Error: "</span> + e.getMessage());</span><br><span class="line">    &#125; <span class="keyword">catch</span> (RemoteException e) &#123;</span><br><span class="line">        err.println(<span class="string">"Remote exception: "</span> + e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>例如<code>cmd overlay list</code>命令列出了各个overlay apk的启用状态,<code>[x]</code>是已经启用,<code>[ ]</code>是停用:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">me.linjw.demo.overlay1.app</span><br><span class="line">[ ] me.linjw.demo.overlay1.overlay</span><br><span class="line"></span><br><span class="line">me.linjw.demo.overlay2.app</span><br><span class="line">[x] me.linjw.demo.overlay2.overlay</span><br><span class="line"></span><br><span class="line">com.android.connectivity.resources</span><br><span class="line">--- com.rockchip.networkstack.tethering.nokeepalive.overlay</span><br></pre></td></tr></table></figure>
+
+<p>而<code>---</code>则是代表这个overlay包处于不可用状态无法使用<code>cmd overlay enable {package}</code>或者<code>cmd overlay disable {package}</code>去启用或者停用它。这种情况会出现在目标包未预装、没有找到需要overlay的资源等情况:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/services/core/java/com/android/server/om/OverlayManagerShellCommand.java;l=193</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">printListOverlay</span><span class="params">(PrintWriter out, OverlayInfo oi)</span> </span>&#123;</span><br><span class="line">    String status;</span><br><span class="line">    <span class="keyword">switch</span> (oi.state) &#123;</span><br><span class="line">        <span class="keyword">case</span> OverlayInfo.STATE_ENABLED_IMMUTABLE:</span><br><span class="line">        <span class="keyword">case</span> OverlayInfo.STATE_ENABLED:</span><br><span class="line">            status = <span class="string">"[x]"</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> OverlayInfo.STATE_DISABLED:</span><br><span class="line">            status = <span class="string">"[ ]"</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            status = <span class="string">"---"</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    out.println(String.format(<span class="string">"%s %s"</span>, status, oi.getOverlayIdentifier()));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r74:frameworks/base/core/java/android/content/om/OverlayInfo.java;l=45</span></span><br><span class="line"><span class="meta">@IntDef</span>(prefix = <span class="string">"STATE_"</span>, value = &#123;</span><br><span class="line">        STATE_UNKNOWN,</span><br><span class="line">        STATE_MISSING_TARGET,</span><br><span class="line">        STATE_NO_IDMAP,</span><br><span class="line">        STATE_DISABLED,</span><br><span class="line">        STATE_ENABLED,</span><br><span class="line">        STATE_ENABLED_IMMUTABLE,</span><br><span class="line">        <span class="comment">// @Deprecated STATE_TARGET_IS_BEING_REPLACED,</span></span><br><span class="line">        STATE_OVERLAY_IS_BEING_REPLACED,</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">/** <span class="doctag">@hide</span> */</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.SOURCE)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> State &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An internal state used as the initial state of an overlay. OverlayInfo</span></span><br><span class="line"><span class="comment"> * objects exposed outside the &#123;<span class="doctag">@link</span></span></span><br><span class="line"><span class="comment"> * com.android.server.om.OverlayManagerService&#125; should never have this</span></span><br><span class="line"><span class="comment"> * state.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_UNKNOWN = -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The target package of the overlay is not installed. The overlay cannot be enabled.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_MISSING_TARGET = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Creation of idmap file failed (e.g. no matching resources). The overlay</span></span><br><span class="line"><span class="comment"> * cannot be enabled.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_NO_IDMAP = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The overlay is currently disabled. It can be enabled.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> IOverlayManager#setEnabled</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_DISABLED = <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The overlay is currently enabled. It can be disabled.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> IOverlayManager#setEnabled</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_ENABLED = <span class="number">3</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The target package is currently being upgraded or downgraded; the state</span></span><br><span class="line"><span class="comment"> * will change once the package installation has finished.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@deprecated</span> No longer used. Caused invalid transitions from enabled -&gt; upgrading -&gt; enabled,</span></span><br><span class="line"><span class="comment"> * where an update is propagated when nothing has changed. Can occur during --dont-kill</span></span><br><span class="line"><span class="comment"> * installs when code and resources are hot swapped and the Activity should not be relaunched.</span></span><br><span class="line"><span class="comment"> * In all other cases, the process and therefore Activity is killed, so the state loop is</span></span><br><span class="line"><span class="comment"> * irrelevant.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Deprecated</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_TARGET_IS_BEING_REPLACED = <span class="number">4</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The overlay package is currently being upgraded or downgraded; the state</span></span><br><span class="line"><span class="comment"> * will change once the package installation has finished.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_OVERLAY_IS_BEING_REPLACED = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The overlay package is currently enabled because it is marked as</span></span><br><span class="line"><span class="comment"> * 'immutable'. It cannot be disabled but will change state if for instance</span></span><br><span class="line"><span class="comment"> * its target is uninstalled.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@hide</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Deprecated</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_ENABLED_IMMUTABLE = <span class="number">6</span>;</span><br></pre></td></tr></table></figure>
+
+<p>然后可以用<code>lookup</code>命令查看启用、停用overlay包的情况下最终读取到的资源值是什么:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmd overlay lookup me.linjw.demo.overlay.app me.linjw.demo.overlay.app:string/app_name</span><br></pre></td></tr></table></figure>
+
+<h1 id="idmap"><a href="#idmap" class="headerlink" title="idmap"></a>idmap</h1><p>之前我写过一系列<a href="https://blog.islinjw.cn/2019/05/18/%E5%8F%AF%E8%83%BD%E6%98%AF%E5%85%A8%E7%BD%91%E8%AE%B2%E6%9C%80%E7%BB%86%E7%9A%84%E5%AE%89%E5%8D%93resources-arsc%E8%A7%A3%E6%9E%90%E6%95%99%E7%A8%8B-%E4%B8%80/">博客</a>探索过安卓的资源机制,实际上安卓是通过一个int的资源id去resources.arsc里面查询的资源,如果Overlay apk里面的id和目标apk的资源id不一致要怎么处理?</p>
+<p>其实安卓是通过idmap机制实现的,在<code>/data/resource-cache/</code>目录下保存有各个overlay应用的idmap映射文件,可以用<code>idmap2 dump --idmap-path {file}</code>命令去打印映射关系:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">idmap2 dump --idmap-path /data/resource-cache/system_ext@overlay@OverlayDemo.apk@idmap</span><br><span class="line">Paths:</span><br><span class="line">    target path  : /system_ext/app/OverlayDemo/OverlayDemo.apk</span><br><span class="line">    overlay path : /system_ext/overlay/OverlayDemoOverlay.apk</span><br><span class="line">Debug info:</span><br><span class="line">    W failed to find resource &apos;string/app_name2&apos;</span><br><span class="line">Mapping:</span><br><span class="line">    0x7f030000 -&gt; 0x7f010000 (string/app_name -&gt; string/app_name)</span><br></pre></td></tr></table></figure>
+
+<p>例如上面的打印指的是在OverlayDemo.apk里面用<code>0x7f030000</code>这个id去搜索资源的时候会映射到<code>0x7f010000</code>这个id去它的overlay apk(OverlayDemoOverlay.apk)里面搜索。</p>
+<h1 id="新增资源"><a href="#新增资源" class="headerlink" title="新增资源"></a>新增资源</h1><p>安卓的RRO机制应该是不支持新增资源的,所以我在overlay apk里面加入了目标apk没有的<code>app_name2</code>字符串之后dump的时候打印<code>W failed to find resource &#39;string/app_name2&#39;</code>。</p>
+<p>但我们可以通过代码在指定的overlay包里面搜索资源id然后读取,实现新增资源的目的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">id = getResources().getIdentifier(<span class="string">"app_name2"</span>, <span class="string">"string"</span>, <span class="string">"me.linjw.demo.overlay.overlay"</span>);</span><br><span class="line"><span class="keyword">if</span> (id != <span class="number">0</span>) &#123;</span><br><span class="line">    sb.append(<span class="string">"app_name2="</span> + getResources().getString(id));</span><br><span class="line">&#125;<span class="keyword">else</span> &#123;</span><br><span class="line">    sb.append(<span class="string">"app_name2=?"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="完整Demo"><a href="#完整Demo" class="headerlink" title="完整Demo"></a>完整Demo</h1><p>完整的Demo已经上传到<a href="https://github.com/bluesky466/OverlayDemo" target="_blank" rel="noopener">Github</a></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
