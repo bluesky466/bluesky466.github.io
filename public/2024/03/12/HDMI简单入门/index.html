@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>HDMI简单入门 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,嵌入式,">
+  
+
+  <meta name="description" content="最近做的音视频项目里面需要深入到hdmi的硬件实现去定位问题,于是大概学习了一下hdmi的硬件知识，这里总结下做个简单入门。 hdmi是啥我就不说了直接看看它的针脚定义,后面讲的内容都会基于它:   插入检测插入检测的作用是让信号源知道显示器已经插入,由19号HPD引脚实现。HPD全称Hot Plug Detect即热插拔检测。  信号源在启动之后生成5V电压通过18号引脚向显示器供电 插入显示器">
+<meta name="keywords" content="技术相关,嵌入式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HDMI简单入门">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/03/12/HDMI简单入门/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="最近做的音视频项目里面需要深入到hdmi的硬件实现去定位问题,于是大概学习了一下hdmi的硬件知识，这里总结下做个简单入门。 hdmi是啥我就不说了直接看看它的针脚定义,后面讲的内容都会基于它:   插入检测插入检测的作用是让信号源知道显示器已经插入,由19号HPD引脚实现。HPD全称Hot Plug Detect即热插拔检测。  信号源在启动之后生成5V电压通过18号引脚向显示器供电 插入显示器">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/HDMI-pin-definition.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/980manager.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/声卡驱动.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/注册表.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/单端信号.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/差分信号.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/屏蔽线.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/眼图.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/眼图质量.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/预加重.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/连续1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/开眼小.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/去加重.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/开眼变大.png">
+<meta property="og:image" content="https://blog.islinjw.cn/HDMI简单入门/swing变小.png">
+<meta property="og:updated_time" content="2024-03-12T00:27:54.140Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HDMI简单入门">
+<meta name="twitter:description" content="最近做的音视频项目里面需要深入到hdmi的硬件实现去定位问题,于是大概学习了一下hdmi的硬件知识，这里总结下做个简单入门。 hdmi是啥我就不说了直接看看它的针脚定义,后面讲的内容都会基于它:   插入检测插入检测的作用是让信号源知道显示器已经插入,由19号HPD引脚实现。HPD全称Hot Plug Detect即热插拔检测。  信号源在启动之后生成5V电压通过18号引脚向显示器供电 插入显示器">
+<meta name="twitter:image" content="https://blog.islinjw.cn/HDMI简单入门/HDMI-pin-definition.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#插入检测"><span class="toc-text">插入检测</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#EDID"><span class="toc-text">EDID</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#HDCP"><span class="toc-text">HDCP</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#数据传输"><span class="toc-text">数据传输</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#眼图"><span class="toc-text">眼图</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#EQ"><span class="toc-text">EQ</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考文章"><span class="toc-text">参考文章</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-HDMI简单入门" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">HDMI简单入门</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.03.12</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近做的音视频项目里面需要深入到hdmi的硬件实现去定位问题,于是大概学习了一下hdmi的硬件知识，这里总结下做个简单入门。</p>
+<p>hdmi是啥我就不说了直接看看它的针脚定义,后面讲的内容都会基于它:</p>
+<img src="/HDMI简单入门/HDMI-pin-definition.png">
+
+<h1 id="插入检测"><a href="#插入检测" class="headerlink" title="插入检测"></a>插入检测</h1><p>插入检测的作用是让信号源知道显示器已经插入,由19号HPD引脚实现。HPD全称Hot Plug Detect即热插拔检测。</p>
+<ol>
+<li>信号源在启动之后生成5V电压通过18号引脚向显示器供电</li>
+<li>插入显示器之后即使显示器自己没有外接电源也可以靠这个5V供电上拉19号HPD引脚到5V</li>
+<li>只要信号源检测到HPD引脚为5V即代表已经接入显示器</li>
+</ol>
+<p>所以显示器在没有外接电源供电不足以出图的时候,但信号仍然可以检测到显示器已经接入。</p>
+<p>所以出现插入hdmi线但是不出图的情况可以先量下HPD看看是不是5V。</p>
+<h1 id="EDID"><a href="#EDID" class="headerlink" title="EDID"></a>EDID</h1><p>EDID (Extended Display Identification Data)是用来描述显示器信息的,信号源通过读取显示器的EDID就能知道显示器支持哪些分辨率/刷新率/数据格式等,然后输出合适的数据给到显示器。</p>
+<p>它实际就是一个128字节(HDMI1.0~1.4)或者256字节(HDMI2.0+)的二进制数据,它里面每个bit都有对应的含义,可以在<a href="https://en.wikipedia.org/wiki/Extended_Display_Identification_Data" target="_blank" rel="noopener">维基百科</a>看到具体的定义。不过看了大概也记不住所以一般直接用可视化的编辑工具去编辑就好,编辑工具就会显示人可理解的信息出来。例如通过<a href="https://980-manager.software.informer.com/download" target="_blank" rel="noopener"><br>980 Manager</a>去编辑EDID:</p>
+<img src="/HDMI简单入门/980manager.png">
+
+<p>可以看到这个工具会列举出edid里的bit功能,基本上只需要打勾/选择/填空即可。</p>
+<p>信号源检测到显示器插入之后就可以通过DDC（Display Data Channel）通道读取显示器的EDID。这里的DDC是个功能名,hdmi具体是通过I2C实现的。也就是说输入源可以通过15号/16号两根引脚走I2C协议读取显示器的EDID。</p>
+<p>另外修改HDMI的设备名的时候,信号源笔记本上看声卡名不会改变是因为windows把相关信息根据Manufacturer ID和Product Code缓存到了注册表,可以到设备管理器里面查看设备id:</p>
+<img src="/HDMI简单入门/声卡驱动.jpg">
+
+<p>然后到注册表编辑器的<code>计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Render\</code>下找到对应id然后在Properties里面将Manufacturer ID+Product Code信息删除接着插拔hdmi即可。</p>
+<img src="/HDMI简单入门/注册表.jpg">
+
+<h1 id="HDCP"><a href="#HDCP" class="headerlink" title="HDCP"></a>HDCP</h1><p>信号源读取到EDID之后可以向显示器传输它支持的数据格式去显示,但在版权概念越来越强的今天,有些高价值的数据希望在抵达显示器之前都是加密状态不能被直接录制的。这个时候就需要使用HDCP(High -bandwidth Digital Content Protection)去进行加密。</p>
+<p>它的原理简单来说就是信号源和显示器各自都有一个可用密钥集,在握手阶段在可用密钥集里面选取密钥交换,然后计算出最终的密钥对传输的数据进行加密解密。</p>
+<p>所以当我们的显示器需要播放HDCP信号源的视频的时候就需要先烧录好密钥集,之前就遇到过测试机器没有烧录key导致DVD插入不出图的问题。</p>
+<h1 id="数据传输"><a href="#数据传输" class="headerlink" title="数据传输"></a>数据传输</h1><p>从上面的引脚图可以看到hdmi由三个数据通道,即1~9号引脚。具体的数据传输是通过差分信号的方式传输的。那什么是差分信号呢?</p>
+<p>如果不考虑干扰实际上我们用一个线就能完成数据的传输,高低平是1低电平是0。这样一根线传输数据的信号叫做单端信号。但是实际场景下单端信号很容易被干扰:</p>
+<img src="/HDMI简单入门/单端信号.png">
+
+<p>像上面的低电平突然有个干扰噪声,就容易被识别成1。</p>
+<p>而差分信号通过两根导线传输信号，这两根导线上传输的信号具有相同的振幅和相反的相位用两根线去传输数据。可以简单理解成两根线传完全对称的波形,然后由他们的电平差来决定是0还是1:</p>
+<img src="/HDMI简单入门/差分信号.png">
+
+<p>由于两个线受到的干扰是一样的,所以不影响他们两之间的差。</p>
+<p>既然差分信号由两根线去传输数据那为啥hdmi每个data通道需要三根线呢?从名字可以看到第三根线叫做屏蔽线。这是由于hdmi data线传输的速率很快，像我们传输4k60HZ的画面，每秒要传60张3840x2160的图片还要带上音频信息就更多了。</p>
+<p>越高频的传输速率就越容易产生干扰，所以每个data通道的线包括时钟线都容易对其他的线造成干扰，所以会多一条线隔开他们,让屏蔽线去吸收掉干扰:</p>
+<img src="/HDMI简单入门/屏蔽线.png">
+
+<h1 id="眼图"><a href="#眼图" class="headerlink" title="眼图"></a>眼图</h1><p>说到干扰就要讲到怎么评估信号收到干扰的程度了，即信号质量。hdmi可以通过眼图去分析信号质量，眼图就是用余辉方式累积叠加示波器的波形:</p>
+<img src="/HDMI简单入门/眼图.png">
+
+<p>由于它长的像眼睛所以就叫做眼图。它叠加了无数的波形数据，可以看出整体的信号质量。眼睛线条越清晰,形状越标准质量就越好，有时候会在眼图中间放个对比框确认眼图是否合格:</p>
+<img src="/HDMI简单入门/眼图质量.png">
+
+<p>眼图的质量会收到传输频率和线长的影响，频率越高干扰越严重,线长越长衰减越严重。例如我之前处理的问题就是10m的hdmi线4k30hz能出图4k60hz就不能，而5m的hdmi线4k60hz又能出图。</p>
+<p>那怎么样处理这个传输质量的问题呢?答案是通过调节均衡器(Equalization)简称EQ。</p>
+<h1 id="EQ"><a href="#EQ" class="headerlink" title="EQ"></a>EQ</h1><p>通过在发送端和接收端的EQ对信号进行处理让眼图质量变高。</p>
+<p>发送端(信号源)可以通过预加重(Pre-emphasis)和去加重(De-emphasis)对抗码间干扰。</p>
+<p>Pre-emphasis就是加大跳变沿的强度,让原本平缓的跳变变得陡峭:</p>
+<img src="/HDMI简单入门/预加重.png">
+
+<p>De-emphasis则是则是为了处理连续的1或者0对于后面信号跳变的影响,例如连续的1可能会让电压逐渐增加,而在接下来要变成0的时候减低的电压不足以达到标准的0的电压:</p>
+<img src="/HDMI简单入门/连续1.png">
+
+<p>在我们用差分信号的时候就会让开眼变小:</p>
+<img src="/HDMI简单入门/开眼小.png">
+
+<p>De-emphasis的具体做法是连续相同极性电平的第一个bit之后的bit，压低或者提高电压:</p>
+<img src="/HDMI简单入门/去加重.png">
+
+<p>这样就能让开眼变大:</p>
+<img src="/HDMI简单入门/开眼变大.png">
+
+<p>值得一提的是De-emphasis可能会让摆幅(Swing)减小:</p>
+<img src="/HDMI简单入门/swing变小.png">
+
+<p>所以在接收端芯片其实也需要对swing进行兼容处理。</p>
+<p>而接收端则可以通过CTLE (Continuous Time Linear Equalizer，连续时间线性均衡器)、DFE (Decision Feedback Equalizer，判决反馈均衡器)等均衡器去处理接收到的信号，他们本质上应该是滤波器让信号波形变得平滑稳定。具体的原理过于硬核我也看不太懂只要大概知道有这么个东西,接收端芯片上可以设置固定用某一个均衡器,也可以打开Auto EQ让芯片根据实际的信号质量自动选择一个均衡器。</p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a href="https://blog.csdn.net/yinuoheqian123/article/details/100015843" target="_blank" rel="noopener">https://blog.csdn.net/yinuoheqian123/article/details/100015843</a></p>
+<p><a href="https://www.cnblogs.com/lcgbk/p/14030663.html" target="_blank" rel="noopener">https://www.cnblogs.com/lcgbk/p/14030663.html</a></p>
+<p><a href="http://blog.chinaaet.com/justlxy/p/5100053544" target="_blank" rel="noopener">http://blog.chinaaet.com/justlxy/p/5100053544</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/48343011?utm_id=0" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/48343011?utm_id=0</a></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
