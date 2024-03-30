@@ -564,15 +564,15 @@ final ClassLoader classLoader = createClassLoader(dexPath, librarySearchPath, pa
 
 # 解决方案
 
-## 方法1:
+## 方法1
 
 由于ClassLoaderFactory.createClassloaderNamespace是private的不能在外部调用,所以解决自定义classloader找不到libandroidicu.so的方法就是不要自己直接new ClassLoader,而是调用ClassLoaderFactory.createClassLoader去创建,传入isNamespaceShared为true。
 
-## 方法2:
+## 方法2
 
 由于系统默认的classloader对应的namespace已经加载了libandroid\_runtime.so,如果将我们自定义的classloader的父classloader设置成系统默认的classloder,则自定义classloader对应的namespace的parent\_namespace也会指向默认classloader的namespace。
 
-然后这个namespace已经加载了libandroid\_runtime.so,于是在后面的`add_soinfos_to_namespace(parent_namespace->get_shared_group(), ns);`里面就能直接使用已经加载好的libandroid\_runtime.so：
+然后这个namespace已经加载了libandroid\_runtime.so,于是在后面的`add_soinfos_to_namespace(parent_namespace->get_shared_group(), ns);`里面就能直接使用已经加载好的shared so libandroid\_runtime.so：
 
 {% plantuml %}
 component defalut
@@ -598,7 +598,7 @@ libandroidicu.so <.. libandroid_runtime.so : 依赖
 defalut ..right..> libandroidicu.so : ld.config.txt的links配置允许Load
 
 NameSpaceShared ..up..> libandroidicu.so : 由于is_shared true\n继承default的links配置
-NameSpace .up.> libandroid_runtime.so : is_shared false也会调用add_soinfos_to_namespace(parent_namespace->get_shared_group(), ns)\n可以直接使用parent namespace已经Load的so
+NameSpace .up.> libandroid_runtime.so : is_shared false也会调用add_soinfos_to_namespace(parent_namespace->get_shared_group(), ns)\n可以直接使用parent namespace已经Load的shared so
 {% endplantuml %}
 
 使用`setprop debug.ld.all dlopen,dlerror`命令打开全部linker打印也可以看到libandroid\_runtime.so Already loaded的日志:
