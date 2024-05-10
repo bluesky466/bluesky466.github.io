@@ -182,11 +182,13 @@ start             end                 module name
 
 # dump对虚拟内存大小的要求
 
-在具体分析dump的时候发现有时候就算加载了正确的pdb文件也会有看到一些符号无法解析,我猜测是因为抓出来的dump只包含物理内存的信息,而这部分符号的地址在虚拟内存上。本来想关掉虚拟内存再抓取确认的。但是发现蓝屏dump的抓取对虚拟内存大小是有要求的，可以在[官方文档](https://learn.microsoft.com/zh-cn/troubleshoot/windows-client/performance/configure-system-failure-and-recovery-options?source=recommendations)上看到。例如full dump的要求如下:
+在具体分析dump的时候发现有时候就算加载了正确的pdb文件也会有看到一些符号无法解析,我猜测是因为抓出来的dump只包含物理内存的信息,而这部分符号的地址在虚拟内存上。
+
+本来想关掉虚拟内存再抓取确认的。但是发现蓝屏dump的抓取对虚拟内存大小是有要求的，可以在[官方文档](https://learn.microsoft.com/zh-cn/troubleshoot/windows-client/performance/configure-system-failure-and-recovery-options?source=recommendations)上看到。例如full dump的要求如下:
 
 |物理内存|虚拟内存要求|
 |-|-|
 |256 MB–1,373 MB|	物理内存大小的 1.5 倍|
 |1,374 MB 或更大|	32 位系统：2 GB 加 16 MB<br/>64 位系统：物理内存的大小加上 128 MB|
 
-所以有时候蓝屏dump抓不出来也可以看看是不是虚拟内存被关掉了。
+所以有时候蓝屏dump抓不出来也可以看看是不是虚拟内存设置的小了或者直接被关掉了。

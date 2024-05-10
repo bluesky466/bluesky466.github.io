@@ -27,7 +27,7 @@
 <meta property="og:image" content="https://blog.islinjw.cn/蓝屏dump/kd.png">
 <meta property="og:image" content="https://blog.islinjw.cn/蓝屏dump/thread.png">
 <meta property="og:image" content="https://blog.islinjw.cn/蓝屏dump/source.png">
-<meta property="og:updated_time" content="2024-05-09T12:39:47.676Z">
+<meta property="og:updated_time" content="2024-05-10T00:33:00.819Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Windows蓝屏dump文件分析入门">
 <meta name="twitter:description" content="之前的一篇笔记&amp;lt;Windows Dump文件分析&amp;gt;介绍了应用dump的生成方式和调试手法,有稍微提一句蓝屏dump。但是实际在分析蓝屏的dump文件的时候和普通应用的dump文件分析还是有一些差异的。这篇笔记就记录下蓝屏dump的一些相关知识。 蓝屏dump文件的配置首先我们可以在”右键选中我的电脑-&amp;gt;属性-&amp;gt;高级系统设置-&amp;gt;高级-&amp;gt;启动和故障恢复设置-&amp;gt;">
@@ -231,7 +231,8 @@
 <img src="/蓝屏dump/source.png">
 
 <p>有时候还能在Locals窗口看到传入函数的参数的值，虽然这个dump没有抓到param的值。</p>
-<h1 id="dump对虚拟内存大小的要求"><a href="#dump对虚拟内存大小的要求" class="headerlink" title="dump对虚拟内存大小的要求"></a>dump对虚拟内存大小的要求</h1><p>在具体分析dump的时候发现有时候就算加载了正确的pdb文件也会有看到一些符号无法解析,我猜测是因为抓出来的dump只包含物理内存的信息,而这部分符号的地址在虚拟内存上。本来想关掉虚拟内存再抓取确认的。但是发现蓝屏dump的抓取对虚拟内存大小是有要求的，可以在<a href="https://learn.microsoft.com/zh-cn/troubleshoot/windows-client/performance/configure-system-failure-and-recovery-options?source=recommendations" target="_blank" rel="noopener">官方文档</a>上看到。例如full dump的要求如下:</p>
+<h1 id="dump对虚拟内存大小的要求"><a href="#dump对虚拟内存大小的要求" class="headerlink" title="dump对虚拟内存大小的要求"></a>dump对虚拟内存大小的要求</h1><p>在具体分析dump的时候发现有时候就算加载了正确的pdb文件也会有看到一些符号无法解析,我猜测是因为抓出来的dump只包含物理内存的信息,而这部分符号的地址在虚拟内存上。</p>
+<p>本来想关掉虚拟内存再抓取确认的。但是发现蓝屏dump的抓取对虚拟内存大小是有要求的，可以在<a href="https://learn.microsoft.com/zh-cn/troubleshoot/windows-client/performance/configure-system-failure-and-recovery-options?source=recommendations" target="_blank" rel="noopener">官方文档</a>上看到。例如full dump的要求如下:</p>
 <table>
 <thead>
 <tr>
@@ -248,7 +249,7 @@
 <td>32 位系统：2 GB 加 16 MB<br>64 位系统：物理内存的大小加上 128 MB</td>
 </tr>
 </tbody></table>
-<p>所以有时候蓝屏dump抓不出来也可以看看是不是虚拟内存被关掉了。</p>
+<p>所以有时候蓝屏dump抓不出来也可以看看是不是虚拟内存设置的小了或者直接被关掉了。</p>
 
     
   </div>
