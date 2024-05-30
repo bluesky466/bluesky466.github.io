@@ -24,7 +24,7 @@
 <meta property="og:description" content="最近部门新入职了几个小鲜肉,打算给他们分享下一些C/C++编译的基础知识,于是整理了一些资料写了这篇博客.由于已经有差不多一年没有写c++了,可能会有一些不太正确的地方,希望哪位同学看到能够帮忙指出,免得误人子弟. 首先需要声明的是,我用的是Ubuntu系统,也是基于Linux去讲的,当然大家如果是用的Mac系统,其实可以无缝切换,用几乎完全一样的命令去跑.但是如果是Windows的同学,可能就不">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://blog.islinjw.cn/写给安卓程序员的cc-编译入门/1.png">
-<meta property="og:updated_time" content="2022-02-07T05:47:21.436Z">
+<meta property="og:updated_time" content="2024-05-30T12:28:11.678Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="写给安卓程序员的C&#x2F;C++编译入门">
 <meta name="twitter:description" content="最近部门新入职了几个小鲜肉,打算给他们分享下一些C/C++编译的基础知识,于是整理了一些资料写了这篇博客.由于已经有差不多一年没有写c++了,可能会有一些不太正确的地方,希望哪位同学看到能够帮忙指出,免得误人子弟. 首先需要声明的是,我用的是Ubuntu系统,也是基于Linux去讲的,当然大家如果是用的Mac系统,其实可以无缝切换,用几乎完全一样的命令去跑.但是如果是Windows的同学,可能就不">
@@ -273,9 +273,8 @@
 <p>如果我们想要交叉编译出安卓可运行的程序或者库的话就不能直接使用gcc去编译了.而需要使用Android NDK提供了的一套交叉编译工具链.</p>
 <p>我们首先要下载Android NDK,然后配置好环境变量NDK_ROOT指向NDK的根目录.</p>
 <p>然后可以通过下面命令安装交叉编译工具链:</p>
-<blockquote>
-<p>$NDK_ROOT/build/tools/make-standalone-toolchain.sh <br>    –platform=android-19 <br>    –install-dir=$HOME/Android/standalone-toolchains/android-toolchain-arm <br>    –toolchain=arm-linux-androideabi-4.9 <br>    –stl=gnustl</p>
-</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$NDK_ROOT/build/tools/make-standalone-toolchain.sh \</span><br><span class="line">	--platform=android-19 \</span><br><span class="line">	--install-dir=$HOME/Android/standalone-toolchains/android-toolchain-arm \</span><br><span class="line">	--toolchain=arm-linux-androideabi-4.9 \</span><br><span class="line">	--stl=gnustl</span><br></pre></td></tr></table></figure>
+
 <p>然后我们就能在$HOME/Android/目录下看到安装好的工具链了.进到$HOME/Android/standalone-toolchains/android-toolchain-arm/bin/目录下我们可以看到有arm-linux-androideabi-gcc这个程序.</p>
 <p>它就是gcc的安卓交叉编译版本.我们将之前使用gcc去编译的例子全部换成使用它去编译就能编译出运行在安卓上的程序了:</p>
 <p>如下面命令生成的so库就能在安卓上通过jni调用了:</p>
@@ -294,9 +293,8 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">arm-linux-androideabi-4.9</span><br><span class="line">aarch64-linux-android-4.9</span><br><span class="line">mipsel-linux-android-4.9</span><br><span class="line">mips64el-linux-android-4.9</span><br><span class="line">x86-4.9</span><br><span class="line">x86_64-4.9</span><br></pre></td></tr></table></figure>
 
 <p>这就是不同CPU架构的交叉编译工具链了.还记得我们安装工具链的命令吗?</p>
-<blockquote>
-<p>$NDK_ROOT/build/tools/make-standalone-toolchain.sh <br>    –platform=android-19 <br>    –install-dir=$HOME/Android/standalone-toolchains/android-toolchain-arm <br>    –toolchain=arm-linux-androideabi-4.9 <br>    –stl=gnustl</p>
-</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$NDK_ROOT/build/tools/make-standalone-toolchain.sh \</span><br><span class="line">--platform=android-19 \</span><br><span class="line">--install-dir=$HOME/Android/standalone-toolchains/android-toolchain-arm \</span><br><span class="line">--toolchain=arm-linux-androideabi-4.9 \</span><br><span class="line">--stl=gnustl</span><br></pre></td></tr></table></figure>
+
 <p>toolchain参数就能指定使用哪个工具链,然后就能使用该工具链去编译该架构版本的程序了.</p>
 <p>但是,我们看到这下面并没有armeabi-v7a的工具链,那armeabi-v7a的程序要如何编译呢?</p>
 <p>其实armeabi-v7a的程序也是用arm-linux-androideabi-4.9去编译的,只不过在编译的时候可以带上-march=armv7-a:</p>

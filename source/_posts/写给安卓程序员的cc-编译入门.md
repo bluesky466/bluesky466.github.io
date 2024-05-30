@@ -259,11 +259,13 @@ fPIC (Position-Independent Code)告诉编译器产生与位置无关代码,即�
 
 然后可以通过下面命令安装交叉编译工具链:
 
-> $NDK_ROOT/build/tools/make-standalone-toolchain.sh \
+```
+$NDK_ROOT/build/tools/make-standalone-toolchain.sh \
 	--platform=android-19 \
 	--install-dir=$HOME/Android/standalone-toolchains/android-toolchain-arm \
 	--toolchain=arm-linux-androideabi-4.9 \
 	--stl=gnustl
+```
 
 然后我们就能在$HOME/Android/目录下看到安装好的工具链了.进到$HOME/Android/standalone-toolchains/android-toolchain-arm/bin/目录下我们可以看到有arm-linux-androideabi-gcc这个程序.
 
@@ -306,11 +308,13 @@ x86_64-4.9
 
 这就是不同CPU架构的交叉编译工具链了.还记得我们安装工具链的命令吗?
 
-> $NDK_ROOT/build/tools/make-standalone-toolchain.sh \
+```
+ $NDK_ROOT/build/tools/make-standalone-toolchain.sh \
 	--platform=android-19 \
 	--install-dir=$HOME/Android/standalone-toolchains/android-toolchain-arm \
 	--toolchain=arm-linux-androideabi-4.9 \
 	--stl=gnustl
+```
 
 toolchain参数就能指定使用哪个工具链,然后就能使用该工具链去编译该架构版本的程序了.
 
