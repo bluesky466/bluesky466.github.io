@@ -1,4 +1,4 @@
-title: NDK交叉编译入门
+title: NDK编译OpenSSL
 date: 2024-05-30 20:28:50
 tags:
     - 技术相关
@@ -99,7 +99,7 @@ make: *** [build_crypto] Error 1
 
 新版本的ndk都是在sdk里面携带的,可以在android studio里面选择版本下载:
 
-{% img /NDK交叉编译入门/1.png %}
+{% img /NDK编译OpenSSL/1.png %}
 
 
 例如我这边安装的20.0.5594570的ndk就在`/Users/linjw/Library/Android/sdk/ndk/20.0.5594570`,可以在它的子目录使用make-standalone-toolchain.sh生成android23的交叉编译工具链:

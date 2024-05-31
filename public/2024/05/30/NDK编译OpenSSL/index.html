@@ -7,7 +7,7 @@
 <head><meta name="generator" content="Hexo 3.9.0">
   <meta charset="utf-8">
   
-  <title>NDK交叉编译入门 | 编程代码笔记</title>
+  <title>NDK编译OpenSSL | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -18,17 +18,17 @@
   <meta name="description" content="最近协助同事交叉编译openssl,整理了下知识点准备出个交叉编译的入门教程。其实多年前写过一篇写给安卓程序员的C/C++编译入门。但并没有一个具体的开源项目实例可能对新人来讲不够直观,这里就用openssl举例。 事情的背景是我们有个老项目之前只有armeabi-v7a的so现在想添加arm64-v8a的so,负责的同事不太熟悉交叉编译所以找到我帮忙。 如果我们有全部的源码那只需要在build.">
 <meta name="keywords" content="技术相关,Android,C&#x2F;C++">
 <meta property="og:type" content="article">
-<meta property="og:title" content="NDK交叉编译入门">
-<meta property="og:url" content="https://blog.islinjw.cn/2024/05/30/NDK交叉编译入门/index.html">
+<meta property="og:title" content="NDK编译OpenSSL">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/05/30/NDK编译OpenSSL/index.html">
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="最近协助同事交叉编译openssl,整理了下知识点准备出个交叉编译的入门教程。其实多年前写过一篇写给安卓程序员的C/C++编译入门。但并没有一个具体的开源项目实例可能对新人来讲不够直观,这里就用openssl举例。 事情的背景是我们有个老项目之前只有armeabi-v7a的so现在想添加arm64-v8a的so,负责的同事不太熟悉交叉编译所以找到我帮忙。 如果我们有全部的源码那只需要在build.">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://blog.islinjw.cn/NDK交叉编译入门/1.png">
-<meta property="og:updated_time" content="2024-05-30T12:35:07.610Z">
+<meta property="og:image" content="https://blog.islinjw.cn/NDK编译OpenSSL/1.png">
+<meta property="og:updated_time" content="2024-05-31T01:14:31.846Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="NDK交叉编译入门">
+<meta name="twitter:title" content="NDK编译OpenSSL">
 <meta name="twitter:description" content="最近协助同事交叉编译openssl,整理了下知识点准备出个交叉编译的入门教程。其实多年前写过一篇写给安卓程序员的C/C++编译入门。但并没有一个具体的开源项目实例可能对新人来讲不够直观,这里就用openssl举例。 事情的背景是我们有个老项目之前只有armeabi-v7a的so现在想添加arm64-v8a的so,负责的同事不太熟悉交叉编译所以找到我帮忙。 如果我们有全部的源码那只需要在build.">
-<meta name="twitter:image" content="https://blog.islinjw.cn/NDK交叉编译入门/1.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/NDK编译OpenSSL/1.png">
 
   
     <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
@@ -152,9 +152,9 @@
 
 
 <div class="content content-post CENTER">
-   <article id="post-NDK交叉编译入门" class="article article-type-post" itemprop="blogPost">
+   <article id="post-NDK编译OpenSSL" class="article article-type-post" itemprop="blogPost">
   <header class="article-header">
-    <h1 class="post-title">NDK交叉编译入门</h1>
+    <h1 class="post-title">NDK编译OpenSSL</h1>
 
     <div class="article-meta">
       <span>
@@ -206,7 +206,7 @@
 <p>交叉编译其实就是找到对应的编译器去对源码进行编译。这部分有时间可以看看<a href="https://blog.islinjw.cn/2018/07/29/%E5%86%99%E7%BB%99%E5%AE%89%E5%8D%93%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84cc-%E7%BC%96%E8%AF%91%E5%85%A5%E9%97%A8/">写给安卓程序员的C/C++编译入门</a>介绍的会比较详细,这里简单讲一下。</p>
 <p>例如可以直接用gcc或者clang编译出本机可用的目标文件(可执行程序、.a静态库、.so动态库等),也可以用ndk里面的aarch64-linux-android21-clang去编译出android21 arm64-v8a的目标文件,用android16 armv7a-linux-androideabi16-clang编译出armeabi-v7a的目标文件。</p>
 <p>新版本的ndk都是在sdk里面携带的,可以在android studio里面选择版本下载:</p>
-<img src="/NDK交叉编译入门/1.png">
+<img src="/NDK编译OpenSSL/1.png">
 
 
 <p>例如我这边安装的20.0.5594570的ndk就在<code>/Users/linjw/Library/Android/sdk/ndk/20.0.5594570</code>,可以在它的子目录使用make-standalone-toolchain.sh生成android23的交叉编译工具链:</p>
