@@ -57,7 +57,7 @@ Version: 1.0.2t
 Requires: libssl libcrypto
 ```
 
-于是我们可以在openssl的[旧版本列表](https://ftp.openssl.org/source/old/1.0.2/)里面找到这个版本的源码。
+于是我们可以切到这个[TAG](https://github.com/openssl/openssl/tree/OpenSSL_1_0_2t)看看。
 
 # 交叉编译
 
@@ -243,7 +243,7 @@ ldr x16,.LOPENSSL_armcap_P
 
 > This should be fixed on both branch 1.1.1 (and incoming release 1.1.1i) and master now.
 
-具体的修改在[这](https://github.com/openssl/openssl/compare/OpenSSL_1_1_1-stable%E2%80%A6Romain-Geissler-1A:OpenSSL_1_1_1-stable),我本来是想直接pick过来用的,但是因为这个版本代码架构和1.0.2t差异有点大,而且perl超出了我的知识边界也不确定会不会改出问题来,所以还是决定更新到1.1.1i的版本。在[列表](https://ftp.openssl.org/source/old/1.1.1/)找到对应的源码下载下来执行`./Configure android64-aarch64 --prefix=/Users/linjw/Downloads/opensslbuild`发现会报错:
+具体的修改在[这](https://github.com/openssl/openssl/compare/OpenSSL_1_1_1-stable%E2%80%A6Romain-Geissler-1A:OpenSSL_1_1_1-stable),我本来是想直接pick过来用的,但是因为这个版本代码架构和1.0.2t差异有点大,而且perl超出了我的知识边界也不确定会不会改出问题来,所以还是决定更新到1.1.1i的版本。切到版本对应的[TAG](https://github.com/openssl/openssl/tree/OpenSSL_1_1_1i)之后执行`./Configure android64-aarch64 --prefix=/Users/linjw/Downloads/opensslbuild`发现会报错:
 
 ```
 Configuring OpenSSL version 1.1.1i (0x1010109fL) for android64-aarch64
