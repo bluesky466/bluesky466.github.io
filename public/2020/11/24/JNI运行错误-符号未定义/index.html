@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="最近在弄ndk的时候遇到了个比较坑的问题，虽然最后发现原因挺低级的，但是的确花了我不少时间去查找，中间的分析手法可能不熟悉c/c++的同学会比较陌生，如果遇到的同样问题的话会无从下手。这里把整个分析的流程记录下来，希望有用。 背景项目分两个部分，自己编写的c库工程，和安卓工程，将它们分离的原因是这个c库的功能可能在其他的地方也能使用到。 由于项目只是初始阶段，为了验证流程，我先搭了个简单的demo">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2022-02-07T05:47:21.423Z">
+<meta property="og:updated_time" content="2024-06-28T07:19:45.952Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JNI运行错误-符号未定义">
 <meta name="twitter:description" content="最近在弄ndk的时候遇到了个比较坑的问题，虽然最后发现原因挺低级的，但是的确花了我不少时间去查找，中间的分析手法可能不熟悉c/c++的同学会比较陌生，如果遇到的同样问题的话会无从下手。这里把整个分析的流程记录下来，希望有用。 背景项目分两个部分，自己编写的c库工程，和安卓工程，将它们分离的原因是这个c库的功能可能在其他的地方也能使用到。 由于项目只是初始阶段，为了验证流程，我先搭了个简单的demo">
@@ -227,7 +227,7 @@
 <blockquote>
 <p>gcc main.c -L. -lfoo</p>
 </blockquote>
-<h2 id="soname"><a href="#soname" class="headerlink" title="soname"></a>soname</h2><p>soname顾名思义就是so的名字，它可以在编译的时候用−Wl,−soname,$(soname)指定，-Wl,表示后面的参数将传给link程序ld。如果不指定的话soname默认为realname:</p>
+<h2 id="soname"><a href="#soname" class="headerlink" title="soname"></a>soname</h2><p>soname顾名思义就是so的名字，它可以在编译的时候用−Wl,−soname,$(soname)指定，-Wl,表示后面的参数将传给link程序ld:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -shared -fPIC -Wl,-soname,libfoo.so.0 -o libfoo.so.0.0.0 foo.c</span><br></pre></td></tr></table></figure>
 
 <p>Soname会被记录在so的二进制数据中，我们可以用readelf命令查看:</p>

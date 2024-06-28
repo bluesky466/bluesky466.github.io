@@ -180,7 +180,7 @@ linkname是在链接时使用的,用-l参数指定例如下面的foo就是linkna
 
 ## soname
 
-soname顾名思义就是so的名字，它可以在编译的时候用−Wl,−soname,$(soname)指定，-Wl,表示后面的参数将传给link程序ld。如果不指定的话soname默认为realname:
+soname顾名思义就是so的名字，它可以在编译的时候用−Wl,−soname,$(soname)指定，-Wl,表示后面的参数将传给link程序ld:
 
 ```shell
 gcc -shared -fPIC -Wl,-soname,libfoo.so.0 -o libfoo.so.0.0.0 foo.c

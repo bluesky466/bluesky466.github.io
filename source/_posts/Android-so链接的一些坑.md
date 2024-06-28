@@ -16,7 +16,7 @@ tags:
 06-26 08:10:01.940 25976 25976 E AndroidRuntime: java.lang.UnsatisfiedLinkError: dlopen failed: library "/Users/linjw/workspace/Demo/app/src/main/cpp/../../../libs/arm64-v8a/libcjson.so" not found: needed by /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/libDemo.so in namespace classloader-namespace
 ```
 
-`libcjson.so`的确是其中一个so，但可以看到它的运行报错居然是去找`/Users/linjw/workspace/Demo/app/src/main/cpp/../../../libs/arm64-v8a/libcjson.so`,这里的路径是我的开发电脑上的路径。
+`libcjson.so`的确是其中一个so，但可以看到它的运行报错居然是去找我的开发电脑上的这个路径:`/Users/linjw/workspace/Demo/app/src/main/cpp/../../../libs/arm64-v8a/libcjson.so`。
 
 这样的问题首先我们可以在`adb shell`里面用`readelf`命令或者在开发电脑里的ndk目录下找到对应abi的`readelf`工具看看`libDemo.so`的信息:
 
@@ -48,115 +48,7 @@ set_target_properties(crypto PROPERTIES IMPORTED_LOCATION ${lib_path}/${ANDROID_
 
 那么问题就只能出现在他们的so本身,我们继续用`readelf`去对比看看这几个so的区别:
 
-```
-# readelf -d /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/libcjson.so
-
-Dynamic section at offset 0x8d90 contains 28 entries:
-  Tag                Type                 Name/Value
- 0x0000000000000001 (NEEDED)             Shared library: [libdl.so]
- 0x0000000000000001 (NEEDED)             Shared library: [libc.so]
- 0x000000000000001a (FINI_ARRAY)         0x9d78
- 0x000000000000001c (FINI_ARRAYSZ)       16 (bytes)
- 0x0000000000000004 (HASH)               0x190
- 0x000000006ffffef5 (GNU_HASH)           0x4b8
- 0x0000000000000005 (STRTAB)             0x1110
- 0x0000000000000006 (SYMTAB)             0x768
- 0x000000000000000a (STRSZ)              1836 (bytes)
- 0x000000000000000b (SYMENT)             24 (bytes)
- 0x0000000000000003 (PLTGOT)             0x9f50
- 0x0000000000000002 (PLTRELSZ)           360 (bytes)
- 0x0000000000000014 (PLTREL)             RELA
- 0x0000000000000017 (JMPREL)             0x1a08
- 0x0000000000000007 (RELA)               0x1930
- 0x0000000000000008 (RELASZ)             216 (bytes)
- 0x0000000000000009 (RELAENT)            24 (bytes)
- 0x000000000000001e (FLAGS)              BIND_NOW
- 0x000000006ffffffb (FLAGS_1)            Flags: NOW
- 0x000000006ffffffe (VERNEED)            0x1910
- 0x000000006fffffff (VERNEEDNUM)         1
- 0x000000006ffffff0 (VERSYM)             0x183c
- 0x000000006ffffff9 (RELACOUNT)          3
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
-```
-
-```
-# readelf -d /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/libcurl.so
-
-Dynamic section at offset 0x45978 contains 29 entries:
-  Tag                Type                 Name/Value
- 0x0000000000000001 (NEEDED)             Shared library: [libdl.so]
- 0x0000000000000001 (NEEDED)             Shared library: [libc.so]
- 0x000000000000000e (SONAME)             Library soname: [libcurl.so]
- 0x000000000000001a (FINI_ARRAY)         0x45768
- 0x000000000000001c (FINI_ARRAYSZ)       16 (bytes)
- 0x0000000000000004 (HASH)               0x50000
- 0x000000006ffffef5 (GNU_HASH)           0x638
- 0x0000000000000005 (STRTAB)             0x504a8
- 0x0000000000000006 (SYMTAB)             0x8c0
- 0x000000000000000a (STRSZ)              1932 (bytes)
- 0x000000000000000b (SYMENT)             24 (bytes)
- 0x0000000000000003 (PLTGOT)             0x46b48
- 0x0000000000000002 (PLTRELSZ)           2808 (bytes)
- 0x0000000000000014 (PLTREL)             RELA
- 0x0000000000000017 (JMPREL)             0x49d8
- 0x0000000000000007 (RELA)               0x2128
- 0x0000000000000008 (RELASZ)             10416 (bytes)
- 0x0000000000000009 (RELAENT)            24 (bytes)
- 0x000000000000001e (FLAGS)              BIND_NOW
- 0x000000006ffffffb (FLAGS_1)            Flags: NOW
- 0x000000006ffffffe (VERNEED)            0x2108
- 0x000000006fffffff (VERNEEDNUM)         1
- 0x000000006ffffff0 (VERSYM)             0x1fba
- 0x000000006ffffff9 (RELACOUNT)          419
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
-```
-
-```
-# readelf -d /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/libcrypto.so
-
-Dynamic section at offset 0x20ffc8 contains 32 entries:
-  Tag                Type                 Name/Value
- 0x0000000000000001 (NEEDED)             Shared library: [libdl.so]
- 0x0000000000000001 (NEEDED)             Shared library: [libc.so]
- 0x000000000000000e (SONAME)             Library soname: [libcrypto.so.1.1]
- 0x0000000000000010 (SYMBOLIC)           0x0
- 0x000000000000001a (FINI_ARRAY)         0x1e9560
- 0x000000000000001c (FINI_ARRAYSZ)       16 (bytes)
- 0x0000000000000004 (HASH)               0x190
- 0x000000006ffffef5 (GNU_HASH)           0x8888
- 0x0000000000000005 (STRTAB)             0x2c6f0
- 0x0000000000000006 (SYMTAB)             0x11d98
- 0x000000000000000a (STRSZ)              88060 (bytes)
- 0x000000000000000b (SYMENT)             24 (bytes)
- 0x0000000000000003 (PLTGOT)             0x2111c8
- 0x0000000000000002 (PLTRELSZ)           2880 (bytes)
- 0x0000000000000014 (PLTREL)             RELA
- 0x0000000000000017 (JMPREL)             0x7f438
- 0x0000000000000007 (RELA)               0x444d0
- 0x0000000000000008 (RELASZ)             241512 (bytes)
- 0x0000000000000009 (RELAENT)            24 (bytes)
- 0x000000006ffffffc (VERDEF)             0x44260
- 0x000000006ffffffd (VERDEFNUM)          16
- 0x000000000000001e (FLAGS)              SYMBOLIC BIND_NOW
- 0x000000006ffffffb (FLAGS_1)            Flags: NOW NODELETE
- 0x000000006ffffffe (VERNEED)            0x44490
- 0x000000006fffffff (VERNEEDNUM)         2
- 0x000000006ffffff0 (VERSYM)             0x41eec
- 0x000000006ffffff9 (RELACOUNT)          10058
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
- 0x0000000000000000 (NULL)               0x0
-```
+{% img /AndroidSo链接的一些坑/1.png %}
 
 可以看到`libcrypto.so`和`libcurl.so`都是带有`SONAME`的,但是`libcjson.so`没有携带。我之前在[其他的问题](https://blog.islinjw.cn/2020/11/24/JNI%E8%BF%90%E8%A1%8C%E9%94%99%E8%AF%AF-%E7%AC%A6%E5%8F%B7%E6%9C%AA%E5%AE%9A%E4%B9%89/)里面遇到过`SONAME`配错了导致找不到符号的问题。看起链接器在链接的时候是使用so的`SONAME`字段而不是文件名去写入target的NEEDED字段所以造成了这个问题。
 
@@ -188,13 +80,13 @@ System.loadLibrary("Demo");
 
 ### soname
 
-soname顾名思义就是so的名字，它可以在编译的时候用`−Wl,−soname,${soname}`指定，-Wl,表示后面的参数将传给link程序ld。如果不指定的话soname默认为realname:
+soname顾名思义就是so的名字，它可以在编译的时候用`−Wl,−soname,${soname}`指定，-Wl,表示后面的参数将传给link程序ld:
 
 ```
 gcc -shared -fPIC -Wl,-soname,libfoo.so.0 -o libfoo.so.0.0.0 foo.c
 ```
 
-如前面所见,soname会被记录在so的二进制数据中。在链接目标程序的时候也会将soname填入目标程序的NEEDED字段记录依赖(如果so里面没有SONAME字段则将文件路径打入目标程序的NEEDED字段)。在加载目标程序的时候则是根据这个NEEDED去相应目录加载`${NEEDED}`这个文件。
+如前面所见,soname会被记录在so的二进制数据中。在链接目标程序的时候也会将soname填入目标程序的NEEDED字段记录依赖,**如果so里面没有SONAME字段则将文件路径打入目标程序的NEEDED字段**。在加载目标程序的时候则是根据这个NEEDED去相应目录加载`${NEEDED}`这个文件。
 
 ## patchelf
 
