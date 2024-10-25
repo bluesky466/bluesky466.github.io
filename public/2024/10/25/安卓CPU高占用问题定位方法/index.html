@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>安卓CPU高占用问题定位方法 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,">
+  
+
+  <meta name="description" content="今天测试报了一个问题说我们都某个应用从top命令看cpu占用到了百分之90几,这种问题要怎么分析呢? 首先adb连接上去之后用logcat | grep 应用进程pid查看看看有没有频繁打印日志,如果有的话根据日志就能比较简单的定位到代码,但这次我看了下并没有什么输出。 然后可以adb连接上去用Profiler抓一下进程的CPU使用信息,例如下图就可以看到Thread-2这个线程一直处于Runni">
+<meta name="keywords" content="技术相关,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓CPU高占用问题定位方法">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/10/25/安卓CPU高占用问题定位方法/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="今天测试报了一个问题说我们都某个应用从top命令看cpu占用到了百分之90几,这种问题要怎么分析呢? 首先adb连接上去之后用logcat | grep 应用进程pid查看看看有没有频繁打印日志,如果有的话根据日志就能比较简单的定位到代码,但这次我看了下并没有什么输出。 然后可以adb连接上去用Profiler抓一下进程的CPU使用信息,例如下图就可以看到Thread-2这个线程一直处于Runni">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://blog.islinjw.cn/安卓CPU高占用问题定位方法/1.png">
+<meta property="og:updated_time" content="2024-10-25T14:42:23.950Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓CPU高占用问题定位方法">
+<meta name="twitter:description" content="今天测试报了一个问题说我们都某个应用从top命令看cpu占用到了百分之90几,这种问题要怎么分析呢? 首先adb连接上去之后用logcat | grep 应用进程pid查看看看有没有频繁打印日志,如果有的话根据日志就能比较简单的定位到代码,但这次我看了下并没有什么输出。 然后可以adb连接上去用Profiler抓一下进程的CPU使用信息,例如下图就可以看到Thread-2这个线程一直处于Runni">
+<meta name="twitter:image" content="https://blog.islinjw.cn/安卓CPU高占用问题定位方法/1.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    <link rel="stylesheet" href="/css/personal-style.css">
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+</head>
+</html>
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#schedstat"><span class="toc-text">schedstat</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HZ"><span class="toc-text">HZ</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#utm、stm"><span class="toc-text">utm、stm</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#core"><span class="toc-text">core</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#定位方法"><span class="toc-text">定位方法</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-安卓CPU高占用问题定位方法" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">安卓CPU高占用问题定位方法</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.10.25</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>今天测试报了一个问题说我们都某个应用从top命令看cpu占用到了百分之90几,这种问题要怎么分析呢?</p>
+<p>首先adb连接上去之后用<code>logcat | grep 应用进程pid</code>查看看看有没有频繁打印日志,如果有的话根据日志就能比较简单的定位到代码,但这次我看了下并没有什么输出。</p>
+<p>然后可以adb连接上去用Profiler抓一下进程的CPU使用信息,例如下图就可以看到<code>Thread-2</code>这个线程一直处于Running的状态没有停过,所以就是这个线程在不停占用CPU:</p>
+<img src="/安卓CPU高占用问题定位方法/1.png">
+
+<p>说某些机器不能使用adb只能用串口查看的话还能怎么做呢?我们可以用<code>kill -3 应用进程pid</code>命令强行在<code>/data/anr</code>下生成所有线程的堆栈文件,然后可以一个个线程分析过去看看线程运行到哪里了。当然如果线程数量比较多的时候就比较低效了,尤其是开了混淆的情况下。</p>
+<p>但其实堆栈文件里面是有信息可以辅助我们分析是哪个线程不停在占用cpu的,例如<code>Thread-6</code>的线程堆栈如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&quot;Thread-6&quot; prio=5 tid=3 Native</span><br><span class="line">  | group=&quot;main&quot; sCount=1 ucsCount=0 flags=1 obj=0x75c801b8 self=0xb400007140d4ca60</span><br><span class="line">  | sysTid=5030 nice=0 cgrp=default sched=0/0 handle=0x6fb6d0bcb0</span><br><span class="line">  | state=R schedstat=( 43469364687935 414576037821 2915248 ) utm=2781704 stm=1565231 core=6 HZ=100</span><br><span class="line">  | stack=0x6fb650c000-0x6fb650e000 stackSize=8191KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  native: #00 pc 00000000000a22d8  /apex/com.android.runtime/lib64/bionic/libc.so (__ioctl+8) (BuildId: 058e3ec96fa600fb840a6a6956c6b64e)</span><br><span class="line">  native: #01 pc 000000000005b40c  /apex/com.android.runtime/lib64/bionic/libc.so (ioctl+156) (BuildId: 058e3ec96fa600fb840a6a6956c6b64e)</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+
+<p>这里有几个数据比较有用但是可能很多人会忽略掉。</p>
+<h3 id="schedstat"><a href="#schedstat" class="headerlink" title="schedstat"></a>schedstat</h3><p><a href="https://docs.kernel.org/translations/zh_CN/scheduler/sched-stats.html" target="_blank" rel="noopener">schedstat</a>显示了CPU的调度器统计数据,它有三个数字的含义分别是</p>
+<ol>
+<li>在CPU上运行花费的时间(单位是纳秒)</li>
+<li>在调度队列上等待的时间(单位是纳秒)</li>
+<li>CPU调度切换次数</li>
+</ol>
+<p>所以<code>schedstat=( 43469364687935 414576037821 2915248 )</code>表示这个线程在CPU上运行了43469364687935ns, 等待了414576037821ns, 调度切换了2915248次。</p>
+<h3 id="HZ"><a href="#HZ" class="headerlink" title="HZ"></a>HZ</h3><p>CPU时间以节拍(tick)为单位进行计算,<a href="https://en.wikipedia.org/wiki/CPU_time" target="_blank" rel="noopener">维基百科</a>上是这么说的:</p>
+<blockquote>
+<p>CPU time is measured in clock ticks or seconds. Sometimes it is useful to convert CPU time into a percentage of the CPU capacity, giving the CPU usage.</p>
+</blockquote>
+<p>而这里的HZ代表的是<a href="https://docs.kernel.org/scheduler/sched-design-CFS.html" target="_blank" rel="noopener">CFS Scheduler</a>的CONFIG_HZ配置,通过它可以计算出每个cpu节拍是多长,例如上面显示的<code>HZ=100</code>代表的是每个cpu节拍为<code>1s / 100 = 10ms</code></p>
+<h3 id="utm、stm"><a href="#utm、stm" class="headerlink" title="utm、stm"></a>utm、stm</h3><ul>
+<li>utime:  用户态下使用了多少个节拍的CPU</li>
+<li>utime:  内核态下使用了多少个节拍的CPU</li>
+</ul>
+<p>由于从前面的<code>HZ=100</code>的到cpu节拍为10ms,所以<code>utm=2781704 stm=1565231</code>代表这个线程在用户态下使用了<code>2781704 * 10 =</code>27817040ms<code>的CPU,在内核态下使用了</code>1565231 * 10 = 15652310ms`的CPU,</p>
+<p>它总的CPU使用总时间就是<code>27817040ms + 15652310ms = 43469350ms</code>和前面schedstat算出来的<code>43469364687935ns = 43469364ms</code>是匹配的</p>
+<h3 id="core"><a href="#core" class="headerlink" title="core"></a>core</h3><p>最后是CPU哪个核在执行这个线程</p>
+<h3 id="定位方法"><a href="#定位方法" class="headerlink" title="定位方法"></a>定位方法</h3><p>有了上面这些信息之后我们就能比较快速的定位是哪个线程在不断占用cpu了:</p>
+<ol>
+<li>使用<code>kill -3 {pid}</code>命令输出第一份堆栈</li>
+<li>等待1分钟</li>
+<li>使用<code>kill -3 {pid}</code>命令输出第二份堆栈</li>
+<li>编写脚本对比两份堆栈里面每个线程的schedstat,看每个线程在这一分钟了使用了多久的cpu</li>
+</ol>
+<p>这个脚本代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> datetime</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">readTrace</span><span class="params">(path)</span>:</span></span><br><span class="line">	thread_run_time = &#123;&#125;</span><br><span class="line">	<span class="keyword">with</span> open(path) <span class="keyword">as</span> f:</span><br><span class="line">		<span class="keyword">for</span> line <span class="keyword">in</span> f.readlines():</span><br><span class="line">			<span class="keyword">if</span> line.startswith(<span class="string">"----- pid "</span>):</span><br><span class="line">				trace_time = datetime.datetime.strptime(line.split(<span class="string">" at "</span>)[<span class="number">1</span>].split(<span class="string">"."</span>)[<span class="number">0</span>], <span class="string">"%Y-%m-%d %H:%M:%S"</span>)</span><br><span class="line">			<span class="keyword">elif</span> <span class="string">" tid="</span> <span class="keyword">in</span> line:</span><br><span class="line">				thread_name = line.strip().split(<span class="string">"\""</span>)[<span class="number">1</span>]</span><br><span class="line">			<span class="keyword">elif</span> <span class="string">"schedstat=("</span> <span class="keyword">in</span> line:</span><br><span class="line">				schedstat = line.split(<span class="string">"schedstat=( "</span>)[<span class="number">1</span>].split(<span class="string">")"</span>)[<span class="number">0</span>].split(<span class="string">" "</span>)</span><br><span class="line">				thread_run_time[thread_name] = (int(schedstat[<span class="number">0</span>]) + int(schedstat[<span class="number">1</span>])) / <span class="number">1000000000.0</span></span><br><span class="line">	<span class="keyword">return</span> trace_time, thread_run_time</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</span><br><span class="line">	trace_time_start, thread_run_time_start = readTrace(sys.argv[<span class="number">1</span>])</span><br><span class="line">	trace_time_end, thread_run_time_end = readTrace(sys.argv[<span class="number">2</span>])</span><br><span class="line">	duration = (trace_time_end - trace_time_start).total_seconds()</span><br><span class="line">	result = []</span><br><span class="line">	<span class="keyword">for</span> thread, thread_run_time <span class="keyword">in</span> thread_run_time_end.items():</span><br><span class="line">		<span class="keyword">if</span> thread <span class="keyword">in</span> thread_run_time_start:</span><br><span class="line">			thread_run_in_duration = thread_run_time_end[thread] -  thread_run_time_start[thread]</span><br><span class="line">			result.append([thread, thread_run_in_duration, <span class="string">f"<span class="subst">&#123;thread_run_in_duration / duration:.&#123;<span class="number">2</span>&#125;</span>%&#125;"</span>])</span><br><span class="line">	<span class="keyword">for</span> it <span class="keyword">in</span> sorted(result, key=<span class="keyword">lambda</span> it: it[<span class="number">2</span>], reverse=<span class="literal">True</span>):</span><br><span class="line">		print(it[<span class="number">0</span>], it[<span class="number">1</span>], it[<span class="number">2</span>])</span><br></pre></td></tr></table></figure>
+
+<p>执行结果如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">python3 test.py trace_04 trace_05</span><br><span class="line">Thread-6 100.00285464500485 99.01%</span><br><span class="line">main 0.4229402489999998 0.42%</span><br><span class="line">HeapTaskDaemon 0.1186862900000012 0.12%</span><br><span class="line">Signal Catcher 0.113778791 0.11%</span><br><span class="line">Thread-7 0.11453095000000069 0.11%</span><br><span class="line">DefaultDispatcher-worker-5 0.1086997830000005 0.11%</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>最后找到<code>Thread-6</code>线程在<code>09:22:10.977080231</code>到<code>09:23:51.419991904</code>这100秒左右,使用了<code>43469364687935ns - 43402540633850ns = 66824054085ns</code>秒的cpu,然后还在调度队列上等待了<code>414576037821ns - 381397237261ns = 33178800560ns</code>,<code>66824054085ns + 33178800560ns = 100002854645ns = 100.002854645s</code>基本这100s它都在执行了:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">----- pid 1834 at 2024-10-16 09:22:10.977080231+0800 -----</span><br><span class="line">...</span><br><span class="line">&quot;Thread-6&quot; prio=5 tid=3 Native</span><br><span class="line">  | group=&quot;main&quot; sCount=1 ucsCount=0 flags=1 obj=0x75c801b8 self=0xb400007140d4ca60</span><br><span class="line">  | sysTid=5030 nice=0 cgrp=default sched=0/0 handle=0x6fb6d0bcb0</span><br><span class="line">  | state=R schedstat=( 43402540633850 381397237261 2772868 ) utm=2777362 stm=1562891 core=5 HZ=100</span><br><span class="line">  | stack=0x6fb650c000-0x6fb650e000 stackSize=8191KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  native: #00 pc 00000000000a22d8  /apex/com.android.runtime/lib64/bionic/libc.so (__ioctl+8) (BuildId: 058e3ec96fa600fb840a6a6956c6b64e)</span><br><span class="line">  native: #01 pc 000000000005b40c  /apex/com.android.runtime/lib64/bionic/libc.so (ioctl+156) (BuildId: 058e3ec96fa600fb840a6a6956c6b64e)</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">----- pid 1834 at 2024-10-16 09:23:51.419991904+0800 -----</span><br><span class="line">...</span><br><span class="line">&quot;Thread-6&quot; prio=5 tid=3 Native</span><br><span class="line">  | group=&quot;main&quot; sCount=1 ucsCount=0 flags=1 obj=0x75c801b8 self=0xb400007140d4ca60</span><br><span class="line">  | sysTid=5030 nice=0 cgrp=default sched=0/0 handle=0x6fb6d0bcb0</span><br><span class="line">  | state=R schedstat=( 43469364687935 414576037821 2915248 ) utm=2781704 stm=1565231 core=6 HZ=100</span><br><span class="line">  | stack=0x6fb650c000-0x6fb650e000 stackSize=8191KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  native: #00 pc 00000000000a22d8  /apex/com.android.runtime/lib64/bionic/libc.so (__ioctl+8) (BuildId: 058e3ec96fa600fb840a6a6956c6b64e)</span><br><span class="line">  native: #01 pc 000000000005b40c  /apex/com.android.runtime/lib64/bionic/libc.so (ioctl+156) (BuildId: 058e3ec96fa600fb840a6a6956c6b64e)</span><br></pre></td></tr></table></figure>
+
+<p>然后就可以根据堆栈定位到底是哪里的代码逻辑异常不断占用cpu。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
