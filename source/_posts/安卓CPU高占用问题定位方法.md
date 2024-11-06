@@ -14,7 +14,9 @@ tags:
 
 {% img /安卓CPU高占用问题定位方法/1.png %}
 
-说某些机器不能使用adb只能用串口查看的话还能怎么做呢?我们可以用`kill -3 应用进程pid`命令强行在`/data/anr`下生成所有线程的堆栈文件,然后可以一个个线程分析过去看看线程运行到哪里了。当然如果线程数量比较多的时候就比较低效了,尤其是开了混淆的情况下。
+如果某些机器不能使用adb只能用串口查看的话还能怎么做呢?
+
+我们可以用`kill -3 应用进程pid`命令强行在`/data/anr`下生成所有线程的堆栈文件,然后可以一个个线程分析过去看看线程运行到哪里了。当然如果线程数量比较多的时候就比较低效了,尤其是开了混淆的情况下。
 
 但其实堆栈文件里面是有信息可以辅助我们分析是哪个线程不停在占用cpu的,例如`Thread-6`的线程堆栈如下:
 
@@ -30,7 +32,26 @@ tags:
   ...
 ```
 
-这里有几个数据比较有用但是可能很多人会忽略掉。
+`| state=R schedstat=( 43469364687935 414576037821 2915248 ) utm=2781704 stm=1565231 core=6 HZ=100`这行其实能看到比较有用的信息但是可能很多人会忽略掉。
+
+### state
+
+线程状态,root的情况下我们也可以直接`cat /proc/{pid}/task/{tid}/stat`获取,它和`cat /proc/{pid}/stat`的进程状态类似,从[文档](https://man7.org/linux/man-pages/man5/proc_pid_stat.5.html)看有下面的下面的值:
+
+- R      Running
+- S      Sleeping in an interruptible wait
+- D      Waiting in uninterruptible disk sleep
+- Z      Zombie
+- T      Stopped (on a signal) or (before Linux 2.6.33) trace stopped
+- t      Tracing stop (Linux 2.6.33 onward)
+- W      Paging (only before Linux 2.6.0)
+- X      Dead (from Linux 2.6.0 onward)
+- x      Dead (Linux 2.6.33 to 3.13 only)
+- K      Wakekill (Linux 2.6.33 to 3.13 only)
+- W      Waking (Linux 2.6.33 to 3.13 only)
+- P      Parked (Linux 3.9 to 3.13 only)
+- I      Idle (Linux 4.14 onward)
+
 
 
 ### schedstat
@@ -41,13 +62,15 @@ tags:
 2. 在调度队列上等待的时间(单位是纳秒)
 3. CPU调度切换次数
 
+root的情况下我们也可以直接`cat /proc/{pid}/task/{tid}/schedstat`获取
+
 所以`schedstat=( 43469364687935 414576037821 2915248 )`表示这个线程在CPU上运行了43469364687935ns, 等待了414576037821ns, 调度切换了2915248次。
 
 ### HZ
 
-CPU时间以节拍(tick)为单位进行计算,[维基百科](https://en.wikipedia.org/wiki/CPU_time)上是这么说的:
+CPU时间或者说系统时间是以节拍(tick)为单位进行计算的,[维基百科](https://en.wikipedia.org/wiki/System_time)上是这么说的:
 
-> CPU time is measured in clock ticks or seconds. Sometimes it is useful to convert CPU time into a percentage of the CPU capacity, giving the CPU usage.
+> The system clock is typically implemented as a programmable interval timer that periodically interrupts the CPU, which then starts executing a timer interrupt service routine. This routine typically adds one tick to the system clock (a simple counter) and handles other periodic housekeeping tasks (preemption, etc.) before returning to the task the CPU was executing before the interruption.
 
 而这里的HZ代表的是[CFS Scheduler](https://docs.kernel.org/scheduler/sched-design-CFS.html)的CONFIG\_HZ配置,通过它可以计算出每个cpu节拍是多长,例如上面显示的`HZ=100`代表的是每个cpu节拍为`1s / 100 = 10ms`
 
@@ -104,7 +127,7 @@ if __name__ == '__main__':
 		if thread in thread_run_time_start:
 			thread_run_in_duration = thread_run_time_end[thread] -  thread_run_time_start[thread]
 			result.append([thread, thread_run_in_duration, f"{thread_run_in_duration / duration:.{2}%}"])
-	for it in sorted(result, key=lambda it: it[2], reverse=True):
+	for it in sorted(result, key=lambda it: it[1], reverse=True):
 		print(it[0], it[1], it[2])
 
 ```
