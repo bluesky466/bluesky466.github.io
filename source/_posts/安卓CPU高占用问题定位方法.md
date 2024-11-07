@@ -68,18 +68,22 @@ root的情况下我们也可以直接`cat /proc/{pid}/task/{tid}/schedstat`获�
 
 ### HZ
 
-CPU时间或者说系统时间是以节拍(tick)为单位进行计算的,[维基百科](https://en.wikipedia.org/wiki/System_time)上是这么说的:
+系统时间是以tick(节拍)为单位进行计算的,[维基百科](https://en.wikipedia.org/wiki/System_time)上是这么说的:
 
 > The system clock is typically implemented as a programmable interval timer that periodically interrupts the CPU, which then starts executing a timer interrupt service routine. This routine typically adds one tick to the system clock (a simple counter) and handles other periodic housekeeping tasks (preemption, etc.) before returning to the task the CPU was executing before the interruption.
 
-而这里的HZ代表的是[CFS Scheduler](https://docs.kernel.org/scheduler/sched-design-CFS.html)的CONFIG\_HZ配置,通过它可以计算出每个cpu节拍是多长,例如上面显示的`HZ=100`代表的是每个cpu节拍为`1s / 100 = 10ms`
+Linux核心每隔固定周期会发出timer interrupt (IRQ 0)，这个中断会触发系统时间的更新、系统资源使用率的更新、检查alarm或者delay function之类的调用，检查进程CPU的分配等。
+
+HZ用来定义每秒有多少次timer interrupt，通过它可以计算出每个tick是多长，例如上面显示的`HZ=100`代表的是每个tick为`1s / 100 = 10ms`
 
 ### utm、stm
 
-- utime:  用户态下使用了多少个节拍的CPU
-- utime:  内核态下使用了多少个节拍的CPU
+因为系统时间以tick为单位,所以进程的用户态、内核态运行时间都是以tick为单位的。
 
-由于从前面的`HZ=100`的到cpu节拍为10ms,所以`utm=2781704 stm=1565231`代表这个线程在用户态下使用了`2781704 * 10 = `27817040ms`的CPU,在内核态下使用了`1565231 * 10 = 15652310ms`的CPU,
+- utime:  用户态下使用了多少个tick的CPU
+- utime:  内核态下使用了多少个tick的CPU
+
+由于从前面的`HZ=100`的到每个tick为10ms,所以`utm=2781704 stm=1565231`代表这个线程在用户态下使用了`2781704 * 10 = 27817040ms`的CPU,在内核态下使用了`1565231 * 10 = 15652310ms`的CPU,
 
 它总的CPU使用总时间就是`27817040ms + 15652310ms = 43469350ms`和前面schedstat算出来的`43469364687935ns = 43469364ms`是匹配的
 

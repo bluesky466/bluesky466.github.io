@@ -24,7 +24,7 @@
 <meta property="og:description" content="今天测试报了一个问题说我们都某个应用从top命令看cpu占用到了百分之90几,这种问题要怎么分析呢? 首先adb连接上去之后用logcat | grep 应用进程pid查看看看有没有频繁打印日志,如果有的话根据日志就能比较简单的定位到代码,但这次我看了下并没有什么输出。 然后可以adb连接上去用Profiler抓一下进程的CPU使用信息,例如下图就可以看到Thread-2这个线程一直处于Runni">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://blog.islinjw.cn/安卓CPU高占用问题定位方法/1.png">
-<meta property="og:updated_time" content="2024-11-06T12:30:35.933Z">
+<meta property="og:updated_time" content="2024-11-07T00:46:36.161Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓CPU高占用问题定位方法">
 <meta name="twitter:description" content="今天测试报了一个问题说我们都某个应用从top命令看cpu占用到了百分之90几,这种问题要怎么分析呢? 首先adb连接上去之后用logcat | grep 应用进程pid查看看看有没有频繁打印日志,如果有的话根据日志就能比较简单的定位到代码,但这次我看了下并没有什么输出。 然后可以adb连接上去用Profiler抓一下进程的CPU使用信息,例如下图就可以看到Thread-2这个线程一直处于Runni">
@@ -214,16 +214,18 @@
 </ol>
 <p>root的情况下我们也可以直接<code>cat /proc/{pid}/task/{tid}/schedstat</code>获取</p>
 <p>所以<code>schedstat=( 43469364687935 414576037821 2915248 )</code>表示这个线程在CPU上运行了43469364687935ns, 等待了414576037821ns, 调度切换了2915248次。</p>
-<h3 id="HZ"><a href="#HZ" class="headerlink" title="HZ"></a>HZ</h3><p>CPU时间或者说系统时间是以节拍(tick)为单位进行计算的,<a href="https://en.wikipedia.org/wiki/System_time" target="_blank" rel="noopener">维基百科</a>上是这么说的:</p>
+<h3 id="HZ"><a href="#HZ" class="headerlink" title="HZ"></a>HZ</h3><p>系统时间是以tick(节拍)为单位进行计算的,<a href="https://en.wikipedia.org/wiki/System_time" target="_blank" rel="noopener">维基百科</a>上是这么说的:</p>
 <blockquote>
 <p>The system clock is typically implemented as a programmable interval timer that periodically interrupts the CPU, which then starts executing a timer interrupt service routine. This routine typically adds one tick to the system clock (a simple counter) and handles other periodic housekeeping tasks (preemption, etc.) before returning to the task the CPU was executing before the interruption.</p>
 </blockquote>
-<p>而这里的HZ代表的是<a href="https://docs.kernel.org/scheduler/sched-design-CFS.html" target="_blank" rel="noopener">CFS Scheduler</a>的CONFIG_HZ配置,通过它可以计算出每个cpu节拍是多长,例如上面显示的<code>HZ=100</code>代表的是每个cpu节拍为<code>1s / 100 = 10ms</code></p>
-<h3 id="utm、stm"><a href="#utm、stm" class="headerlink" title="utm、stm"></a>utm、stm</h3><ul>
-<li>utime:  用户态下使用了多少个节拍的CPU</li>
-<li>utime:  内核态下使用了多少个节拍的CPU</li>
+<p>Linux核心每隔固定周期会发出timer interrupt (IRQ 0)，这个中断会触发系统时间的更新、系统资源使用率的更新、检查alarm或者delay function之类的调用，检查进程CPU的分配等。</p>
+<p>HZ用来定义每秒有多少次timer interrupt，通过它可以计算出每个tick是多长，例如上面显示的<code>HZ=100</code>代表的是每个tick为<code>1s / 100 = 10ms</code></p>
+<h3 id="utm、stm"><a href="#utm、stm" class="headerlink" title="utm、stm"></a>utm、stm</h3><p>因为系统时间以tick为单位,所以进程的用户态、内核态运行时间都是以tick为单位的。</p>
+<ul>
+<li>utime:  用户态下使用了多少个tick的CPU</li>
+<li>utime:  内核态下使用了多少个tick的CPU</li>
 </ul>
-<p>由于从前面的<code>HZ=100</code>的到cpu节拍为10ms,所以<code>utm=2781704 stm=1565231</code>代表这个线程在用户态下使用了<code>2781704 * 10 =</code>27817040ms<code>的CPU,在内核态下使用了</code>1565231 * 10 = 15652310ms`的CPU,</p>
+<p>由于从前面的<code>HZ=100</code>的到每个tick为10ms,所以<code>utm=2781704 stm=1565231</code>代表这个线程在用户态下使用了<code>2781704 * 10 = 27817040ms</code>的CPU,在内核态下使用了<code>1565231 * 10 = 15652310ms</code>的CPU,</p>
 <p>它总的CPU使用总时间就是<code>27817040ms + 15652310ms = 43469350ms</code>和前面schedstat算出来的<code>43469364687935ns = 43469364ms</code>是匹配的</p>
 <h3 id="core"><a href="#core" class="headerlink" title="core"></a>core</h3><p>最后是CPU哪个核在执行这个线程</p>
 <h3 id="定位方法"><a href="#定位方法" class="headerlink" title="定位方法"></a>定位方法</h3><p>有了上面这些信息之后我们就能比较快速的定位是哪个线程在不断占用cpu了:</p>
