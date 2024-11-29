@@ -23,13 +23,13 @@
 <meta property="og:site_name" content="编程代码笔记">
 <meta property="og:description" content="最近的项目里面需要对UVC摄像头进行操控,简单的了解了下相关的知识。 首先UVC全称为USB video(device) class,是微软与另外几家设备厂商联合推出的为USB视频捕获设备定义的协议标准，目前已成为USB org标准之一。在USB中文网上其实有比较详细的描述,但是新手直接上来就看这个协议其实是比较懵逼的。所以可以参考UVCCamera这个安卓项目的源码去辅助理解。 USB描述符当我">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/YtwnRj_J9UtF-ljVxD_mVCsoM0NTbFpoF5qxXUYNhRtFzwv3o7154wrM0QWONJj2yRE-fK_x5oCRZA4TfsAGoUZw4OgVhrx_l6adiib4gyLYi08UrQGgLuW50000">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidUvcControl/2.png">
 <meta property="og:image" content="https://blog.islinjw.cn/AndroidUvcControl/1.png">
-<meta property="og:updated_time" content="2024-09-19T16:57:55.960Z">
+<meta property="og:updated_time" content="2024-11-29T06:47:01.020Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="安卓UVC控制协议入门">
 <meta name="twitter:description" content="最近的项目里面需要对UVC摄像头进行操控,简单的了解了下相关的知识。 首先UVC全称为USB video(device) class,是微软与另外几家设备厂商联合推出的为USB视频捕获设备定义的协议标准，目前已成为USB org标准之一。在USB中文网上其实有比较详细的描述,但是新手直接上来就看这个协议其实是比较懵逼的。所以可以参考UVCCamera这个安卓项目的源码去辅助理解。 USB描述符当我">
-<meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/YtwnRj_J9UtF-ljVxD_mVCsoM0NTbFpoF5qxXUYNhRtFzwv3o7154wrM0QWONJj2yRE-fK_x5oCRZA4TfsAGoUZw4OgVhrx_l6adiib4gyLYi08UrQGgLuW50000">
+<meta name="twitter:image" content="https://blog.islinjw.cn/AndroidUvcControl/2.png">
 
   
     <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
@@ -186,7 +186,7 @@
 <figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> manager = context.getSystemService(AppCompatActivity.USB_SERVICE) <span class="keyword">as</span> UsbManager</span><br><span class="line"><span class="keyword">val</span> deviceIterator: Iterator&lt;UsbDevice&gt; = manager.deviceList.values.iterator()</span><br><span class="line"><span class="keyword">while</span> (deviceIterator.hasNext()) &#123;</span><br><span class="line">    <span class="keyword">val</span> device = deviceIterator.next()</span><br><span class="line">    <span class="keyword">if</span> (device.vendorId == targetVid &amp;&amp; device.productId == targetPid) &#123;</span><br><span class="line">        <span class="keyword">val</span> connect = manager.openDevice(device)</span><br><span class="line">        <span class="keyword">val</span> desc = connect.rawDescriptors</span><br><span class="line">        <span class="comment">// 解析usb描述符</span></span><br><span class="line">        connect.close()</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>这里拿到的是一个byte数组,我们先要理解什么是usb描述符才能去解析它。usb描述符其实就是描述usb的属性和用途的,四种主要描述符的逻辑结构大概如下:</p>
-<img src="http://www.plantuml.com/plantuml/svg/YtwnRj_J9UtF-ljVxD_mVCsoM0NTbFpoF5qxXUYNhRtFzwv3o7154wrM0QWONJj2yRE-fK_x5oCRZA4TfsAGoUZw4OgVhrx_l6adiib4gyLYi08UrQGgLuW50000">
+<img src="/AndroidUvcControl/2.png">
 
 <ul>
 <li>设备描述符: 每一个USB设备只有一个设备描述符，主要向主机说明设备类型、端点0最大包长、设备版本、配置数量等等</li>
