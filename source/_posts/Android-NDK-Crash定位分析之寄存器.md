@@ -193,14 +193,13 @@ X0-X7是参数和结果寄存器,函数的参数和返回值由它们去传递,�
 
 {% img /Android_NDK_Crash定位分析之寄存器/2.jpg %}
 
-
 但是函数中间的临时变量也可以用它们去保存,如果甚至在参数使用完成之后可以修改掉保存参数的寄存器的值,而X19-X28则是Callee-saved寄存器,当函数退栈的时候需要恢复回去,官方文档里面是这么说的:
 
 > For example, the function foo() can use registers X0 to X15 without needing to preserve their values. However, if foo() wants to use X19 to X28 it must save them to stack first, and then restore from the stack before returning.
 
-所以一开始看到的audioserver奔溃寄存器信息里面参数和结果寄存器的寄存器值已经被覆盖掉了,但是刚好在前一级函数里面刚好将inputSource存到了X19寄存器里面(因为这种奇怪数字能刚好撞中的几率还是蛮低的)。
+另外就是我从一些博客里面看到Callee-saved也会用于传参(虽然在arm的官方资料里面没有看到).类似一开始看到的audioserver奔溃寄存器信息里面inputSource的值并没有存到X0-X15,而是被存到了X19寄存器里面(因为这种奇怪数字能刚好撞中的几率还是蛮低的)。毕竟编译器为了优化代码执行效率可什么事情都做得出来,既然都把数据放到了X19寄存器了,也没有必要再在X0-X15里面也放多一份。
 
-另外的就是如果参数比较多的时候寄存器放不下也会通过压栈的方式去传参,这部分参数在还没有用到的时候也不会在寄存器信息中看到。
+还有就是如果参数比较多的时候寄存器放不下也会通过压栈的方式去传参,这部分参数在还没有用到的时候也不会在寄存器信息中看到。
 
 # 编译器优化
 

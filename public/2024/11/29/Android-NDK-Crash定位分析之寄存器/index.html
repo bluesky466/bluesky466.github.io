@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://blog.islinjw.cn/Android_NDK_Crash定位分析之寄存器/1.png">
 <meta property="og:image" content="https://blog.islinjw.cn/Android_NDK_Crash定位分析之寄存器/2.jpg">
-<meta property="og:updated_time" content="2024-11-29T10:12:05.055Z">
+<meta property="og:updated_time" content="2024-11-29T10:55:15.180Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android NDK Crash定位分析之寄存器">
 <meta name="twitter:description" content="最近协助分析了一个audioserver crash的问题,堆栈如下: 12345678910111213141516171819DEBUG   : Cmdline: /system/bin/audioserverDEBUG   : pid: 26089, tid: 26136, name: binder:26089_4  &amp;gt;&amp;gt;&amp;gt; /system/bin/audioserver">
@@ -230,13 +230,12 @@
 <p>X0-X7是参数和结果寄存器,函数的参数和返回值由它们去传递,正常情况下可以在这里看到参数的值;</p>
 <img src="/Android_NDK_Crash定位分析之寄存器/2.jpg">
 
-
 <p>但是函数中间的临时变量也可以用它们去保存,如果甚至在参数使用完成之后可以修改掉保存参数的寄存器的值,而X19-X28则是Callee-saved寄存器,当函数退栈的时候需要恢复回去,官方文档里面是这么说的:</p>
 <blockquote>
 <p>For example, the function foo() can use registers X0 to X15 without needing to preserve their values. However, if foo() wants to use X19 to X28 it must save them to stack first, and then restore from the stack before returning.</p>
 </blockquote>
-<p>所以一开始看到的audioserver奔溃寄存器信息里面参数和结果寄存器的寄存器值已经被覆盖掉了,但是刚好在前一级函数里面刚好将inputSource存到了X19寄存器里面(因为这种奇怪数字能刚好撞中的几率还是蛮低的)。</p>
-<p>另外的就是如果参数比较多的时候寄存器放不下也会通过压栈的方式去传参,这部分参数在还没有用到的时候也不会在寄存器信息中看到。</p>
+<p>另外就是我从一些博客里面看到Callee-saved也会用于传参(虽然在arm的官方资料里面没有看到).类似一开始看到的audioserver奔溃寄存器信息里面inputSource的值并没有存到X0-X15,而是被存到了X19寄存器里面(因为这种奇怪数字能刚好撞中的几率还是蛮低的)。毕竟编译器为了优化代码执行效率可什么事情都做得出来,既然都把数据放到了X19寄存器了,也没有必要再在X0-X15里面也放多一份。</p>
+<p>还有就是如果参数比较多的时候寄存器放不下也会通过压栈的方式去传参,这部分参数在还没有用到的时候也不会在寄存器信息中看到。</p>
 <h1 id="编译器优化"><a href="#编译器优化" class="headerlink" title="编译器优化"></a>编译器优化</h1><p>由于编译器会对代码做各种优化所以有时候甚至会将函数调用给优化掉,就更难从寄存器信息里面看到参数的值了。</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">debug</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">const</span> <span class="keyword">char</span> *str)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">0xaaaa</span>;</span><br><span class="line">    <span class="keyword">int</span> y = i + str[<span class="number">0</span>] + x;</span><br><span class="line">    LOGD(<span class="string">"y=%d"</span>, y);</span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">debug(<span class="number">0xabcd</span>, <span class="literal">nullptr</span>);</span><br></pre></td></tr></table></figure>
 
