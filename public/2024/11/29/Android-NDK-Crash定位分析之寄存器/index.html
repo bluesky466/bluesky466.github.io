@@ -25,7 +25,8 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://blog.islinjw.cn/Android_NDK_Crash定位分析之寄存器/1.png">
 <meta property="og:image" content="https://blog.islinjw.cn/Android_NDK_Crash定位分析之寄存器/2.jpg">
-<meta property="og:updated_time" content="2024-11-29T10:55:15.180Z">
+<meta property="og:image" content="https://blog.islinjw.cn/Android_NDK_Crash定位分析之寄存器/3.png">
+<meta property="og:updated_time" content="2024-12-04T00:47:24.671Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android NDK Crash定位分析之寄存器">
 <meta name="twitter:description" content="最近协助分析了一个audioserver crash的问题,堆栈如下: 12345678910111213141516171819DEBUG   : Cmdline: /system/bin/audioserverDEBUG   : pid: 26089, tid: 26136, name: binder:26089_4  &amp;gt;&amp;gt;&amp;gt; /system/bin/audioserver">
@@ -249,7 +250,11 @@
 <p>另外更加神奇的是如果我直接将所有的LOGD都注释掉,编译器判断这个代码没有任何的作用,则会直接都优化掉,然后我们运行的时候程序就会正常运行不会崩溃…</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">debug</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">const</span> <span class="keyword">char</span> *str)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> x = <span class="number">0xaaaa</span>;</span><br><span class="line">    <span class="keyword">int</span> y = i + str[<span class="number">0</span>] + x;</span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line"><span class="comment">//    LOGD("y=%d", y);</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">debug(<span class="number">0xabcd</span>, <span class="literal">nullptr</span>);</span><br></pre></td></tr></table></figure>
 
-<p>当然上面所说的优化都属于编译器的行为不在c/c++的语言规范里面,不同的编译器编译出来的结果可能不一样。不得不感慨一句,c++真的太难了…</p>
+<p>当然上面所说的优化都属于编译器的行为不在c/c++的语言规范里面,不同的编译器编译出来的结果可能不一样。</p>
+<p>另外说一句题外话，这种编译器优化有时候会引起难以理解的bug，就类似下面这个表情包的<a href="https://leadroyal.cn/p/2301/" target="_blank" rel="noopener">BUG</a>:</p>
+<img src="/Android_NDK_Crash定位分析之寄存器/3.png">
+
+<p>不得不感慨一句,c++真的太难了…</p>
 
     
   </div>
