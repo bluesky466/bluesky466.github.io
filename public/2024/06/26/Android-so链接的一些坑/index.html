@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Android so链接的一些坑 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,C/C++," />
+  
+
+  <meta name="description" content="SONAME缺失前几天遇到了个比较诡异的链接问题,分析下来感觉挺有意思的。 背景是我们导入了供应商给的几个so,编译成功之后在机器上运行出现链接报错: 106-26 08:10:01.940 25976 25976 E AndroidRuntime: java.lang.UnsatisfiedLinkError: dlopen failed: library &quot;&#x2F;Users&#x2F;linjw&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android so链接的一些坑">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/06/26/Android-so%E9%93%BE%E6%8E%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="SONAME缺失前几天遇到了个比较诡异的链接问题,分析下来感觉挺有意思的。 背景是我们导入了供应商给的几个so,编译成功之后在机器上运行出现链接报错: 106-26 08:10:01.940 25976 25976 E AndroidRuntime: java.lang.UnsatisfiedLinkError: dlopen failed: library &quot;&#x2F;Users&#x2F;linjw&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidSo%E9%93%BE%E6%8E%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/1.png">
+<meta property="article:published_time" content="2024-06-26T11:19:51.000Z">
+<meta property="article:modified_time" content="2025-12-23T10:44:10.234Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="C&#x2F;C++">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/AndroidSo%E9%93%BE%E6%8E%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/1.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SONAME%E7%BC%BA%E5%A4%B1"><span class="toc-text">SONAME缺失</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#so%E7%9A%84%E5%87%A0%E4%B8%AA%E5%90%8D%E5%AD%97"><span class="toc-text">so的几个名字</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#realname"><span class="toc-text">realname</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#linkname"><span class="toc-text">linkname</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#soname"><span class="toc-text">soname</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#patchelf"><span class="toc-text">patchelf</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#so%E7%9A%84%E7%89%88%E6%9C%AC%E5%8F%B7%E9%97%AE%E9%A2%98"><span class="toc-text">so的版本号问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#so%E7%9A%84%E6%90%9C%E7%B4%A2%E8%B7%AF%E5%BE%84"><span class="toc-text">so的搜索路径</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#so%E7%BC%93%E5%AD%98"><span class="toc-text">so缓存</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android-so链接的一些坑" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android so链接的一些坑</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.06.26</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="SONAME缺失"><a href="#SONAME缺失" class="headerlink" title="SONAME缺失"></a>SONAME缺失</h1><p>前几天遇到了个比较诡异的链接问题,分析下来感觉挺有意思的。</p>
+<p>背景是我们导入了供应商给的几个so,编译成功之后在机器上运行出现链接报错:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">06-26 08:10:01.940 25976 25976 E AndroidRuntime: java.lang.UnsatisfiedLinkError: dlopen failed: library &quot;/Users/linjw/workspace/Demo/app/src/main/cpp/../../../libs/arm64-v8a/libcjson.so&quot; not found: needed by /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/libDemo.so in namespace classloader-namespace</span><br></pre></td></tr></table></figure>
+
+<p><code>libcjson.so</code>的确是其中一个so，但可以看到它的运行报错居然是去找我的开发电脑上的这个路径:<code>/Users/linjw/workspace/Demo/app/src/main/cpp/../../../libs/arm64-v8a/libcjson.so</code>。</p>
+<p>这样的问题首先我们可以在<code>adb shell</code>里面用<code>readelf</code>命令或者在开发电脑里的ndk目录下找到对应abi的<code>readelf</code>工具看看<code>libDemo.so</code>的信息:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># readelf -d /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/libDemo.so</span><br><span class="line"></span><br><span class="line">Dynamic section at offset 0x3f6c8 contains 38 entries:</span><br><span class="line">  Tag                Type                 Name/Value</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [/Users/linjw/workspace/Demo/app/src/main/cpp/../../../libs/arm64-v8a/libcjson.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libcurl.so.4]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libcrypto.so.1.1]</span><br><span class="line"> ...</span><br></pre></td></tr></table></figure>
+
+<p>可以看到的确有一个<code>NEEDED</code>配置的是<code>/Users/linjw/workspace/Demo/app/src/main/cpp/../../../libs/arm64-v8a/libcjson.so</code>,但是可以看到其他的像<code>libcurl.so.4</code>和<code>libcrypto.so.1.1</code>也是供应商提供的,他们就没有带开发电脑的路径。从CMake配置上看他们的配置方式是一样的:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">set(lib_path $&#123;CMAKE_SOURCE_DIR&#125;/../../../libs)</span><br><span class="line"></span><br><span class="line">add_library(cjson SHARED IMPORTED)</span><br><span class="line">set_target_properties(cjson PROPERTIES IMPORTED_LOCATION $&#123;lib_path&#125;/$&#123;ANDROID_ABI&#125;/libcjson.so)</span><br><span class="line"></span><br><span class="line">add_library(curl SHARED IMPORTED)</span><br><span class="line">set_target_properties(curl PROPERTIES IMPORTED_LOCATION $&#123;lib_path&#125;/$&#123;ANDROID_ABI&#125;/libcurl.so)</span><br><span class="line"></span><br><span class="line">add_library(crypto SHARED IMPORTED)</span><br><span class="line">set_target_properties(crypto PROPERTIES IMPORTED_LOCATION $&#123;lib_path&#125;/$&#123;ANDROID_ABI&#125;/libcrypto.so)</span><br></pre></td></tr></table></figure>
+
+<p>那么问题就只能出现在他们的so本身,我们继续用<code>readelf</code>去对比看看这几个so的区别:</p>
+<img src="/AndroidSo%E9%93%BE%E6%8E%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/1.png" class="">
+
+<p>可以看到<code>libcrypto.so</code>和<code>libcurl.so</code>都是带有<code>SONAME</code>的,但是<code>libcjson.so</code>没有携带。我之前在<a href="https://blog.islinjw.cn/2020/11/24/JNI%E8%BF%90%E8%A1%8C%E9%94%99%E8%AF%AF-%E7%AC%A6%E5%8F%B7%E6%9C%AA%E5%AE%9A%E4%B9%89/">其他的问题</a>里面遇到过<code>SONAME</code>配错了导致找不到符号的问题。看起链接器在链接的时候是使用so的<code>SONAME</code>字段而不是文件名去写入target的NEEDED字段所以造成了这个问题。</p>
+<h2 id="so的几个名字"><a href="#so的几个名字" class="headerlink" title="so的几个名字"></a>so的几个名字</h2><p>这里我们再回顾下so几个name的作用:</p>
+<h3 id="realname"><a href="#realname" class="headerlink" title="realname"></a>realname</h3><p>realname实际上就是so的文件名，一般格式为<code>lib$&#123;name&#125;.so.$&#123;major&#125;.$&#123;minor&#125;.$&#123;revision&#125;</code>例如libcurl.so.4.5.0，我们可以在编译的时候用-o参数指定:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -shared -o $(realname) …</span><br></pre></td></tr></table></figure>
+
+<h3 id="linkname"><a href="#linkname" class="headerlink" title="linkname"></a>linkname</h3><p>linkname是在链接时使用的,用-l参数指定例如下面的foo就是linkname。我们在这里不需要填so文件的名字，gcc会自动为linkname补上lib和.so，去链接lib$(name).so</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc main.c -L. -lfoo</span><br></pre></td></tr></table></figure>
+
+<p>另外我们在java里面加载so填的也是linkname:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">System.loadLibrary(&quot;Demo&quot;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="soname"><a href="#soname" class="headerlink" title="soname"></a>soname</h3><p>soname顾名思义就是so的名字，它可以在编译的时候用<code>−Wl,−soname,$&#123;soname&#125;</code>指定，-Wl,表示后面的参数将传给link程序ld:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc -shared -fPIC -Wl,-soname,libfoo.so.0 -o libfoo.so.0.0.0 foo.c</span><br></pre></td></tr></table></figure>
+
+<p>如前面所见,soname会被记录在so的二进制数据中。在链接目标程序的时候也会将soname填入目标程序的NEEDED字段记录依赖,<strong>如果so里面没有SONAME字段则将文件路径打入目标程序的NEEDED字段</strong>。在加载目标程序的时候则是根据这个NEEDED去相应目录加载<code>$&#123;NEEDED&#125;</code>这个文件。</p>
+<h2 id="patchelf"><a href="#patchelf" class="headerlink" title="patchelf"></a>patchelf</h2><p>如果我们有源码,当然可以修改编译配置把SONAME加入到<code>libcjson.so</code>,但是这个so是供应商提供的。我们可以先用<a href="https://github.com/NixOS/patchelf/releases">patchelf</a>工具尝试给它加上SONAME验证看看。下载<a href="https://github.com/NixOS/patchelf/releases/download/0.18.0/patchelf-0.18.0-aarch64.tar.gz">patchelf-0.18.0-aarch64.tar.gz</a>解压出patchelf直接adb push到安卓机器上去运行:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">patchelf --set-soname libcjson.so libcjson.so</span><br></pre></td></tr></table></figure>
+
+<p>然后再把修改后的libcjson.so用adb pull回来重新编译app。运行之后可以发现前面的报错的确没有了,证明的确是SONAME缺失导致的。</p>
+<h1 id="so的版本号问题"><a href="#so的版本号问题" class="headerlink" title="so的版本号问题"></a>so的版本号问题</h1><p>但是却出现了其他的报错:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">06-26 08:46:47.737 30092 30092 E AndroidRuntime: java.lang.UnsatisfiedLinkError: dlopen failed: library &quot;libcrypto.so.1.1&quot; not found: needed by /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/libDemo.so in namespace classloader-namespace</span><br></pre></td></tr></table></figure>
+
+<p>这是由于<code>libcrypto.so</code>的SONAME字段是<code>libcrypto.so.1.1</code>,所以libDemo.so在链接它之后NEEDED字段填入的也是<code>libcrypto.so.1.1</code>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># readelf -d /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/libDemo.so</span><br><span class="line"></span><br><span class="line">Dynamic section at offset 0x3f6c8 contains 38 entries:</span><br><span class="line">  Tag                Type                 Name/Value</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [/Users/linjw/workspace/Demo/app/src/main/cpp/../../../libs/arm64-v8a/libcjson.so]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libcurl.so.4]</span><br><span class="line"> 0x0000000000000001 (NEEDED)             Shared library: [libcrypto.so.1.1]</span><br><span class="line"> ...</span><br></pre></td></tr></table></figure>
+
+<p>但我们导入apk的so名字是<code>libcrypto.so</code>,在安装目录只有<code>libcrypto.so</code>找不到<code>libcrypto.so.1.1</code>这个名字的so:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># ls /data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/ | grep libcrypto</span><br><span class="line">libcrypto.so</span><br></pre></td></tr></table></figure>
+
+<p>所以比较容易想到的是把<code>libcrypto.so</code>文件名改成<code>libcrypto.so.1.1</code>,在adb shell里面用<code>mv</code>命令修改名字运行时可以的。但代码工程里面修改so名字再去编译,实际编译出来之后仍然报错。这个时候在安装目录甚至都找不到<code>libcrypto.so.1.1</code>。</p>
+<p>原因就是虽然安卓系统是支持这种加载带版本后缀的so,但是gradle在编译apk的时候确是只会将<code>.so</code>后缀的文件打包到apk,所以安装之后就缺失了这个so。</p>
+<p>在Android上库不是在系统范围内安装的它们总是应用程序包的一部分,所以so的版本标记是不必要的,谷歌就把这块在打包的时候去掉了,但这样的差异造成了在安卓上使用c/c++库方面需要对so的版本号进行额外的处理。例如在编译ffmpeg的时候编译参数添加<code>--target-os=android</code>最终链接的时候就会添加<code>-shared -Wl,-soname,$(SLIBNAME)</code>参数指定<code>soname</code>为不带版本后缀的<code>SLIBNAME</code>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"># ffmpeg-4.4.2 configure</span><br><span class="line">...</span><br><span class="line">SLIBPREF=&quot;lib&quot;</span><br><span class="line">SLIBSUF=&quot;.so&quot;</span><br><span class="line">SLIBNAME=&#x27;$(SLIBPREF)$(FULLNAME)$(SLIBSUF)&#x27;</span><br><span class="line">...</span><br><span class="line"># OS specific</span><br><span class="line">case $target_os in</span><br><span class="line">    ...</span><br><span class="line">    android)</span><br><span class="line">        disable symver</span><br><span class="line">        enable section_data_rel_ro</span><br><span class="line">        add_cflags -fPIE</span><br><span class="line">        add_ldexeflags -fPIE -pie</span><br><span class="line">        SLIB_INSTALL_NAME=&#x27;$(SLIBNAME)&#x27;</span><br><span class="line">        SLIB_INSTALL_LINKS=</span><br><span class="line">        SHFLAGS=&#x27;-shared -Wl,-soname,$(SLIBNAME)&#x27;</span><br><span class="line">        ;;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+
+<p>解决这个问题除了修改编译配置重新编译之外,如果没有源代码同样可以用<code>patchelf</code>把<code>libcrypto.so</code>的SONAME改成<code>libcrypto.so</code>,不过由于蛮多第三方库交叉编译之后都会出现带版本后缀so文件名和soname的情况,这里我再提供两个思路。</p>
+<h2 id="so的搜索路径"><a href="#so的搜索路径" class="headerlink" title="so的搜索路径"></a>so的搜索路径</h2><p>一个是可以用<code>rpath</code>或者<code>runpath</code>去解决。</p>
+<p>安卓默认会按照优先级搜索下面的路径:</p>
+<ul>
+<li>so文件的RPATH字段指的的目录</li>
+<li>LD_LIBRARY_PATH环境变量指定的目录</li>
+<li>so文件的RUNPATH字段指的的目录</li>
+<li>应用的安装目录如上面的(/data/app/~~Y8XCESOaI01yUY_5GwBPeg==/me.linjw.demo-HHKb0jSb43YhjfSIfuxutw==/lib/arm64/)</li>
+<li>系统目录如/system/lib64/、/vendor/lib64/、/system/apex/com.android.i18n/lib64/等</li>
+</ul>
+<p>所以我们可以在CMakeLists.txt对libDemo.so添加如下link参数指定<code>rpath</code>到应用的内部私有目录:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">project(&quot;Demo&quot;)</span><br><span class="line">...</span><br><span class="line">set_target_properties($&#123;CMAKE_PROJECT_NAME&#125; PROPERTIES LINK_FLAGS &quot;-Wl,-rpath,/data/data/me.linjw.demo/cache&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>然后在第一次运行的时候将带有版本后缀的so拷贝到这个目录下。然后加载libDemo.so的时候就会先去到这个<code>rpath</code>指的的目录去搜索NEEDED so。</p>
+<p>如果有多个目录需要指定<code>rpath</code>可以用冒号分割,例如<code>&quot;-Wl,-rpath,/data/data/me.linjw.demo/cache:/data/data/me.linjw.demo/files&quot;</code></p>
+<p>另外从前面的搜索目录来看,Linux并不会在可执行程序的当前目录下去搜索so。而<code>rpath</code>还有个<code>$ORIGIN</code>变量它指定的是可执行程序的位置,例如我们写的一个可执行程序依赖了某个so,可以将<code>rpath</code>指定为<code>$ORIGIN</code>,那么只要so和可执行程序在同一个目录就能搜索到。</p>
+<h2 id="so缓存"><a href="#so缓存" class="headerlink" title="so缓存"></a>so缓存</h2><p>另外一个是我们在load <code>libDemo.so</code>之前手动调用<code>System.loadLibrary(&quot;crypto&quot;)</code>去load <code>libcrypto.so</code>,然后load的时候读取到SONAME是<code>libcrypto.so.1.1</code>放到缓存里，然后再load <code>libDemo.so</code>查找依赖的时候在缓存里面就能找<code>libcrypto.so.1.1</code></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

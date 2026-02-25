@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Android Input系统(一) 事件的获取流程 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android," />
+  
+
+  <meta name="description" content="应用层的事件分发流程看得多了,但是对事件是怎么从底层获取分发的一直不是很了解,刚好临近春节这几天没那么忙,看了下源码(android-8.0.0_r1)和一些博客,这里给大家分享下。 启动与初始化首先framework层的设备事件获取和分发都是在InputManagerService里面进行的,它在SystemServer里面启动: 12345678910111213141516171819202">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Input系统(一) 事件的获取流程">
+<meta property="og:url" content="https://blog.islinjw.cn/2020/01/23/Android-Input%E7%B3%BB%E7%BB%9F-%E4%B8%80-%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%8E%B7%E5%8F%96%E6%B5%81%E7%A8%8B/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="应用层的事件分发流程看得多了,但是对事件是怎么从底层获取分发的一直不是很了解,刚好临近春节这几天没那么忙,看了下源码(android-8.0.0_r1)和一些博客,这里给大家分享下。 启动与初始化首先framework层的设备事件获取和分发都是在InputManagerService里面进行的,它在SystemServer里面启动: 12345678910111213141516171819202">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput%E7%B3%BB%E7%BB%9F%E4%B8%80/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput%E7%B3%BB%E7%BB%9F%E4%B8%80/2.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AndroidInput%E7%B3%BB%E7%BB%9F%E4%B8%80/3.png">
+<meta property="article:published_time" content="2020-01-23T09:28:01.000Z">
+<meta property="article:modified_time" content="2025-12-23T10:44:10.234Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/AndroidInput%E7%B3%BB%E7%BB%9F%E4%B8%80/1.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%90%AF%E5%8A%A8%E4%B8%8E%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">启动与初始化</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E8%AF%BB%E5%8F%96"><span class="toc-text">事件读取</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Thread"><span class="toc-text">Thread</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#InputDispatcherThread"><span class="toc-text">InputDispatcherThread</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#InputReaderThread"><span class="toc-text">InputReaderThread</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#EventHub"><span class="toc-text">EventHub</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Android-Input系统-一-事件的获取流程" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Android Input系统(一) 事件的获取流程</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2020.01.23</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>应用层的事件分发流程看得多了,但是对事件是怎么从底层获取分发的一直不是很了解,刚好临近春节这几天没那么忙,看了下源码(<a href="https://cs.android.com/android/platform/superproject/+/android-8.0.0_r1:">android-8.0.0_r1</a>)和一些博客,这里给大家分享下。</p>
+<h1 id="启动与初始化"><a href="#启动与初始化" class="headerlink" title="启动与初始化"></a>启动与初始化</h1><p>首先framework层的设备事件获取和分发都是在InputManagerService里面进行的,它在SystemServer里面启动:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/java/com/android/server/SystemServer.java</span><br><span class="line">public final class SystemServer &#123;</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        new SystemServer().run();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    private void run() &#123;</span><br><span class="line">    	...</span><br><span class="line">    	startOtherServices();</span><br><span class="line">    	...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    private void startOtherServices() &#123;</span><br><span class="line">    	inputManager = new InputManagerService(context);</span><br><span class="line">    	...</span><br><span class="line">		inputManager.start();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>InputManagerService在构造函数里面会调用nativeInit,初始化native层相关环境,得到一个指针mPtr,这个指针其实是c++里面new出来的对象,所以在start的时候调用nativeStart将这个mPtr传回进去就能启动native层的相关逻辑</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/java/com/android/server/input/InputManagerService.java</span><br><span class="line">public InputManagerService(Context context) &#123;</span><br><span class="line">	...</span><br><span class="line">	mPtr = nativeInit(this, mContext, mHandler.getLooper().getQueue());</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">public void start() &#123;</span><br><span class="line">	nativeStart(mPtr);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们接着来来看看natvie层,nativeInit的时候其实是new了一个NativeInputManager出来并且返回.这个NativeInputManager属于JNI层,作用是联通framework层的InputManagerService和native层的InputManager。所以上面的mPtr其实就是NativeInputManager的指针,而且NativeInputManager的构造函数里面又会创建InputManager,我们这次要看的事件获取和分发就主要在它内部实现:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/jni/com_android_server_input_InputManagerService.cpp</span><br><span class="line">static jlong nativeInit(JNIEnv* env, jclass /* clazz */,</span><br><span class="line">        jobject serviceObj, jobject contextObj, jobject messageQueueObj) &#123;</span><br><span class="line">    ...</span><br><span class="line">    NativeInputManager* im = new NativeInputManager(contextObj, serviceObj,</span><br><span class="line">            messageQueue-&gt;getLooper());</span><br><span class="line">    im-&gt;incStrong(0);</span><br><span class="line">    return reinterpret_cast&lt;jlong&gt;(im);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">NativeInputManager::NativeInputManager(jobject contextObj,</span><br><span class="line">        jobject serviceObj, const sp&lt;Looper&gt;&amp; looper) :</span><br><span class="line">        mLooper(looper), mInteractive(true) &#123;</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">    sp&lt;EventHub&gt; eventHub = new EventHub();</span><br><span class="line">    mInputManager = new InputManager(eventHub, this, this);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在nativeStart的时候就会将这个InputManager启动:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/base/services/core/jni/com_android_server_input_InputManagerService.cpp</span><br><span class="line">static void nativeStart(JNIEnv* env, jclass /* clazz */, jlong ptr) &#123;</span><br><span class="line">	NativeInputManager* im = reinterpret_cast&lt;NativeInputManager*&gt;(ptr);</span><br><span class="line"></span><br><span class="line">	status_t result = im-&gt;getInputManager()-&gt;start();</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>InputManager里面会启动两条线程，分别用于事件的读取和分发:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputManager.cpp</span><br><span class="line">InputManager::InputManager(</span><br><span class="line">        const sp&lt;EventHubInterface&gt;&amp; eventHub,</span><br><span class="line">        const sp&lt;InputReaderPolicyInterface&gt;&amp; readerPolicy,</span><br><span class="line">        const sp&lt;InputDispatcherPolicyInterface&gt;&amp; dispatcherPolicy) &#123;</span><br><span class="line">    mDispatcher = new InputDispatcher(dispatcherPolicy);</span><br><span class="line">    mReader = new InputReader(eventHub, readerPolicy, mDispatcher);</span><br><span class="line">    initialize();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputManager::initialize() &#123;</span><br><span class="line">    mReaderThread = new InputReaderThread(mReader);</span><br><span class="line">    mDispatcherThread = new InputDispatcherThread(mDispatcher);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">status_t InputManager::start() &#123;</span><br><span class="line">    status_t result = mDispatcherThread-&gt;run(&quot;InputDispatcher&quot;, PRIORITY_URGENT_DISPLAY);</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    result = mReaderThread-&gt;run(&quot;InputReader&quot;, PRIORITY_URGENT_DISPLAY);</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    return OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的启动流程,我们可以整理出相关模块的层次关系如下:</p>
+<img src="/AndroidInput%E7%B3%BB%E7%BB%9F%E4%B8%80/1.png" class="">
+
+<p>启动的时序图如下:</p>
+<img src="/AndroidInput%E7%B3%BB%E7%BB%9F%E4%B8%80/2.png" class="">
+
+<p>今天这篇文章主要讲的就是Native层的事件获取流程,几个相关模块的功能如下:</p>
+<ul>
+<li>EventHub : 从底层设备驱动读取事件消息</li>
+<li>InputReader : 从EventHub读取事件消息发送给InputDispatcher</li>
+<li>InputDispatcher : 接收来自的InputReader的实现消息并分发到应用层</li>
+</ul>
+<h1 id="事件读取"><a href="#事件读取" class="headerlink" title="事件读取"></a>事件读取</h1><h2 id="Thread"><a href="#Thread" class="headerlink" title="Thread"></a>Thread</h2><p>到了这里其实整个启动就完成了,在继续讲InputManager是怎么读取事件之前我觉得有必要先看看Thread是怎么工作的。</p>
+<p>Thread::run方法会调用createThreadEtc,这个方法的第一个参数是一个函数指针。<br>createThreadEtc会去启动一个线程去调用这个传进去的函数。</p>
+<p>这里我们看到传进去的是_threadLoop方法,所以_threadLoop方法会在子线程中执行:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// system/core/libutils/Threads.cpp</span><br><span class="line">status_t Thread::run(const char* name, int32_t priority, size_t stack)</span><br><span class="line">&#123;</span><br><span class="line">	...</span><br><span class="line">	res = createThreadEtc(_threadLoop,</span><br><span class="line">                this, name, priority, stack, &amp;mThread);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>_threadLoop是Thread的一个静态成员函数,它传入的参数是createThreadEtc的第二个参数,即Thread的this指针,所以可以在这里把它转回Thread*,之后就在一个while循环里面不断的执行Thread::threadLoop方法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">// system/core/libutils/Threads.cpp</span><br><span class="line">int Thread::_threadLoop(void* user)</span><br><span class="line">&#123;</span><br><span class="line">	Thread* const self = static_cast&lt;Thread*&gt;(user);</span><br><span class="line"></span><br><span class="line">	sp&lt;Thread&gt; strong(self-&gt;mHoldSelf);</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">	do &#123;</span><br><span class="line">		...</span><br><span class="line">		result = self-&gt;threadLoop();</span><br><span class="line">		...</span><br><span class="line">		if (result == false || self-&gt;mExitPending) &#123;</span><br><span class="line">			...</span><br><span class="line">			break;</span><br><span class="line">		&#125;</span><br><span class="line">		...</span><br><span class="line">	&#125; while(strong != 0);</span><br><span class="line"></span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而threadLoop是一个纯虚函数,就相当于java里面的抽象方法,由子类去实现</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// system/core/libutils/include/utils/Thread.h</span><br><span class="line">class Thread : virtual public RefBase</span><br><span class="line">&#123;</span><br><span class="line">	..</span><br><span class="line">	virtual bool        threadLoop() = 0;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="InputDispatcherThread"><a href="#InputDispatcherThread" class="headerlink" title="InputDispatcherThread"></a>InputDispatcherThread</h2><p>ok,我们来看看InputDispatcherThread是怎么实现它的:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputDispatcher.cpp</span><br><span class="line">bool InputDispatcherThread::threadLoop() &#123;</span><br><span class="line">    mDispatcher-&gt;dispatchOnce();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputDispatcher::dispatchOnce() &#123;</span><br><span class="line">    nsecs_t nextWakeupTime = LONG_LONG_MAX;</span><br><span class="line">    ...</span><br><span class="line">    if (!haveCommandsLocked()) &#123;</span><br><span class="line">        dispatchOnceInnerLocked(&amp;nextWakeupTime);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    if (runCommandsLockedInterruptible()) &#123;</span><br><span class="line">        nextWakeupTime = LONG_LONG_MIN;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    nsecs_t currentTime = now();</span><br><span class="line">    int timeoutMillis = toMillisecondTimeoutDelay(currentTime, nextWakeupTime);</span><br><span class="line">    mLooper-&gt;pollOnce(timeoutMillis);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>dispatchOnce去执行消息分发或者运行命令,但是因为一开始并没有读到任何的消息或者命令,所以第一次dispatchOnce并没有做什么实际的工作,于是最后跑到了mLooper::pollOnce,这个方法里面会阻塞住,等待其他线程唤醒mLooper(这块的知识以前有写过一篇<a href="http://blog.islinjw.cn/2019/11/05/%E6%B7%B1%E5%85%A5native%E5%B1%82%E6%AD%BB%E6%8A%A0Handler/">深入native层死抠Handler</a>,感兴趣的同学可以去看看)</p>
+<p>也就是说现在InputDispatcher已经阻塞在那里等待消息的到来，再去进行分发了。而这个消息是哪里来的呢?</p>
+<h2 id="InputReaderThread"><a href="#InputReaderThread" class="headerlink" title="InputReaderThread"></a>InputReaderThread</h2><p>答案就是之前创建的另外一个线程InputReaderThread:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputReader.cpp</span><br><span class="line">bool InputReaderThread::threadLoop() &#123;</span><br><span class="line">    mReader-&gt;loopOnce();</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">void InputReader::loopOnce() &#123;</span><br><span class="line">    ...</span><br><span class="line">    size_t count = mEventHub-&gt;getEvents(timeoutMillis, mEventBuffer, EVENT_BUFFER_SIZE);</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    if (count) &#123;</span><br><span class="line">        processEventsLocked(mEventBuffer, count);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    mQueuedListener-&gt;flush();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputReader::processEventsLocked(const RawEvent* rawEvents, size_t count) &#123;</span><br><span class="line">    for (const RawEvent* rawEvent = rawEvents; count;) &#123;</span><br><span class="line">        ...</span><br><span class="line">        int32_t deviceId = rawEvent-&gt;deviceId;</span><br><span class="line">        processEventsForDeviceLocked(deviceId, rawEvent, batchSize);</span><br><span class="line">        ...</span><br><span class="line">        count -= batchSize;</span><br><span class="line">        rawEvent += batchSize;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void InputReader::processEventsForDeviceLocked(int32_t deviceId,</span><br><span class="line">        const RawEvent* rawEvents, size_t count) &#123;</span><br><span class="line">    ssize_t deviceIndex = mDevices.indexOfKey(deviceId);</span><br><span class="line">    InputDevice* device = mDevices.valueAt(deviceIndex);</span><br><span class="line">    device-&gt;process(rawEvents, count);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在threadLoop里面会去通过mEventHub向底层驱动读取事件,然后找到事件对应的InputDevice去处理,InputDevice是在addDeviceLocked里面添加的:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputReader.cpp</span><br><span class="line">void InputReader::addDeviceLocked(nsecs_t when, int32_t deviceId) &#123;</span><br><span class="line">	...</span><br><span class="line">	InputDevice* device = createDeviceLocked(deviceId, controllerNumber, identifier, classes);</span><br><span class="line">	...</span><br><span class="line">	mDevices.add(deviceId, device);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">InputDevice* InputReader::createDeviceLocked(int32_t deviceId, int32_t controllerNumber,</span><br><span class="line">        const InputDeviceIdentifier&amp; identifier, uint32_t classes) &#123;</span><br><span class="line">    InputDevice* device = new InputDevice(&amp;mContext, deviceId, bumpGenerationLocked(),</span><br><span class="line">            controllerNumber, identifier, classes);</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    if (keyboardSource != 0) &#123;</span><br><span class="line">        device-&gt;addMapper(new KeyboardInputMapper(device, keyboardSource, keyboardType));</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    return device;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>createDeviceLocked里面会根据设备的类型给InputDevice添加Mapper,例如键盘设备会添加KeyboardInputMapper。</p>
+<p>知道了InputDevice是啥,我们再来以键盘设备为例看看它的process方法里面干了什么:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputReader.cpp</span><br><span class="line">void InputDevice::process(const RawEvent* rawEvents, size_t count) &#123;</span><br><span class="line">    size_t numMappers = mMappers.size();</span><br><span class="line">    for (const RawEvent* rawEvent = rawEvents; count--; rawEvent++) &#123;</span><br><span class="line">        ...</span><br><span class="line">        for (size_t i = 0; i &lt; numMappers; i++) &#123;</span><br><span class="line">            InputMapper* mapper = mMappers[i];</span><br><span class="line">            mapper-&gt;process(rawEvent);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">void KeyboardInputMapper::process(const RawEvent* rawEvent) &#123;</span><br><span class="line">    switch (rawEvent-&gt;type) &#123;</span><br><span class="line">    case EV_KEY: &#123;</span><br><span class="line">        ...</span><br><span class="line">        processKey(rawEvent-&gt;when, rawEvent-&gt;value != 0, scanCode, usageCode);</span><br><span class="line">        ...</span><br><span class="line">        break;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void KeyboardInputMapper::processKey(nsecs_t when, bool down, int32_t scanCode,</span><br><span class="line">        int32_t usageCode) &#123;</span><br><span class="line">    ...</span><br><span class="line">    keyCode = rotateKeyCode(keyCode, mOrientation);</span><br><span class="line">    ...</span><br><span class="line">    nsecs_t downTime = mDownTime;</span><br><span class="line">    ...</span><br><span class="line">    NotifyKeyArgs args(when, getDeviceId(), mSource, policyFlags,</span><br><span class="line">            down ? AKEY_EVENT_ACTION_DOWN : AKEY_EVENT_ACTION_UP,</span><br><span class="line">            AKEY_EVENT_FLAG_FROM_SYSTEM, keyCode, scanCode, keyMetaState, downTime);</span><br><span class="line">    getListener()-&gt;notifyKey(&amp;args);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>我们看到它最终调用了KeyboardInputMapper的processKey函数,封装了一个按键事件的NotifyKeyArgs发送给一个Listener,那这个Listener是啥呢:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputReader.h</span><br><span class="line">class InputMapper &#123;</span><br><span class="line">	...</span><br><span class="line">	inline InputListenerInterface* getListener() &#123; return mContext-&gt;getListener(); &#125;</span><br><span class="line">	...</span><br><span class="line">	InputReaderContext* mContext;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line">class InputReader : public InputReaderInterface &#123;</span><br><span class="line">	...</span><br><span class="line">	class ContextImpl : public InputReaderContext &#123;</span><br><span class="line">		InputReader* mReader;</span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// frameworks/native/services/inputflinger/InputReader.cpp</span><br><span class="line">InputListenerInterface* InputReader::ContextImpl::getListener() &#123;</span><br><span class="line">    return mReader-&gt;mQueuedListener.get();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它最后get出来其实是InputReader的mQueuedListener,而这里的notifyKey方法也没有立马就将NotifyKeyArgs发送出去,它只是先保存到了一个队列里面:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputListener.cpp</span><br><span class="line">void QueuedInputListener::notifyKey(const NotifyKeyArgs* args) &#123;</span><br><span class="line">    mArgsQueue.push(new NotifyKeyArgs(*args));</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>然后有认真听讲的同学可能会记得上面InputReader::loopOnce里面最后其实是有调用它的flush方法的:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputReader.cpp</span><br><span class="line">void InputReader::loopOnce() &#123;</span><br><span class="line">    ...</span><br><span class="line">    size_t count = mEventHub-&gt;getEvents(timeoutMillis, mEventBuffer, EVENT_BUFFER_SIZE);</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    if (count) &#123;</span><br><span class="line">        processEventsLocked(mEventBuffer, count);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    mQueuedListener-&gt;flush();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个flush方法里面才是真正的发送消息给mInnerListener:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputListener.cpp</span><br><span class="line">void QueuedInputListener::flush() &#123;</span><br><span class="line">    size_t count = mArgsQueue.size();</span><br><span class="line">    for (size_t i = 0; i &lt; count; i++) &#123;</span><br><span class="line">        NotifyArgs* args = mArgsQueue[i];</span><br><span class="line">        args-&gt;notify(mInnerListener);</span><br><span class="line">        delete args;</span><br><span class="line">    &#125;</span><br><span class="line">    mArgsQueue.clear();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void NotifyKeyArgs::notify(const sp&lt;InputListenerInterface&gt;&amp; listener) const &#123;</span><br><span class="line">    listener-&gt;notifyKey(this);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个mInnerListener又是哪里来的呢:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputListener.cpp</span><br><span class="line">QueuedInputListener::QueuedInputListener(const sp&lt;InputListenerInterface&gt;&amp; innerListener) :</span><br><span class="line">        mInnerListener(innerListener) &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// frameworks/native/services/inputflinger/InputReader.cpp</span><br><span class="line">InputReader::InputReader(const sp&lt;EventHubInterface&gt;&amp; eventHub,</span><br><span class="line">        const sp&lt;InputReaderPolicyInterface&gt;&amp; policy,</span><br><span class="line">        const sp&lt;InputListenerInterface&gt;&amp; listener) :</span><br><span class="line">        mContext(this), mEventHub(eventHub), mPolicy(policy),</span><br><span class="line">        mGlobalMetaState(0), mGeneration(1),</span><br><span class="line">        mDisableVirtualKeysTimeout(LLONG_MIN), mNextTimeout(LLONG_MAX),</span><br><span class="line">        mConfigurationChangesToRefresh(0) &#123;</span><br><span class="line">    mQueuedListener = new QueuedInputListener(listener);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// frameworks/native/services/inputflinger/InputManager.cpp</span><br><span class="line">InputManager::InputManager(</span><br><span class="line">        const sp&lt;EventHubInterface&gt;&amp; eventHub,</span><br><span class="line">        const sp&lt;InputReaderPolicyInterface&gt;&amp; readerPolicy,</span><br><span class="line">        const sp&lt;InputDispatcherPolicyInterface&gt;&amp; dispatcherPolicy) &#123;</span><br><span class="line">    mDispatcher = new InputDispatcher(dispatcherPolicy);</span><br><span class="line">    mReader = new InputReader(eventHub, readerPolicy, mDispatcher);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>mInnerListener其实是InputDispatcher,在InputDispatcher::notifyKey里面会将NotifyKeyArgs封装成KeyEntry丢到mInboundQueue.isEmpty中,然后唤醒InputDispatcher::dispatchOnce里面阻塞住的mLooper:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputDispatcher.cpp</span><br><span class="line">void InputDispatcher::notifyKey(const NotifyKeyArgs* args) &#123;</span><br><span class="line">    ...</span><br><span class="line">    int32_t repeatCount = 0;</span><br><span class="line">    KeyEntry* newEntry = new KeyEntry(args-&gt;eventTime,</span><br><span class="line">            args-&gt;deviceId, args-&gt;source, policyFlags,</span><br><span class="line">            args-&gt;action, flags, keyCode, args-&gt;scanCode,</span><br><span class="line">            metaState, repeatCount, args-&gt;downTime);</span><br><span class="line"></span><br><span class="line">    needWake = enqueueInboundEventLocked(newEntry);</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    if (needWake) &#123;</span><br><span class="line">        mLooper-&gt;wake();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">bool InputDispatcher::enqueueInboundEventLocked(EventEntry* entry) &#123;</span><br><span class="line">    bool needWake = mInboundQueue.isEmpty();</span><br><span class="line">    mInboundQueue.enqueueAtTail(entry);</span><br><span class="line">    ...</span><br><span class="line">    return needWake;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>于是dispatchOnce继续执行重新被子线程调用,接下来就是从mInboundQueue里面拿出消息去分发了。分发这一块的逻辑也比较复杂我们放到下一篇继续讲。</p>
+<p>事件读取的时序图如下:</p>
+<img src="/AndroidInput%E7%B3%BB%E7%BB%9F%E4%B8%80/3.png" class="">
+
+<h1 id="EventHub"><a href="#EventHub" class="headerlink" title="EventHub"></a>EventHub</h1><p>上面讲的事件获取流程大概是这样的,loopOnce不断被死循环调用通过mEventHub获取事件放到mQueuedListener,里面,然后再通过mQueuedListener::flush,方法唤醒InputDispatcher去分发事件:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/InputReader.cpp</span><br><span class="line">void InputReader::loopOnce() &#123;</span><br><span class="line">    ...</span><br><span class="line">    size_t count = mEventHub-&gt;getEvents(timeoutMillis, mEventBuffer, EVENT_BUFFER_SIZE);</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    if (count) &#123;</span><br><span class="line">        processEventsLocked(mEventBuffer, count);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    mQueuedListener-&gt;flush();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是这样是不是意味着InputReader是通过轮询去获取设备驱动的事件的?效率会不会很低?</p>
+<p>其实不是的,EventHub::getEvents在设备没有接收到事件的时候也是阻塞的:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// frameworks/native/services/inputflinger/EventHub.cpp</span><br><span class="line">size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize) &#123;</span><br><span class="line">    ...</span><br><span class="line">    int pollResult = epoll_wait(mEpollFd, mPendingEventItems, EPOLL_MAX_EVENTS, timeoutMillis);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>epoll_wait是liunx的多路复用IO接口,这里会阻塞等待mEpollFd这个设备的接收到消息.</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>所以现在整个事件的获取流程就清晰了:</p>
+<ol>
+<li>SystemServer启动InputManagerService</li>
+<li>InputManagerService启动NativeInputManager</li>
+<li>NativeInputManager启动InputManager</li>
+<li>InputManager启动InputReaderThread和InputDispatcherThread</li>
+<li>InputReaderThread调用InputReader从EventHub读取设备事件唤醒InputDispatcherThread</li>
+<li>InputDispatcherThread拿到实际进行分发</li>
+</ol>
+<p>PS:本文参考了<a href="https://www.jianshu.com/u/7f26e9b13731">Stan_Z</a>的<a href="https://www.jianshu.com/p/5a879b7ad3b2">Android Input系列文章</a>,我也推荐大家去看看,这里面还讲了很多其他的细节</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

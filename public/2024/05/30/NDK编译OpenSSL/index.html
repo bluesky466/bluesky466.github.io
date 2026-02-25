@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>NDK编译OpenSSL | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android,C/C++," />
+  
+
+  <meta name="description" content="最近协助同事交叉编译openssl,整理了下知识点准备出个交叉编译的入门教程。其实多年前写过一篇写给安卓程序员的C&#x2F;C++编译入门。但并没有一个具体的开源项目实例可能对新人来讲不够直观,这里就用openssl举例。 事情的背景是我们有个老项目之前只有armeabi-v7a的so现在想添加arm64-v8a的so,负责的同事不太熟悉交叉编译所以找到我帮忙。 如果我们有全部的源码那只需要在build.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NDK编译OpenSSL">
+<meta property="og:url" content="https://blog.islinjw.cn/2024/05/30/NDK%E7%BC%96%E8%AF%91OpenSSL/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="最近协助同事交叉编译openssl,整理了下知识点准备出个交叉编译的入门教程。其实多年前写过一篇写给安卓程序员的C&#x2F;C++编译入门。但并没有一个具体的开源项目实例可能对新人来讲不够直观,这里就用openssl举例。 事情的背景是我们有个老项目之前只有armeabi-v7a的so现在想添加arm64-v8a的so,负责的同事不太熟悉交叉编译所以找到我帮忙。 如果我们有全部的源码那只需要在build.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/NDK%E7%BC%96%E8%AF%91OpenSSL/1.png">
+<meta property="article:published_time" content="2024-05-30T12:28:50.000Z">
+<meta property="article:modified_time" content="2025-12-23T10:44:10.239Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="C&#x2F;C++">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/NDK%E7%BC%96%E8%AF%91OpenSSL/1.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BA%93%E7%89%88%E6%9C%AC"><span class="toc-text">库版本</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91"><span class="toc-text">交叉编译</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#openssl-%E9%9D%99%E6%80%81%E5%BA%93%E9%93%BE%E6%8E%A5%E5%BC%82%E5%B8%B8"><span class="toc-text">openssl 静态库链接异常</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E9%97%AE%E9%A2%98"><span class="toc-text">其他问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#gradle-config%E5%BC%82%E5%B8%B8"><span class="toc-text">gradle config异常</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9AABI%E7%BC%96%E8%AF%91%E6%94%AF%E6%8C%81"><span class="toc-text">多ABI编译支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#stderr-undefined%E9%97%AE%E9%A2%98"><span class="toc-text">stderr undefined问题</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-NDK编译OpenSSL" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">NDK编译OpenSSL</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2024.05.30</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近协助同事交叉编译openssl,整理了下知识点准备出个交叉编译的入门教程。其实多年前写过一篇<a href="https://blog.islinjw.cn/2018/07/29/%E5%86%99%E7%BB%99%E5%AE%89%E5%8D%93%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84cc-%E7%BC%96%E8%AF%91%E5%85%A5%E9%97%A8/">写给安卓程序员的C/C++编译入门</a>。但并没有一个具体的开源项目实例可能对新人来讲不够直观,这里就用openssl举例。</p>
+<p>事情的背景是我们有个老项目之前只有armeabi-v7a的so现在想添加arm64-v8a的so,负责的同事不太熟悉交叉编译所以找到我帮忙。</p>
+<p>如果我们有全部的源码那只需要在build.gradle的abiFilters里面添加<code>arm64-v8a</code>就可以让ndk去编译了:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">	...</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">    	...</span><br><span class="line">    	ndk &#123;</span><br><span class="line">            abiFilters &#x27;armeabi-v7a&#x27;,&#x27;arm64-v8a&#x27;</span><br><span class="line">        &#125;</span><br><span class="line">    	...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是这样直接编译我们那个项目编译失败了:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ld: error: /Users/linjw/workspace/Demo/Demo/src/main/cpp/openssl/lib/libcrypto.a(bio_lib.o) is incompatible with</span><br><span class="line">aarch64linux</span><br></pre></td></tr></table></figure>
+
+<p>然后我去看了下原来这个项目直接依赖了编译好的armeabi-v7a的openssl的libcrypto.a和libssl.a,所以在编译arm64-v8a版本的so的时候链接armeabi-v7a的.a文件就出问题了,所以我们还需要先编译出arm64-v8a的libcrypto.a和libssl.a才行。</p>
+<h1 id="库版本"><a href="#库版本" class="headerlink" title="库版本"></a>库版本</h1><p>那怎么知道之前编译的openssl是哪个版本呢？正常的c或者c++第三方库除了静态库、动态库之外还会提供头文件,大部分的第三方库都会在头文件里面声明版本,所以我们可以在include目录下<code>grep -rn version .</code>搜索下,可以看到这里的版本是1.0.2t:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#  <span class="keyword">define</span> OPENSSL_VERSION_TEXT    <span class="string">&quot;OpenSSL 1.0.2t  10 Sep 2019&quot;</span></span></span><br></pre></td></tr></table></figure>
+
+<p>有些第三方库还会生成.pc（package configure 配置文件）文件,刚好这个项目把它也保存了进去,在<code>openssl.pc</code>看到它的确是1.0.2t:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">prefix=/usr/local/ssl/android-23</span><br><span class="line">exec_prefix=$&#123;prefix&#125;</span><br><span class="line">libdir=$&#123;exec_prefix&#125;/lib</span><br><span class="line">includedir=$&#123;prefix&#125;/include</span><br><span class="line"></span><br><span class="line">Name: OpenSSL</span><br><span class="line">Description: Secure Sockets Layer and cryptography libraries and tools</span><br><span class="line">Version: 1.0.2t</span><br><span class="line">Requires: libssl libcrypto</span><br></pre></td></tr></table></figure>
+
+<p>于是我们可以切到这个<a href="https://github.com/openssl/openssl/tree/OpenSSL_1_0_2t">TAG</a>看看。</p>
+<h1 id="交叉编译"><a href="#交叉编译" class="headerlink" title="交叉编译"></a>交叉编译</h1><p>编译第三方库的源码第一步应该看看他的文档,一般都会有编译的方法,例如从OpenSSL 1.0.2t源码的README里面就能找到我们应该去INSTALL里面看编译方法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"> See the appropriate file:</span><br><span class="line">        INSTALL         Linux, Unix, etc.</span><br><span class="line">        INSTALL.DJGPP   DOS platform with DJGPP</span><br><span class="line">        INSTALL.NW      Netware</span><br><span class="line">        INSTALL.OS2     OS/2</span><br><span class="line">        INSTALL.VMS     VMS</span><br><span class="line">        INSTALL.W32     Windows (32bit)</span><br><span class="line">        INSTALL.W64     Windows (64bit)</span><br><span class="line">        INSTALL.WCE     Windows CE</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>在<code>INSTALL</code>文档里面可以看到大概是用<code>Configure</code>去配置编译环境然后make install就好,用<code>./Configure -h</code>查看下它的文档,然后可以大概知道我们应该用<code>./Configure android64-aarch64 --prefix=/Users/linjw/Downloads/opensslbuild</code>去配置。</p>
+<p>然后<code>make install</code>就会发现报错了:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">making all in crypto...</span><br><span class="line">gcc -I. -I.. -I../include  -DOPENSSL_THREADS -D_REENTRANT -DDSO_DLFCN -DHAVE_DLFCN_H -mandroid -fPIC -I/include -B/lib -O3 -Wall -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM   -c -o cryptlib.o cryptlib.c</span><br><span class="line">clang: error: unknown argument: &#x27;-mandroid&#x27;</span><br><span class="line">make[1]: *** [cryptlib.o] Error 1</span><br><span class="line">make: *** [build_crypto] Error 1</span><br></pre></td></tr></table></figure>
+
+<p>这里的报错是clang不认识<code>-mandroid</code>这个参数。但看的仔细点的同学可以看到它用的是gcc去编译的源码,实际编译的是本机的版本而不是安卓的版本。</p>
+<p>交叉编译其实就是找到对应的编译器去对源码进行编译。这部分有时间可以看看<a href="https://blog.islinjw.cn/2018/07/29/%E5%86%99%E7%BB%99%E5%AE%89%E5%8D%93%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84cc-%E7%BC%96%E8%AF%91%E5%85%A5%E9%97%A8/">写给安卓程序员的C/C++编译入门</a>介绍的会比较详细,这里简单讲一下。</p>
+<p>例如可以直接用gcc或者clang编译出本机可用的目标文件(可执行程序、.a静态库、.so动态库等),也可以用ndk里面的aarch64-linux-android21-clang去编译出android21 arm64-v8a的目标文件,用android16 armv7a-linux-androideabi16-clang编译出armeabi-v7a的目标文件。</p>
+<p>新版本的ndk都是在sdk里面携带的,可以在android studio里面选择版本下载:</p>
+<img src="/NDK%E7%BC%96%E8%AF%91OpenSSL/1.png" class="">
+
+
+<p>例如我这边安装的20.0.5594570的ndk就在<code>/Users/linjw/Library/Android/sdk/ndk/20.0.5594570</code>,可以在它的子目录使用make-standalone-toolchain.sh生成android23的交叉编译工具链:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">export NDK_ROOT=/Users/linjw/Library/Android/sdk/ndk/20.0.5594570</span><br><span class="line">export TOOLCHAIN_HOME=$HOME/Android/standalone-toolchains/android-toolchain-arm</span><br><span class="line">export TOOLCHAIN_SYSROOT=$TOOLCHAIN_HOME/sysroot</span><br><span class="line">export PATH=$PATH:$TOOLCHAIN_HOME/bin</span><br><span class="line"></span><br><span class="line">$NDK_ROOT/build/tools/make-standalone-toolchain.sh --platform=android-23 --install-dir=$HOME/Android/standalone-toolchains/android-toolchain-arm  --toolchain=arm-linux-androideabi-4.9 --stl=gnustl</span><br></pre></td></tr></table></figure>
+
+<p>然后我们在<code>$TOOLCHAIN_HOME/bin</code>目录下就可以看到各种ABI的编译器:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">2to3                               arm-linux-androideabi-objdump      i686-linux-android-ld.gold         ndk-stack</span><br><span class="line">aarch64-linux-android-addr2line    arm-linux-androideabi-ranlib       i686-linux-android-nm              ndk-stack.py</span><br><span class="line">aarch64-linux-android-ar           arm-linux-androideabi-readelf      i686-linux-android-objcopy         ndk-which</span><br><span class="line">aarch64-linux-android-as           arm-linux-androideabi-size         i686-linux-android-objdump         pydoc</span><br><span class="line">aarch64-linux-android-c++filt      arm-linux-androideabi-strings      i686-linux-android-ranlib          python</span><br><span class="line">aarch64-linux-android-dwp          arm-linux-androideabi-strip        i686-linux-android-readelf         python-config</span><br><span class="line">aarch64-linux-android-elfedit      armv7a-linux-androideabi16-clang   i686-linux-android-size            python-config.sh</span><br><span class="line">aarch64-linux-android-gprof        armv7a-linux-androideabi16-clang++ i686-linux-android-strings         python2</span><br><span class="line">aarch64-linux-android-ld           armv7a-linux-androideabi17-clang   i686-linux-android-strip           python2-config</span><br><span class="line">aarch64-linux-android-ld.bfd       armv7a-linux-androideabi17-clang++ i686-linux-android16-clang         python2.7</span><br><span class="line">aarch64-linux-android-ld.gold      armv7a-linux-androideabi18-clang   i686-linux-android16-clang++       python2.7-config</span><br><span class="line">aarch64-linux-android-nm           armv7a-linux-androideabi18-clang++ i686-linux-android17-clang         sancov</span><br><span class="line">aarch64-linux-android-objcopy      armv7a-linux-androideabi19-clang   i686-linux-android17-clang++       sanstats</span><br><span class="line">aarch64-linux-android-objdump      armv7a-linux-androideabi19-clang++ i686-linux-android18-clang         scan-build</span><br><span class="line">aarch64-linux-android-ranlib       armv7a-linux-androideabi21-clang   i686-linux-android18-clang++       scan-view</span><br><span class="line">aarch64-linux-android-readelf      armv7a-linux-androideabi21-clang++ i686-linux-android19-clang         smtpd.py</span><br><span class="line">aarch64-linux-android-size         armv7a-linux-androideabi22-clang   i686-linux-android19-clang++       x86_64-linux-android-addr2line</span><br><span class="line">aarch64-linux-android-strings      armv7a-linux-androideabi22-clang++ i686-linux-android21-clang         x86_64-linux-android-ar</span><br><span class="line">aarch64-linux-android-strip        armv7a-linux-androideabi23-clang   i686-linux-android21-clang++       x86_64-linux-android-as</span><br><span class="line">aarch64-linux-android21-clang      armv7a-linux-androideabi23-clang++ i686-linux-android22-clang         x86_64-linux-android-c++filt</span><br><span class="line">aarch64-linux-android21-clang++    armv7a-linux-androideabi24-clang   i686-linux-android22-clang++       x86_64-linux-android-dwp</span><br><span class="line">aarch64-linux-android22-clang      armv7a-linux-androideabi24-clang++ i686-linux-android23-clang         x86_64-linux-android-elfedit</span><br><span class="line">aarch64-linux-android22-clang++    armv7a-linux-androideabi26-clang   i686-linux-android23-clang++       x86_64-linux-android-gprof</span><br><span class="line">aarch64-linux-android23-clang      armv7a-linux-androideabi26-clang++ i686-linux-android24-clang         x86_64-linux-android-ld</span><br><span class="line">aarch64-linux-android23-clang++    armv7a-linux-androideabi27-clang   i686-linux-android24-clang++       x86_64-linux-android-ld.bfd</span><br><span class="line">aarch64-linux-android24-clang      armv7a-linux-androideabi27-clang++ i686-linux-android26-clang         x86_64-linux-android-ld.gold</span><br><span class="line">aarch64-linux-android24-clang++    armv7a-linux-androideabi28-clang   i686-linux-android26-clang++       x86_64-linux-android-nm</span><br><span class="line">aarch64-linux-android26-clang      armv7a-linux-androideabi28-clang++ i686-linux-android27-clang         x86_64-linux-android-objcopy</span><br><span class="line">aarch64-linux-android26-clang++    armv7a-linux-androideabi29-clang   i686-linux-android27-clang++       x86_64-linux-android-objdump</span><br><span class="line">aarch64-linux-android27-clang      armv7a-linux-androideabi29-clang++ i686-linux-android28-clang         x86_64-linux-android-ranlib</span><br><span class="line">aarch64-linux-android27-clang++    bisect_driver.py                   i686-linux-android28-clang++       x86_64-linux-android-readelf</span><br><span class="line">aarch64-linux-android28-clang      clang                              i686-linux-android29-clang         x86_64-linux-android-size</span><br><span class="line">aarch64-linux-android28-clang++    clang++                            i686-linux-android29-clang++       x86_64-linux-android-strings</span><br><span class="line">aarch64-linux-android29-clang      clang-check                        idle                               x86_64-linux-android-strip</span><br><span class="line">aarch64-linux-android29-clang++    clang-format                       ld.lld                             x86_64-linux-android21-clang</span><br><span class="line">arm-linux-androideabi-addr2line    clang-tidy                         llvm-ar                            x86_64-linux-android21-clang++</span><br><span class="line">arm-linux-androideabi-ar           clang-tidy.real                    llvm-as                            x86_64-linux-android22-clang</span><br><span class="line">arm-linux-androideabi-as           clang80                            llvm-config                        x86_64-linux-android22-clang++</span><br><span class="line">arm-linux-androideabi-c++filt      clang80++                          llvm-cov                           x86_64-linux-android23-clang</span><br><span class="line">arm-linux-androideabi-clang        gdb                                llvm-dis                           x86_64-linux-android23-clang++</span><br><span class="line">arm-linux-androideabi-clang++      gdb-orig                           llvm-link                          x86_64-linux-android24-clang</span><br><span class="line">arm-linux-androideabi-dwp          git-clang-format                   llvm-modextract                    x86_64-linux-android24-clang++</span><br><span class="line">arm-linux-androideabi-elfedit      i686-linux-android-addr2line       llvm-nm                            x86_64-linux-android26-clang</span><br><span class="line">arm-linux-androideabi-g++          i686-linux-android-ar              llvm-objcopy                       x86_64-linux-android26-clang++</span><br><span class="line">arm-linux-androideabi-gcc          i686-linux-android-as              llvm-profdata                      x86_64-linux-android27-clang</span><br><span class="line">arm-linux-androideabi-gprof        i686-linux-android-c++filt         llvm-readobj                       x86_64-linux-android27-clang++</span><br><span class="line">arm-linux-androideabi-ld           i686-linux-android-dwp             llvm-strip                         x86_64-linux-android28-clang</span><br><span class="line">arm-linux-androideabi-ld.bfd       i686-linux-android-elfedit         llvm-symbolizer                    x86_64-linux-android28-clang++</span><br><span class="line">arm-linux-androideabi-ld.gold      i686-linux-android-gprof           make                               x86_64-linux-android29-clang</span><br><span class="line">arm-linux-androideabi-nm           i686-linux-android-ld              ndk-gdb                            x86_64-linux-android29-clang++</span><br><span class="line">arm-linux-androideabi-objcopy      i686-linux-android-ld.bfd          ndk-gdb.py                         yasm</span><br></pre></td></tr></table></figure>
+
+<p>不同cpu架构对应的工具链如下:</p>
+<table>
+<thead>
+<tr>
+<th>ABI</th>
+<th>工具链</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>armeabi-v7a</td>
+<td>armv7a-linux-androideabi</td>
+</tr>
+<tr>
+<td>arm64-v8a</td>
+<td>aarch64-linux-android</td>
+</tr>
+<tr>
+<td>x86</td>
+<td>i686-linux-android</td>
+</tr>
+<tr>
+<td>x86-64</td>
+<td>x86_64-linux-android</td>
+</tr>
+</tbody></table>
+<p>所以我们想要编译出arm64-v8a的库就需要指定<code>aarch64-linux-</code>的这堆工具去编译openssl的源码,但具体要怎么指定?</p>
+<p>其实C/C++的编译有一些约定俗成的环境变量,我们可以用设置这些环境变量去指定编译工具:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">export CC=aarch64-linux-android23-clang</span><br><span class="line">export CXX=aarch64-linux-android23-clang++</span><br><span class="line">export AR=aarch64-linux-android-ar</span><br><span class="line">export AS=aarch64-linux-android-as</span><br><span class="line">export RANLIB=aarch64-linux-android-ranlib</span><br><span class="line">export LD=aarch64-linux-android-ld</span><br><span class="line">export STRIP=aarch64-linux-android-strip</span><br></pre></td></tr></table></figure>
+
+<p>他们的作用如下:</p>
+<ul>
+<li>CC : c语言编译器</li>
+<li>CXX : C++编译器</li>
+<li>AR : 将.o文件打包成.a库</li>
+<li>AS : 将汇编代码转化为.o文件</li>
+<li>RANLIB : 为静态库文件生成索引,优化链接速度</li>
+<li>STRIP : 剥掉目标文件中一些符号信息和调试信息,使文件变小</li>
+<li>LD : 链接目标文件生成可执行文件</li>
+</ul>
+<p>设置好了之后重新<code>./Configure android64-aarch64 --prefix=/Users/linjw/Downloads/opensslbuild</code>再<code>make install</code>会发现还是报错,但是可以看到编译器的确已经变成了<code>aarch64-linux-android23-clang</code>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">making all in crypto...</span><br><span class="line">/usr/bin/perl ../util/mkbuildinf.pl &quot;aarch64-linux-android23-clang -I. -I.. -I../include  -DOPENSSL_THREADS -D_REENTRANT -DDSO_DLFCN -DHAVE_DLFCN_H -mandroid -fPIC -I/include -B/lib -O3 -Wall -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM&quot; &quot;android64-aarch64&quot; &gt;buildinf.h</span><br><span class="line">aarch64-linux-android23-clang -I. -I.. -I../include  -DOPENSSL_THREADS -D_REENTRANT -DDSO_DLFCN -DHAVE_DLFCN_H -mandroid -fPIC -I/include -B/lib -O3 -Wall -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM   -c -o cryptlib.o cryptlib.c</span><br><span class="line">clang80: error: unknown argument: &#x27;-mandroid&#x27;</span><br><span class="line">make[1]: *** [cryptlib.o] Error 1</span><br><span class="line">make: *** [build_crypto] Error 1</span><br></pre></td></tr></table></figure>
+
+<p>旧的ndk版本使用gcc去编译需要这个参数,新的ndk版本转向clang之后的确就不认识这个参数,因为我们都有源码了,直接修改下Configure把<code>android64-aarch64</code>目标的<code>-mandroid</code>参数去掉重新执行Configure和编译就好。<code>make install</code>运行完之后就可以在<code>/Users/linjw/Downloads/opensslbuild</code>下看到编译好的产物了。</p>
+<h1 id="openssl-静态库链接异常"><a href="#openssl-静态库链接异常" class="headerlink" title="openssl 静态库链接异常"></a>openssl 静态库链接异常</h1><p>虽然openssl arm64-v8a的库编译好了,但是实际放到项目里面去编译的时候出现了下面的链接异常:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ld: error: relocation R_AARCH64_PREL64 cannot be used against symbol OPENSSL_armcap_P; recompile with -fPIC</span><br><span class="line">&gt;&gt;&gt; defined in /Users/linjw/workspace/Demo/Demo/src/main/cpp/openssl/lib/libcrypto.a(armcap.o)</span><br><span class="line">&gt;&gt;&gt; referenced by sha1-armv8.o:(.text+0x1240) in archive /Users/linjw/workspace/Demo/Demo/src/main/cpp/openssl/lib/libcrypto.a</span><br></pre></td></tr></table></figure>
+
+<p>从编译提示和源码可以看到,在sha1-armv8.pl里面使用定义在armcap.c的OPENSSL_armcap_P的时候出现依赖异常:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// crypto/armcap.c</span><br><span class="line">unsigned int OPENSSL_armcap_P = 0;</span><br><span class="line"></span><br><span class="line"># crypto/sha/asm</span><br><span class="line">ldr x16,.LOPENSSL_armcap_P</span><br></pre></td></tr></table></figure>
+
+<p>根据提示需要用<code>-fPIC</code>参数重新编译,但是我看无论是编译libcrypto.a还是libssl.a或者我们的项目都是有带的。</p>
+<p>这种情况按道理应该有人遇到才对,搜索了下仓库的issues,发现其实之前就有人报过<a href="https://github.com/openssl/openssl/issues/10842">问题</a>,然后可以看到这个问题已经在1.1.1i上解决了:</p>
+<blockquote>
+<p>This should be fixed on both branch 1.1.1 (and incoming release 1.1.1i) and master now.</p>
+</blockquote>
+<p>具体的修改在<a href="https://github.com/openssl/openssl/compare/OpenSSL_1_1_1-stable%E2%80%A6Romain-Geissler-1A:OpenSSL_1_1_1-stable">这</a>,我本来是想直接pick过来用的,但是因为这个版本代码架构和1.0.2t差异有点大,而且perl超出了我的知识边界也不确定会不会改出问题来,所以还是决定更新到1.1.1i的版本。切到版本对应的<a href="https://github.com/openssl/openssl/tree/OpenSSL_1_1_1i">TAG</a>之后执行<code>./Configure android64-aarch64 --prefix=/Users/linjw/Downloads/opensslbuild</code>发现会报错:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Configuring OpenSSL version 1.1.1i (0x1010109fL) for android64-aarch64</span><br><span class="line">Using os-specific seed configuration</span><br><span class="line"></span><br><span class="line">Failure!  build file wasn&#x27;t produced.</span><br><span class="line">Please read INSTALL and associated NOTES files.  You may also have to look over</span><br><span class="line">your available compiler tool chain or change your configuration.</span><br><span class="line"></span><br><span class="line">$ANDROID_NDK_HOME is not defined at (eval 10) line 32.</span><br></pre></td></tr></table></figure>
+
+<p>看起来是编译方式改变了,从提示看需要配置ANDROID_NDK_HOME,我们直接在文档(NOTES.ANDROID)里搜索下它可以看到的确简化了安卓的编译流程:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">    export ANDROID_NDK_HOME=/home/whoever/Android/android-sdk/ndk/20.0.5594570</span><br><span class="line">    PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$ANDROID_NDK_HOME/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin:$PATH</span><br><span class="line">    ./Configure android-arm64 -D__ANDROID_API__=29</span><br><span class="line">    make</span><br><span class="line"></span><br><span class="line"> Older versions of the NDK have GCC under their common prebuilt tools directory, so the bin path</span><br><span class="line"> will be slightly different. EG: to compile for ICS on ARM with NDK 10d:</span><br><span class="line"></span><br><span class="line">    export ANDROID_NDK_HOME=/some/where/android-ndk-10d</span><br><span class="line">    PATH=$ANDROID_NDK_HOME/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86_64/bin:$PATH</span><br><span class="line">    ./Configure android-arm -D__ANDROID_API__=14</span><br><span class="line">    make</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>我的开发笔记本是MAC,编译配置如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">export ANDROID_NDK_HOME=/Users/linjw/Library/Android/sdk/ndk/20.0.5594570</span><br><span class="line">export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/bin:$ANDROID_NDK_HOME/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin:$PATH</span><br><span class="line">./Configure android-arm64 -D__ANDROID_API__=23 --prefix=/Users/linjw/Downloads/opensslbuild</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+
+<p>编译完成就能在<code>/Users/linjw/Downloads/opensslbuild</code>找到编译的产物了。</p>
+<h1 id="其他问题"><a href="#其他问题" class="headerlink" title="其他问题"></a>其他问题</h1><h3 id="gradle-config异常"><a href="#gradle-config异常" class="headerlink" title="gradle config异常"></a>gradle config异常</h3><p>项目clone下来之后编译它gradle出现了异常,添加<code>--stacktrace</code>参数编译之后看到下面的堆栈:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Caused by: java.lang.NullPointerException</span><br><span class="line">        at com.google.common.base.Preconditions.checkNotNull(Preconditions.java:782)</span><br><span class="line">        at com.android.build.gradle.internal.ndk.NdkHandler.getPlatformVersion(NdkHandler.java:158)</span><br><span class="line">        at com.android.build.gradle.internal.ndk.NdkHandler.supports64Bits(NdkHandler.java:331)</span><br><span class="line">        at com.android.build.gradle.internal.ndk.NdkHandler.getSupportedAbis(NdkHandler.java:397)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>其实就是因为旧版本的gradle支持不了新版本的ndk的编译,所以就只需要更新下<code>gradle-wrapper.properties</code>里的版本就好,例如我更新到了6.7.1:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#Tue May 18 15:09:16 CST 2021</span><br><span class="line">distributionBase=GRADLE_USER_HOME</span><br><span class="line">distributionPath=wrapper/dists</span><br><span class="line">zipStoreBase=GRADLE_USER_HOME</span><br><span class="line">zipStorePath=wrapper/dists</span><br><span class="line">distributionUrl=https\://services.gradle.org/distributions/gradle-6.7.1-bin.zip</span><br></pre></td></tr></table></figure>
+
+<h3 id="多ABI编译支持"><a href="#多ABI编译支持" class="headerlink" title="多ABI编译支持"></a>多ABI编译支持</h3><p>编译出来了之后我们还需要修改项目的CMakeLists.txt配置让他能同时编译’armeabi-v7a’,’arm64-v8a’两种架构的so,可以用ANDROID_ABI变量控制编译不同ABI的so的时候依赖不同的库:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">set(OPENSSL_CRYPTO_LIBRARY &quot;$&#123;CMAKE_SOURCE_DIR&#125;/openssl/$&#123;ANDROID_ABI&#125;/lib/libcrypto.a&quot;)</span><br><span class="line">set(OPENSSL_INCLUDE_DIR &quot;$&#123;CMAKE_SOURCE_DIR&#125;/openssl/$&#123;ANDROID_ABI&#125;/include&quot;)</span><br><span class="line">set(OPENSSL_SSL_LIBRARY &quot;$&#123;CMAKE_SOURCE_DIR&#125;/openssl/$&#123;ANDROID_ABI&#125;/lib/libcrypto.a;$&#123;CMAKE_SOURCE_DIR&#125;/openssl/$&#123;ANDROID_ABI&#125;/lib/libs</span><br><span class="line">sl.a&quot;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="stderr-undefined问题"><a href="#stderr-undefined问题" class="headerlink" title="stderr undefined问题"></a>stderr undefined问题</h3><p>在导入arm64-v8a的openssl静态库编译项目之后其实在编译链接的时候其实除了前面讲的<code>OPENSSL_armcap_P</code>问题,还出现了stderr undefined问题:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ld: error: undefined symbol: stderr</span><br><span class="line">&gt;&gt;&gt; referenced by cryptlib.c</span><br><span class="line">&gt;&gt;&gt;               cryptlib.o:(OPENSSL_showfatal) in archive /Users/linjw/workspace/Demo/Demo/src/main/cpp/openssl/a</span><br><span class="line">rm64-v8a/lib/libcrypto.a</span><br></pre></td></tr></table></figure>
+
+<p>由于.a是可以编译成功的,所以起码在编译静态库的时候是能找到stderr定义的,我们随便在cryptlib.c加个<code>int stderr = 1;</code>去编译让他出现重定义问题来确认stderr是在哪里定义的:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">making all in crypto...</span><br><span class="line">aarch64-linux-android23-clang -I. -I.. -I../include  -DOPENSSL_THREADS -D_REENTRANT -DDSO_DLFCN -DHAVE_DLFCN_H -fPIC -I/include -B/lib -O3 -Wall -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM   -c -o cryptlib.o cryptlib.c</span><br><span class="line">cryptlib.c:1039:5: error: redefinition of &#x27;stderr&#x27; with a different type: &#x27;int&#x27; vs &#x27;FILE *&#x27; (aka &#x27;struct __sFILE *&#x27;)</span><br><span class="line">int stderr = 1;</span><br><span class="line">    ^</span><br><span class="line">/Users/linjw/Android/standalone-toolchains/android-toolchain-arm/bin/../sysroot/usr/include/stdio.h:69:16: note: expanded from macro &#x27;stderr&#x27;</span><br><span class="line">#define stderr stderr</span><br><span class="line">               ^</span><br><span class="line">/Users/linjw/Android/standalone-toolchains/android-toolchain-arm/bin/../sysroot/usr/include/stdio.h:64:14: note: previous declaration is here</span><br><span class="line">extern FILE* stderr __INTRODUCED_IN(23);</span><br></pre></td></tr></table></figure>
+
+<p>可以看到它实际是定义在ndk的stdio.h里面的:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">if</span> __ANDROID_API__ &gt;= __ANDROID_API_M__</span></span><br><span class="line"><span class="keyword">extern</span> FILE* stdin __INTRODUCED_IN(<span class="number">23</span>);</span><br><span class="line"><span class="keyword">extern</span> FILE* stdout __INTRODUCED_IN(<span class="number">23</span>);</span><br><span class="line"><span class="keyword">extern</span> FILE* stderr __INTRODUCED_IN(<span class="number">23</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* C99 and earlier plus current C++ standards say these must be macros. */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stdin stdin</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stdout stdout</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stderr stderr</span></span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line"><span class="comment">/* Before M the actual symbols for stdin and friends had different names. */</span></span><br><span class="line"><span class="keyword">extern</span> FILE __sF[] __REMOVED_IN(<span class="number">23</span>);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stdin (&amp;__sF[0])</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stdout (&amp;__sF[1])</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stderr (&amp;__sF[2])</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>__ANDROID_API_M__的值为23,而我们编译openssl的时候定义的android版本刚好是23:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./android/api-level.h:83:#define __ANDROID_API_M__ 23</span><br></pre></td></tr></table></figure>
+
+<p>所以最终stderr的定义如下:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> FILE* stderr __INTRODUCED_IN(<span class="number">23</span>);</span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stderr stderr</span></span><br></pre></td></tr></table></figure>
+
+<p>而在链接libcrypto.a编译so的时候找不到stderr,意味着它并没有定义<code>extern FILE* stderr __INTRODUCED_IN(23);</code>,而是走了下面的:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line"><span class="comment">/* Before M the actual symbols for stdin and friends had different names. */</span></span><br><span class="line"><span class="keyword">extern</span> FILE __sF[] __REMOVED_IN(<span class="number">23</span>);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stdin (&amp;__sF[0])</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stdout (&amp;__sF[1])</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> stderr (&amp;__sF[2])</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>因为预处理宏定义在编译的最前头,并不会修改.a里面的符号(见<a href="https://blog.islinjw.cn/2018/07/29/%E5%86%99%E7%BB%99%E5%AE%89%E5%8D%93%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84cc-%E7%BC%96%E8%AF%91%E5%85%A5%E9%97%A8/#C-C-%E7%9A%84%E7%BC%96%E8%AF%91%E6%B5%81%E7%A8%8B">C/C++的编译流</a>)所以并不会将.a里面的stderr修改成<code>(&amp;__sF[2])</code>,所以就找不到stderr的符号定义了。</p>
+<p>所以去看项目build.gradle里的minSdkVersion发现它是21:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    ...</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        minSdkVersion 21</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>于是在编译项目的时候<code>__ANDROID_API__</code>的值就是21小于__ANDROID_API_M__(23)。</p>
+<p>所以修改也很简单,把minSdkVersion改成和编译openssl时的23或者用21去重新编译openssl就可以了。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

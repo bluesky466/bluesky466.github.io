@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>bugreport原理 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android," />
+  
+
+  <meta name="description" content="bugreport在定位分析问题的时候十分有用,一个adb bugreport就能打包拉取logcat、tombstones、anr堆栈等各种信息:   但是这里面都是一些标准的安卓调试信息,对于我司这种定制系统的情况,有些特殊的信息也想在bugreport里面导出要怎么办?最近就遇到了这样一个需求,于是去研究了下整个bugreport的流程。 adb bugreport命令原理首先我们的adb命">
+<meta property="og:type" content="article">
+<meta property="og:title" content="bugreport原理">
+<meta property="og:url" content="https://blog.islinjw.cn/2023/10/12/bugreport%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="bugreport在定位分析问题的时候十分有用,一个adb bugreport就能打包拉取logcat、tombstones、anr堆栈等各种信息:   但是这里面都是一些标准的安卓调试信息,对于我司这种定制系统的情况,有些特殊的信息也想在bugreport里面导出要怎么办?最近就遇到了这样一个需求,于是去研究了下整个bugreport的流程。 adb bugreport命令原理首先我们的adb命">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/bugreport%E5%8E%9F%E7%90%86/1.png">
+<meta property="article:published_time" content="2023-10-12T00:47:26.000Z">
+<meta property="article:modified_time" content="2025-12-23T10:44:10.240Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/bugreport%E5%8E%9F%E7%90%86/1.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#adb-bugreport%E5%91%BD%E4%BB%A4%E5%8E%9F%E7%90%86"><span class="toc-text">adb bugreport命令原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#bugreportz%E5%8E%9F%E7%90%86"><span class="toc-text">bugreportz原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#dumpstate%E5%8E%9F%E7%90%86"><span class="toc-text">dumpstate原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%B7%BB%E5%8A%A0%E8%87%AA%E5%AE%9A%E4%B9%89%E6%96%87%E4%BB%B6"><span class="toc-text">添加自定义文件</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-bugreport原理" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">bugreport原理</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2023.10.12</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p><a href="https://developer.android.com/studio/debug/bug-report?hl=zh-cn">bugreport</a>在定位分析问题的时候十分有用,一个<code>adb bugreport</code>就能打包拉取logcat、tombstones、anr堆栈等各种信息:</p>
+<img src="/bugreport%E5%8E%9F%E7%90%86/1.png" class="">
+
+<p>但是这里面都是一些标准的安卓调试信息,对于我司这种定制系统的情况,有些特殊的信息也想在bugreport里面导出要怎么办?最近就遇到了这样一个需求,于是去研究了下整个bugreport的流程。</p>
+<h1 id="adb-bugreport命令原理"><a href="#adb-bugreport命令原理" class="headerlink" title="adb bugreport命令原理"></a>adb bugreport命令原理</h1><p>首先我们的adb命令都是在adb clinet里面解析处理的</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:packages/modules/adb/client/main.cpp</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[], <span class="type">char</span>* envp[])</span> </span>&#123;</span><br><span class="line">    __adb_argv = <span class="built_in">const_cast</span>&lt;<span class="type">const</span> <span class="type">char</span>**&gt;(argv);</span><br><span class="line">    __adb_envp = <span class="built_in">const_cast</span>&lt;<span class="type">const</span> <span class="type">char</span>**&gt;(envp);</span><br><span class="line">    <span class="built_in">adb_trace_init</span>(argv);</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">adb_commandline</span>(argc - <span class="number">1</span>, <span class="built_in">const_cast</span>&lt;<span class="type">const</span> <span class="type">char</span>**&gt;(argv + <span class="number">1</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:packages/modules/adb/client/commandline.cpp</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">adb_commandline</span><span class="params">(<span class="type">int</span> argc, <span class="type">const</span> <span class="type">char</span>** argv)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (!<span class="built_in">strcmp</span>(argv[<span class="number">0</span>], <span class="string">&quot;bugreport&quot;</span>)) &#123;</span><br><span class="line">        Bugreport bugreport;</span><br><span class="line">        <span class="keyword">return</span> bugreport.<span class="built_in">DoIt</span>(argc, argv);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到bugreport命令由Bugreport::DoIt去处理:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:packages/modules/adb/client/bugreport.cpp</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">Bugreport::DoIt</span><span class="params">(<span class="type">int</span> argc, <span class="type">const</span> <span class="type">char</span>** argv)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	std::string bugz_command = <span class="string">&quot;bugreportz -p&quot;</span>;</span><br><span class="line">	...</span><br><span class="line">	<span class="function">BugreportStandardStreamsCallback <span class="title">bugz_callback</span><span class="params">(dest_dir, dest_file, show_progress, <span class="keyword">this</span>)</span></span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">SendShellCommand</span>(bugz_command, <span class="literal">false</span>, &amp;bugz_callback);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到最终的实现命令是”bugreportz -p”,它是在物理设备上生成bugreport并打印进度的命令,在<code>adb shell</code>里面执行它可以看到它生成bugreport的过程日志:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">odin:/ $ bugreportz -p</span><br><span class="line">PROGRESS:20/1683</span><br><span class="line">BEGIN:/data/user_de/0/com.android.shell/files/bugreports/bugreport-odin-TKQ1.220829.002-2023-10-11-19-07-35.zip</span><br><span class="line">PROGRESS:40/1683</span><br><span class="line">PROGRESS:60/1683</span><br><span class="line">PROGRESS:110/1683</span><br><span class="line">...</span><br><span class="line">PROGRESS:1560/1683</span><br><span class="line">PROGRESS:1619/1683</span><br><span class="line">OK:/data/user_de/0/com.android.shell/files/bugreports/bugreport-odin-TKQ1.220829.002-2023-10-11-19-07-35.zip</span><br><span class="line">PROGRESS:1639/1683</span><br></pre></td></tr></table></figure>
+
+<p><code>adb bugreport</code>实际也是执行这个命令之后不断解析它的日志来计算进度进行打印:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:packages/modules/adb/client/bugreport.cpp</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">BugreportStandardStreamsCallback</span> : <span class="keyword">public</span> StandardStreamsCallbackInterface &#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">// 解析bugreportz -p的打印</span></span><br><span class="line">	<span class="function"><span class="type">bool</span> <span class="title">OnStdout</span><span class="params">(<span class="type">const</span> <span class="type">char</span>* buffer, <span class="type">size_t</span> length)</span> </span>&#123;</span><br><span class="line">	    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; length; i++) &#123;</span><br><span class="line">	        <span class="type">char</span> c = buffer[i];</span><br><span class="line">	        <span class="keyword">if</span> (c == <span class="string">&#x27;\n&#x27;</span>) &#123;</span><br><span class="line">	        	<span class="comment">// 逐行解析,在里面打印进度, 例如</span></span><br><span class="line">	        	<span class="comment">// [ 20%] generating bugreport-odin-TKQ1.220829.002-2023-10-11-19-52-56.zip</span></span><br><span class="line">	            <span class="built_in">ProcessLine</span>(line_);</span><br><span class="line">	            line_.<span class="built_in">clear</span>();</span><br><span class="line">	        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	            line_.<span class="built_in">append</span>(<span class="number">1</span>, c);</span><br><span class="line">	        &#125;</span><br><span class="line">	    &#125;</span><br><span class="line">	    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// bugreportz -p执行完成的回调</span></span><br><span class="line">	<span class="function"><span class="type">int</span> <span class="title">Done</span><span class="params">(<span class="type">int</span> unused_)</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// 执行完成之后使用adb pull将bugreportz -p生成的zip文件pull到本机</span></span><br><span class="line">        <span class="keyword">if</span> (status_ == <span class="number">0</span>) &#123;</span><br><span class="line">            ...</span><br><span class="line">            <span class="built_in">SetLineMessage</span>(<span class="string">&quot;pulling&quot;</span>);</span><br><span class="line">            status_ =</span><br><span class="line">                br_-&gt;<span class="built_in">DoSyncPull</span>(srcs, destination.<span class="built_in">c_str</span>(), <span class="literal">false</span>, line_message_.<span class="built_in">c_str</span>()) ? <span class="number">0</span> : <span class="number">1</span>;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> status_;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>总结一下就是<code>adb bugreport</code>实际就是让安卓系统执行<code>bugreportz -p</code>生成bugreport的zip包,然后再使用<code>adb pull</code>命令拉到本机。</p>
+<h1 id="bugreportz原理"><a href="#bugreportz原理" class="headerlink" title="bugreportz原理"></a>bugreportz原理</h1><p>我们继续追踪bugreportz的源码:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/cmds/bugreportz/main.cpp</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="built_in">property_set</span>(<span class="string">&quot;ctl.start&quot;</span>, <span class="string">&quot;dumpstate&quot;</span>);</span><br><span class="line">    ...</span><br><span class="line">    s = <span class="built_in">socket_local_client</span>(<span class="string">&quot;dumpstate&quot;</span>, ANDROID_SOCKET_NAMESPACE_RESERVED, SOCK_STREAM);</span><br><span class="line">    ...</span><br><span class="line">    ret = <span class="built_in">bugreportz</span>(s, show_progress);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">close</span>(s) == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(stderr, <span class="string">&quot;WARNING: error closing socket: %s\n&quot;</span>, <span class="built_in">strerror</span>(errno));</span><br><span class="line">        ret = EXIT_FAILURE;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码上看它也只是个命令的转发者,通过ctl.start属性启动dumpstate服务(/system/bin/dumpstate):</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/cmds/dumpstate/dumpstate.rc</span><br><span class="line"></span><br><span class="line">service dumpstate /system/bin/dumpstate -s</span><br><span class="line">    class main</span><br><span class="line">    socket dumpstate stream 0660 shell log</span><br><span class="line">    disabled</span><br><span class="line">    oneshot</span><br></pre></td></tr></table></figure>
+
+<p>dumpstate创建了个socket的服务端,所以bugreportz就是通过socket和它进行通讯的,不断读取dumpstate的输出并打印。</p>
+<h1 id="dumpstate原理"><a href="#dumpstate原理" class="headerlink" title="dumpstate原理"></a>dumpstate原理</h1><p>所以活又外包到了dumpstate:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/cmds/dumpstate/main.cpp</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">run_main</span>(argc, argv);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/cmds/dumpstate/dumpstate.cpp</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">run_main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">    Dumpstate::RunStatus status = ds.<span class="built_in">ParseCommandlineAndRun</span>(argc, argv);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">Dumpstate::RunStatus <span class="title">Dumpstate::ParseCommandlineAndRun</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	status = <span class="built_in">Run</span>(<span class="number">-1</span> <span class="comment">/* calling_uid */</span>, <span class="string">&quot;&quot;</span> <span class="comment">/* calling_package */</span>);</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">Dumpstate::RunStatus <span class="title">Dumpstate::Run</span><span class="params">(<span class="type">int32_t</span> calling_uid, <span class="type">const</span> std::string&amp; calling_package)</span> </span>&#123;</span><br><span class="line">    Dumpstate::RunStatus status = <span class="built_in">RunInternal</span>(calling_uid, calling_package);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">Dumpstate::RunStatus <span class="title">Dumpstate::RunInternal</span><span class="params">(<span class="type">int32_t</span> calling_uid,</span></span></span><br><span class="line"><span class="params"><span class="function">                                            <span class="type">const</span> std::string&amp; calling_package)</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">// Redirect stdout to tmp_path_. This is the main bugreport entry and will be</span></span><br><span class="line">    <span class="comment">// moved into zip file later, if zipping.</span></span><br><span class="line">    <span class="built_in">TEMP_FAILURE_RETRY</span>(dup_stdout_fd = <span class="built_in">dup</span>(<span class="built_in">fileno</span>(stdout)));</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> why not write to a file instead of stdout to overcome this problem?</span></span><br><span class="line">    <span class="comment">/* <span class="doctag">TODO:</span> rather than generating a text file now and zipping it later,</span></span><br><span class="line"><span class="comment">        it would be more efficient to redirect stdout to the zip entry</span></span><br><span class="line"><span class="comment">        directly, but the libziparchive doesn&#x27;t support that option yet. */</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">redirect_to_file</span>(stdout, <span class="built_in">const_cast</span>&lt;<span class="type">char</span>*&gt;(tmp_path_.<span class="built_in">c_str</span>()))) &#123;</span><br><span class="line">        <span class="keyword">return</span> ERROR;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">	<span class="comment">// Dump state for the default case. This also drops root.</span></span><br><span class="line">    RunStatus s = <span class="built_in">DumpstateDefaultAfterCritical</span>();</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">// Zip the (now complete) .tmp file within the internal directory.</span></span><br><span class="line">    <span class="built_in">FinalizeFile</span>();</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>RunInternal里面先将stdout重定向到了tmp文件,后面的打印就会去到tmp文件。然后就调用最终来的实际干活的DumpstateDefaultAfterCritical:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://cs.android.com/android/platform/superproject/+/android-13.0.0_r8:frameworks/native/cmds/dumpstate/dumpstate.cpp</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> PSTORE_LAST_KMSG <span class="string">&quot;/sys/fs/pstore/console-ramoops&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ALT_PSTORE_LAST_KMSG <span class="string">&quot;/sys/fs/pstore/console-ramoops-0&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BLK_DEV_SYS_DIR <span class="string">&quot;/sys/block&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> RECOVERY_DIR <span class="string">&quot;/cache/recovery&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> RECOVERY_DATA_DIR <span class="string">&quot;/data/misc/recovery&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> UPDATE_ENGINE_LOG_DIR <span class="string">&quot;/data/misc/update_engine_log&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LOGPERSIST_DATA_DIR <span class="string">&quot;/data/misc/logd&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> PREREBOOT_DATA_DIR <span class="string">&quot;/data/misc/prereboot&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> PROFILE_DATA_DIR_CUR <span class="string">&quot;/data/misc/profiles/cur&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> PROFILE_DATA_DIR_REF <span class="string">&quot;/data/misc/profiles/ref&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> XFRM_STAT_PROC_FILE <span class="string">&quot;/proc/net/xfrm_stat&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> WLUTIL <span class="string">&quot;/vendor/xbin/wlutil&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> WMTRACE_DATA_DIR <span class="string">&quot;/data/misc/wmtrace&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OTA_METADATA_DIR <span class="string">&quot;/metadata/ota&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SNAPSHOTCTL_LOG_DIR <span class="string">&quot;/data/misc/snapshotctl_log&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LINKERCONFIG_DIR <span class="string">&quot;/linkerconfig&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> PACKAGE_DEX_USE_LIST <span class="string">&quot;/data/system/package-dex-usage.list&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SYSTEM_TRACE_SNAPSHOT <span class="string">&quot;/data/misc/perfetto-traces/bugreport/systrace.pftrace&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CGROUPFS_DIR <span class="string">&quot;/sys/fs/cgroup&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// TODO(narayan): Since this information has to be kept in sync</span></span><br><span class="line"><span class="comment">// with tombstoned, we should just put it in a common header.</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// File: system/core/debuggerd/tombstoned/tombstoned.cpp</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> std::string TOMBSTONE_DIR = <span class="string">&quot;/data/tombstones/&quot;</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">const</span> std::string TOMBSTONE_FILE_PREFIX = <span class="string">&quot;tombstone_&quot;</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">const</span> std::string ANR_DIR = <span class="string">&quot;/data/anr/&quot;</span>;</span><br><span class="line"><span class="type">static</span> <span class="type">const</span> std::string ANR_FILE_PREFIX = <span class="string">&quot;anr_&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="function">Dumpstate::RunStatus <span class="title">Dumpstate::DumpstateDefaultAfterCritical</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Capture first logcat early on; useful to take a snapshot before dumpstate logs take over the</span></span><br><span class="line">    <span class="comment">// buffer.</span></span><br><span class="line">    <span class="built_in">DoLogcat</span>();</span><br><span class="line">    <span class="comment">// Capture timestamp after first logcat to use in next logcat</span></span><br><span class="line">    <span class="type">time_t</span> logcat_ts = <span class="built_in">time</span>(<span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* collect stack traces from Dalvik and native processes (needs root) */</span></span><br><span class="line">    std::future&lt;std::string&gt; dump_traces;</span><br><span class="line">    <span class="keyword">if</span> (dump_pool_) &#123;</span><br><span class="line">        <span class="built_in">RETURN_IF_USER_DENIED_CONSENT</span>();</span><br><span class="line">        <span class="comment">// One thread is enough since we only need to enqueue DumpTraces here.</span></span><br><span class="line">        dump_pool_-&gt;<span class="built_in">start</span>(<span class="comment">/* thread_counts = */</span><span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// DumpTraces takes long time, post it to the another thread in the</span></span><br><span class="line">        <span class="comment">// pool, if pool is available</span></span><br><span class="line">        dump_traces = dump_pool_-&gt;<span class="built_in">enqueueTask</span>(</span><br><span class="line">            DUMP_TRACES_TASK, &amp;Dumpstate::DumpTraces, &amp;ds, &amp;dump_traces_path);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">RUN_SLOW_FUNCTION_WITH_CONSENT_CHECK_AND_LOG</span>(DUMP_TRACES_TASK, ds.DumpTraces,</span><br><span class="line">                &amp;dump_traces_path);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Run some operations that require root. */</span></span><br><span class="line">    <span class="keyword">if</span> (!PropertiesHelper::<span class="built_in">IsDryRun</span>()) &#123;</span><br><span class="line">        ds.tombstone_data_ = <span class="built_in">GetDumpFds</span>(TOMBSTONE_DIR, TOMBSTONE_FILE_PREFIX);</span><br><span class="line">        ds.anr_data_ = <span class="built_in">GetDumpFds</span>(ANR_DIR, ANR_FILE_PREFIX);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ds.<span class="built_in">AddDir</span>(RECOVERY_DIR, <span class="literal">true</span>);</span><br><span class="line">    ds.<span class="built_in">AddDir</span>(RECOVERY_DATA_DIR, <span class="literal">true</span>);</span><br><span class="line">    ds.<span class="built_in">AddDir</span>(UPDATE_ENGINE_LOG_DIR, <span class="literal">true</span>);</span><br><span class="line">    ds.<span class="built_in">AddDir</span>(LOGPERSIST_DATA_DIR, <span class="literal">false</span>);</span><br><span class="line">    <span class="keyword">if</span> (!PropertiesHelper::<span class="built_in">IsUserBuild</span>()) &#123;</span><br><span class="line">        ds.<span class="built_in">AddDir</span>(PROFILE_DATA_DIR_CUR, <span class="literal">true</span>);</span><br><span class="line">        ds.<span class="built_in">AddDir</span>(PROFILE_DATA_DIR_REF, <span class="literal">true</span>);</span><br><span class="line">        ds.<span class="built_in">AddZipEntry</span>(ZIP_ROOT_DIR + PACKAGE_DEX_USE_LIST, PACKAGE_DEX_USE_LIST);</span><br><span class="line">    &#125;</span><br><span class="line">    ds.<span class="built_in">AddDir</span>(PREREBOOT_DATA_DIR, <span class="literal">false</span>);</span><br><span class="line">    <span class="built_in">add_mountinfo</span>();</span><br><span class="line">    <span class="built_in">DumpIpTablesAsRoot</span>();</span><br><span class="line">    <span class="built_in">DumpDynamicPartitionInfo</span>();</span><br><span class="line">    ds.<span class="built_in">AddDir</span>(OTA_METADATA_DIR, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Capture any IPSec policies in play. No keys are exposed here.</span></span><br><span class="line">    <span class="built_in">RunCommand</span>(<span class="string">&quot;IP XFRM POLICY&quot;</span>, &#123;<span class="string">&quot;ip&quot;</span>, <span class="string">&quot;xfrm&quot;</span>, <span class="string">&quot;policy&quot;</span>&#125;, CommandOptions::<span class="built_in">WithTimeout</span>(<span class="number">10</span>).<span class="built_in">Build</span>());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Dump IPsec stats. No keys are exposed here.</span></span><br><span class="line">    <span class="built_in">DumpFile</span>(<span class="string">&quot;XFRM STATS&quot;</span>, XFRM_STAT_PROC_FILE);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Run ss as root so we can see socket marks.</span></span><br><span class="line">    <span class="built_in">RunCommand</span>(<span class="string">&quot;DETAILED SOCKET STATE&quot;</span>, &#123;<span class="string">&quot;ss&quot;</span>, <span class="string">&quot;-eionptu&quot;</span>&#125;, CommandOptions::<span class="built_in">WithTimeout</span>(<span class="number">10</span>).<span class="built_in">Build</span>());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Run iotop as root to show top 100 IO threads</span></span><br><span class="line">    <span class="built_in">RunCommand</span>(<span class="string">&quot;IOTOP&quot;</span>, &#123;<span class="string">&quot;iotop&quot;</span>, <span class="string">&quot;-n&quot;</span>, <span class="string">&quot;1&quot;</span>, <span class="string">&quot;-m&quot;</span>, <span class="string">&quot;100&quot;</span>&#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Gather shared memory buffer info if the product implements it</span></span><br><span class="line">    <span class="built_in">RunCommand</span>(<span class="string">&quot;Dmabuf dump&quot;</span>, &#123;<span class="string">&quot;dmabuf_dump&quot;</span>&#125;);</span><br><span class="line">    <span class="built_in">RunCommand</span>(<span class="string">&quot;Dmabuf per-buffer/per-exporter/per-device stats&quot;</span>, &#123;<span class="string">&quot;dmabuf_dump&quot;</span>, <span class="string">&quot;-b&quot;</span>&#125;);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">DumpFile</span>(<span class="string">&quot;PSI cpu&quot;</span>, <span class="string">&quot;/proc/pressure/cpu&quot;</span>);</span><br><span class="line">    <span class="built_in">DumpFile</span>(<span class="string">&quot;PSI memory&quot;</span>, <span class="string">&quot;/proc/pressure/memory&quot;</span>);</span><br><span class="line">    <span class="built_in">DumpFile</span>(<span class="string">&quot;PSI io&quot;</span>, <span class="string">&quot;/proc/pressure/io&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (dump_pool_) &#123;</span><br><span class="line">        <span class="built_in">RETURN_IF_USER_DENIED_CONSENT</span>();</span><br><span class="line">        <span class="built_in">WaitForTask</span>(std::<span class="built_in">move</span>(dump_traces));</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Current running thread in the pool is the root user also. Delete</span></span><br><span class="line">        <span class="comment">// the pool and make a new one later to ensure none of threads in the pool are root.</span></span><br><span class="line">        dump_pool_ = std::<span class="built_in">make_unique</span>&lt;DumpPool&gt;(bugreport_internal_dir_);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">DropRootUser</span>()) &#123;</span><br><span class="line">        <span class="keyword">return</span> Dumpstate::RunStatus::ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">RETURN_IF_USER_DENIED_CONSENT</span>();</span><br><span class="line">    Dumpstate::RunStatus status = <span class="built_in">dumpstate</span>();</span><br><span class="line">    <span class="comment">// Capture logcat since the last time we did it.</span></span><br><span class="line">    <span class="built_in">DoSystemLogcat</span>(logcat_ts);</span><br><span class="line">    <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码可以看出它的工作原理是</p>
+<ol>
+<li>通过AddDir、AddZipEntry往zip包里面插入目录和文件,</li>
+<li>通过RunCommand执行命令 : logcat、getprop、dumpsys等命令的结果获取用了取巧的方法,将标准输出重定向到tmp文件,所以实际是执行这些命令将结果收集到tmp文件,最终再将tmp文件加入zip包完成信息的收集。</li>
+</ol>
+<h1 id="添加自定义文件"><a href="#添加自定义文件" class="headerlink" title="添加自定义文件"></a>添加自定义文件</h1><p>分析完整个bugreport的生成流程,可以发现将我们自定义的信息导入到bugreport还是比较容易的,只需要把通过ds.AddZipEntry或者ds.AddDir把文件或者目录添加进zip包即可:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> CUSTOMER_LOG <span class="string">&quot;/mnt/tmp/customer.log&quot;</span></span></span><br><span class="line"></span><br><span class="line">ds.<span class="built_in">AddZipEntry</span>(ZIP_ROOT_DIR + CUSTOMER_LOG, CUSTOMER_LOG);</span><br></pre></td></tr></table></figure>
+
+<p>当然如果你的信息是执行命令后的打印,也可以用RunCommand把执行结果写入文件</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

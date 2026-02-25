@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Windows调试技巧案例-ffmpeg&amp;wave播放音频卡死问题 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Windows," />
+  
+
+  <meta name="description" content="最近在windows上开发音视频,遇到了读流卡死的问题.定位过程中学到了一些Windows上的程序调试技巧,这里记录一下。 WinDbg查看线程堆栈最近的这个项目使用ffmpeg播放外部设备的音视频流,在播放的过程中强行拔掉外部设备和pc的硬件连接,会出现音频流卡死在av_read_frame的现象。卡死问题在安卓上可以用kill -3命令输出进程堆栈,在Windows上没有类似的命令而是需要使用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows调试技巧案例-ffmpeg&amp;wave播放音频卡死问题">
+<meta property="og:url" content="https://blog.islinjw.cn/2023/08/31/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-ffmpeg-wave%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="最近在windows上开发音视频,遇到了读流卡死的问题.定位过程中学到了一些Windows上的程序调试技巧,这里记录一下。 WinDbg查看线程堆栈最近的这个项目使用ffmpeg播放外部设备的音视频流,在播放的过程中强行拔掉外部设备和pc的硬件连接,会出现音频流卡死在av_read_frame的现象。卡死问题在安卓上可以用kill -3命令输出进程堆栈,在Windows上没有类似的命令而是需要使用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/1.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/2.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/3.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/4.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/5.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/6.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/7.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/8.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/9.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/12.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/13.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/10.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/11.jpg">
+<meta property="article:published_time" content="2023-08-31T12:01:02.000Z">
+<meta property="article:modified_time" content="2025-12-23T10:44:10.240Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="Windows">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/1.jpg">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#WinDbg%E6%9F%A5%E7%9C%8B%E7%BA%BF%E7%A8%8B%E5%A0%86%E6%A0%88"><span class="toc-text">WinDbg查看线程堆栈</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Visual-Studio%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95"><span class="toc-text">Visual Studio远程调试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E8%AF%95%E6%9C%BA"><span class="toc-text">调试机</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BC%80%E5%8F%91%E6%9C%BA"><span class="toc-text">开发机</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D"><span class="toc-text">问题定位</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B8%80"><span class="toc-text">解决方案一</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%BA%8C"><span class="toc-text">解决方案二</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#WinDbg%E5%88%86%E6%9E%90%E7%BA%BF%E7%A8%8B%E6%AD%BB%E9%94%81"><span class="toc-text">WinDbg分析线程死锁</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Windows调试技巧案例-ffmpeg-wave播放音频卡死问题" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Windows调试技巧案例-ffmpeg&amp;wave播放音频卡死问题</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2023.08.31</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>最近在windows上开发音视频,遇到了读流卡死的问题.定位过程中学到了一些Windows上的程序调试技巧,这里记录一下。</p>
+<h1 id="WinDbg查看线程堆栈"><a href="#WinDbg查看线程堆栈" class="headerlink" title="WinDbg查看线程堆栈"></a>WinDbg查看线程堆栈</h1><p>最近的这个项目使用ffmpeg播放外部设备的音视频流,在播放的过程中强行拔掉外部设备和pc的硬件连接,会出现音频流卡死在<code>av_read_frame</code>的现象。卡死问题在安卓上可以用<code>kill -3</code>命令输出进程堆栈,在Windows上没有类似的命令而是需要使用<a href="https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/">WinDbg</a>去调试。</p>
+<p>可以直接使用它打开exe程序或者attach到已经打开的进程对程序进行调试:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/1.jpg" class="">
+
+
+<p>将编译时生成的pdb文件放到exe程序的同级目录为WinDbg提供符号表信息,在问题出现的时候就可以点击Break按钮然后在命令行输入框里面输入<code>~*k</code>命令打印出进程的所有线程堆栈,我们只要找到卡死的线程分析其堆栈看具体卡死在什么地方即可。</p>
+<p>这里的<code>~</code>指线程信息,<code>*</code>指所有线程,<code>k</code>指打印堆栈,所以<code>~*k</code>指打印所有线程的堆栈。类似的可以用<code>~8k</code>打印序号为8的线程的堆栈,更多的命令可以查看<a href="https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/commands">官方文档</a></p>
+<p>从我们这个案例举例,序号为8,Id为1278.1680的线程在audio_player.cpp的第228行调用了<code>av_read_frame</code>然后最终卡死在ffmpeg的dshow.c的第1862行:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/2.jpg" class="">
+
+<p>所以我们打开dshow.c的源码看1862行为什么会卡死:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/3.jpg" class="">
+
+<p>可以看到1862行是在<code>dshow_read_packet</code>的while循环,我一开始以为是卡在了等待mutex锁上,但是从ffmpeg的源码上看只有另外一个<code>callback</code>函数里面会去抢占这个锁:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/4.jpg" class="">
+
+<p>但是搜索所有的线程堆栈都没有调用到这个<code>callback</code>函数的。</p>
+<p>我们需要先定位到它是怎么卡死的才能针对性的去分析如何解决问题,既然堆栈里面看不到,那么我们还有下面的手动去继续分析:</p>
+<ol>
+<li>在ffmpeg源码里面添加日志打印 - 我们使用的conan去依赖的ffmpeg,修改源码的方式又需要自己编译然后修改依赖配置比较麻烦</li>
+<li>使用WinDbg添加断点单步调试 - 使用起来不是很方便</li>
+<li>在调试机上部署开发环境,使用Visual Studio添加断点单步调试 - 配置环境的耗时比较大</li>
+<li>使用Visual Studio远程调试在开发机上远程单步调试开发机的程序 - 比较合适</li>
+</ol>
+<h1 id="Visual-Studio远程调试"><a href="#Visual-Studio远程调试" class="headerlink" title="Visual Studio远程调试"></a>Visual Studio远程调试</h1><p>综合考虑下来我选择使用Visual Studio远程调试功能去调试。</p>
+<h3 id="调试机"><a href="#调试机" class="headerlink" title="调试机"></a>调试机</h3><p>根据<a href="https://learn.microsoft.com/zh-cn/visualstudio/debugger/remote-debugging?view=vs-2022">官方文档</a>,我们可以从VS的安装目录拷贝<code>Program Files\Microsoft Visual Studio 17.0\Common7\IDE\Remote Debugger</code>到调试机上执行msvsmon.exe打开调试服务,而且为了方便我们可以直接配置成无身份认证:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/5.jpg" class="">
+
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/6.jpg" class="">
+
+
+<h3 id="开发机"><a href="#开发机" class="headerlink" title="开发机"></a>开发机</h3><p>开发机需要和调试机在同一个局域网,然后配置远程调试器:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/7.jpg" class="">
+
+<p>注意这里的远程命令、工作目录指的都是调试机上的文件路径,而且每次修改编译完成之后VS并不会自动帮我们把新生成的exe文件传输到调试机,所以要么每次重新编译之后手动拷贝exe到开发机,要么弄一个共享目录将编译的目标exe配置生成到共享目录。</p>
+<p>完成配置之后就可以在vs上选择远程Windows调试器执行exe,然后像本地调试一样添加断点、查看堆栈、查看变量值等:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/8.jpg" class="">
+
+<h3 id="问题定位"><a href="#问题定位" class="headerlink" title="问题定位"></a>问题定位</h3><p>从单步调试的代码执行流程来看,是我之前对堆栈的分析有问题,卡在dshow.c的第1862行并不是卡在下一行等待mutex锁,而是卡在while的末尾等待进入下次while循环,即卡住1879行的WaitForMultipleObjects上。如果细心点的话也能发现,堆栈实际是卡在WaitForMultipleObjects而不是WaitForSingleObject:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/9.jpg" class="">
+
+<p>这个问题实际其实只涉及到<code>callback</code>和<code>dshow_read_packet</code>两个函数:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/12.jpg" class="">
+
+<p><code>callback</code>会在工作线程读取音频数据,放到<code>ctx-&gt;pktl</code>,而<code>dshow_read_packet</code>里面的while循环回去判断<code>ctx-&gt;pktl</code>是否有数据,这里的mutex锁就是为了解决两个线程的同步问题。</p>
+<p>如果判断还没有数据而且没有读取到eof,就会根据AVFormatContext::flags判断是否为阻塞读取,非阻塞直接返回again的错误码让调用方重试,如果是阻塞就等待数据填充的信号量。</p>
+<p>这个信号量是在<code>callback</code>里面填充完成之后通过SetEvent发送的,而由于我们已经把设备拔掉了,所以永远不会有callback的回调,于是<code>dshow_read_packet</code>就卡死了。</p>
+<p>PS: 这里的链表插入算法和Linus在TED上说的<a href="https://riboseyim.gitbook.io/perf/linus#hua-ti-si-lun-pin-wei">有品味的链表删除代码</a>有异曲同工之意，大佬的世界果然是类似的</p>
+<h3 id="解决方案一"><a href="#解决方案一" class="headerlink" title="解决方案一"></a>解决方案一</h3><p>解决的方式有两种,一是创建看门狗线程,在读取超时之后手动唤醒:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/13.jpg" class="">
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 计算priv_data数据偏移,去除无用的符号依赖</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">PrivDataOffsetHelper</span> &#123;</span><br><span class="line">    <span class="type">char</span>* pointer_place_holder[<span class="number">20</span>];</span><br><span class="line">    <span class="type">int</span> int_place_holder[<span class="number">14</span>];</span><br><span class="line"></span><br><span class="line">    HANDLE mutex;</span><br><span class="line">    HANDLE event[<span class="number">2</span>]; </span><br><span class="line">    <span class="type">char</span> *pktl;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 看门狗设置</span></span><br><span class="line">watch_dog_timer_.<span class="built_in">expires_after</span>(<span class="number">2</span>s);</span><br><span class="line">watch_dog_timer_.<span class="built_in">async_wait</span>([<span class="keyword">this</span>](<span class="type">const</span> boost::system::error_code&amp; code) &#123;</span><br><span class="line">    <span class="keyword">if</span> (code == boost::asio::error::operation_aborted) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">LOGW</span>(<span class="string">&quot;FORCE WAKEUP FOR WATCH DOG!!!&quot;</span>);</span><br><span class="line"></span><br><span class="line">    format_context_-&gt;flags |= AVFMT_FLAG_NONBLOCK;</span><br><span class="line">    <span class="keyword">auto</span> ctx = (PrivDataOffsetHelper*)format_context_-&gt;priv_data;</span><br><span class="line">    ctx-&gt;pktl = <span class="literal">nullptr</span>;</span><br><span class="line">    <span class="built_in">SetEvent</span>(ctx-&gt;event[<span class="number">1</span>]);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> error = <span class="built_in">av_read_frame</span>(format_context_, packet);</span><br><span class="line">watch_dog_timer_.<span class="built_in">cancel</span>();</span><br></pre></td></tr></table></figure>
+
+<p>这种方式最大的问题在于如果以后更新ffmpeg的时候priv_data的数据结构改变了,内存偏移也变了的话就会出现野指针。它是一种无奈的做法,如果按我一开始想的是卡在mutex上,而外部设备拔出之后的确没有办法从锁的触发流程上规避的话就只能用这种硬编码方式主动调用ReleaseMutex。</p>
+<h3 id="解决方案二"><a href="#解决方案二" class="headerlink" title="解决方案二"></a>解决方案二</h3><p>这里实际上使用非阻塞的方式去读取去解决会更加合适一点:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">// 打开AVFormatContext之后设置AVFMT_FLAG_NONBLOCK</span></span><br><span class="line"><span class="keyword">auto</span> error = <span class="built_in">avformat_open_input</span>(&amp;format_context_, device.second.<span class="built_in">data</span>(), iformat, &amp;options);</span><br><span class="line">format_context_-&gt;flags |= AVFMT_FLAG_NONBLOCK;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用非阻塞的方式不断读取</span></span><br><span class="line"><span class="keyword">auto</span> error = <span class="built_in">av_read_frame</span>(format_context_, packet);</span><br><span class="line"><span class="keyword">auto</span> start = std::chrono::high_resolution_clock::<span class="built_in">now</span>();</span><br><span class="line"><span class="keyword">while</span> (!exit_ &amp;&amp; error == <span class="built_in">AVERROR</span>(EAGAIN)) &#123;</span><br><span class="line">	<span class="comment">// 如果读取的时间超过阈值就代表已经拔出设备</span></span><br><span class="line">    <span class="keyword">auto</span> now = std::chrono::high_resolution_clock::<span class="built_in">now</span>();</span><br><span class="line">    <span class="keyword">auto</span> duration = std::chrono::<span class="built_in">duration_cast</span>&lt;std::chrono::milliseconds&gt;(now - start);</span><br><span class="line">    <span class="keyword">if</span> (duration.<span class="built_in">count</span>() &gt;= kReadFrameTimeout) &#123;</span><br><span class="line">        <span class="built_in">LOGW</span>(<span class="string">&quot;read frame timeout&quot;</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 暂停10ms防止空转耗费cpu</span></span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">milliseconds</span>(<span class="number">10</span>));</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 重新尝试读取</span></span><br><span class="line">    error = <span class="built_in">av_read_frame</span>(format_context_, packet);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="WinDbg分析线程死锁"><a href="#WinDbg分析线程死锁" class="headerlink" title="WinDbg分析线程死锁"></a>WinDbg分析线程死锁</h1><p>本来以为问题已经解决了,但是在自检的时候又发现了另外的死锁现象:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">00 0000000a`5fefe0e8 00007ffc`d57a30ce     ntdll!NtWaitForSingleObject+0x14</span><br><span class="line">01 0000000a`5fefe0f0 00007ffc`d1d21985     KERNELBASE!WaitForSingleObjectEx+0x8e</span><br><span class="line">02 0000000a`5fefe190 00007ffc`9609fabe     wdmaud!wodMessage+0x235</span><br><span class="line">03 0000000a`5fefe330 00007ffc`960a0ae9     winmmbase!waveMessage+0x9a</span><br><span class="line">04 0000000a`5fefe370 00007ffc`d1f42ba1     winmmbase!waveOutWrite+0x79</span><br><span class="line">05 0000000a`5fefe3a0 00007ffc`d1f43e80     msacm32!mapWaveWriteBuffer+0x69</span><br><span class="line">06 0000000a`5fefe3e0 00007ffc`9609fabe     msacm32!wodMessage+0xd0</span><br><span class="line">07 0000000a`5fefe430 00007ffc`960a0ae9     winmmbase!waveMessage+0x9a</span><br><span class="line">08 0000000a`5fefe470 00007ff6`1012c5f6     winmmbase!waveOutWrite+0x79</span><br><span class="line">09 0000000a`5fefe4a0 00007ff6`1012c432     XXXXXXX!AudioPlayer::Play+0xd6 [C:\Users\user\workspace\XXXXXXX\src\audio\audio_player.cpp @ 410] </span><br></pre></td></tr></table></figure>
+
+<p>这里卡死在Windows原生的waveOutWrite里面,由于没有源码,所以也没有办法调试。搜索了下资料,发现WinDbg其实是可以用<code>!locks</code>命令打印被持有的线程锁的信息:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">0:015&gt; !locks</span><br><span class="line"></span><br><span class="line">CritSec +2d2b3e28 at 000001e52d2b3e28</span><br><span class="line">WaiterWoken        No</span><br><span class="line">LockCount          1</span><br><span class="line">RecursionCount     1</span><br><span class="line">OwningThread       3f14</span><br><span class="line">EntryCount         0</span><br><span class="line">ContentionCount    1</span><br><span class="line">*** Locked</span><br><span class="line"></span><br><span class="line">Scanned 27 critical sections</span><br></pre></td></tr></table></figure>
+
+<p>这里的输出代表着有线程进入了临界区在等待3f14线程持有的2d2b3e28锁。</p>
+<p>如果出现了<code>Unable to resolve ntdll!RtlCriticalSectionList</code>的错误提示则说明找不到Windows源码的符号表,根据<a href="https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/symbol-path">官方文档</a>我们可以用<code>.sympath srv*https://msdl.microsoft.com/download/symbols</code>命令或者在设置页面配置微软符号服务器地址:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/10.jpg" class="">
+
+
+<p>接着我们通过<code>~</code>命令输出线程信息,找到3f14的线程序号是8:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">0:015&gt; ~</span><br><span class="line">   0  Id: 1d2c.47f4 Suspend: 1 Teb: 0000000a`5f54f000 Unfrozen</span><br><span class="line">   1  Id: 1d2c.4cc Suspend: 1 Teb: 0000000a`5f5bb000 Unfrozen</span><br><span class="line">   2  Id: 1d2c.2cec Suspend: 1 Teb: 0000000a`5f46e000 Unfrozen</span><br><span class="line">   3  Id: 1d2c.150c Suspend: 1 Teb: 0000000a`5f470000 Unfrozen</span><br><span class="line">   4  Id: 1d2c.2260 Suspend: 1 Teb: 0000000a`5f557000 Unfrozen</span><br><span class="line">   5  Id: 1d2c.31c8 Suspend: 1 Teb: 0000000a`5f559000 Unfrozen</span><br><span class="line">   6  Id: 1d2c.d58 Suspend: 1 Teb: 0000000a`5f55b000 Unfrozen</span><br><span class="line">   7  Id: 1d2c.1010 Suspend: 1 Teb: 0000000a`5f55d000 Unfrozen</span><br><span class="line">   8  Id: 1d2c.3f14 Suspend: 1 Teb: 0000000a`5f55f000 Unfrozen</span><br><span class="line">   9  Id: 1d2c.33f0 Suspend: 1 Teb: 0000000a`5f561000 Unfrozen</span><br><span class="line">  10  Id: 1d2c.21b4 Suspend: 1 Teb: 0000000a`5f563000 Unfrozen</span><br><span class="line">  11  Id: 1d2c.2a68 Suspend: 1 Teb: 0000000a`5f565000 Unfrozen</span><br><span class="line">  12  Id: 1d2c.227c Suspend: 1 Teb: 0000000a`5f567000 Unfrozen</span><br><span class="line">  13  Id: 1d2c.3be0 Suspend: 1 Teb: 0000000a`5f569000 Unfrozen</span><br><span class="line">  14  Id: 1d2c.2364 Suspend: 1 Teb: 0000000a`5f56b000 Unfrozen</span><br><span class="line">. 15  Id: 1d2c.455c Suspend: 1 Teb: 0000000a`5f474000 Unfrozen</span><br><span class="line">  16  Id: 1d2c.154c Suspend: 1 Teb: 0000000a`5f472000 Unfrozen</span><br><span class="line">  21  Id: 1d2c.3f2c Suspend: 1 Teb: 0000000a`5f5a3000 Unfrozen</span><br><span class="line">  22  Id: 1d2c.46b8 Suspend: 1 Teb: 0000000a`5f47e000 Unfrozen</span><br><span class="line">  28  Id: 1d2c.12fc Suspend: 1 Teb: 0000000a`5f492000 Unfrozen</span><br><span class="line">  30  Id: 1d2c.15cc Suspend: 1 Teb: 0000000a`5f496000 Unfrozen</span><br></pre></td></tr></table></figure>
+
+<p>然后使用<code>~8k</code>命令输出序号为8的线程堆栈,可以发现这个线程就是一开始我们看到的卡死的waveOutWrite线程:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">0:015&gt; ~8k</span><br><span class="line"> # Child-SP          RetAddr               Call Site</span><br><span class="line">00 0000000a`5fefe0e8 00007ffc`d57a30ce     ntdll!NtWaitForSingleObject+0x14</span><br><span class="line">01 0000000a`5fefe0f0 00007ffc`d1d21985     KERNELBASE!WaitForSingleObjectEx+0x8e</span><br><span class="line">02 0000000a`5fefe190 00007ffc`9609fabe     wdmaud!wodMessage+0x235</span><br><span class="line">03 0000000a`5fefe330 00007ffc`960a0ae9     winmmbase!waveMessage+0x9a</span><br><span class="line">04 0000000a`5fefe370 00007ffc`d1f42ba1     winmmbase!waveOutWrite+0x79</span><br><span class="line">05 0000000a`5fefe3a0 00007ffc`d1f43e80     msacm32!mapWaveWriteBuffer+0x69</span><br><span class="line">06 0000000a`5fefe3e0 00007ffc`9609fabe     msacm32!wodMessage+0xd0</span><br><span class="line">07 0000000a`5fefe430 00007ffc`960a0ae9     winmmbase!waveMessage+0x9a</span><br><span class="line">08 0000000a`5fefe470 00007ff6`1012c5f6     winmmbase!waveOutWrite+0x79</span><br><span class="line">09 0000000a`5fefe4a0 00007ff6`1012c432     XXXXXXX!AudioPlayer::Play+0xd6 [C:\Users\user\workspace\XXXXXXX\src\audio\audio_player.cpp @ 410] </span><br></pre></td></tr></table></figure>
+
+
+<p>这个线程卡持有了2d2b3e28锁之后卡在了WaitForSingleObject,导致其他线程无法获取2d2b3e28锁。一般死锁就是两个线程相互持有对方的锁导致的,所以我们需要找到哪个线程想要获取2d2b3e28锁。可以用<code>~*kv</code>命令打印打印线程堆栈并显示传递给每个函数的前三个参数,然后搜索2d2b3e28:</p>
+<img src="/Windows%E8%B0%83%E8%AF%95%E6%8A%80%E5%B7%A7%E6%A1%88%E4%BE%8B-%E6%92%AD%E6%94%BE%E9%9F%B3%E9%A2%91%E5%8D%A1%E6%AD%BB%E9%97%AE%E9%A2%98/11.jpg" class="">
+
+<p>发现在audio_player.cpp的第109行,调用了waveOutUnprepareHeader,在里面传入2d2b3e28给RtlpWaitOnAddress函数去等待这个锁。</p>
+<p>这里实际上是waveOutOpen注册的callback函数,我在里面去释放播放数据的缓存:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> CALLBACK <span class="title">WaveOutProc</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">   HWAVEOUT  hwo,</span></span></span><br><span class="line"><span class="params"><span class="function">   UINT      msg,</span></span></span><br><span class="line"><span class="params"><span class="function">   DWORD_PTR instance,</span></span></span><br><span class="line"><span class="params"><span class="function">   DWORD_PTR param1,</span></span></span><br><span class="line"><span class="params"><span class="function">   DWORD_PTR param2</span></span></span><br><span class="line"><span class="params"><span class="function">)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(WOM_DONE == msg) &#123;</span><br><span class="line">        <span class="keyword">auto</span> hdr = (WAVEHDR*)param1;</span><br><span class="line">        <span class="keyword">auto</span> handle_ptr = (HWAVEOUT*)instance;</span><br><span class="line">        <span class="built_in">av_free</span>(hdr-&gt;lpData);</span><br><span class="line">        <span class="built_in">waveOutUnprepareHeader</span>(*handle_ptr, hdr, <span class="built_in">sizeof</span>(WAVEHDR));</span><br><span class="line">        <span class="keyword">delete</span> hdr;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> ret = <span class="built_in">waveOutOpen</span>(&amp;wave_out_handle_, WAVE_MAPPER, &amp;wfx, (DWORD_PTR) WaveOutProc, (DWORD_PTR) &amp;wave_out_handle_, CALLBACK_FUNCTION);</span><br></pre></td></tr></table></figure>
+
+<p>从堆栈上看这个callback是在子线程中回调的,所以结合现象我们可以大概分析出</p>
+<ol>
+<li>wave有一条工作线程和一个线程锁</li>
+<li>waveOutWrite会获取线程锁,然后往工作线程丢入任务,然后等待任务完成的信号量</li>
+<li>callback也是在工作线程中回调的,我们在里面调用waveOutUnprepareHeader,这里面也需要获取线程锁</li>
+<li>由于线程锁已经被waveOutWrite持有,所以callback会卡住,即工作线程会阻塞等待线程锁</li>
+<li>而waveOutWrite又需要等待工作线程去执行丢入的任务</li>
+<li>于是发生了死锁</li>
+</ol>
+<p>从<a href="https://learn.microsoft.com/en-us/previous-versions/dd743869(v=vs.85)">官方文档</a>里面其实也可以看到在callback里面调用其他wave函数会造成死锁(Calling other wave functions will cause deadlock.),只能怪我自己没有仔细阅读文档了:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Applications should not call any system-defined functions from inside a callback function, except for EnterCriticalSection, LeaveCriticalSection, midiOutLongMsg, midiOutShortMsg, OutputDebugString, PostMessage, PostThreadMessage, SetEvent, timeGetSystemTime, timeGetTime, timeKillEvent, and timeSetEvent. Calling other wave functions will cause deadlock.</span><br></pre></td></tr></table></figure>
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Python元编程 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Python," />
+  
+
+  <meta name="description" content="小组内已经有蛮多的项目是通过python去实现的,但是大部分人可能只是用到了它的一些简单特性,像元编程这样的高级特性就没有去了解过。 虽然过渡使用元编程会造成代码复杂度,但在某些特定场景下可能是个比较优雅的解决思路。所以我们可以不去用它，但是我们需要了解他。 元编程Python元编程是指在运行时对Python代码进行操作的技术，它可以动态地生成、修改和执行代码，从而实现一些高级的编程技巧,这里介绍">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python元编程">
+<meta property="og:url" content="https://blog.islinjw.cn/2025/08/22/Python%E5%85%83%E7%BC%96%E7%A8%8B/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="小组内已经有蛮多的项目是通过python去实现的,但是大部分人可能只是用到了它的一些简单特性,像元编程这样的高级特性就没有去了解过。 虽然过渡使用元编程会造成代码复杂度,但在某些特定场景下可能是个比较优雅的解决思路。所以我们可以不去用它，但是我们需要了解他。 元编程Python元编程是指在运行时对Python代码进行操作的技术，它可以动态地生成、修改和执行代码，从而实现一些高级的编程技巧,这里介绍">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-08-22T06:53:55.000Z">
+<meta property="article:modified_time" content="2025-12-23T10:44:10.239Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%83%E7%BC%96%E7%A8%8B"><span class="toc-text">元编程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%A3%85%E9%A5%B0%E5%99%A8"><span class="toc-text">装饰器</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B8%A6%E5%8F%82%E8%A3%85%E9%A5%B0%E5%99%A8"><span class="toc-text">带参装饰器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%A3%85%E9%A5%B0%E5%99%A8%E9%A1%BA%E5%BA%8F"><span class="toc-text">装饰器顺序</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%AD%94%E6%B3%95%E5%87%BD%E6%95%B0"><span class="toc-text">魔法函数</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%83%E7%B1%BB"><span class="toc-text">元类</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Python元编程" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Python元编程</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2025.08.22</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>小组内已经有蛮多的项目是通过python去实现的,但是大部分人可能只是用到了它的一些简单特性,像<code>元编程</code>这样的高级特性就没有去了解过。</p>
+<p>虽然过渡使用元编程会造成代码复杂度,但在某些特定场景下可能是个比较优雅的解决思路。所以我们可以不去用它，但是我们需要了解他。</p>
+<h1 id="元编程"><a href="#元编程" class="headerlink" title="元编程"></a>元编程</h1><p><a href="https://python3-cookbook.readthedocs.io/zh-cn/latest/chapters/p09_meta_programming.html">Python元编程</a>是指在运行时对Python代码进行操作的技术，它可以动态地生成、修改和执行代码，从而实现一些高级的编程技巧,这里介绍喜爱比较常用的技术几种技术:装饰器、魔法函数、元类。</p>
+<h1 id="装饰器"><a href="#装饰器" class="headerlink" title="装饰器"></a>装饰器</h1><p>装饰器从形式看类似java里面的注解,但它的原理是基于”python里面函数是一等公民”或者说”python里面一切皆对象,包括函数”。我们先来看一个例子:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line">USERS = &#123;</span><br><span class="line">    <span class="string">&quot;tom&quot;</span>: &#123;<span class="string">&quot;permissions&quot;</span>: [<span class="string">&quot;read&quot;</span>, <span class="string">&quot;write&quot;</span>]&#125;,</span><br><span class="line">    <span class="string">&quot;jerry&quot;</span>: &#123;<span class="string">&quot;permissions&quot;</span>: [<span class="string">&quot;read&quot;</span>]&#125;,</span><br><span class="line">    <span class="string">&quot;mary&quot;</span>: &#123;<span class="string">&quot;permissions&quot;</span>: []&#125;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">DB = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Request</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, headers, body = <span class="literal">None</span></span>):</span><br><span class="line">        <span class="variable language_">self</span>.headers = headers</span><br><span class="line">        <span class="variable language_">self</span>.body = body</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_get_request</span>(<span class="params">request</span>):</span><br><span class="line">    body = json.loads(request.body)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">200</span>, DB.get(body.get(<span class="string">&quot;key&quot;</span>), <span class="string">&quot;null&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_dump_request</span>(<span class="params">request</span>):</span><br><span class="line">    <span class="keyword">return</span> <span class="number">200</span>, json.dumps(DB)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_list_request</span>(<span class="params">request</span>):</span><br><span class="line">    <span class="keyword">return</span> <span class="number">200</span>, <span class="built_in">str</span>(DB.keys())</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_set_request</span>(<span class="params">request</span>):</span><br><span class="line">    body = json.loads(request.body)</span><br><span class="line">    DB[body.get(<span class="string">&quot;key&quot;</span>)] = body.get(<span class="string">&quot;value&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">200</span>, <span class="string">&quot;OK&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_delete_request</span>(<span class="params">request</span>):</span><br><span class="line">    body = json.loads(request.body)</span><br><span class="line">    <span class="keyword">del</span> DB[body.get(<span class="string">&quot;key&quot;</span>)]</span><br><span class="line">    <span class="keyword">return</span> <span class="number">200</span>, <span class="string">&quot;OK&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果我们想要在<code>on_xxx_request</code>里面将请求的header和body还有response都打印出来,最简单直接的方法是类似下面这种方式修改每个函数:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">on_get_request</span>(<span class="params">request</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;on_get_request&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\trequest : headers(<span class="subst">&#123;request.headers&#125;</span>) body(<span class="subst">&#123;request.body&#125;</span>)&quot;</span>)</span><br><span class="line">    body = json.loads(request.body)</span><br><span class="line">    (response_code, response_body) = <span class="number">200</span>, DB.get(body.get(<span class="string">&quot;key&quot;</span>), <span class="string">&quot;null&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;\tresponse : code(<span class="subst">&#123;response_code&#125;</span>) body(<span class="subst">&#123;response_body&#125;</span>)&quot;</span>)</span><br><span class="line">    <span class="keyword">return</span> response_code, response_body</span><br></pre></td></tr></table></figure>
+
+<p>但是这种方式重复代码过高,一旦有日志输出方式或者格式需要修改的情况下改动会很多。我们可以先将打印的操作统一到一个函数中:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">log_request</span>(<span class="params">func</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">wrapper</span>(<span class="params">request</span>):</span><br><span class="line">        <span class="built_in">print</span>(func.__name__)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;\trequest : headers(<span class="subst">&#123;request.headers&#125;</span>) body(<span class="subst">&#123;request.body&#125;</span>)&quot;</span>)</span><br><span class="line">        (response_code, response_body) = func(request)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;\tresponse : code(<span class="subst">&#123;response_code&#125;</span>) body(<span class="subst">&#123;response_body&#125;</span>)&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> response_code, response_body</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br></pre></td></tr></table></figure>
+
+<p>我们可以将函数当成一个普通的变量,这就意味着我们可以这样操作:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">on_get_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_dump_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_list_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_set_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_delete_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">on_get_request = log_request(on_get_request)</span><br><span class="line">on_dump_request = log_request(on_dump_request)</span><br><span class="line">on_list_request = log_request(on_list_request)</span><br><span class="line">on_set_request = log_request(on_set_request)</span><br><span class="line">on_delete_request = log_request(on_delete_request)</span><br></pre></td></tr></table></figure>
+
+<p>这样一来,后面调用的<code>on_xxx_request</code>函数实际上是<code>log_request.wrapper</code>这个嵌套函数,通过闭包的特性保存了原始的函数,然后在调用原始函数前后可以添加一些打印。</p>
+<p>装饰器的原理就是如此,上面的代码等同于:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@on_get_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_get_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="meta">@on_get_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_dump_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="meta">@on_get_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_list_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="meta">@on_get_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_set_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="meta">@on_get_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_delete_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<h4 id="带参装饰器"><a href="#带参装饰器" class="headerlink" title="带参装饰器"></a>带参装饰器</h4><p>如果我们需要让下面的单元测试通过,需要怎么修改python代码:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> user, properties <span class="keyword">in</span> USERS.items():</span><br><span class="line">    request = Request(&#123;<span class="string">&quot;username&quot;</span>: user&#125;, json.dumps(&#123;<span class="string">&quot;key&quot;</span>: <span class="string">&quot;KEY&quot;</span>, <span class="string">&quot;value&quot;</span>: <span class="string">&quot;VALUE&quot;</span>&#125;))</span><br><span class="line">    read_response_code = <span class="number">200</span> <span class="keyword">if</span> <span class="string">&quot;read&quot;</span> <span class="keyword">in</span> properties[<span class="string">&quot;permissions&quot;</span>] <span class="keyword">else</span> <span class="number">403</span></span><br><span class="line">    write_response_code = <span class="number">200</span> <span class="keyword">if</span> <span class="string">&quot;write&quot;</span> <span class="keyword">in</span> properties[<span class="string">&quot;permissions&quot;</span>] <span class="keyword">else</span> <span class="number">403</span></span><br><span class="line">    </span><br><span class="line">    status, body = on_get_request(request)</span><br><span class="line">    <span class="keyword">assert</span> status == read_response_code</span><br><span class="line">    </span><br><span class="line">    status, body = on_dump_request(request)</span><br><span class="line">    <span class="keyword">assert</span> status == read_response_code</span><br><span class="line"></span><br><span class="line">    status, body = on_list_request(request)</span><br><span class="line">    <span class="keyword">assert</span> status == read_response_code</span><br><span class="line"></span><br><span class="line">    status, body = on_set_request(request)</span><br><span class="line">    <span class="keyword">assert</span> status == write_response_code</span><br><span class="line"></span><br><span class="line">    status, body = on_delete_request(request)</span><br><span class="line">    <span class="keyword">assert</span> status == write_response_code</span><br></pre></td></tr></table></figure>
+
+<p>还是从嵌套函数出发,我们可以写出这样的多重嵌套函数:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">check_permission</span>(<span class="params">permission</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">wrapper</span>(<span class="params">func</span>):</span><br><span class="line">        <span class="keyword">def</span> <span class="title function_">wrapper</span>(<span class="params">request</span>):</span><br><span class="line">            permissions = USERS.get(request.headers.get(<span class="string">&quot;username&quot;</span>), &#123;&#125;).get(<span class="string">&quot;permissions&quot;</span>, [])</span><br><span class="line">            <span class="keyword">if</span> permission <span class="keyword">in</span> permissions:</span><br><span class="line">                <span class="keyword">return</span> func(request)</span><br><span class="line">            <span class="keyword">return</span> <span class="number">403</span>, <span class="string">&quot;Forbidden&quot;</span></span><br><span class="line">        <span class="keyword">return</span> wrapper</span><br><span class="line">    <span class="keyword">return</span> wrapper</span><br><span class="line"></span><br><span class="line">on_get_request = check_permission(<span class="string">&quot;read&quot;</span>)(on_get_request)</span><br><span class="line">on_dump_request = check_permission(<span class="string">&quot;read&quot;</span>)(on_dump_request)</span><br><span class="line">on_list_request = check_permission(<span class="string">&quot;read&quot;</span>)(on_list_request)</span><br><span class="line">on_set_request = check_permission(<span class="string">&quot;write&quot;</span>)(on_set_request)</span><br><span class="line">on_delete_request = check_permission(<span class="string">&quot;write&quot;</span>)(on_delete_request)</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码就是带参装饰器的原理,函数复制修改的部分等同于下面的代码:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@check_permission(<span class="params"><span class="string">&quot;read&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_get_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="meta">@check_permission(<span class="params"><span class="string">&quot;read&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_dump_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="meta">@check_permission(<span class="params"><span class="string">&quot;read&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_list_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="meta">@check_permission(<span class="params"><span class="string">&quot;write&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_set_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="meta">@check_permission(<span class="params"><span class="string">&quot;write&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_delete_request</span>(<span class="params">request</span>):</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<h4 id="装饰器顺序"><a href="#装饰器顺序" class="headerlink" title="装饰器顺序"></a>装饰器顺序</h4><p>如果同时使用两个装饰器的情况下,装饰器的顺序对最终的执行结果也是会有影响的。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@check_permission(<span class="params"><span class="string">&quot;read&quot;</span></span>)</span></span><br><span class="line"><span class="meta">@log_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_get_request</span>(<span class="params">request</span>):</span><br><span class="line">    body = json.loads(request.body)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">200</span>, DB.get(body.get(<span class="string">&quot;key&quot;</span>), <span class="string">&quot;null&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>例如上面这个代码最终的打印是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">on_get_request</span><br><span class="line">        request : headers(&#123;&#x27;username&#x27;: &#x27;tom&#x27;&#125;) body(&#123;&quot;key&quot;: &quot;KEY&quot;, &quot;value&quot;: &quot;VALUE&quot;&#125;)</span><br><span class="line">        response : code(200) body(null)</span><br><span class="line">on_get_request</span><br><span class="line">        request : headers(&#123;&#x27;username&#x27;: &#x27;jerry&#x27;&#125;) body(&#123;&quot;key&quot;: &quot;KEY&quot;, &quot;value&quot;: &quot;VALUE&quot;&#125;)</span><br><span class="line">        response : code(200) body(null)</span><br></pre></td></tr></table></figure>
+
+<p>因为<code>on_get_request</code>先被<code>@log_request</code>替换了,再被<code>@check_permission</code>替换。</p>
+<p>如果我们将两个装饰器的顺序调换一下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@log_request</span></span><br><span class="line"><span class="meta">@check_permission(<span class="params"><span class="string">&quot;read&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">on_get_request</span>(<span class="params">request</span>):</span><br><span class="line">    body = json.loads(request.body)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">200</span>, DB.get(body.get(<span class="string">&quot;key&quot;</span>), <span class="string">&quot;null&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><code>on_get_request</code>会先被<code>@check_permission</code>再被替换<code>@log_request</code>替换,最终的打印就变成了:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">wrapper</span><br><span class="line">        request : headers(&#123;&#x27;username&#x27;: &#x27;tom&#x27;&#125;) body(&#123;&quot;key&quot;: &quot;KEY&quot;, &quot;value&quot;: &quot;VALUE&quot;&#125;)</span><br><span class="line">        response : code(200) body(null)</span><br><span class="line">wrapper</span><br><span class="line">        request : headers(&#123;&#x27;username&#x27;: &#x27;jerry&#x27;&#125;) body(&#123;&quot;key&quot;: &quot;KEY&quot;, &quot;value&quot;: &quot;VALUE&quot;&#125;)</span><br><span class="line">        response : code(200) body(null)</span><br><span class="line">wrapper</span><br><span class="line">        request : headers(&#123;&#x27;username&#x27;: &#x27;mary&#x27;&#125;) body(&#123;&quot;key&quot;: &quot;KEY&quot;, &quot;value&quot;: &quot;VALUE&quot;&#125;)</span><br><span class="line">        response : code(403) body(Forbidden)</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="魔法函数"><a href="#魔法函数" class="headerlink" title="魔法函数"></a>魔法函数</h1><p>在我们的机器里会有一个开放接口提供给第三方应用调用,为了做自动化测试我们会在python里面编写测试脚本去调用接口,下面是demo代码:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"></span><br><span class="line">CACHE = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">send_request_to_device</span>(<span class="params">request</span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;send_request_to_device: <span class="subst">&#123;request&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 模拟发送到机器,并且获得了机器上执行结果的返回</span></span><br><span class="line">    index = request[<span class="string">&quot;code&quot;</span>].index(<span class="string">&quot;(&quot;</span>)</span><br><span class="line">    method = request[<span class="string">&quot;code&quot;</span>][:index]</span><br><span class="line">    params = request[<span class="string">&quot;code&quot;</span>][index + <span class="number">1</span>: -<span class="number">1</span>].split(<span class="string">&quot;,&quot;</span>)</span><br><span class="line">    <span class="keyword">if</span> method == <span class="string">&quot;SDKAudioHelper.I.setVolume&quot;</span>:</span><br><span class="line">        CACHE[<span class="string">&quot;volume&quot;</span>] = <span class="built_in">int</span>(params[<span class="number">0</span>])</span><br><span class="line">        <span class="keyword">return</span> json.loads(<span class="string">&#x27;&#123;&quot;value&quot;: true&#125;&#x27;</span>)</span><br><span class="line">    <span class="keyword">elif</span> method == <span class="string">&quot;SDKAudioHelper.I.getVolume&quot;</span>:</span><br><span class="line">        <span class="keyword">return</span> json.loads(<span class="string">&#x27;&#123;&quot;value&quot;: &#x27;</span> + <span class="built_in">str</span>(CACHE[<span class="string">&quot;volume&quot;</span>]) + <span class="string">&#x27;&#125;&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="keyword">assert</span> send_request_to_device(&#123;<span class="string">&quot;code&quot;</span> : <span class="string">&quot;SDKAudioHelper.I.setVolume(50)&quot;</span>&#125;)[<span class="string">&quot;value&quot;</span>] </span><br><span class="line">    <span class="keyword">assert</span> send_request_to_device(&#123;<span class="string">&quot;code&quot;</span> : <span class="string">&quot;SDKAudioHelper.I.getVolume()&quot;</span>&#125;)[<span class="string">&quot;value&quot;</span>] == <span class="number">50</span></span><br></pre></td></tr></table></figure>
+
+<p>如果我们想让测试用例的代码尽量贴近开放接口的原始代码,即写成下面的形式要怎么做?</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">assert</span> SDKAudioHelper.I.setVolume(<span class="number">50</span>) </span><br><span class="line"><span class="keyword">assert</span> SDKAudioHelper.I.getVolume() == <span class="number">50</span></span><br></pre></td></tr></table></figure>
+
+<p>比较粗暴的方式是这样的:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SDKAudioHelper</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">setVolume</span>(<span class="params">self, volume</span>):</span><br><span class="line">        <span class="keyword">return</span> send_request_to_device(&#123;<span class="string">&quot;code&quot;</span> : <span class="string">f&quot;SDKAudioHelper.I.setVolume(<span class="subst">&#123;volume&#125;</span>)&quot;</span>&#125;)[<span class="string">&quot;value&quot;</span>] </span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">getVolume</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> send_request_to_device(&#123;<span class="string">&quot;code&quot;</span> : <span class="string">&quot;SDKAudioHelper.I.getVolume()&quot;</span>&#125;)[<span class="string">&quot;value&quot;</span>]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    SDKAudioHelper.I = SDKAudioHelper()</span><br><span class="line">    <span class="keyword">assert</span> SDKAudioHelper.I.setVolume(<span class="number">40</span>) </span><br><span class="line">    <span class="keyword">assert</span> SDKAudioHelper.I.getVolume() == <span class="number">40</span></span><br></pre></td></tr></table></figure>
+
+<p>但这样会有个问题就是如果开放接口有100个方法,那么就需要写100个方法,如果开放接口的方法名有变化,那么就需要修改100个方法,所以我们需要一种方式让python能够自动帮我们生成这些方法。</p>
+<p>python 中有许多魔法函数（Magic Methods），一般格式为 <code>__func__</code>,详细的可以参考<a href="https://pycoders-weekly-chinese.readthedocs.io/en/latest/issue6/a-guide-to-pythons-magic-methods.html">这篇文章</a>:</p>
+<table>
+<thead>
+<tr>
+<th>魔术方法</th>
+<th>调用方式</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>__new__(cls [,…])</td>
+<td>instance = MyClass(arg1, arg2)</td>
+<td>__new__ 在创建实例的时候被调用</td>
+</tr>
+<tr>
+<td>__init__(self [,…])</td>
+<td>instance = MyClass(arg1, arg2)</td>
+<td>__init__ 在创建实例的时候被调用</td>
+</tr>
+<tr>
+<td>__cmp__(self, other)</td>
+<td>self == other, self &gt; other, 等。</td>
+<td>在比较的时候调用</td>
+</tr>
+<tr>
+<td>__pos__(self)</td>
+<td>+self</td>
+<td>一元加运算符</td>
+</tr>
+<tr>
+<td>__neg__(self)</td>
+<td>-self</td>
+<td>一元减运算符</td>
+</tr>
+<tr>
+<td>__invert__(self)</td>
+<td>~self</td>
+<td>取反运算符</td>
+</tr>
+<tr>
+<td>__index__(self)</td>
+<td>x[self]</td>
+<td>对象被作为索引使用的时候</td>
+</tr>
+<tr>
+<td>__nonzero__(self)</td>
+<td>bool(self)</td>
+<td>对象的布尔值</td>
+</tr>
+<tr>
+<td>__getattr__(self, name)</td>
+<td>self.name # name 不存在</td>
+<td>访问一个不存在的属性时</td>
+</tr>
+<tr>
+<td>__setattr__(self, name, val)</td>
+<td>self.name = val</td>
+<td>对一个属性赋值时</td>
+</tr>
+<tr>
+<td>__delattr__(self, name)</td>
+<td>del self.name</td>
+<td>删除一个属性时</td>
+</tr>
+<tr>
+<td>__getattribute(self, name)</td>
+<td>self.name</td>
+<td>访问任何属性时</td>
+</tr>
+<tr>
+<td>__getitem__(self, key)</td>
+<td>self[key]</td>
+<td>使用索引访问元素时</td>
+</tr>
+<tr>
+<td>__setitem__(self, key, val)</td>
+<td>self[key] = val</td>
+<td>对某个索引值赋值时</td>
+</tr>
+<tr>
+<td>__delitem__(self, key)</td>
+<td>del self[key]</td>
+<td>删除某个索引值时</td>
+</tr>
+<tr>
+<td>__iter__(self)</td>
+<td>for x in self</td>
+<td>迭代时</td>
+</tr>
+<tr>
+<td>__contains__(self, value)</td>
+<td>value in self, value not in self</td>
+<td>使用 in 操作测试关系时</td>
+</tr>
+<tr>
+<td>__concat__(self, value)</td>
+<td>self + other</td>
+<td>连接两个对象时</td>
+</tr>
+<tr>
+<td>__call__(self [,…])</td>
+<td>self(args)</td>
+<td>“调用”对象时</td>
+</tr>
+<tr>
+<td>__enter__(self)</td>
+<td>with self as x:</td>
+<td>with 语句环境管理</td>
+</tr>
+<tr>
+<td>__exit__(self, exc, val, trace)</td>
+<td>with self as x:</td>
+<td>with 语句环境管理</td>
+</tr>
+<tr>
+<td>__getstate__(self)</td>
+<td>pickle.dump(pkl_file, self)</td>
+<td>序列化</td>
+</tr>
+<tr>
+<td>__setstate__(self)</td>
+<td>data = pickle.load(pkl_file)</td>
+<td>序列化</td>
+</tr>
+</tbody></table>
+<p>还记得我们前面强调的”python里面函数是一等公民”吗?调用SDKAudioHelper的setVolume实际上分了两步:</p>
+<ol>
+<li>获取SDKAudioHelper的setVolume这个成员变量,它的类型是函数</li>
+<li>调用获取到的函数</li>
+</ol>
+<p>所以我们可以利用<code>__getattr__</code>返回一个内嵌函数是拼接函数名和参数,实现任意方法调用:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">OpenSdkHelper</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">join_args</span>(<span class="params">self, *args</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;,&quot;</span>.join([<span class="built_in">str</span>(a) <span class="keyword">for</span> a <span class="keyword">in</span> args])</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">invoke_send_request_to_device</span>(<span class="params">self, method_name, *args</span>):</span><br><span class="line">        code = <span class="string">f&quot;<span class="subst">&#123;self.__class__.__name__&#125;</span>.I.<span class="subst">&#123;method_name&#125;</span>(<span class="subst">&#123;self.join_args(*args)&#125;</span>)&quot;</span></span><br><span class="line">        result = send_request_to_device(&#123;<span class="string">&quot;code&quot;</span> : code&#125;)</span><br><span class="line">        <span class="keyword">return</span> result[<span class="string">&quot;value&quot;</span>]</span><br><span class="line">   </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__getattr__</span>(<span class="params">self, name</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">lambda</span> *args : <span class="variable language_">self</span>.invoke_send_request_to_device(name, *args)</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SDKAudioHelper</span>(<span class="title class_ inherited__">OpenSdkHelper</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    SDKAudioHelper.I = SDKAudioHelper()</span><br><span class="line">    <span class="keyword">assert</span> SDKAudioHelper.I.setVolume(<span class="number">40</span>) </span><br><span class="line">    <span class="keyword">assert</span> SDKAudioHelper.I.getVolume() == <span class="number">40</span></span><br></pre></td></tr></table></figure>
+
+<p>这里我们抽象出来一个OpenSdkHelper的父类,这样一来其他的Helper只需要继承他就能实现任意方法调用了。</p>
+<h1 id="元类"><a href="#元类" class="headerlink" title="元类"></a>元类</h1><p>上面的代码我们还需要对每个Helper的I变量做初始化:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    SDKAudioHelper.I = SDKAudioHelper()</span><br></pre></td></tr></table></figure>
+
+<p>当Helper类型的数量变多的时候每个Helper都需要初始化一下也是比较麻烦的,这一步有没有办法优化呢?</p>
+<p>在Python中一切都是对象,包括类。通常我们用类来定义对象，类本身也是一个对象。而负责创建这些类的“类”就是元类。如果类是对象的模板,那么元类就是类的模板。</p>
+<p>type是默认元类,默认情况下类是由type去创建的,例如下面的两种方法都可以用来创建MyClass这个类:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 通过类定义去创建MyClass类</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span>:</span><br><span class="line">    <span class="keyword">pass</span> </span><br><span class="line"></span><br><span class="line"><span class="comment"># 通过type去创建MyClass类</span></span><br><span class="line">MyClass = <span class="built_in">type</span>(<span class="string">&#x27;MyClass&#x27;</span>, (), &#123;&#125;)</span><br></pre></td></tr></table></figure>
+<p>类定义的背后实际上python就是通过type帮我们创建的类,我们也可以通过继承type来创建我们自己的元类:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">OpenSdkHelperMeta</span>(<span class="title class_ inherited__">type</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__new__</span>(<span class="params">self, name, bases, attrs</span>):</span><br><span class="line">        new_cls = <span class="built_in">super</span>().__new__(<span class="variable language_">self</span>, name, bases, attrs)</span><br><span class="line">        new_cls.I = new_cls()</span><br><span class="line">        <span class="keyword">return</span> new_cls</span><br><span class="line">    </span><br><span class="line"><span class="keyword">class</span> <span class="title class_">OpenSdkHelper</span>(metaclass = OpenSdkHelperMeta):</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SDKAudioHelper</span>(<span class="title class_ inherited__">OpenSdkHelper</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+<p>这样一来OpenSdkHelper和它的子类就都是由OpenSdkHelperMeta这个元类创建的,而OpenSdkHelperMeta在创建类的时候会自动初始化I变量,这样我们就不需要手动初始化了。</p>
+<p>python元类的一种重要应用场景就是搭建数据库的ORM框架。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

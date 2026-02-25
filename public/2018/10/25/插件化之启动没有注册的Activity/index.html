@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>插件化之启动没有注册的Activity | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android," />
+  
+
+  <meta name="description" content="启动没有在AndroidManifest中注册的Activity是安卓插件化中一个很重要的知识点,只有这样你才能把Activity中分离出来,放到插件中． 启动没有在AndroidManifest中注册的Activity，会涉及到Activity启动流程、反射、动态代理的知识,我觉得就算不学插件化,掌握这些知识也是很有用的． Activity的启动流程为了达到启动没有在AndroidManifes">
+<meta property="og:type" content="article">
+<meta property="og:title" content="插件化之启动没有注册的Activity">
+<meta property="og:url" content="https://blog.islinjw.cn/2018/10/25/%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B9%8B%E5%90%AF%E5%8A%A8%E6%B2%A1%E6%9C%89%E6%B3%A8%E5%86%8C%E7%9A%84Activity/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="启动没有在AndroidManifest中注册的Activity是安卓插件化中一个很重要的知识点,只有这样你才能把Activity中分离出来,放到插件中． 启动没有在AndroidManifest中注册的Activity，会涉及到Activity启动流程、反射、动态代理的知识,我觉得就算不学插件化,掌握这些知识也是很有用的． Activity的启动流程为了达到启动没有在AndroidManifes">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B9%8B%E5%90%AF%E5%8A%A8%E6%B2%A1%E6%9C%89%E6%B3%A8%E5%86%8C%E7%9A%84Activity/1.png">
+<meta property="og:image" content="https://blog.islinjw.cn/%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B9%8B%E5%90%AF%E5%8A%A8%E6%B2%A1%E6%9C%89%E6%B3%A8%E5%86%8C%E7%9A%84Activity/2.png">
+<meta property="article:published_time" content="2018-10-25T15:56:55.000Z">
+<meta property="article:modified_time" content="2025-12-23T10:44:10.246Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B9%8B%E5%90%AF%E5%8A%A8%E6%B2%A1%E6%9C%89%E6%B3%A8%E5%86%8C%E7%9A%84Activity/1.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Activity%E7%9A%84%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="toc-text">Activity的启动流程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%9B%E5%87%BAActivityNotFoundException%E7%9A%84%E5%8E%9F%E5%9B%A0"><span class="toc-text">抛出ActivityNotFoundException的原因</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Activity%E6%98%AF%E6%80%8E%E6%A0%B7%E8%A2%AB%E5%88%9B%E5%BB%BA%E7%9A%84"><span class="toc-text">Activity是怎样被创建的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Activity%E5%90%AF%E5%8A%A8%E7%9A%84%E5%8E%9F%E7%90%86%E5%9B%BE"><span class="toc-text">Activity启动的原理图</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%8E%E6%A0%B7%E6%AC%BA%E9%AA%97ActivityManagerService"><span class="toc-text">怎样欺骗ActivityManagerService</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%86%E8%A6%81%E5%90%AF%E5%8A%A8%E7%9A%84Activity%E6%9B%BF%E6%8D%A2%E6%88%90StubActivity"><span class="toc-text">将要启动的Activity替换成StubActivity</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%86StubActivity%E6%9B%BF%E6%8D%A2%E4%BC%9A%E8%A6%81%E5%90%AF%E5%8A%A8%E7%9A%84Activity"><span class="toc-text">将StubActivity替换会要启动的Activity</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%84%E7%90%86Android-8-0%E7%9A%84%E6%83%85%E5%86%B5"><span class="toc-text">处理Android 8.0的情况</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%84%E7%90%86AppCompatActivity%E7%9A%84%E6%83%85%E5%86%B5"><span class="toc-text">处理AppCompatActivity的情况</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4Demo"><span class="toc-text">完整Demo</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-插件化之启动没有注册的Activity" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">插件化之启动没有注册的Activity</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.10.25</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>启动没有在AndroidManifest中注册的Activity是安卓插件化中一个很重要的知识点,只有这样你才能把Activity中分离出来,放到插件中．</p>
+<p>启动没有在AndroidManifest中注册的Activity，会涉及到Activity启动流程、反射、动态代理的知识,我觉得就算不学插件化,掌握这些知识也是很有用的．</p>
+<h1 id="Activity的启动流程"><a href="#Activity的启动流程" class="headerlink" title="Activity的启动流程"></a>Activity的启动流程</h1><p>为了达到启动没有在AndroidManifest中注册的Activity的目的,我们先来分析下Activity的启动流程,看看有没有什么突破口.</p>
+<p>这部分的知识我在<a href="http://blog.islinjw.cn/2018/03/07/%E4%BB%8E%E6%BA%90%E7%A0%81%E7%9C%8BActivity%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/">《从源码看Activity生命周期》</a>这篇博客里面其实也有讲过,这里只做大概的讲解,然后做一些补充,感兴趣的同学可以将两篇博客结合起来看看．</p>
+<h2 id="抛出ActivityNotFoundException的原因"><a href="#抛出ActivityNotFoundException的原因" class="headerlink" title="抛出ActivityNotFoundException的原因"></a>抛出ActivityNotFoundException的原因</h2><p>如果使用startActivity去启动一个没有在AndroidManifest中注册的Activity,正常情况下是会抛出ActivityNotFoundException的,那这个异常是怎么抛出来的呢?</p>
+<p>我们知道调用Activity.startActivity方法,实际上最后是调用了Instrumentation.execStartActivity:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">public class Instrumentation &#123;</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  public ActivityResult execStartActivity(</span><br><span class="line">                  Context who, IBinder contextThread, IBinder token, Activity target,</span><br><span class="line">                  Intent intent, int requestCode, Bundle options) &#123;</span><br><span class="line">      ...</span><br><span class="line">      int result = ActivityManagerNative.getDefault()</span><br><span class="line">                         .startActivity(whoThread, who.getBasePackageName(), intent,</span><br><span class="line">                                      intent.resolveTypeIfNeeded(who.getContentResolver()),</span><br><span class="line">                                      token, target != null ? target.mEmbeddedID : null,</span><br><span class="line">                                      requestCode, 0, null, null, options);</span><br><span class="line">      checkStartActivityResult(result, intent);</span><br><span class="line">      ...</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  public static void checkStartActivityResult(int res, Object intent) &#123;</span><br><span class="line">        ...</span><br><span class="line">        switch (res) &#123;</span><br><span class="line">              case ActivityManager.START_INTENT_NOT_RESOLVED:</span><br><span class="line">              case ActivityManager.START_CLASS_NOT_FOUND:</span><br><span class="line">                  if (intent instanceof Intent &amp;&amp; ((Intent)intent).getComponent() != null)</span><br><span class="line">                      throw new ActivityNotFoundException(</span><br><span class="line">                              &quot;Unable to find explicit activity class &quot;</span><br><span class="line">                              + ((Intent)intent).getComponent().toShortString()</span><br><span class="line">                              + &quot;; have you declared this activity in your AndroidManifest.xml?&quot;);</span><br><span class="line">                  throw new ActivityNotFoundException(</span><br><span class="line">                          &quot;No Activity found to handle &quot; + intent);</span><br><span class="line">              ...</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>可以看到Instrumentation又是通过ActivityManagerNative.getDefault()拿到一个IActivityManager去调用其startActivity来启动Activity的．</p>
+<p>这个IActivityManager内部实际是通过Binder机制将处理转发给ActivityManagerService:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public abstract class ActivityManagerNative extends Binder implements IActivityManager</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    static public IActivityManager getDefault() &#123;</span><br><span class="line">       return gDefault.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    private static final Singleton&lt;IActivityManager&gt; gDefault = new Singleton&lt;IActivityManager&gt;() &#123;</span><br><span class="line">        protected IActivityManager create() &#123;</span><br><span class="line">            //实际上是用Binder机制与AMS进行交互</span><br><span class="line">            IBinder b = ServiceManager.getService(&quot;activity&quot;);</span><br><span class="line">            IActivityManager am = asInterface(b);</span><br><span class="line">            return am;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以可以看到通过ActivityManagerService去startActivity之后会有个返回值.</p>
+<p>ActivityManagerService内部会使用PackageManagerService查询这个Activity是否在AndroidManifest中注册.如果没有,就会返回START_CLASS_NOT_FOUND或者START_INTENT_NOT_RESOLVED,这个时候Instrumentation就会抛出ActivityNotFoundException.</p>
+<p>所以ActivityNotFoundException就是这样被抛出的．</p>
+<h2 id="Activity是怎样被创建的"><a href="#Activity是怎样被创建的" class="headerlink" title="Activity是怎样被创建的"></a>Activity是怎样被创建的</h2><p>我们都知道两个不同的进程直接是不能直接访问内存的,所以处于应用进程的Activity肯定还是应用进程去创建,而不是被AMS创建的.</p>
+<p>这块的代码在ActivityThread中实现:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">public final class ActivityThread &#123;</span><br><span class="line">    ...</span><br><span class="line">    final H mH = new H();</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    @Override</span><br><span class="line">    public final void scheduleLaunchActivity(Intent intent, IBinder token, int ident,</span><br><span class="line">            ActivityInfo info, Configuration curConfig, Configuration overrideConfig,</span><br><span class="line">            CompatibilityInfo compatInfo, String referrer, IVoiceInteractor voiceInteractor,</span><br><span class="line">            int procState, Bundle state, PersistableBundle persistentState,</span><br><span class="line">            List&lt;ResultInfo&gt; pendingResults, List&lt;ReferrerIntent&gt; pendingNewIntents,</span><br><span class="line">            boolean notResumed, boolean isForward, ProfilerInfo profilerInfo) &#123;</span><br><span class="line">        ...</span><br><span class="line">        sendMessage(H.LAUNCH_ACTIVITY, r);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    private class H extends Handler &#123;</span><br><span class="line">        public static final int LAUNCH_ACTIVITY         = 100;</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        public void handleMessage(Message msg) &#123;</span><br><span class="line">            switch (msg.what) &#123;</span><br><span class="line">                case LAUNCH_ACTIVITY: &#123;</span><br><span class="line">                    Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, &quot;activityStart&quot;);</span><br><span class="line">                    final ActivityClientRecord r = (ActivityClientRecord) msg.obj;</span><br><span class="line"></span><br><span class="line">                    r.packageInfo = getPackageInfoNoCheck(</span><br><span class="line">                            r.activityInfo.applicationInfo, r.compatInfo);</span><br><span class="line">                    handleLaunchActivity(r, null, &quot;LAUNCH_ACTIVITY&quot;);</span><br><span class="line">                    Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);</span><br><span class="line">                &#125; break;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>AMS会调用ActivityThread的scheduleLaunchActivity,在这个方法中会使用一个Hander同步到主线程中再去创建Activity.</p>
+<h2 id="Activity启动的原理图"><a href="#Activity启动的原理图" class="headerlink" title="Activity启动的原理图"></a>Activity启动的原理图</h2><img src="/%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B9%8B%E5%90%AF%E5%8A%A8%E6%B2%A1%E6%9C%89%E6%B3%A8%E5%86%8C%E7%9A%84Activity/1.png" class="">
+
+
+<h1 id="怎样欺骗ActivityManagerService"><a href="#怎样欺骗ActivityManagerService" class="headerlink" title="怎样欺骗ActivityManagerService"></a>怎样欺骗ActivityManagerService</h1><p>从上面的Activity启动的原理图可以看到大概的流程是:</p>
+<p>应用将要启动的Activity告诉AMS-&gt;AMS检查Activity是否注册-&gt;AMS让ActivityThread去创建Activity．</p>
+<p>那是不是可以这样呢?</p>
+<ol>
+<li>新建一个StubActivity并且在AndroidManifest中注册</li>
+<li>将想要启动的Activity换成StubActivity,而将真正想要启动的Activity保存到Extra中</li>
+<li>骗过AMS</li>
+<li>在ActivityThread中拿出真正想要创建的Activity换回来去创建</li>
+</ol>
+<p>修改后的原理如下:</p>
+<img src="/%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B9%8B%E5%90%AF%E5%8A%A8%E6%B2%A1%E6%9C%89%E6%B3%A8%E5%86%8C%E7%9A%84Activity/2.png" class="">
+
+<h2 id="将要启动的Activity替换成StubActivity"><a href="#将要启动的Activity替换成StubActivity" class="headerlink" title="将要启动的Activity替换成StubActivity"></a>将要启动的Activity替换成StubActivity</h2><p>第一步是将要启动的Activity替换成StubActivity,我们回顾下上一节看到的ActivityManagerNative代码:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public abstract class ActivityManagerNative extends Binder implements IActivityManager</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    static public IActivityManager getDefault() &#123;</span><br><span class="line">       return gDefault.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    private static final Singleton&lt;IActivityManager&gt; gDefault = new Singleton&lt;IActivityManager&gt;() &#123;</span><br><span class="line">        protected IActivityManager create() &#123;</span><br><span class="line">            //实际上是用Binder机制与AMS进行交互</span><br><span class="line">            IBinder b = ServiceManager.getService(&quot;activity&quot;);</span><br><span class="line">            IActivityManager am = asInterface(b);</span><br><span class="line">            return am;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到这个gDefault其实是个静态的私有成员变量.</p>
+<p>那我们是不是可以通过反射,将它替换成我们写的Singleton<IActivityManager>,然后保存好原来的gDefault,在替换的代码里面先将要启动的Activity替换成StubActivity,然后再将Intent传给原来的gDefault?</p>
+<p>大概的做法如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">class MyActivityManager implements IActivityManager &#123;</span><br><span class="line">    private IActivityManager mOrigin;</span><br><span class="line"></span><br><span class="line">    public MyActivityManager(IActivityManager origin) &#123;</span><br><span class="line">        mOrigin = origin;</span><br><span class="line">    &#125;</span><br><span class="line">    public int startActivity(IApplicationThread caller, String callingPackage, Intent intent,</span><br><span class="line">            String resolvedType, IBinder resultTo, String resultWho, int requestCode, int flags,</span><br><span class="line">            ProfilerInfo profilerInfo, Bundle options) throws RemoteException &#123;</span><br><span class="line">        // TODO 将要启动的activity替换成StubActivity</span><br><span class="line"></span><br><span class="line">        return mOrigin. startActivity(caller, callingPackage, intent,</span><br><span class="line">            resolvedType, resultTo, resultWho, requestCode, flags,</span><br><span class="line">            profilerInfo, options);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Class c = Class.forName(&quot;android.app.ActivityManagerNative&quot;);</span><br><span class="line">final Field field =  c.getDeclaredField(&quot;gDefault&quot;);</span><br><span class="line">field.setAccessible(true);</span><br><span class="line"></span><br><span class="line">Singleton&lt;IActivityManager&gt; proxy = new Singleton&lt;IActivityManager&gt;() &#123;</span><br><span class="line">    protected IActivityManager create() &#123;</span><br><span class="line">        return new MyActivityManager(field.get(null));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">field.set(null, proxy);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>但是这个做法问题很大,首先我们要将IActivityManager的所有方法都实现一遍转发给mOrigin。而且最大的问题是IActivityManager和Singleton被隐藏了,我们在应用层是找不到定义的!</p>
+<p>那怎么办呢？别急,我们先来看看Singleton的实现:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Singleton&lt;T&gt; &#123;</span><br><span class="line">    private T mInstance;</span><br><span class="line"></span><br><span class="line">    protected abstract T create();</span><br><span class="line"></span><br><span class="line">    public final T get() &#123;</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            if (mInstance == null) &#123;</span><br><span class="line">                mInstance = create();</span><br><span class="line">            &#125;</span><br><span class="line">            return mInstance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实最终的IActivityManager是保存在mInstance这个变量里面的,我们只需要替换这个变量就好,于是就绕过了Singleton没有定义的问题。但是还有这个IActivityManager的定义问题摆在我们面前。</p>
+<p>怎么办呢？答案就是我们可以用动态代理的方法去创建IActivityManager。关于动态代理我之前写过一篇博客 <a href="http://blog.islinjw.cn/2016/05/27/Java%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3%E5%92%8C%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">《Java自定义注解和动态代理》</a> ,大家感兴趣的话可以去看看。这里就直接把代码贴上了:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">// 获取gDefault</span><br><span class="line">Class activityManagerClass = Class.forName(&quot;android.app.ActivityManagerNative&quot;);</span><br><span class="line">Field gDefaultField = activityManagerClass.getDeclaredField(&quot;gDefault&quot;);</span><br><span class="line">gDefaultField.setAccessible(true);</span><br><span class="line">Object gDefault = gDefaultField.get(null);</span><br><span class="line"></span><br><span class="line">//　获取mIntance</span><br><span class="line">Class singletonClass = Class.forName(&quot;android.util.Singleton&quot;);</span><br><span class="line">Field mInstanceField = singletonClass.getDeclaredField(&quot;mInstance&quot;);</span><br><span class="line">mInstanceField.setAccessible(true);</span><br><span class="line">Object mInstance = mInstanceField.get(gDefault);</span><br><span class="line"></span><br><span class="line">// 替换mIntance</span><br><span class="line">Object proxy = Proxy.newProxyInstance(</span><br><span class="line">        mInstance.getClass().getClassLoader(),</span><br><span class="line">        new Class[]&#123;Class.forName(&quot;android.app.IActivityManager&quot;)&#125;,</span><br><span class="line">        new IActivityManagerHandler(mInstance));</span><br><span class="line">mInstanceField.set(gDefault, proxy);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public static class IActivityManagerHandler implements InvocationHandler &#123;</span><br><span class="line">    private Object mOrigin;</span><br><span class="line"></span><br><span class="line">    IActivityManagerHandler(Object origin) &#123;</span><br><span class="line">        mOrigin = origin;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable &#123;</span><br><span class="line">        if (&quot;startActivity&quot;.equals(method.getName())) &#123;</span><br><span class="line">            int index = 0;</span><br><span class="line">            for (int i = 0; i &lt; args.length; i++) &#123;</span><br><span class="line">                if (args[i] instanceof Intent) &#123;</span><br><span class="line">                    index = i;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            Intent raw = (Intent) args[index];</span><br><span class="line"></span><br><span class="line">            Intent intent = new Intent();</span><br><span class="line">            intent.setClassName(raw.getComponent().getPackageName(), StubActivity.class.getName());</span><br><span class="line">            intent.putExtra(&quot;RawIntent&quot;, raw);</span><br><span class="line">            args[index] = intent;</span><br><span class="line">        &#125;</span><br><span class="line">        return method.invoke(mOrigin, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码的功能就是创建一个IActivityManager的代理,代理startActivity方法,将启动的Activity的Intent换成启动StubActivity的Intent,并且将原来的Intent保存起来放到RawIntent这个Extra里。</p>
+<p>然后用它去替换ActivityManagerNative.gDefault的mInstance成员变量。</p>
+<h2 id="将StubActivity替换会要启动的Activity"><a href="#将StubActivity替换会要启动的Activity" class="headerlink" title="将StubActivity替换会要启动的Activity"></a>将StubActivity替换会要启动的Activity</h2><p>在上面我们已经将要启动的Activity替换成了已经注册了的StubActivity,这样在AMS检查的时候就能在AndroidManifest查到,不会报ActivityNotFoundException了.</p>
+<p>然后AMS会让ActivityThread去创建Activity,这个时候就要将StubActivity替换会真正要启动的Activity了.</p>
+<p>再回顾下这部分的代码:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">public final class ActivityThread &#123;</span><br><span class="line">    ...</span><br><span class="line">    final H mH = new H();</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    @Override</span><br><span class="line">    public final void scheduleLaunchActivity(Intent intent, IBinder token, int ident,</span><br><span class="line">            ActivityInfo info, Configuration curConfig, Configuration overrideConfig,</span><br><span class="line">            CompatibilityInfo compatInfo, String referrer, IVoiceInteractor voiceInteractor,</span><br><span class="line">            int procState, Bundle state, PersistableBundle persistentState,</span><br><span class="line">            List&lt;ResultInfo&gt; pendingResults, List&lt;ReferrerIntent&gt; pendingNewIntents,</span><br><span class="line">            boolean notResumed, boolean isForward, ProfilerInfo profilerInfo) &#123;</span><br><span class="line">        ...</span><br><span class="line">        sendMessage(H.LAUNCH_ACTIVITY, r);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    private class H extends Handler &#123;</span><br><span class="line">        public static final int LAUNCH_ACTIVITY         = 100;</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        public void handleMessage(Message msg) &#123;</span><br><span class="line">            switch (msg.what) &#123;</span><br><span class="line">                case LAUNCH_ACTIVITY: &#123;</span><br><span class="line">                    Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, &quot;activityStart&quot;);</span><br><span class="line">                    final ActivityClientRecord r = (ActivityClientRecord) msg.obj;</span><br><span class="line"></span><br><span class="line">                    r.packageInfo = getPackageInfoNoCheck(</span><br><span class="line">                            r.activityInfo.applicationInfo, r.compatInfo);</span><br><span class="line">                    handleLaunchActivity(r, null, &quot;LAUNCH_ACTIVITY&quot;);</span><br><span class="line">                    Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);</span><br><span class="line">                &#125; break;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ActivityThread的scheduleLaunchActivity方法会被调到,然后会向mH发送LAUNCH_ACTIVITY消息.</p>
+<p>所以关键点就是将这个mH变量替换成我们的代理对象,将Intent替换回之前保存的RawIntent.</p>
+<p>但是这里有个问题,H是个内部类,我们是没有办法用动态代理的方式创建内部类的,也就是说我们没有办法替换掉mH这个对象.</p>
+<p>于是只好继续挖一挖Handler内部有没有机会了,其实在Handler.dispatchMessage里面是会先判断mCallback是不是有赋值的,如果有就会将消息交给它去处理.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">public class Handler &#123;</span><br><span class="line">    ...</span><br><span class="line">    final Callback mCallback;</span><br><span class="line">    ...</span><br><span class="line">    public void dispatchMessage(Message msg) &#123;</span><br><span class="line">        if (msg.callback != null) &#123;</span><br><span class="line">            handleCallback(msg);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            if (mCallback != null) &#123;</span><br><span class="line">                if (mCallback.handleMessage(msg)) &#123;</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            handleMessage(msg);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以我们可以从这个mCallback入手,将mH的mCallback设置成我们的代理对象:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">//　获取ActivityThread实例</span><br><span class="line">Class activityThreadClass = Class.forName(&quot;android.app.ActivityThread&quot;);</span><br><span class="line">Field threadField = activityThreadClass.getDeclaredField(&quot;sCurrentActivityThread&quot;);</span><br><span class="line">threadField.setAccessible(true);</span><br><span class="line">Object sCurrentActivityThread = threadField.get(null);</span><br><span class="line"></span><br><span class="line">//　获取mH变量</span><br><span class="line">Field mHField = activityThreadClass.getDeclaredField(&quot;mH&quot;);</span><br><span class="line">mHField.setAccessible(true);</span><br><span class="line">Object mH = mHField.get(sCurrentActivityThread);</span><br><span class="line"></span><br><span class="line">//　设置mCallback变量</span><br><span class="line">Field mCallbackField = Handler.class.getDeclaredField(&quot;mCallback&quot;);</span><br><span class="line">mCallbackField.setAccessible(true);</span><br><span class="line">Handler.Callback callback = new Handler.Callback() &#123;</span><br><span class="line">   @Override</span><br><span class="line">   public boolean handleMessage(Message msg) &#123;</span><br><span class="line">       if (msg.what == 100) &#123;</span><br><span class="line">           try &#123;</span><br><span class="line">               Field intentField = msg.obj.getClass().getDeclaredField(&quot;intent&quot;);</span><br><span class="line">               intentField.setAccessible(true);</span><br><span class="line">               Intent intent = (Intent) intentField.get(msg.obj);</span><br><span class="line">               Intent raw = intent.getParcelableExtra(&quot;RawIntent&quot;);</span><br><span class="line">               intent.setComponent(raw.getComponent());</span><br><span class="line">           &#125; catch (Exception e) &#123;</span><br><span class="line">               Log.e(&quot;hook&quot;, &quot;get intent err&quot;, e);</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">       &#125;</span><br><span class="line">       return false;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;;</span><br><span class="line">mCallbackField.set(mH, callback);</span><br></pre></td></tr></table></figure>
+
+<p>ActivityThread的实例保存在sCurrentActivityThread这个静态成员变量里,代码我就不贴了,然后我们在mCallback这里将要启动的Activity设置回来.</p>
+<h1 id="处理Android-8-0的情况"><a href="#处理Android-8-0的情况" class="headerlink" title="处理Android 8.0的情况"></a>处理Android 8.0的情况</h1><p>上面的代码运行在8.0的系统上会崩溃,原因是8.0对Activity的启动这块做了些改动,不再使用ActivityManagerNative.getDefault()了,改成了ActivityManager.getService():</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public ActivityResult execStartActivity(</span><br><span class="line">            Context who, IBinder contextThread, IBinder token, Activity target,</span><br><span class="line">            Intent intent, int requestCode, Bundle options) &#123;</span><br><span class="line">    ...</span><br><span class="line">    int result = ActivityManager.getService()</span><br><span class="line">        .startActivity(whoThread, who.getBasePackageName(), intent,</span><br><span class="line">                intent.resolveTypeIfNeeded(who.getContentResolver()),</span><br><span class="line">                token, target != null ? target.mEmbeddedID : null,</span><br><span class="line">                requestCode, 0, null, options);</span><br><span class="line">    checkStartActivityResult(result, intent);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>ActivityManager其实和ActivityManagerNative很像:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public class ActivityManager &#123;</span><br><span class="line">    ...</span><br><span class="line">    public static IActivityManager getService() &#123;</span><br><span class="line">        return IActivityManagerSingleton.get();</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    private static final Singleton&lt;IActivityManager&gt; IActivityManagerSingleton =</span><br><span class="line">          new Singleton&lt;IActivityManager&gt;() &#123;</span><br><span class="line">              @Override</span><br><span class="line">              protected IActivityManager create() &#123;</span><br><span class="line">                  final IBinder b = ServiceManager.getService(Context.ACTIVITY_SERVICE);</span><br><span class="line">                  final IActivityManager am = IActivityManager.Stub.asInterface(b);</span><br><span class="line">                  return am;</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以我们类似的去替换IActivityManagerSingleton就好了:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">// 获取IActivityManagerSingleton</span><br><span class="line">Class activityManagerClass = Class.forName(&quot;android.app.ActivityManager&quot;);</span><br><span class="line">Field singletonField = activityManagerClass.getDeclaredField(&quot;IActivityManagerSingleton&quot;);</span><br><span class="line">singletonField.setAccessible(true);</span><br><span class="line">Object gDefault = singletonField.get(null);</span><br><span class="line"></span><br><span class="line">//　获取mIntance</span><br><span class="line">Class singletonClass = Class.forName(&quot;android.util.Singleton&quot;);</span><br><span class="line">Field mInstanceField = singletonClass.getDeclaredField(&quot;mInstance&quot;);</span><br><span class="line">mInstanceField.setAccessible(true);</span><br><span class="line">Object mInstance = mInstanceField.get(gDefault);</span><br><span class="line"></span><br><span class="line">// 替换mIntance</span><br><span class="line">Object proxy = Proxy.newProxyInstance(</span><br><span class="line">        mInstance.getClass().getClassLoader(),</span><br><span class="line">        new Class[]&#123;Class.forName(&quot;android.app.IActivityManager&quot;)&#125;,</span><br><span class="line">        new IActivityManagerHandler(mInstance));</span><br><span class="line">mInstanceField.set(gDefault, proxy);</span><br></pre></td></tr></table></figure>
+
+<h1 id="处理AppCompatActivity的情况"><a href="#处理AppCompatActivity的情况" class="headerlink" title="处理AppCompatActivity的情况"></a>处理AppCompatActivity的情况</h1><p>到目前为止,我们已经可以正常启动没有注册的Activity了,但是其实还有一个BUG:如果启动的是没有注册的AppCompatActivity就会崩溃。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime: Caused by: java.lang.IllegalArgumentException: android.content.pm.PackageManager$NameNotFoundException: ComponentInfo&#123;me.linjw.plugindemo/me.linjw.plugindemo.HideActivity&#125;</span><br><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime:        at android.support.v4.app.NavUtils.getParentActivityName(NavUtils.java:285)</span><br><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime:        at android.support.v7.app.AppCompatDelegateImplV9.onCreate(AppCompatDelegateImplV9.java:158)</span><br><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime:        at android.support.v7.app.AppCompatDelegateImplV14.onCreate(AppCompatDelegateImplV14.java:58)</span><br><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime:        at android.support.v7.app.AppCompatActivity.onCreate(AppCompatActivity.java:72)</span><br><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime:        at com.cvte.tv.speech.TestActivity.onCreate(TestActivity.java:14)</span><br><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime:        at android.app.Activity.performCreate(Activity.java:6664)</span><br><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime:        at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1118)</span><br><span class="line">10-25 19:32:30.867  8754  8754 E AndroidRuntime:        at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2599)</span><br></pre></td></tr></table></figure>
+
+<p>网上很多讲启动未注册的Activity的文章要不就没有讲这个,要不就没有详细讲如何处理,直接一笔带过了.这里我手把手带大家解BUG.</p>
+<p>遇到问题先不要慌,先看看打印找到崩溃的代码在哪:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">@Nullable</span><br><span class="line">public static String getParentActivityName(Activity sourceActivity) &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        return getParentActivityName(sourceActivity, sourceActivity.getComponentName());</span><br><span class="line">    &#125; catch (NameNotFoundException e) &#123;</span><br><span class="line">        // Component name of supplied activity does not exist...?</span><br><span class="line">        throw new IllegalArgumentException(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Nullable</span><br><span class="line">public static String getParentActivityName(Context context, ComponentName componentName)</span><br><span class="line">        throws NameNotFoundException &#123;</span><br><span class="line">    PackageManager pm = context.getPackageManager();</span><br><span class="line">    ActivityInfo info = pm.getActivityInfo(componentName, PackageManager.GET_META_DATA);</span><br><span class="line">    String parentActivity = IMPL.getParentActivityName(context, info);</span><br><span class="line">    return parentActivity;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>很明显是PackageManager.getActivityInfo在AndroidManifest里面找不到Activity抛出了NameNotFoundException.</p>
+<p>所以我们看看有没有办法替换一下这个Context.getPackageManager()拿到的PackageManager:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">class ContextImpl extends Context &#123;</span><br><span class="line">	...</span><br><span class="line">	@Override</span><br><span class="line">	public PackageManager getPackageManager() &#123;</span><br><span class="line">	    if (mPackageManager != null) &#123;</span><br><span class="line">	        return mPackageManager;</span><br><span class="line">	    &#125;</span><br><span class="line"></span><br><span class="line">	    IPackageManager pm = ActivityThread.getPackageManager();</span><br><span class="line">	    if (pm != null) &#123;</span><br><span class="line">	        // Doesn&#x27;t matter if we make more than one instance.</span><br><span class="line">	        return (mPackageManager = new ApplicationPackageManager(this, pm));</span><br><span class="line">	    &#125;</span><br><span class="line"></span><br><span class="line">	    return null;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ContextImpl会从ActivityThread.getPackageManager获取IPackageManager,让我们继续挖:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public final class ActivityThread &#123;</span><br><span class="line">	...</span><br><span class="line">	static volatile IPackageManager sPackageManager;</span><br><span class="line">	...</span><br><span class="line">	public static IPackageManager getPackageManager() &#123;</span><br><span class="line">	    if (sPackageManager != null) &#123;</span><br><span class="line">	        //Slog.v(&quot;PackageManager&quot;, &quot;returning cur default = &quot; + sPackageManager);</span><br><span class="line">	        return sPackageManager;</span><br><span class="line">	    &#125;</span><br><span class="line">	    IBinder b = ServiceManager.getService(&quot;package&quot;);</span><br><span class="line">	    //Slog.v(&quot;PackageManager&quot;, &quot;default service binder = &quot; + b);</span><br><span class="line">	    sPackageManager = IPackageManager.Stub.asInterface(b);</span><br><span class="line">	    //Slog.v(&quot;PackageManager&quot;, &quot;default service = &quot; + sPackageManager);</span><br><span class="line">	    return sPackageManager;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以sPackageManager就是我们的突破点,让我们来把它换掉:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">try &#123;</span><br><span class="line">    //要先获取一下,保证它初始化</span><br><span class="line">    context.getPackageManager();</span><br><span class="line"></span><br><span class="line">    Class activityThread = Class.forName(&quot;android.app.ActivityThread&quot;);</span><br><span class="line">    Field pmField = activityThread.getDeclaredField(&quot;sPackageManager&quot;);</span><br><span class="line">    pmField.setAccessible(true);</span><br><span class="line">    final Object origin = pmField.get(null);</span><br><span class="line">    Object handler = Proxy.newProxyInstance(activityThread.getClassLoader(),</span><br><span class="line">            new Class[]&#123;Class.forName(&quot;android.content.pm.IPackageManager&quot;)&#125;,</span><br><span class="line">            new PackageManagerHandler(context, origin));</span><br><span class="line">    pmField.set(null, handler);</span><br><span class="line">&#125; catch (Exception e) &#123;</span><br><span class="line">    Log.e(&quot;hook&quot;, &quot;hook IPackageManager err&quot;, e);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static class PackageManagerHandler implements InvocationHandler &#123;</span><br><span class="line">        private Context mContext;</span><br><span class="line">        private Object mOrigin;</span><br><span class="line"></span><br><span class="line">        PackageManagerHandler(Context context, Object origin) &#123;</span><br><span class="line">            mContext = context;</span><br><span class="line">            mOrigin = origin;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable &#123;</span><br><span class="line">            if (!method.getName().equals(&quot;getActivityInfo&quot;)) &#123;</span><br><span class="line">                return method.invoke(mOrigin, args);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            //如果没有注册,并不会抛出异常,而是会直接返回null</span><br><span class="line">            Object ret = method.invoke(mOrigin, args);</span><br><span class="line">            if (ret == null) &#123;</span><br><span class="line">                for (int i = 0; i &lt; args.length; i++) &#123;</span><br><span class="line">                    if (args[i] instanceof ComponentName) &#123;</span><br><span class="line">                        ComponentName componentName = (ComponentName) args[i];</span><br><span class="line">                        componentName.getClassName();</span><br><span class="line">                        args[i] = new ComponentName(</span><br><span class="line">                        	mContext.getPackageName(),</span><br><span class="line">                        	StubActivity.class.getName()</span><br><span class="line">                        );</span><br><span class="line">                        return method.invoke(mOrigin, args);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            return ret;</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在IPackageManager.getActivityInfo方法抛出异常的时候invoke会返回null,就代表这个Activity没有注册,我们直接将他换成StubActivity就好。</p>
+<p>大功告成!</p>
+<h1 id="完整Demo"><a href="#完整Demo" class="headerlink" title="完整Demo"></a>完整Demo</h1><p>完整Demo见我的<a href="https://github.com/bluesky466/PluginDemo">Github</a></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

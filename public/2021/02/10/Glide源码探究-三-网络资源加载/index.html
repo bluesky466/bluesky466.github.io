@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Glide源码探究(三) - 网络资源加载 | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,Android," />
+  
+
+  <meta name="description" content="系列文章:  Glide源码探究(一) - 生命周期绑定与Request创建  Glide源码探究(二) - 内存缓存  Glide源码探究(三) - 网络资源加载  Glide源码探究(四) - Bitmap复用机制   接着上篇笔记，按照Glide的流程查询完内存缓存之后应该算是查询磁盘缓存，但是由于磁盘缓存的数据依赖第一次请求的时候从网络下载，再写入磁盘缓存。所以我这篇先讲网络请求部分的流程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Glide源码探究(三) - 网络资源加载">
+<meta property="og:url" content="https://blog.islinjw.cn/2021/02/10/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%B8%89-%E7%BD%91%E7%BB%9C%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="系列文章:  Glide源码探究(一) - 生命周期绑定与Request创建  Glide源码探究(二) - 内存缓存  Glide源码探究(三) - 网络资源加载  Glide源码探究(四) - Bitmap复用机制   接着上篇笔记，按照Glide的流程查询完内存缓存之后应该算是查询磁盘缓存，但是由于磁盘缓存的数据依赖第一次请求的时候从网络下载，再写入磁盘缓存。所以我这篇先讲网络请求部分的流程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6%E4%B8%89/1.jpg">
+<meta property="og:image" content="https://blog.islinjw.cn/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6%E4%B8%89/2.png">
+<meta property="article:published_time" content="2021-02-10T07:14:12.000Z">
+<meta property="article:modified_time" content="2025-12-23T10:44:10.238Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6%E4%B8%89/1.jpg">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#ModelLoader%E7%9A%84%E6%9F%A5%E8%AF%A2%E4%B8%8E%E6%B3%A8%E5%86%8C"><span class="toc-text">ModelLoader的查询与注册</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#DataFetcher"><span class="toc-text">DataFetcher</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#LoadPath"><span class="toc-text">LoadPath</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-Glide源码探究-三-网络资源加载" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Glide源码探究(三) - 网络资源加载</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2021.02.10</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ul>
+<li><p><a href="https://blog.islinjw.cn/2021/02/05/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%B8%80-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%BB%91%E5%AE%9A%E4%B8%8ERequest%E5%88%9B%E5%BB%BA/">Glide源码探究(一) - 生命周期绑定与Request创建</a></p>
+</li>
+<li><p><a href="https://blog.islinjw.cn/2021/02/08/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%BA%8C-%E5%86%85%E5%AD%98%E7%BC%93%E5%AD%98/">Glide源码探究(二) - 内存缓存</a></p>
+</li>
+<li><p><a href="https://blog.islinjw.cn/2021/02/10/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E4%B8%89-%E7%BD%91%E7%BB%9C%E8%B5%84%E6%BA%90%E5%8A%A0%E8%BD%BD/">Glide源码探究(三) - 网络资源加载</a></p>
+</li>
+<li><p><a href="https://blog.islinjw.cn/2021/03/27/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6-%E5%9B%9B-Bitmap%E5%A4%8D%E7%94%A8%E6%9C%BA%E5%88%B6/">Glide源码探究(四) - Bitmap复用机制</a></p>
+</li>
+</ul>
+<p>接着<a href="https://www.jianshu.com/p/79cc0dab40c3">上篇笔记</a>，按照Glide的流程查询完内存缓存之后应该算是查询磁盘缓存，但是由于磁盘缓存的数据依赖第一次请求的时候从网络下载，再写入磁盘缓存。所以我这篇先讲网络请求部分的流程。</p>
+<p>这部分的代码坦白讲比较多也比较绕，我在看的时候也看的头晕。这里就不去把代码都列出来了，感兴趣的同学可以跟着下面的时序图去追踪一下:</p>
+<img src="/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6%E4%B8%89/1.jpg" class="">
+
+<p>EngineJob的功能比较简单，就是管理加载和回调:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * A class that manages a load by adding and removing callbacks for for the load and notifying</span></span><br><span class="line"><span class="comment"> * callbacks when the load completes.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">EngineJob</span>&lt;R&gt; <span class="keyword">implements</span> <span class="title class_">DecodeJob</span>.Callback&lt;R&gt;, Poolable &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它最重要的功能是启动了DecodeJob去加载资源，DecodeJob是一个运行在子线程的Runnable。它会使用Generator去从缓存或者数据源加载数据，我们这次只看从数据源加载的SourceGenerator。</p>
+<p>SourceGenerator在启动的时候会使用DecodeHelper去获取一个叫LoadData的东西，这一步比较有意思我们展开讲，先看看DecodeHelper.getLoadData的代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">List&lt;LoadData&lt;?&gt;&gt; getLoadData() &#123;</span><br><span class="line">    <span class="keyword">if</span> (!isLoadDataSet) &#123;</span><br><span class="line">        isLoadDataSet = <span class="literal">true</span>;</span><br><span class="line">        loadData.clear();</span><br><span class="line">        List&lt;ModelLoader&lt;Object, ?&gt;&gt; modelLoaders = glideContext.getRegistry().getModelLoaders(model);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>, size = modelLoaders.size(); i &lt; size; i++) &#123;</span><br><span class="line">            ModelLoader&lt;Object, ?&gt; modelLoader = modelLoaders.get(i);</span><br><span class="line">            LoadData&lt;?&gt; current = modelLoader.buildLoadData(model, width, height, options);</span><br><span class="line">            <span class="keyword">if</span> (current != <span class="literal">null</span>) &#123;</span><br><span class="line">                loadData.add(current);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> loadData;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>loadData是个List，而且DecodeHelper内部做了缓存。它的加载逻辑是先用model(就是我们load传入的url)从glideContext里面查询ModelLoader列表，然后遍历它去buildLoadData丢到loadData这个列表里面。</p>
+<h1 id="ModelLoader的查询与注册"><a href="#ModelLoader的查询与注册" class="headerlink" title="ModelLoader的查询与注册"></a>ModelLoader的查询与注册</h1><p>getModelLoaders的逻辑很简单，就用modelLoaderRegistry去getModelLoaders:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@NonNull</span></span><br><span class="line"><span class="keyword">public</span> &lt;Model&gt; List&lt;ModelLoader&lt;Model, ?&gt;&gt; getModelLoaders(<span class="meta">@NonNull</span> Model model) &#123;</span><br><span class="line">    <span class="keyword">return</span> modelLoaderRegistry.getModelLoaders(model);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>modelLoaderRegistry里面会根据model的class查询modelLoaders列表，然后遍历它去使用ModelLoader.handles方法判断这个ModelLoader是否支持这个model，如果是的再放到filteredLoaders里面一起返回。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;A&gt; List&lt;ModelLoader&lt;A, ?&gt;&gt; getModelLoaders(<span class="meta">@NonNull</span> A model) &#123;</span><br><span class="line">    List&lt;ModelLoader&lt;A, ?&gt;&gt; modelLoaders = getModelLoadersForClass(getClass(model));</span><br><span class="line">    ...</span><br><span class="line">    <span class="type">int</span> <span class="variable">size</span> <span class="operator">=</span> modelLoaders.size();</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">isEmpty</span> <span class="operator">=</span> <span class="literal">true</span>;</span><br><span class="line">    List&lt;ModelLoader&lt;A, ?&gt;&gt; filteredLoaders = Collections.emptyList();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; size; i++) &#123;</span><br><span class="line">      ModelLoader&lt;A, ?&gt; loader = modelLoaders.get(i);</span><br><span class="line">      <span class="keyword">if</span> (loader.handles(model)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (isEmpty) &#123;</span><br><span class="line">          filteredLoaders = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;(size - i);</span><br><span class="line">          isEmpty = <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        filteredLoaders.add(loader);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> filteredLoaders;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个逻辑要怎么理解呢？举个例子，就是假设model是一个Uri，那么getModelLoadersForClass查出来的ModelLoader列表里面可能有加载本地图片的也可能有加载网络图片的。然后分别调用ModelLoader.handles方法去过滤。如果是个本地请求的Uri，网络请求的ModelLoader就会被过滤掉，因为它只支持http和https的scheme:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlUriLoader</span>&lt;Data&gt; <span class="keyword">implements</span> <span class="title class_">ModelLoader</span>&lt;Uri, Data&gt; &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Set&lt;String&gt; SCHEMES =</span><br><span class="line">      Collections.unmodifiableSet(<span class="keyword">new</span> <span class="title class_">HashSet</span>&lt;&gt;(Arrays.asList(<span class="string">&quot;http&quot;</span>, <span class="string">&quot;https&quot;</span>)));</span><br><span class="line">  ...</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">handles</span><span class="params">(<span class="meta">@NonNull</span> Uri uri)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> SCHEMES.contains(uri.getScheme());</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>getModelLoadersForClass方法里面也比较绕，我就不展开代码了，只要知道它是根据model的class去查询即可。</p>
+<p>有了查询就肯定有注册，它的注册在Glide的构造函数里面有很长的一坨，第一个参数就是用于对比model class的，第二个参数是DataFetcher的数据类型，最后一个参数是ModelLoader的工厂:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">registry</span><br><span class="line">  ...</span><br><span class="line">  .append(String.class, InputStream.class, <span class="keyword">new</span> <span class="title class_">StringLoader</span>.StreamFactory())</span><br><span class="line">    ...</span><br><span class="line">    .append(Uri.class, InputStream.class, <span class="keyword">new</span> <span class="title class_">UriLoader</span>.StreamFactory(contentResolver))</span><br><span class="line">    .append(Uri.class,ParcelFileDescriptor.class,<span class="keyword">new</span> <span class="title class_">UriLoader</span>.FileDescriptorFactory(contentResolver))</span><br><span class="line">    .append(Uri.class,AssetFileDescriptor.class,<span class="keyword">new</span> <span class="title class_">UriLoader</span>.AssetFileDescriptorFactory(contentResolver))</span><br><span class="line">    .append(Uri.class, InputStream.class, <span class="keyword">new</span> <span class="title class_">UrlUriLoader</span>.StreamFactory())</span><br><span class="line">    .append(URL.class, InputStream.class, <span class="keyword">new</span> <span class="title class_">UrlLoader</span>.StreamFactory())</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>光看这个流程其实还比较好理解，但是由于我们使用的是String类型的url，当我第一次追踪代码的时候还是有被绕晕。原因是String.class注册的StringLoader自己并不干活，而是将String转换成Uri再去registry里面找人干活:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">StringLoader</span>&lt;Data&gt; <span class="keyword">implements</span> <span class="title class_">ModelLoader</span>&lt;String, Data&gt; &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">StringLoader</span><span class="params">(ModelLoader&lt;Uri, Data&gt; uriLoader)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.uriLoader = uriLoader;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> LoadData&lt;Data&gt; <span class="title function_">buildLoadData</span><span class="params">(<span class="meta">@NonNull</span> String model, <span class="type">int</span> width, <span class="type">int</span> height, <span class="meta">@NonNull</span> Options options)</span> &#123;</span><br><span class="line">        <span class="type">Uri</span> <span class="variable">uri</span> <span class="operator">=</span> parseUri(model);</span><br><span class="line">        <span class="keyword">if</span> (uri == <span class="literal">null</span> || !uriLoader.handles(uri)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> uriLoader.buildLoadData(uri, width, height, options);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">handles</span><span class="params">(<span class="meta">@NonNull</span> String model)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">StreamFactory</span> <span class="keyword">implements</span> <span class="title class_">ModelLoaderFactory</span>&lt;String, InputStream&gt; &#123;</span><br><span class="line">        <span class="keyword">public</span> ModelLoader&lt;String, InputStream&gt; <span class="title function_">build</span><span class="params">(<span class="meta">@NonNull</span> MultiModelLoaderFactory multiFactory)</span> &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">StringLoader</span>&lt;&gt;(multiFactory.build(Uri.class, InputStream.class));</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到StreamFactory创建StringLoader的时候调用了multiFactory.build(Uri.class, InputStream.class)方法创建了一个ModelLoader传给StringLoader。这个build出来的是一个MultiModelLoader，具体细节我也不讲了。它从registry查询了append时候第一个参数为Uri.class，第二个参数为InputStream.class的ModelLoader。</p>
+<p>StringLoader.handles直接返回true，然后buildLoadData的时候在从这堆ModelLoader使用handles然后build出来。</p>
+<p>也就是相当于将String.class的model转换成了Uri.class类型。但是这样还没有完，Uri.class最终又被转换成了GlideUrl.class，这个我就不展开代码了…</p>
+<h1 id="DataFetcher"><a href="#DataFetcher" class="headerlink" title="DataFetcher"></a>DataFetcher</h1><p>得到的ModelLoader回到到DecodeHelper.getLoadData去buildLoadData创建LoadData，就得到了一个LoadData列表。</p>
+<p>然后SourceGenerator.startNext里面就会遍历这个列表去找到一个能加载资源的LoadData，其中主要干活的是DataFetcher:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">startNext</span><span class="params">()</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">while</span> (!started &amp;&amp; hasNextModelLoader()) &#123;</span><br><span class="line">      loadData = helper.getLoadData().get(loadDataListIndex++);</span><br><span class="line">      <span class="keyword">if</span> (loadData != <span class="literal">null</span></span><br><span class="line">          &amp;&amp; (helper.getDiskCacheStrategy().isDataCacheable(loadData.fetcher.getDataSource())</span><br><span class="line">              || helper.hasLoadPath(loadData.fetcher.getDataClass()))) &#123;</span><br><span class="line">        started = <span class="literal">true</span>;</span><br><span class="line">        startNextLoad(loadData);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> started;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>startNextLoad里面使用loadData.fetcher启动资源的加载，完成后回调onDataReadyInternal:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">startNextLoad</span><span class="params">(<span class="keyword">final</span> LoadData&lt;?&gt; toStart)</span> &#123;</span><br><span class="line">    loadData.fetcher.loadData(</span><br><span class="line">        helper.getPriority(),</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">DataCallback</span>&lt;Object&gt;() &#123;</span><br><span class="line">          <span class="meta">@Override</span></span><br><span class="line">          <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onDataReady</span><span class="params">(<span class="meta">@Nullable</span> Object data)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (isCurrentRequest(toStart)) &#123;</span><br><span class="line">              onDataReadyInternal(toStart, data);</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        ...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是值得注意的是Fetcher的加载完成并不是把图片文件下载完成，只是打开了文件流而已，需要等待后面的流程从里面读取:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HttpUrlFetcher</span> <span class="keyword">implements</span> <span class="title class_">DataFetcher</span>&lt;InputStream&gt; &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">loadData</span><span class="params">(<span class="meta">@NonNull</span> Priority priority, <span class="meta">@NonNull</span> DataCallback&lt;? <span class="built_in">super</span> InputStream&gt; callback)</span> &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="type">InputStream</span> <span class="variable">result</span> <span class="operator">=</span> loadDataWithRedirects(glideUrl.toURL(), <span class="number">0</span>, <span class="literal">null</span>, glideUrl.getHeaders());</span><br><span class="line">        callback.onDataReady(result);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="LoadPath"><a href="#LoadPath" class="headerlink" title="LoadPath"></a>LoadPath</h1><p>看回时序图可以知道，DataFetcher的数据是被LoadPath读取去解码的。这里面也很复杂，但是我们并不需要全部了解，我这只讲个比较重要的东西。</p>
+<p>LoadPath.load方法最终会调用到LoadPath.decodeResourceWithList方法。顾名思义它是遍历解码器列表查找一个解码器去解码文件:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Resource&lt;ResourceType&gt; <span class="title function_">decodeResourceWithList</span><span class="params">(...)</span> <span class="keyword">throws</span> GlideException &#123;</span><br><span class="line">    Resource&lt;ResourceType&gt; result = <span class="literal">null</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>, size = decoders.size(); i &lt; size; i++) &#123;</span><br><span class="line">        ResourceDecoder&lt;DataType, ResourceType&gt; decoder = decoders.get(i);</span><br><span class="line">        ...</span><br><span class="line">        <span class="type">DataType</span> <span class="variable">data</span> <span class="operator">=</span> rewinder.rewindAndGet();</span><br><span class="line">        <span class="keyword">if</span> (decoder.handles(data, options)) &#123;</span><br><span class="line">            data = rewinder.rewindAndGet();</span><br><span class="line">            result = decoder.decode(data, width, height, options);</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (result != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这些解码器是哪里注册的呢？答案还是Glide的构造函数里面那坨很长的append，没错那坨append不仅注册了ModelLoader还注册了解码器:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">registry</span><br><span class="line">        .append(ByteBuffer.class, <span class="keyword">new</span> <span class="title class_">ByteBufferEncoder</span>())</span><br><span class="line">        .append(InputStream.class, <span class="keyword">new</span> <span class="title class_">StreamEncoder</span>(arrayPool))</span><br><span class="line">        .append(Registry.BUCKET_BITMAP, ByteBuffer.class, Bitmap.class, byteBufferBitmapDecoder)</span><br><span class="line">        .append(Registry.BUCKET_BITMAP, InputStream.class, Bitmap.class, streamBitmapDecoder)</span><br><span class="line">            ...</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>之后的流程就是不断回到到Engine去放到弱引用缓存里面的。到这里整个网络资源的下载解码流程也就讲完了，我们来看看简化之后的时序图:</p>
+<img src="/Glide%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6%E4%B8%89/2.png" class="">
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
