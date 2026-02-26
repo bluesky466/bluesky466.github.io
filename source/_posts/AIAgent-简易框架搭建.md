@@ -5,6 +5,12 @@ tags:
     - AI Agent
 ---
 
+系列文章:
+
+1. [AIAgent - 简易框架搭建](https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)
+1. [AIAgent - LiteLLM](https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/)
+
+
 近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。
 
 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent其实更偏应用层的工程实践是能被我所理解的。

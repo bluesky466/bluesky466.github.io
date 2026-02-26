@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>AIAgent - LiteLLM | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,AI Agent," />
+  
+
+  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM  上篇文章讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？ 其实业界早就有LiteLLM这种兼容各家api的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。 使用LiteLLM SDKLiteLLM基">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AIAgent - LiteLLM">
+<meta property="og:url" content="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM  上篇文章讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？ 其实业界早就有LiteLLM这种兼容各家api的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。 使用LiteLLM SDKLiteLLM基">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/LiteLLM/userapis.png">
+<meta property="og:image" content="https://blog.islinjw.cn/LiteLLM/keyapis.png">
+<meta property="article:published_time" content="2026-02-26T15:55:38.000Z">
+<meta property="article:modified_time" content="2026-02-26T15:59:21.429Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="AI Agent">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/LiteLLM/userapis.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8LiteLLM-SDK"><span class="toc-text">使用LiteLLM SDK</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#LiteLLM-Proxy"><span class="toc-text">LiteLLM Proxy</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-AIAgent-LiteLLM" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">AIAgent - LiteLLM</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2026.02.26</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ol>
+<li><a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">AIAgent - 简易框架搭建</a></li>
+<li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
+</ol>
+<p>上篇<a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">文章</a>讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？</p>
+<p>其实业界早就有<a href="https://docs.litellm.ai/docs/#litellm-python-sdk">LiteLLM</a>这种兼容<a href="https://docs.litellm.ai/docs/providers">各家api</a>的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。</p>
+<h1 id="使用LiteLLM-SDK"><a href="#使用LiteLLM-SDK" class="headerlink" title="使用LiteLLM SDK"></a>使用LiteLLM SDK</h1><p>LiteLLM基本上是按照OpenAI的接口设计的,而智谱的接口也和OpenAI一致,所以改成使用LiteLLM改动其实很小:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> litellm <span class="keyword">import</span> completion</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> platform</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">AgentBrain</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, tools</span>):</span><br><span class="line">        <span class="variable language_">self</span>.model = <span class="string">&quot;zai/glm-4.7&quot;</span></span><br><span class="line">        <span class="variable language_">self</span>.tools = tools</span><br><span class="line">        <span class="variable language_">self</span>.tools_definition = tools.get_definition_for_json()</span><br><span class="line">        <span class="variable language_">self</span>.messages = [&#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;system&quot;</span>, <span class="string">&quot;content&quot;</span>: <span class="variable language_">self</span>.__get_system_prompt()&#125;,]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__get_system_prompt</span>(<span class="params">self</span>):</span><br><span class="line">        runtime = <span class="string">f&quot;<span class="subst">&#123;platform.system()&#125;</span> <span class="subst">&#123;platform.machine()&#125;</span>, Python <span class="subst">&#123;platform.python_version()&#125;</span>&quot;</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        你是一个AI智能助手.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        ## 运行环境</span></span><br><span class="line"><span class="string">        <span class="subst">&#123;runtime&#125;</span></span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">think</span>(<span class="params">self, prompt</span>):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="variable language_">self</span>.messages.append(&#123;<span class="string">&quot;role&quot;</span>: <span class="string">&quot;user&quot;</span>, <span class="string">&quot;content&quot;</span>: prompt&#125;)</span><br><span class="line"></span><br><span class="line">            message = completion(</span><br><span class="line">                model=<span class="variable language_">self</span>.model,</span><br><span class="line">                messages=<span class="variable language_">self</span>.messages,</span><br><span class="line">                tools=<span class="variable language_">self</span>.tools_definition</span><br><span class="line">            ).choices[<span class="number">0</span>].message</span><br><span class="line">            <span class="variable language_">self</span>.messages.append(<span class="variable language_">self</span>.parse_response_message(message))</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">hasattr</span>(message, <span class="string">&quot;tool_calls&quot;</span>) <span class="keyword">and</span> message.tool_calls:</span><br><span class="line">                <span class="keyword">for</span> tool_call <span class="keyword">in</span> message.tool_calls:</span><br><span class="line">                    args = tool_call.function.arguments</span><br><span class="line">                    <span class="keyword">if</span> <span class="built_in">isinstance</span>(args, <span class="built_in">str</span>):</span><br><span class="line">                        args = json.loads(args)</span><br><span class="line"></span><br><span class="line">                    <span class="variable language_">self</span>.messages.append(&#123;</span><br><span class="line">                        <span class="string">&quot;role&quot;</span>: <span class="string">&quot;tool&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;tool_call_id&quot;</span>: tool_call.<span class="built_in">id</span>,</span><br><span class="line">                        <span class="string">&quot;name&quot;</span>: tool_call.function.name,</span><br><span class="line">                        <span class="string">&quot;content&quot;</span>: <span class="variable language_">self</span>.tools.<span class="built_in">exec</span>(tool_call.function.name, args),</span><br><span class="line">                    &#125;)</span><br><span class="line">                <span class="keyword">return</span> <span class="variable language_">self</span>.think(<span class="string">&quot;思考执行结果并决定下一步行动.&quot;</span>)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="keyword">return</span> message.content</span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">return</span> <span class="string">f&quot;思考过程出错: <span class="subst">&#123;e&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">parse_response_message</span>(<span class="params">self, message</span>):</span><br><span class="line">        result = &#123;</span><br><span class="line">            <span class="string">&quot;role&quot;</span>: message.role,</span><br><span class="line">            <span class="string">&quot;content&quot;</span>: message.content,</span><br><span class="line">            <span class="string">&quot;reasoning_content&quot;</span>: message.reasoning_content,</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">hasattr</span>(message, <span class="string">&quot;tool_calls&quot;</span>) <span class="keyword">and</span> message.tool_calls:</span><br><span class="line">            result[<span class="string">&quot;tool_calls&quot;</span>] = [</span><br><span class="line">                &#123;<span class="string">&quot;id&quot;</span>:tc.<span class="built_in">id</span>, <span class="string">&quot;type&quot;</span>:tc.<span class="built_in">type</span>, <span class="string">&quot;function&quot;</span>:&#123;<span class="string">&quot;name&quot;</span>:tc.function.name, <span class="string">&quot;arguments&quot;</span>:tc.function.arguments&#125;&#125; <span class="keyword">for</span> tc <span class="keyword">in</span> message.tool_calls</span><br><span class="line">            ]</span><br><span class="line">        <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure>
+
+<p>从<a href="https://docs.litellm.ai/docs/providers/zai">文档</a>来看api key就是保存在<code>ZAI_API_KEY</code>环境变量,然后模型的选择需要加上<code>zai/</code>前缀，然后就可以使用<code>completion</code>去调用功能请求了,它的<a href="https://docs.litellm.ai/docs/#response-format-openai-chat-completions-format">响应格式</a>也是按着OpenAI来的。</p>
+<p>由于各家的api并不是完全一样的，所以<code>completion</code>调用不同llm的时候支持的参数也有所差异,根据<a href="https://docs.litellm.ai/docs/completion/input#translated-openai-params">文档</a>,我们可以用<code>get_supported_openai_params</code>去查询支持的参数:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> litellm <span class="keyword">import</span> get_supported_openai_params</span><br><span class="line"></span><br><span class="line">response = get_supported_openai_params(model=<span class="string">&quot;zai/glm-4.7&quot;</span>, custom_llm_provider=<span class="string">&quot;zai&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(response)  <span class="comment">#[&#x27;max_tokens&#x27;, &#x27;stream&#x27;, &#x27;stream_options&#x27;, &#x27;temperature&#x27;, &#x27;top_p&#x27;, &#x27;stop&#x27;, &#x27;tools&#x27;, &#x27;tool_choice&#x27;, &#x27;thinking&#x27;]</span></span><br></pre></td></tr></table></figure>
+
+<p>然后agent用到的函数调用的功能可以参考这个<a href="https://docs.litellm.ai/docs/completion/function_call">文档</a>,也不是所有llm都支持的,可以通过<code>supports_function_calling</code>查询是否支持:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> litellm <span class="keyword">import</span> supports_function_calling</span><br><span class="line"></span><br><span class="line">response = supports_function_calling(model=<span class="string">&quot;zai/glm-4.7&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(response) <span class="comment"># True</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="LiteLLM-Proxy"><a href="#LiteLLM-Proxy" class="headerlink" title="LiteLLM Proxy"></a>LiteLLM Proxy</h1><p>除了统一API接口之外LiteLLM还有个企业里常用的功能就是<a href="https://docs.litellm.ai/docs/proxy/docker_quick_start">LLM网关</a>,通过下面命令安装启动:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pip install &#x27;litellm[proxy]&#x27;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">config文件参考官方文档https://docs.litellm.ai/docs/proxy/configs</span></span><br><span class="line">litellm --config config.yaml</span><br></pre></td></tr></table></figure>
+
+<p>比如企业为员工购买token,总不能直接将原始的API Key发给员工,这个时候就可以用LiteLLM Proxy创建一个虚拟的API Key,所有权限、预算和限制都绑定在虚拟密钥上，极大提升了安全性。</p>
+<p>启动proxy之后可以在<code>http://0.0.0.0:4000/</code>看到一堆的api,例如获取所有配置的模型:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl http://0.0.0.0:4000/models</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">&#123;<span class="string">&quot;data&quot;</span>:[&#123;<span class="string">&quot;id&quot;</span>:<span class="string">&quot;glm&quot;</span>,<span class="string">&quot;object&quot;</span>:<span class="string">&quot;model&quot;</span>,<span class="string">&quot;created&quot;</span>:1677610602,<span class="string">&quot;owned_by&quot;</span>:<span class="string">&quot;openai&quot;</span>&#125;],<span class="string">&quot;object&quot;</span>:<span class="string">&quot;list&quot;</span>&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后就可以用虚拟的key,例如我这里的sk-1234去请求glm的模型:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl -X POST http://localhost:4000/v1/chat/completions \</span></span><br><span class="line"><span class="language-bash">-H <span class="string">&quot;Content-Type: application/json&quot;</span> \</span></span><br><span class="line"><span class="language-bash">-H <span class="string">&quot;Authorization: Bearer sk-1234&quot;</span> \</span></span><br><span class="line"><span class="language-bash">-d <span class="string">&#x27;&#123;</span></span></span><br><span class="line">    &quot;model&quot;: &quot;glm&quot;,</span><br><span class="line">    &quot;messages&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;role&quot;: &quot;user&quot;,</span><br><span class="line">            &quot;content&quot;: &quot;你好!&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;&#x27;</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="string">&#123;&quot;id&quot;:&quot;202602262339573cc26ce0b8804062&quot;,&quot;created&quot;:1772120400,&quot;model&quot;:&quot;glm&quot;,&quot;object&quot;:&quot;chat.completion&quot;,&quot;choices&quot;:[&#123;&quot;finish_reason&quot;:&quot;stop&quot;,&quot;index&quot;:0,&quot;message&quot;:&#123;&quot;content&quot;:&quot;你好！😊 很高兴见到你！有什么可以帮您的吗？无论是问题、建议还是闲聊，我都很乐意为</span></span></span><br><span class="line">您服务～&quot;,&quot;role&quot;:&quot;assistant&quot;,&quot;reasoning_content&quot;:&quot;\n嗯，用户发来了一个简单的问候“你好!”。这看起来像是一个初次接触的开场白，可能用户刚进入对话界面，或者想测试系统是否在线。  \n\n用户没有附带任何具体问题或需求，所以我的回复应该保持友好且开放，鼓励ta进</span><br><span class="line">一步表达需求。考虑到中文用户的习惯，用“你好！”回应比较自然，同时加上表情符号可以增加亲和力——毕竟纯文字对话容易显得生硬。  \n\n后续可以主动询问需要什么帮助，但避免过度追问给用户压力。用“有什么可以帮您的吗？”这种开放式提问，比“您有什么问题？”更柔和。  \n\n对了，用户没提供任何背景信息，所以暂时不需要预设ta的技术能力或使用场景，保持通用性即可。如果ta后续提出具体问题，再调整回</span><br><span class="line">复深度。&quot;,&quot;provider_specific_fields&quot;:&#123;&quot;refusal&quot;:null,&quot;reasoning_content&quot;:&quot;\n嗯，用户发来了一个简单的问候“你好!”。这看起来像是一个初次接触的开场白，可能用户刚进入对话界面，或者想测试系统是否在线。  \n\n用户没有附带任何具体问题或需求，所以我的回复应该</span><br><span class="line">保持友好且开放，鼓励ta进一步表达需求。考虑到中文用户的习惯，用“你好！”回应比较自然，同时加上表情符号可以增加亲和力——毕竟纯文</span><br><span class="line">字对话容易显得生硬。  \n\n后续可以主动询问需要什么帮助，但避免过度追问给用户压力。用“有什么可以帮您的吗？”这种开放式提问，比“您有什么问题？”更柔和。  \n\n对了，用户没提供任何背景信息，所以暂时不需要预设ta的技术能力或使用场景，保持通用性即可。如果ta后续提出具体问题，再调整回复深度。&quot;&#125;&#125;,&quot;provider_specific_fields&quot;:&#123;&#125;&#125;],&quot;usage&quot;:&#123;&quot;completion_tokens&quot;:201,&quot;prompt_tokens&quot;:7,&quot;total_tokens&quot;:208,&quot;prompt_tokens_details&quot;:&#123;&quot;cached_tokens&quot;:4&#125;&#125;,&quot;request_id&quot;:&quot;202602262339573cc26ce0b8804062&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以使用<code>/user/xxx</code>的接口去管理用户:</p>
+<img src="/LiteLLM/userapis.png" class="">
+
+<p>和使用<code>/key/xxx</code>的接口去管理虚拟key(例如用<code>/key/generate</code>为用户创建一个key):</p>
+<img src="/LiteLLM/keyapis.png" class="">
+
+<p>然后就可以在虚拟密钥、用户、团队或模型层级设置月度、每日等周期性预算,实时监控和记录每个 API 调用的成本，帮助企业精准控制开支,还可以做速率限制与流量控制。</p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

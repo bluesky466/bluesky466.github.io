@@ -15,15 +15,15 @@
     <meta name="keywords" content="技术相关,AI Agent," />
   
 
-  <meta name="description" content="近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent其实更偏应用层的工程实践是能被我所理解的。 llm接口调用ai agent本质上是一个while循环在不断地询问llm: 12">
+  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM  近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent其实更偏应用层的工程实践是能被我所理解的">
 <meta property="og:type" content="article">
 <meta property="og:title" content="AIAgent - 简易框架搭建">
 <meta property="og:url" content="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/index.html">
 <meta property="og:site_name" content="编程代码笔记">
-<meta property="og:description" content="近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent其实更偏应用层的工程实践是能被我所理解的。 llm接口调用ai agent本质上是一个while循环在不断地询问llm: 12">
+<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM  近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent其实更偏应用层的工程实践是能被我所理解的">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-02-25T05:34:53.000Z">
-<meta property="article:modified_time" content="2026-02-25T06:09:41.781Z">
+<meta property="article:modified_time" content="2026-02-26T15:59:43.348Z">
 <meta property="article:author" content="林嘉伟">
 <meta property="article:tag" content="AI Agent">
 <meta property="article:tag" content="技术相关">
@@ -180,7 +180,12 @@
 
   <div class="article-content">
     
-      <p>近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。</p>
+      <p>系列文章:</p>
+<ol>
+<li><a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">AIAgent - 简易框架搭建</a></li>
+<li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
+</ol>
+<p>近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。</p>
 <p>虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent其实更偏应用层的工程实践是能被我所理解的。</p>
 <h2 id="llm接口调用"><a href="#llm接口调用" class="headerlink" title="llm接口调用"></a>llm接口调用</h2><p>ai agent本质上是一个while循环在不断地询问llm:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SimpleAgent</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="variable language_">self</span>.brain = AgentBrain()</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">run</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                user_input = <span class="built_in">input</span>(<span class="string">&quot;请输入(Ctrl+C 退出): &quot;</span>)</span><br><span class="line">            <span class="keyword">except</span> KeyboardInterrupt:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;\n再见!&quot;</span>)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">len</span>(user_input) == <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;.&quot;</span> * <span class="number">20</span>)</span><br><span class="line">            response = <span class="variable language_">self</span>.brain.think(user_input)</span><br><span class="line">            <span class="built_in">print</span>(response)</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;=&quot;</span> * <span class="number">20</span>)</span><br><span class="line">        </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    my_agent = SimpleAgent()</span><br><span class="line">    my_agent.run()</span><br></pre></td></tr></table></figure>
