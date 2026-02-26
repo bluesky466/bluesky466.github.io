@@ -14,7 +14,7 @@ tags:
 
 其实业界早就有[LiteLLM](https://docs.litellm.ai/docs/#litellm-python-sdk)这种兼容[各家api](https://docs.litellm.ai/docs/providers)的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。
 
-# 使用LiteLLM SDK
+# LiteLLM SDK
 
 LiteLLM基本上是按照OpenAI的接口设计的,而智谱的接口也和OpenAI一致,所以改成使用LiteLLM改动其实很小:
 
