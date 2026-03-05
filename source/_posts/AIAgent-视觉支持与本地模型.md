@@ -213,7 +213,7 @@ ollama pull qwen3.5:9b
 ollama run qwen3.5:9b
 ```
 
-我们可以在[模型列表](https://ollama.com/search)里面找到你想要的模型去下载运行即可,从具体模型的详情页面里面查看它的大小和是否支持图片输入。例如在我的MacBook Pro M5 24G上就可以运行起支持图片入的`qwen3.5:9b`:
+我们可以在[模型列表](https://ollama.com/search)里面找到你想要的模型去下载运行即可,从具体模型的[详情页面](https://ollama.com/library/qwen3.5)里面查看它的大小和是否支持图片输入。例如在我的MacBook Pro M5 24G上就可以运行起支持图片入的`qwen3.5:9b`:
 
 |Name|Size|Context|Input|
 |-|-|-|-|
