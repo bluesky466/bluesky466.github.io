@@ -15,15 +15,15 @@
     <meta name="keywords" content="技术相关,AI Agent," />
   
 
-  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与本地模型  近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent">
+  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与流式输出  近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent">
 <meta property="og:type" content="article">
 <meta property="og:title" content="AIAgent - 简易框架搭建">
 <meta property="og:url" content="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/index.html">
 <meta property="og:site_name" content="编程代码笔记">
-<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与本地模型  近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent">
+<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与流式输出  近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-02-25T05:34:53.000Z">
-<meta property="article:modified_time" content="2026-03-05T13:35:30.958Z">
+<meta property="article:modified_time" content="2026-03-06T12:36:20.454Z">
 <meta property="article:author" content="林嘉伟">
 <meta property="article:tag" content="AI Agent">
 <meta property="article:tag" content="技术相关">
@@ -147,7 +147,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#llm%E6%8E%A5%E5%8F%A3%E8%B0%83%E7%94%A8"><span class="toc-text">llm接口调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B7%BB%E5%8A%A0%E8%AE%B0%E5%BF%86"><span class="toc-text">添加记忆</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E4%BD%BF%E7%94%A8"><span class="toc-text">工具使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8tools%E4%BC%A0%E9%80%92%E5%B7%A5%E5%85%B7%E5%87%BD%E6%95%B0%E4%BF%A1%E6%81%AF"><span class="toc-text">使用tools传递工具函数信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF"><span class="toc-text">事件循环</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E5%9C%B0%E6%A8%A1%E5%9E%8B"><span class="toc-text">本地模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#llm%E6%8E%A5%E5%8F%A3%E8%B0%83%E7%94%A8"><span class="toc-text">llm接口调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B7%BB%E5%8A%A0%E8%AE%B0%E5%BF%86"><span class="toc-text">添加记忆</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E4%BD%BF%E7%94%A8"><span class="toc-text">工具使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8tools%E4%BC%A0%E9%80%92%E5%B7%A5%E5%85%B7%E5%87%BD%E6%95%B0%E4%BF%A1%E6%81%AF"><span class="toc-text">使用tools传递工具函数信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF"><span class="toc-text">事件循环</span></a></li></ol>
   </div>
 
 
@@ -184,10 +184,16 @@
 <ol>
 <li><a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">AIAgent - 简易框架搭建</a></li>
 <li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%9C%AC%E5%9C%B0%E6%A8%A1%E5%9E%8B/">AIAgent - 视觉支持与本地模型</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">AIAgent - 视觉支持与流式输出</a></li>
 </ol>
 <p>近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。</p>
 <p>虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent其实更偏应用层的工程实践是能被我所理解的。</p>
+<h2 id="本地模型"><a href="#本地模型" class="headerlink" title="本地模型"></a>本地模型</h2><p>实现一个ai agent的第一步是选择一个llm,我们可以在国产的智谱、minimaxi、kimi、qwen、doubao等里面选则购买。当然也可以在自己的电脑上部署本地小模型。</p>
+<p>随着LLM的发展,很多可以本地部署的小模型的智能程度其实也已经挺高的了,用来做一些翻译、文档提取、文字校正之类的简单工作是完全没有问题的。</p>
+<p>而且有了<a href="https://ollama.com/">ollama</a>之后部署模型也只需要几个指令就能搞定:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装ollama</span></span><br><span class="line">curl -fsSL https://ollama.com/install.sh | sh</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">下载qwen3.5:9b这个模型</span></span><br><span class="line">ollama pull qwen3.5:9b</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">运行qwen3.5:9b直接和qwen3.5:9b对话</span></span><br><span class="line">ollama run qwen3.5:9b</span><br></pre></td></tr></table></figure>
+
+<p>可以在<a href="https://ollama.com/search">模型列表</a>里面找到你想要的模型去下载运行即可。下载完成之后运行<code>ollama serve</code>可以在本地的<code>11434</code>端口启动ollama的服务器给代码调用</p>
 <h2 id="llm接口调用"><a href="#llm接口调用" class="headerlink" title="llm接口调用"></a>llm接口调用</h2><p>ai agent本质上是一个while循环在不断地询问llm:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SimpleAgent</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="variable language_">self</span>.brain = AgentBrain()</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">run</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                user_input = <span class="built_in">input</span>(<span class="string">&quot;请输入(Ctrl+C 退出): &quot;</span>)</span><br><span class="line">            <span class="keyword">except</span> KeyboardInterrupt:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;\n再见!&quot;</span>)</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">len</span>(user_input) == <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;.&quot;</span> * <span class="number">20</span>)</span><br><span class="line">            response = <span class="variable language_">self</span>.brain.think(user_input)</span><br><span class="line">            <span class="built_in">print</span>(response)</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;=&quot;</span> * <span class="number">20</span>)</span><br><span class="line">        </span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    my_agent = SimpleAgent()</span><br><span class="line">    my_agent.run()</span><br></pre></td></tr></table></figure>
 

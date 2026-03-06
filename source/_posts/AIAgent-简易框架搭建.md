@@ -9,12 +9,33 @@ tags:
 
 1. [AIAgent - 简易框架搭建](https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)
 1. [AIAgent - LiteLLM](https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/)
-1. [AIAgent - 视觉支持与本地模型](https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%9C%AC%E5%9C%B0%E6%A8%A1%E5%9E%8B/)
+1. [AIAgent - 视觉支持与流式输出](https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/)
 
 
 近年来部门内越来越多的使用ai去编程,加上最进openclaw爆火,一方面的确让开发的效率越来越高,另一方面我那该死的掌控欲又让我不断想去探究cursor、claude code这些工具的实现原理。
 
 虽然最底层的llm工作原理实在处于我的知识盲区无能为力,但ai agent其实更偏应用层的工程实践是能被我所理解的。
+
+## 本地模型
+
+实现一个ai agent的第一步是选择一个llm,我们可以在国产的智谱、minimaxi、kimi、qwen、doubao等里面选则购买。当然也可以在自己的电脑上部署本地小模型。
+
+随着LLM的发展,很多可以本地部署的小模型的智能程度其实也已经挺高的了,用来做一些翻译、文档提取、文字校正之类的简单工作是完全没有问题的。
+
+而且有了[ollama](https://ollama.com/)之后部署模型也只需要几个指令就能搞定:
+
+```shell
+# 安装ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# 下载qwen3.5:9b这个模型
+ollama pull qwen3.5:9b
+
+# 运行qwen3.5:9b直接和qwen3.5:9b对话
+ollama run qwen3.5:9b
+```
+
+可以在[模型列表](https://ollama.com/search)里面找到你想要的模型去下载运行即可。下载完成之后运行`ollama serve`可以在本地的`11434`端口启动ollama的服务器给代码调用
 
 ## llm接口调用
 

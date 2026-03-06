@@ -15,17 +15,17 @@
     <meta name="keywords" content="技术相关,AI Agent," />
   
 
-  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与本地模型  上篇文章讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？ 其实业界早就有LiteLLM这种兼容各家api的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。 L">
+  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与流式输出  上篇文章讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？ 其实业界早就有LiteLLM这种兼容各家api的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。 L">
 <meta property="og:type" content="article">
 <meta property="og:title" content="AIAgent - LiteLLM">
 <meta property="og:url" content="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/index.html">
 <meta property="og:site_name" content="编程代码笔记">
-<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与本地模型  上篇文章讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？ 其实业界早就有LiteLLM这种兼容各家api的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。 L">
+<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与流式输出  上篇文章讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？ 其实业界早就有LiteLLM这种兼容各家api的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。 L">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.islinjw.cn/LiteLLM/userapis.png">
 <meta property="og:image" content="https://blog.islinjw.cn/LiteLLM/keyapis.png">
 <meta property="article:published_time" content="2026-02-26T15:55:38.000Z">
-<meta property="article:modified_time" content="2026-03-05T13:35:24.461Z">
+<meta property="article:modified_time" content="2026-03-06T12:36:46.267Z">
 <meta property="article:author" content="林嘉伟">
 <meta property="article:tag" content="AI Agent">
 <meta property="article:tag" content="技术相关">
@@ -187,7 +187,7 @@
 <ol>
 <li><a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">AIAgent - 简易框架搭建</a></li>
 <li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%9C%AC%E5%9C%B0%E6%A8%A1%E5%9E%8B/">AIAgent - 视觉支持与本地模型</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">AIAgent - 视觉支持与流式输出</a></li>
 </ol>
 <p>上篇<a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">文章</a>讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？</p>
 <p>其实业界早就有<a href="https://docs.litellm.ai/docs/#litellm-python-sdk">LiteLLM</a>这种兼容<a href="https://docs.litellm.ai/docs/providers">各家api</a>的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。</p>
