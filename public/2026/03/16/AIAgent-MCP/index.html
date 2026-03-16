@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>AIAgent - MCP | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,AI Agent," />
+  
+
+  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与流式输出 AIAgent - MCP  在之前的文章里我们已经知道agent里llm是如何去调用tool的,但我们之前的tool是直接写在python代码里面的。 如何支持用户接入第三方的工具给llm调用呢?这就要用到mcp了。 mcp本质上是一套基于json的发送和接收数据的协议,用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AIAgent - MCP">
+<meta property="og:url" content="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 视觉支持与流式输出 AIAgent - MCP  在之前的文章里我们已经知道agent里llm是如何去调用tool的,但我们之前的tool是直接写在python代码里面的。 如何支持用户接入第三方的工具给llm调用呢?这就要用到mcp了。 mcp本质上是一套基于json的发送和接收数据的协议,用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/lifecycle.png">
+<meta property="og:image" content="https://blog.islinjw.cn/AIAgent-MCP/lifecycle.png">
+<meta property="article:published_time" content="2026-03-16T12:08:14.000Z">
+<meta property="article:modified_time" content="2026-03-16T12:14:58.738Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="AI Agent">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/lifecycle.png">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#MCP-Server"><span class="toc-text">MCP Server</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MCP-JSON%E5%8D%8F%E8%AE%AE"><span class="toc-text">MCP JSON协议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MCP-Client"><span class="toc-text">MCP Client</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Agent%E4%B8%AD%E6%8E%A5%E5%85%A5"><span class="toc-text">Agent中接入</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-AIAgent-MCP" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">AIAgent - MCP</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2026.03.16</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ol>
+<li><a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">AIAgent - 简易框架搭建</a></li>
+<li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">AIAgent - 视觉支持与流式输出</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/">AIAgent - MCP</a></li>
+</ol>
+<p>在之前的文章里我们已经知道agent里llm是如何去调用tool的,但我们之前的tool是直接写在python代码里面的。</p>
+<p>如何支持用户接入第三方的工具给llm调用呢?这就要用到<a href="https://modelcontextprotocol.io/docs/getting-started/intro">mcp</a>了。</p>
+<p>mcp本质上是一套基于json的发送和接收数据的协议,用于告诉llm有哪些工具可以使用和如何使用:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">package &quot;MCP Host (AI Agent)&quot; &#123;</span><br><span class="line">    rectangle &quot;MCP Client1&quot;</span><br><span class="line">    rectangle &quot;MCP Client2&quot;</span><br><span class="line">&#125;</span><br><span class="line">package &quot;远程业务如天气查询&quot; &#123;</span><br><span class="line">    rectangle &quot;MCP Server1&quot;</span><br><span class="line">    rectangle &quot;远程数据库&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">package &quot;本地业务如文件系统操作&quot; &#123;</span><br><span class="line">rectangle &quot;MCP Server2&quot;</span><br><span class="line">rectangle &quot;本地文件系统&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&quot;MCP Client1&quot; &lt;-left-&gt; &quot;MCP Server1&quot; :  &quot;      mcp协议(json)      &quot;</span><br><span class="line">&quot;MCP Client2&quot; &lt;-right-&gt; &quot;MCP Server2&quot; : &quot;      mcp协议(json)      &quot;</span><br><span class="line"></span><br><span class="line">&quot;MCP Server1&quot; &lt;--&gt; &quot;远程数据库&quot;</span><br><span class="line">&quot;MCP Server2&quot; &lt;--&gt; &quot;本地文件系统&quot;</span><br></pre></td></tr></table></figure>
+
+<p>从上面的图我们可以看到mcp协议里面分为三个角色:</p>
+<ul>
+<li>MCP Server : 业务系统搭建的服务，用于将本业务的功能通过llm可以理解的方式暴露出来</li>
+<li>MCP Host : 发起mcp请求的ai应用,如我们开发的ai agent</li>
+<li>MCP Client : MCP Host内部与MCP Server具体进行通讯的组件</li>
+</ul>
+<p>除了三种角色之外,MCP还有三个重要的概念,client可以向server请求下面三种东西:</p>
+<ul>
+<li>Resources : 可以是文件系统、数据库等原本无法从网络中直接获取到的静态的资源,也可以是一些基础的配置信息。它以URI的方式去定义,例如后面定义的<code>weather://citys</code>这个资源。</li>
+<li>Tools : 提供给ai调用的工具,和我们之前定义的tool函数是一样的概念</li>
+<li>Prompts : 某些场景下的预设提示词,如格式化的输出某些内容,ai在需要的时候可以从mcp server选择Prompts去加载</li>
+</ul>
+<p>由于协议本身使用json去通讯,所以可以很方便的使用各种语言去开发,官方也提供了各种语言的<a href="https://modelcontextprotocol.io/docs/sdk">sdk</a>,这里我依然使用<a href="https://github.com/modelcontextprotocol/python-sdk">python</a>去开发。</p>
+<p>实际上我们只需要pip去安装mcp的库就可以开始开发了:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install mcp</span><br></pre></td></tr></table></figure>
+
+<h2 id="MCP-Server"><a href="#MCP-Server" class="headerlink" title="MCP Server"></a>MCP Server</h2><p>我们这里先给出一个简单mcp server demo:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># mcp_server.py</span></span><br><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> mcp.server.fastmcp <span class="keyword">import</span> FastMCP, Context</span><br><span class="line">logging.getLogger(<span class="string">&quot;mcp&quot;</span>).setLevel(logging.WARNING)</span><br><span class="line"></span><br><span class="line">mcp = FastMCP(<span class="string">&quot;demo-weather-server&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@mcp.tool()</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">get_weather</span>(<span class="params">city: <span class="built_in">str</span>, ctx: Context</span>) -&gt; <span class="built_in">dict</span>:</span><br><span class="line">	<span class="string">&quot;&quot;&quot;Get the current weather for a city. should get support cities from resource weather://citys first&quot;&quot;&quot;</span></span><br><span class="line">	weather_data = &#123;</span><br><span class="line">		<span class="string">&quot;guangzhou&quot;</span>: &#123;<span class="string">&quot;temp&quot;</span>: <span class="number">22</span>, <span class="string">&quot;condition&quot;</span>: <span class="string">&quot;sunny&quot;</span>&#125;,</span><br><span class="line">		<span class="string">&quot;shanghai&quot;</span>: &#123;<span class="string">&quot;temp&quot;</span>: <span class="number">15</span>, <span class="string">&quot;condition&quot;</span>: <span class="string">&quot;cloudy&quot;</span>&#125;,</span><br><span class="line">		<span class="string">&quot;beijing&quot;</span>: &#123;<span class="string">&quot;temp&quot;</span>: <span class="number">12</span>, <span class="string">&quot;condition&quot;</span>: <span class="string">&quot;rainy&quot;</span>&#125;,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	city_lower = city.lower()</span><br><span class="line">	<span class="keyword">if</span> city_lower <span class="keyword">in</span> weather_data:</span><br><span class="line">		<span class="keyword">await</span> ctx.session.send_tool_list_changed()</span><br><span class="line">		<span class="keyword">return</span> &#123;<span class="string">&quot;city&quot;</span>: city, **weather_data[city_lower]&#125;</span><br><span class="line">	<span class="keyword">else</span>:</span><br><span class="line">		<span class="keyword">return</span> &#123;<span class="string">&quot;city&quot;</span>: city, <span class="string">&quot;temp&quot;</span>: <span class="string">&quot;unknown&quot;</span>, <span class="string">&quot;condition&quot;</span>: <span class="string">&quot;unknown&quot;</span>, <span class="string">&quot;error&quot;</span>: <span class="string">&quot;city not supported&quot;</span>&#125;</span><br><span class="line">	</span><br><span class="line"><span class="meta">@mcp.resource(<span class="params"><span class="string">&quot;weather://citys&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">citys</span>() -&gt; <span class="built_in">str</span>:</span><br><span class="line">	<span class="string">&quot;&quot;&quot;Get the list of cities.&quot;&quot;&quot;</span></span><br><span class="line">	<span class="keyword">return</span> [<span class="string">&quot;guangzhou&quot;</span>, <span class="string">&quot;shanghai&quot;</span>, <span class="string">&quot;beijing&quot;</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">	mcp.run(transport=<span class="string">&quot;stdio&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>其实代码比较简单,无非是提供了<code>weather://citys</code>这个<code>resource</code>去获取城市列表,和<code>get_weather</code>这个<code>tool</code>去获取指定城市的天气信息。</p>
+<p>PS: Prompts这里没有用到,但用法也是一样的直接使用<code>@mcp.prompt()</code>即可</p>
+<h2 id="MCP-JSON协议"><a href="#MCP-JSON协议" class="headerlink" title="MCP JSON协议"></a>MCP JSON协议</h2><p>Server的代码写好之后就可以写Client的代码去请求它,但在使用sdk编写client代码去调用之前我想先深入到mcp协议的原理来看看。</p>
+<p>之前有说过mcp本质就是用json去发送和接收数据的协议,通讯链路有两种</p>
+<ul>
+<li>如果server运行在云端则通过<a href="https://modelcontextprotocol.io/registry/remote-servers#transport-type">http</a>的<code>sse</code>或者<code>streamable-http</code>去传输数据</li>
+<li>如果是本地的server则直接将mcp server直接作为子进程启动通过标准输入输出去通讯</li>
+</ul>
+<p>整个通讯的<a href="https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle">生命周期</a>如下:</p>
+<p><img src="lifecycle.png" alt=""></p>
+<img src="/AIAgent-MCP/lifecycle.png" class="">
+
+<p>初始化有下面三步:</p>
+<ol>
+<li>client发送初始化请求将自己的信息告诉server</li>
+<li>server将自己的信息返回给client作为初始化响应</li>
+<li>客户端发送初始化完成的通知给服务端</li>
+</ol>
+<p>例如我们可以直接通过<code>python3 mcp_server.py</code>启动mcp server,然后终端就会阻塞主等待我们的输入</p>
+<p>这个时候我们可以手动输入json去模拟client发送初始化请求给server:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;jsonrpc&quot;</span><span class="punctuation">:</span><span class="string">&quot;2.0&quot;</span><span class="punctuation">,</span><span class="attr">&quot;id&quot;</span><span class="punctuation">:</span><span class="number">1</span><span class="punctuation">,</span><span class="attr">&quot;method&quot;</span><span class="punctuation">:</span><span class="string">&quot;initialize&quot;</span><span class="punctuation">,</span><span class="attr">&quot;params&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;protocolVersion&quot;</span><span class="punctuation">:</span><span class="string">&quot;2025-11-25&quot;</span><span class="punctuation">,</span><span class="attr">&quot;capabilities&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;clientInfo&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span><span class="string">&quot;ExampleClient&quot;</span><span class="punctuation">,</span><span class="attr">&quot;version&quot;</span><span class="punctuation">:</span><span class="string">&quot;1.0.0&quot;</span><span class="punctuation">,</span><span class="attr">&quot;description&quot;</span><span class="punctuation">:</span><span class="string">&quot;An example MCP client application&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>server会返回初始化响应,打印在终端上:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;jsonrpc&quot;</span><span class="punctuation">:</span><span class="string">&quot;2.0&quot;</span><span class="punctuation">,</span><span class="attr">&quot;id&quot;</span><span class="punctuation">:</span><span class="number">1</span><span class="punctuation">,</span><span class="attr">&quot;result&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;protocolVersion&quot;</span><span class="punctuation">:</span><span class="string">&quot;2025-11-25&quot;</span><span class="punctuation">,</span><span class="attr">&quot;capabilities&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;experimental&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;prompts&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;listChanged&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;resources&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;subscribe&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span><span class="attr">&quot;listChanged&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;tools&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;listChanged&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;serverInfo&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span><span class="string">&quot;demo-weather-server&quot;</span><span class="punctuation">,</span><span class="attr">&quot;version&quot;</span><span class="punctuation">:</span><span class="string">&quot;1.26.0&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后我们再输入初始化完成的通知:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;jsonrpc&quot;</span><span class="punctuation">:</span><span class="string">&quot;2.0&quot;</span><span class="punctuation">,</span><span class="attr">&quot;method&quot;</span><span class="punctuation">:</span><span class="string">&quot;notifications/initialized&quot;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>虽然server不会有任何的响应,所以终端上看是没有任何的反应,但实际上初始化已经完成了。</p>
+<p>我们这个时候可以发送列出支持的tools的请求:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;jsonrpc&quot;</span><span class="punctuation">:</span><span class="string">&quot;2.0&quot;</span><span class="punctuation">,</span><span class="attr">&quot;id&quot;</span><span class="punctuation">:</span><span class="number">1</span><span class="punctuation">,</span><span class="attr">&quot;method&quot;</span><span class="punctuation">:</span><span class="string">&quot;tools/list&quot;</span><span class="punctuation">,</span><span class="attr">&quot;params&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;cursor&quot;</span><span class="punctuation">:</span><span class="string">&quot;optional-cursor-value&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>就能看到定义在server的<code>get_weather</code>了:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;jsonrpc&quot;</span><span class="punctuation">:</span><span class="string">&quot;2.0&quot;</span><span class="punctuation">,</span><span class="attr">&quot;id&quot;</span><span class="punctuation">:</span><span class="number">1</span><span class="punctuation">,</span><span class="attr">&quot;result&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;tools&quot;</span><span class="punctuation">:</span><span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span><span class="string">&quot;get_weather&quot;</span><span class="punctuation">,</span><span class="attr">&quot;description&quot;</span><span class="punctuation">:</span><span class="string">&quot;Get the current weather for a city. should get support cities from resource weather://citys first&quot;</span><span class="punctuation">,</span><span class="attr">&quot;inputSchema&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;properties&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;city&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;title&quot;</span><span class="punctuation">:</span><span class="string">&quot;City&quot;</span><span class="punctuation">,</span><span class="attr">&quot;type&quot;</span><span class="punctuation">:</span><span class="string">&quot;string&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;required&quot;</span><span class="punctuation">:</span><span class="punctuation">[</span><span class="string">&quot;city&quot;</span><span class="punctuation">]</span><span class="punctuation">,</span><span class="attr">&quot;title&quot;</span><span class="punctuation">:</span><span class="string">&quot;get_weatherArguments&quot;</span><span class="punctuation">,</span><span class="attr">&quot;type&quot;</span><span class="punctuation">:</span><span class="string">&quot;object&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>也可以使用<code>tools/call</code>方法去调用工具:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;jsonrpc&quot;</span><span class="punctuation">:</span><span class="string">&quot;2.0&quot;</span><span class="punctuation">,</span><span class="attr">&quot;id&quot;</span><span class="punctuation">:</span><span class="number">1</span><span class="punctuation">,</span><span class="attr">&quot;method&quot;</span><span class="punctuation">:</span><span class="string">&quot;tools/call&quot;</span><span class="punctuation">,</span><span class="attr">&quot;params&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;name&quot;</span><span class="punctuation">:</span><span class="string">&quot;get_weather&quot;</span><span class="punctuation">,</span><span class="attr">&quot;arguments&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;city&quot;</span><span class="punctuation">:</span><span class="string">&quot;guangzhou&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">,</span><span class="attr">&quot;task&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;ttl&quot;</span><span class="punctuation">:</span><span class="number">60000</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后回在终端里面看到server返回的结果:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;jsonrpc&quot;</span><span class="punctuation">:</span><span class="string">&quot;2.0&quot;</span><span class="punctuation">,</span><span class="attr">&quot;id&quot;</span><span class="punctuation">:</span><span class="number">1</span><span class="punctuation">,</span><span class="attr">&quot;result&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span><span class="attr">&quot;content&quot;</span><span class="punctuation">:</span><span class="punctuation">[</span><span class="punctuation">&#123;</span><span class="attr">&quot;type&quot;</span><span class="punctuation">:</span><span class="string">&quot;text&quot;</span><span class="punctuation">,</span><span class="attr">&quot;text&quot;</span><span class="punctuation">:</span><span class="string">&quot;&#123;\n  \&quot;city\&quot;: \&quot;guangzhou\&quot;,\n  \&quot;temp\&quot;: 22,\n  \&quot;condition\&quot;: \&quot;sunny\&quot;\n&#125;&quot;</span><span class="punctuation">&#125;</span><span class="punctuation">]</span><span class="punctuation">,</span><span class="attr">&quot;isError&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">false</span></span><span class="punctuation">&#125;</span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="MCP-Client"><a href="#MCP-Client" class="headerlink" title="MCP Client"></a>MCP Client</h2><p>从上面的通讯原理我们可以看到,MCP协议其实并不复杂,client的demo我们使用<code>stdio_client</code>去通过标准输入输出调用<code>mcp_server.py</code>:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> mcp.client.session <span class="keyword">import</span> ClientSession</span><br><span class="line"><span class="keyword">from</span> mcp.client.stdio <span class="keyword">import</span> stdio_client, StdioServerParameters</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">main</span>() -&gt; <span class="literal">None</span>:</span><br><span class="line">    script_dir = os.path.dirname(os.path.abspath(__file__))</span><br><span class="line">    server_params = StdioServerParameters(</span><br><span class="line">        command=sys.executable,</span><br><span class="line">        args=[<span class="string">&quot;mcp_server.py&quot;</span>],</span><br><span class="line">        cwd=script_dir,</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> stdio_client(server_params) <span class="keyword">as</span> (read, write):</span><br><span class="line">        <span class="keyword">async</span> <span class="keyword">with</span> ClientSession(read, write) <span class="keyword">as</span> session:</span><br><span class="line">            init_result = <span class="keyword">await</span> session.initialize()</span><br><span class="line">            server_info = init_result.serverInfo</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;Connected to server: <span class="subst">&#123;server_info.name&#125;</span> (version <span class="subst">&#123;server_info.version&#125;</span>)\n&quot;</span>)</span><br><span class="line"></span><br><span class="line">            tools_result = <span class="keyword">await</span> session.list_tools()</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;Available tools:&quot;</span>)</span><br><span class="line">            <span class="keyword">for</span> tool <span class="keyword">in</span> tools_result.tools:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot; - <span class="subst">&#123;tool.name&#125;</span>: <span class="subst">&#123;tool.description&#125;</span> <span class="subst">&#123;tool.inputSchema&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">            resources_result = <span class="keyword">await</span> session.list_resources()</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;Available resources (static):&quot;</span>)</span><br><span class="line">            <span class="keyword">for</span> resource <span class="keyword">in</span> resources_result.resources:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">f&quot; - <span class="subst">&#123;resource.uri&#125;</span>: <span class="subst">&#123;resource.description&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\n&quot;</span> + <span class="string">&quot;=&quot;</span> * <span class="number">50</span> + <span class="string">&quot;\n&quot;</span>)</span><br><span class="line"></span><br><span class="line">            tool_result = <span class="keyword">await</span> session.call_tool(<span class="string">&quot;get_weather&quot;</span>, &#123;<span class="string">&quot;city&quot;</span>: <span class="string">&quot;guangzhou&quot;</span>&#125;)</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;get_weather result: <span class="subst">&#123;tool_result&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">            resource_result = <span class="keyword">await</span> session.read_resource(<span class="string">&quot;weather://citys&quot;</span>)</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">f&quot;Citys result: <span class="subst">&#123;resource_result.contents&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    asyncio.run(main())</span><br></pre></td></tr></table></figure>
+
+<p>在命令行<code>python3 mcp_client.py</code>运行client就能看到server的一些信息了:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Connected to server: demo-weather-server (version 1.26.0)</span><br><span class="line"></span><br><span class="line">Available tools:</span><br><span class="line"> - get_weather: Get the current weather for a city. should get support cities from resource weather://citys first &#123;&#x27;properties&#x27;: &#123;&#x27;city&#x27;: &#123;&#x27;title&#x27;: &#x27;City&#x27;, &#x27;type&#x27;: &#x27;string&#x27;&#125;&#125;, &#x27;required&#x27;: [&#x27;city&#x27;], &#x27;title&#x27;: &#x27;get_weatherArguments&#x27;, &#x27;type&#x27;: &#x27;object&#x27;&#125;</span><br><span class="line">Available resources (static):</span><br><span class="line"> - weather://citys: Get the list of cities.</span><br><span class="line"></span><br><span class="line">==================================================</span><br><span class="line"></span><br><span class="line">get_weather result: meta=None content=[TextContent(type=&#x27;text&#x27;, text=&#x27;&#123;\n  &quot;city&quot;: &quot;guangzhou&quot;,\n  &quot;temp&quot;: 22,\n  &quot;condition&quot;: &quot;sunny&quot;\n&#125;&#x27;, annotations=None, meta=None)] structuredContent=None isError=False</span><br><span class="line">Citys result: [TextResourceContents(uri=AnyUrl(&#x27;weather://citys&#x27;), mimeType=&#x27;text/plain&#x27;, meta=None, text=&#x27;[\n  &quot;guangzhou&quot;,\n  &quot;shanghai&quot;,\n  &quot;beijing&quot;\n]&#x27;)]</span><br></pre></td></tr></table></figure>
+
+<h2 id="Agent中接入"><a href="#Agent中接入" class="headerlink" title="Agent中接入"></a>Agent中接入</h2><p>如何将mcp的信息转换成<code>completion</code>的<code>tools</code>参数可以参考我的<a href="https://github.com/bluesky466/SimpleAgent/blob/feature/mcp/tool/mcp_tool.py">demo</a>,本质上是一种json格式到另一种json格式的转换</p>
+<p>接入完成之后就询问<code>广州天气怎样</code>就可以看到agent先通过<code>weather://citys</code>查询城市列表再通过<code>get_weather</code>获取到天气信息。然后我还加入了智谱的联网搜索api,在<a href="https://github.com/bluesky466/SimpleAgent/blob/feature/mcp/config.json">配置文件</a>里填上你的key就可以通过网络调用到智谱的api去进行智能搜索:</p>
+<p><video src="https://blog.islinjw.cn/AIAgent-MCP/agent_mcp.mp4" controls width="600" style="display: block; margin: 0 auto;"></video></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>
