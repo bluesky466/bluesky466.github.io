@@ -18,8 +18,6 @@ tags:
 
 ## 本地模型
 
-实现一个ai agent的第一步是选择一个llm,我们可以在国产的智谱、minimaxi、kimi、qwen、doubao等里面选则购买。当然也可以在自己的电脑上部署本地小模型。
-
 随着LLM的发展,很多可以本地部署的小模型的智能程度其实也已经挺高的了,用来做一些翻译、文档提取、文字校正之类的简单工作是完全没有问题的。
 
 而且有了[ollama](https://ollama.com/)之后部署模型也只需要几个指令就能搞定:
@@ -35,16 +33,41 @@ ollama pull qwen3.5:9b
 ollama run qwen3.5:9b
 ```
 
-可以在[模型列表](https://ollama.com/search)里面找到你想要的模型去下载运行即可。下载完成之后运行`ollama serve`可以在本地的`11434`端口启动ollama的服务器给代码调用
+可以在[模型列表](https://ollama.com/search)里面找到你想要的模型去下载运行即可。下载完成之后运行`ollama serve`可以在本地的`11434`端口启动ollama的服务器给代码调用。
 
 ## llm接口调用
 
-ai agent本质上是一个while循环在不断地询问llm:
+本地模型虽然是可以协助干一些简单的活,但是如果要体验ai时代的快速发展我还是建议大家花点钱体验下完整版的llm。
+
+例如国产的智谱、minimaxi、kimi、qwen、doubao其实价格并不是特别贵,而且购买也十分简单。
+
+这一系列的博客我就会用[智谱](https://www.bigmodel.cn/glm-coding?ic=RXEAIC4TFX)去实现一个简单的[ai agent](https://github.com/bluesky466/SimpleAgent)。
+
+智谱提供了"OpenAI 兼容模式"的API接口,基本和OpenAI的接口一样。实际上api使用起来也十分简单:
+
+```python
+class AgentBrain:
+    def __init__(self, llm_config: dict):
+        self._model = llm_config["model"]
+        self._client = ZhipuAI(api_key=llm_config["api_key"])
+
+    def think(self, prompt):
+        try:
+            message = self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "user", "content": prompt}],
+            ).choices[0].message
+            return message.content
+        except Exception as e:
+            return f"思考过程出错: {e}"
+```
+
+然后ai agent本质上是一个while循环在不断地询问llm:
 
 ```python
 class SimpleAgent:
-    def __init__(self):
-        self.brain = AgentBrain()
+    def __init__(self, config: dict):
+        self._brain = AgentBrain(config["llm"])
     
     def run(self):
         while True:
@@ -56,44 +79,23 @@ class SimpleAgent:
             if len(user_input) == 0:
                 continue
             print("." * 20)
-            response = self.brain.think(user_input)
+            response = self._brain.think(user_input)
             print(response)
             print("=" * 20)
-        
-if __name__ == "__main__":
-    my_agent = SimpleAgent()
-    my_agent.run()
 ```
 
-这里我选用国内的[智谱](https://www.bigmodel.cn/glm-coding?ic=RXEAIC4TFX)作为Agent的大脑,它提供了"OpenAI 兼容模式"的API接口基本和OpenAI的接口一样,实际上api使用起来也十分简单:
+之后只要在[配置文件](https://github.com/bluesky466/SimpleAgent/blob/feature/simple_loop/config.json)里面配置你的api key:
 
-```python
-from zhipuai import ZhipuAI
-import os
-
-class AgentBrain:
-    def __init__(self):
-        self.model = "glm-4.7"
-        self.client = ZhipuAI(api_key=os.environ.get("ZAI_API_KEY"))
-
-    def think(self, prompt):
-        try:
-            message = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-            ).choices[0].message
-            return message.content
-        except Exception as e:
-            return f"思考过程出错: {e}"
+```json
+{
+    "llm": {
+        "api_key" : "<这里填你的智谱apikey>",
+        "model": "glm-4.7"
+    }
+}
 ```
 
-之后只要先设置apikey的环境变量:
-
-```shell
-export ZAI_API_KEY="<你的智谱api key>"
-```
-
-就可以运行py脚本进行简单对话了:
+就可以运行`python3 simple_agent.py`进行简单对话了:
 
 ```shell
 请输入(Ctrl+C 退出): 你是谁
@@ -107,44 +109,64 @@ export ZAI_API_KEY="<你的智谱api key>"
 
 ## 添加记忆
 
-由于llm本身不会保持历史记录所以需要我们每次对话将之前的历史记录也发送给它,实现ai agent的记忆功能:
+由于llm本身不会保持历史记录所以需要我们每次对话将之前的历史记录也发送给它,实现ai agent的[记忆功能](https://github.com/bluesky466/SimpleAgent/blob/feature/memory/agent_brain.py):
 
 ```python
-from zhipuai import ZhipuAI
-import os
-
 class AgentBrain:
+    def __init__(self, llm_config: dict, memory: AgentMemory):
+        self._model = llm_config["model"]
+        self._client = ZhipuAI(api_key=llm_config["api_key"])
+        self._memory = memory
+
+    def think(self, prompt):
+        try:
+            self._memory.add_user_prompt(prompt)
+            response = self._client.chat.completions.create(
+                model=self._model,
+                messages=self._memory.get_memory(),
+            ).choices[0].message
+            self._memory.add_agent_response(response)
+            return response.content
+        except Exception as e:
+            return f"思考过程出错: {e}"
+```
+
+从AgentMemory的代码可以看到我们按不同角色去保存聊天记录:
+
+```python
+class AgentMemory:
     def __init__(self):
-        self.model = "glm-4.7"
-        self.client = ZhipuAI(api_key=os.environ.get("ZAI_API_KEY"))
-        self.messages = [{"role": "system", "content": self.__get_system_prompt()},]
+        self._memory = [{"role": "system", "content": self._get_system_prompt()},]
     
-    def __get_system_prompt(self):
+    def _get_system_prompt(self):
         return f"""
         你是一个AI智能助手.
         """
-    def think(self, prompt):
-        try:
-            self.messages.append({"role": "user", "content": prompt})
-            message = self.client.chat.completions.create(
-                model=self.model,
-                messages=self.messages,
-            ).choices[0].message
-            self.messages.append(self.parse_response_message("assistant", message))
-            return message.content
-        except Exception as e:
-            return f"思考过程出错: {e}"
-    
-    def parse_response_message(self, role, message):
+
+    def _parse_response_message(self, role, message):
         result = {
             "role": role,
             "content": message.content,
         }
         return result
+
+    def add_user_prompt(self, prompt):
+        self._memory.append({"role": "user", "content": prompt})
+    
+    def add_agent_response(self, message):
+        self._memory.append(self._parse_response_message("assistant", message))
+    
+    def get_memory(self):
+        return self._memory
 ```
 
-从上面的代码也可以看到我们可以按不同角色保存聊天记录,例如system可以在对话开始前对模型进行角色的设定,user是用户发送的消息,而assistant是llm作为智能助手回复的消息。这样从表现上llm就具有了记忆:
+这三个角色分别是:
 
+- system : 可以在对话开始前对模型进行全局的角色设定
+- user : 是用户发送的消息
+- assistant : 是llm作为智能助手回复的消息
+
+ 这样从表现上llm就具有了记忆:
 
 ```shell
 请输入(Ctrl+C 退出): 我是ljw
@@ -163,17 +185,10 @@ class AgentBrain:
 
 ## 工具使用
 
-此时的agent只能做简单的聊天,我们需要提供一些工具给它去操作电脑让他可以做更多事情:
+此时的agent只能做简单的聊天,我们需要提供一些[工具](https://github.com/bluesky466/SimpleAgent/blob/feature/tool_by_prompt/tool/local_tool.py)给它去操作电脑让他可以做更多事情:
 
 ```python
-import os
-import json
-from docstring_parser import parse as parse_docstring
-
-class AgentTools:
-    __TYPE_MAP = {"str": "string", "int": "integer", "float": "number", "bool": "boolean"}
-    __EXCLUDED = {"get_definition_for_prompt", "exec"}
-
+class LocalToolProvider(ToolProvider):
     def list_dir(self, path: str):
         """
         列出指定目录下的文件和目录
@@ -208,91 +223,110 @@ class AgentTools:
         """
         with open(os.path.expanduser(path), "w") as f:
             f.write(content)
-    
-    def exec(self, func_name, arguments):
-        func = getattr(self, func_name)
-        return json.dumps(func(**arguments))
-
-    def get_definition_for_prompt(self):
-        tools_definition = []
-        for attr_name in dir(self):
-            if attr_name.startswith("_") or attr_name in self.__EXCLUDED:
-                continue
-            attr = getattr(self, attr_name)
-            if not callable(attr):
-                continue
-            func = getattr(self.__class__, attr_name, None)
-            if func is None:
-                continue
-            tools_definition.append(f"###{attr_name}\n{func.__doc__}")
-        return tools_definition
+    ...
 ```
 
-可以看到我们提供了`list_dir`、`read_file`、`write_file`三个工具给llm使用,而`get_definition_for_prompt`用于获取工具函数的注释文档,`exec`用于调用工具函数。
+可以看到我们提供了`list_dir`、`read_file`、`write_file`三个函数给llm使用。但llm要怎么去调用这三个函数呢?
 
-在system的角色设定里面将当前的系统运行环境、可以使用的工具通通告诉llm,然后在llm的响应里面判断它是否需要调用工具函数,如果是就调用工具函数将结果保存到聊天记录,再让llm执行下一步动作,这样就可以实现agent操控电脑的功能了:
+我们可以在[系统提示词](https://github.com/bluesky466/SimpleAgent/blob/feature/tool_by_prompt/agent_memory.py)里面告诉它有这些工具可以使用,并约定调用工具的输出格式:
 
 ```python
-from zhipuai import ZhipuAI
-import os
-import json
-import platform
+def _get_system_prompt(self, tool_definition: str):
+    runtime = f"{platform.system()} {platform.machine()}, Python {platform.python_version()}"
+    return f"""
+你是一个AI智能助手.
 
-class AgentBrain:
-    def __init__(self, tools):
-        self.model = "glm-4.7"
-        self.tools = tools
-        self.client = ZhipuAI(api_key=os.environ.get("ZAI_API_KEY"))
-        self.tools_definition = "\n".join(tools.get_definition_for_prompt())
-        self.messages = [{"role": "system", "content": self.__get_system_prompt()},]
-    
-    def __get_system_prompt(self):
-        runtime = f"{platform.system()} {platform.machine()}, Python {platform.python_version()}"
-        return f"""
-        你是一个AI智能助手.
+## 运行环境
 
-        ## 运行环境
-        {runtime}
+{runtime}
 
-        ## 可用工具列表
-        {self.tools_definition}
+## 可用工具列表
 
-        ## 工具调用方法
-        直接返回以下json格式的工具调用参数，不要包含任何其他内容:
-        {{
-            "tool_name": "工具名称",
-            "tool_args": {{
-                "参数名称": "参数值"
-            }}
-        }}"""
-    def think(self, prompt):
-        try:
-            self.messages.append({"role": "user", "content": prompt})
-            message = self.client.chat.completions.create(
-                model=self.model,
-                messages=self.messages,
-            ).choices[0].message
-            self.messages.append(self.parse_response_message("assistant", message))
-            if message.content.startswith("{") or message.content.startswith("```json"):
-                tool_call = json.loads(message.content.strip("```json").strip("```"))
-                self.messages.append({
-                    "role": "tool",
-                    "tool_name": tool_call["tool_name"],
-                    "tool_args": tool_call["tool_args"],
-                    "content": self.tools.exec(tool_call["tool_name"], tool_call["tool_args"]),
-                })
-                return self.think("思考执行结果并决定下一步行动.")
-            else:
-                return message.content
-        except Exception as e:
-            return f"思考过程出错: {e}"
-    
-    def parse_response_message(self, role, message):
-        result = {
-            "role": role,
-            "content": message.content,
-        }
-        return result
+{tool_definition}
+
+## 工具调用方法
+
+当你需要调用工具的时候,严格按照下面格式输出,我会判断返回的第一个字符是'{{'且最后一个字符是'}}'就去调用工具:
+{{
+    "message":"你想说的话"
+    "tool_name": "工具名称",
+    "tool_args": {{
+        "参数名称": "参数值"
+    }}
+}}"""
+```
+
+完整的提示词如下:
+
+```
+你是一个AI智能助手.
+
+## 运行环境
+Darwin arm64, Python 3.10.19
+
+## 可用工具列表
+### list_dir
+
+        列出指定目录下的文件和目录
+        Args:
+            path: 要列出的目录路径
+        Returns:
+            目录下的文件和目录列表
+        
+### read_file
+
+        读取指定文件的内容
+        Args:
+            path: 要读取的文件路径
+        Returns:
+            文件内容
+        
+### write_file
+
+        写入内容到指定文件
+        Args:
+            path: 要写入的文件路径
+            content: 要写入的内容
+        
+
+## 工具调用方法
+当你需要调用工具的时候,严格按照下面格式输出,我会判断返回的第一个字符是'{'且最后一个字符是'}'就去调用工具:
+{
+    "message":"你想说的话"
+    "tool_name": "工具名称",
+    "tool_args": {
+        "参数名称": "参数值"
+    }
+}
+```
+
+我们在system的角色设定里面将当前的系统运行环境、可以使用的工具通通告诉llm,然后在[消息循环](https://github.com/bluesky466/SimpleAgent/blob/feature/tool_by_prompt/simple_agent.py)里判断llm的响应是否为调用工具函数,如果是就调用工具函数将结果保存到聊天记录,再让llm执行下一步动作,这样就可以实现agent操控电脑的功能了:
+
+```python
+class SimpleAgent:
+    ...
+        
+    def run(self):
+        while True:
+            try:
+                user_input = input("请输入(Ctrl+C 退出): ")
+            except KeyboardInterrupt:
+                print("\n再见!")
+                break
+            if len(user_input) == 0:
+                continue
+            print("." * 20)
+            response = self._brain.think(user_input)
+
+            while response.content.strip().startswith("{"):
+                tool_call = json.loads(response.content.strip())
+                tool_name = tool_call["tool_name"]
+                tool_args = tool_call["tool_args"]
+                result = self._tool_manager.exec(tool_name, tool_args)
+                self._memory.add_tool_invoke_result(tool_name, tool_args, result)
+                response = self._brain.think("思考执行结果并决定下一步行动.")
+            print(response.content)
+            print("=" * 20)
 ```
 
 我在下载目录写了一个`test.py`代码:
@@ -306,34 +340,35 @@ print("hello world!")
 ```shell
 请输入(Ctrl+C 退出): 下载目录有什么
 ....................
-根据查询结果，您的下载目录（~/Downloads）下包含以下文件：
+调用工具: list_dir, 参数: {'path': '~/Downloads'}
+工具调用结果: [".DS_Store", "test.py"]
+下载目录下有以下文件和文件夹：
 
-1. **recv.txt** - 文本文件
-2. **test.py** - Python脚本文件
-3. **send.txt** - 文本文件
-4. **录屏.mov** - 视频文件（录屏文件）
+1. **.DS_Store** - macOS系统自动生成的隐藏文件
+2. **test.py** - 一个Python脚本文件
 
-如果您需要查看某个文件的具体内容，请告诉我文件名，我可以帮您读取。
+目前下载目录中就这两个文件。如果你需要查看 test.py 文件的内容，我可以帮你读取。
 ====================
-请输入(Ctrl+C 退出): test.py 脚本做了什么事情
+请输入(Ctrl+C 退出): test.py是干什么的
 ....................
-test.py 脚本非常简单，它只做了一件事：
+调用工具: read_file, 参数: {'path': '~/Downloads/test.py'}
+工具调用结果: "print(\"hello world\")\n"
+test.py 是一个非常简单的Python脚本文件，它的内容只有一行代码：
 
-**打印 "hello world!" 到控制台**
+print("hello world")
 
-具体来说，当运行这个脚本时，它会执行 print("hello world!") 语句，在终端或命令行中输出 hello world! 这段文字。
-
-这是一个最基础的Python程序，通常用于测试Python环境是否正确安装和配置。
+这个脚本的作用是：在运行时打印输出 "hello world" 到控制台。这通常是编程入门时第一个写的程序，用来测试Python
+环境是否正常工作。
 ====================
-请输入(Ctrl+C 退出): 帮我改成帮我改成打印"hello agent!"
+请输入(Ctrl+C 退出): 帮我改成打印"hello agent"
 ....................
-修改完成！我已经将 test.py 文件的内容更新为：
+调用工具: write_file, 参数: {'path': '~/Downloads/test.py', 'content': 'print("hello agent")\n'}
+工具调用结果: null
+已经成功修改了 test.py 文件！现在它的内容是：
 
-print("hello agent!")
+print("hello agent")
 
-现在当您运行这个脚本时，它会在控制台输出 "hello agent!" 而不是之前的 "hello world!"。
-
-您可以通过运行 python ~/Downloads/test.py 来验证修改是否成功。
+当你运行这个脚本时，它将会打印输出 "hello agent"。
 ====================
 ```
 
@@ -348,113 +383,76 @@ hello agent!
 
 ## 使用tools传递工具函数信息
 
-像上面那样直接将工具函数信息写到prompt里面容易出现参数缺失、格式不统一、幻觉的问题。可以看到我上面的代码就有将前后的'\`\`\`json'和'\`\`\`'去掉的代码,实际上有时候它的输出会带这个但有时候不会,有时候又会有其他的东西出现或者缺少。
+像上面那样直接将工具函数信息写到prompt里面容易出现参数缺失、格式不统一、幻觉的问题。例如我明明已经让他严格按照格式输出了,他还是会多出一些文字:
 
-其实很多llm原生支持按结构化格式解析工具信息,这里为`AgentTools`增加一个`get_definition_for_json`函数用于解析函数的文档然后打包成json格式:
+```
+请输入(Ctrl+C 退出): 下载目录有什么
+....................
 
-```python
-class AgentTools:
-    ...
-
-    def get_definition_for_json(self):
-        tools_definition = []
-        for attr_name in dir(self):
-            if attr_name.startswith("_") or attr_name in self.__EXCLUDED:
-                continue
-            attr = getattr(self, attr_name)
-            if not callable(attr):
-                continue
-            func = getattr(self.__class__, attr_name, None)
-            if func is None:
-                continue
-            doc_info = parse_docstring(func.__doc__ or "")
-            params, required_params = {}, []
-            for param in doc_info.params:
-                ann = func.__annotations__.get(param.arg_name)
-                type_name = getattr(ann, "__name__", "string") if ann else "string"
-                params[param.arg_name] = {
-                    "type": self.__TYPE_MAP.get(type_name, type_name),
-                    "description": param.description or ""
-                }
-                required_params.append(param.arg_name)
-            tools_definition.append({
-                "type": "function",
-                "function": {
-                    "name": attr_name,
-                    "description": doc_info.short_description or "",
-                    "parameters": {"type": "object", "properties": params, "required": required_params}
-                }
-            })
-        return tools_definition
+我来帮您查看下载目录的内容。
+{
+    "message": "我将帮您查看下载目录的内容",
+    "tool_name": "list_dir",
+    "tool_args": {
+        "path": "~/Downloads"
+    }
+}
 ```
 
-然后通过tools参数传给llm,接着就可以通过llm返回里面的`tool_calls`看到是否需要调用工具函数:
+其实很多llm原生支持按结构化格式输入工具信息,例如通过[tools参数](https://github.com/bluesky466/SimpleAgent/blob/feature/tool_by_tools/agent_brain.py)输入:
 
 ```python
-from zhipuai import ZhipuAI
-import os
-import json
-import platform
-
 class AgentBrain:
-    def __init__(self, tools):
-        self.model = "glm-4.7"
-        self.tools = tools
-        self.client = ZhipuAI(api_key=os.environ.get("ZAI_API_KEY"))
-        self.tools_definition = tools.get_definition_for_json()
-        self.messages = [{"role": "system", "content": self.__get_system_prompt()},]
-    
-    def __get_system_prompt(self):
-        runtime = f"{platform.system()} {platform.machine()}, Python {platform.python_version()}"
-        return f"""
-        你是一个AI智能助手.
+    def __init__(self, llm_config: dict, memory: AgentMemory, tool_manager: ToolManager):
+        self._model = llm_config["model"]
+        self._client = ZhipuAI(api_key=llm_config["api_key"])
+        self._memory = memory
+        self._tools_definition = tool_manager.get_tool_definition()
 
-        ## 运行环境
-        {runtime}
-        """
-        
     def think(self, prompt):
         try:
-            self.messages.append({"role": "user", "content": prompt})
-            
-            message = self.client.chat.completions.create(
-                model=self.model,
-                messages=self.messages,
-                tools=self.tools_definition
+            self._memory.add_user_prompt(prompt)
+            message = self._client.chat.completions.create(
+                model = self._model,
+                messages = self._memory.get_memory(),
+                tools=self._tools_definition,
             ).choices[0].message
-            self.messages.append(self.parse_response_message(message))
-            if hasattr(message, "tool_calls") and message.tool_calls:
-                for tool_call in message.tool_calls:
-                    args = tool_call.function.arguments
-                    if isinstance(args, str):
-                        args = json.loads(args)
-
-                    self.messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "name": tool_call.function.name,
-                        "content": self.tools.exec(tool_call.function.name, args),
-                    })
-                return self.think("思考执行结果并决定下一步行动.")
-            else:
-                return message.content
+            self._memory.add_agent_response(message)
+            return message
         except Exception as e:
             return f"思考过程出错: {e}"
-    
-    def parse_response_message(self, message):
-        result = {
-            "role": message.role,
-            "content": message.content,
-            "reasoning_content": message.reasoning_content,
-        }
-        if hasattr(message, "tool_calls") and message.tool_calls:
-            result["tool_calls"] = [
-                {"id":tc.id, "type":tc.type, "function":{"name":tc.function.name, "arguments":tc.function.arguments}} for tc in message.tool_calls
-            ]
-        return result
 ```
 
-这样一来就能保证工具调用响应的准确性
+然后通过tools参数传给llm,接着就可以通过llm返回里面的[tool_calls响应](https://github.com/bluesky466/SimpleAgent/blob/feature/tool_by_tools/simple_agent.py)看到是否需要调用工具函数:
+
+```python
+class SimpleAgent:
+    ...
+    def run(self):
+        while True:
+            try:
+                user_input = input("请输入(Ctrl+C 退出): ")
+            except KeyboardInterrupt:
+                print("\n再见!")
+                break
+            if len(user_input) == 0:
+                continue
+            print("." * 20)
+            response = self._brain.think(user_input)
+
+            while hasattr(response, "tool_calls") and response.tool_calls:
+                for tool_call in response.tool_calls:
+                    id = tool_call.id
+                    tool_name = tool_call.function.name
+                    args = json.loads(tool_call.function.arguments)
+                    result = self._tool_manager.exec(tool_name, args)
+                    self._memory.add_tool_invoke_result(id, tool_name, args, result)
+                response = self._brain.think("思考执行结果并决定下一步行动.")
+            print(response.content)
+            print("=" * 20)
+```
+
+`tool_calls`响应一定是json结果的数据,这样一来就能保证工具调用响应的准确性。
 
 ## 事件循环
 
