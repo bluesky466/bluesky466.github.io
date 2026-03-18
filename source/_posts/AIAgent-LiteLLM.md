@@ -18,71 +18,36 @@ tags:
 
 # LiteLLM SDK
 
-LiteLLM基本上是按照OpenAI的接口设计的,而智谱的接口也和OpenAI一致,所以改成使用LiteLLM改动其实很小:
+LiteLLM基本上是按照OpenAI的接口设计的,而智谱的接口也和OpenAI一致,所以改成[使用LiteLLM](https://github.com/bluesky466/SimpleAgent/blob/feature/litellm/agent_brain.py)改动其实很小:
 
 ```python
 from litellm import completion
-import json
-import platform
+from agent_memory import AgentMemory
+from tool.tool_manager import ToolManager
 
 class AgentBrain:
-    def __init__(self, tools):
-        self.model = "zai/glm-4.7"
-        self.tools = tools
-        self.tools_definition = tools.get_definition_for_json()
-        self.messages = [{"role": "system", "content": self.__get_system_prompt()},]
-
-    def __get_system_prompt(self):
-        runtime = f"{platform.system()} {platform.machine()}, Python {platform.python_version()}"
-        return f"""
-        你是一个AI智能助手.
-
-        ## 运行环境
-        {runtime}
-        """
+    def __init__(self, llm_config: dict, memory: AgentMemory, tool_manager: ToolManager):
+        self._model = llm_config["model"]
+        self._api_key = llm_config["api_key"]
+        self._memory = memory
+        self._tools_definition = tool_manager.get_tool_definition()
 
     def think(self, prompt):
         try:
-            self.messages.append({"role": "user", "content": prompt})
-
+            self._memory.add_user_prompt(prompt)
             message = completion(
-                model=self.model,
-                messages=self.messages,
-                tools=self.tools_definition
+                model = self._model,
+                messages = self._memory.get_memory(),
+                tools=self._tools_definition,
+                api_key=self._api_key,
             ).choices[0].message
-            self.messages.append(self.parse_response_message(message))
-            if hasattr(message, "tool_calls") and message.tool_calls:
-                for tool_call in message.tool_calls:
-                    args = tool_call.function.arguments
-                    if isinstance(args, str):
-                        args = json.loads(args)
-
-                    self.messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "name": tool_call.function.name,
-                        "content": self.tools.exec(tool_call.function.name, args),
-                    })
-                return self.think("思考执行结果并决定下一步行动.")
-            else:
-                return message.content
+            self._memory.add_agent_response(message)
+            return message
         except Exception as e:
             return f"思考过程出错: {e}"
-
-    def parse_response_message(self, message):
-        result = {
-            "role": message.role,
-            "content": message.content,
-            "reasoning_content": message.reasoning_content,
-        }
-        if hasattr(message, "tool_calls") and message.tool_calls:
-            result["tool_calls"] = [
-                {"id":tc.id, "type":tc.type, "function":{"name":tc.function.name, "arguments":tc.function.arguments}} for tc in message.tool_calls
-            ]
-        return result
 ```
 
-从[文档](https://docs.litellm.ai/docs/providers/zai)来看api key就是保存在`ZAI_API_KEY`环境变量,然后模型的选择需要加上`zai/`前缀，然后就可以使用`completion`去调用功能请求了,它的[响应格式](https://docs.litellm.ai/docs/#response-format-openai-chat-completions-format)也是按着OpenAI来的。
+从[文档](https://docs.litellm.ai/docs/providers/zai)来看模型的选择需要加上`zai/`前缀，然后就可以使用`completion`去调用功能请求了(api_key通过参数传入),它的[响应格式](https://docs.litellm.ai/docs/#response-format-openai-chat-completions-format)也是按着OpenAI来的。
 
 由于各家的api并不是完全一样的，所以`completion`调用不同llm的时候支持的参数也有所差异,根据[文档](https://docs.litellm.ai/docs/completion/input#translated-openai-params),我们可以用`get_supported_openai_params`去查询支持的参数:
 

@@ -456,7 +456,7 @@ class SimpleAgent:
 
 ## 事件循环
 
-这样一来我们就一步步实现了一个简单的ai agent，完整的demo也放到了[github](https://github.com/bluesky466/SimpleAgent)上。它的事件循环如下:
+这样一来我们就一步步实现了一个简单的ai agent，完整的demo也放到了[github](https://github.com/bluesky466/SimpleAgent/tree/feature/tool_by_tools)上。它的事件循环如下:
 
 {% plantuml %}
 state "读取用户输入" as ReadUserInput
