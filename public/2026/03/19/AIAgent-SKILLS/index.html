@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-home">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>AIAgent - SKILLS | 编程代码笔记</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="技术相关,AI Agent," />
+  
+
+  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS  在上一篇博客我们讲了mcp的原理,但就近期ai圈来看mcp的热点已经逐渐降低了,搭建更多开始关注skills. 从原理上来讲skills也是一个比较简单的东西,基本上就是人类或者llm可读的操作文档按照一定格式存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AIAgent - SKILLS">
+<meta property="og:url" content="https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/index.html">
+<meta property="og:site_name" content="编程代码笔记">
+<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS  在上一篇博客我们讲了mcp的原理,但就近期ai圈来看mcp的热点已经逐渐降低了,搭建更多开始关注skills. 从原理上来讲skills也是一个比较简单的东西,基本上就是人类或者llm可读的操作文档按照一定格式存">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-03-19T12:06:39.000Z">
+<meta property="article:modified_time" content="2026-03-19T12:08:54.928Z">
+<meta property="article:author" content="林嘉伟">
+<meta property="article:tag" content="AI Agent">
+<meta property="article:tag" content="技术相关">
+<meta name="twitter:card" content="summary">
+
+  
+    <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=32204ee7" rel="stylesheet">
+
+
+  
+    
+<link rel="stylesheet" href="/css/personal-style.css">
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+<meta name="generator" content="Hexo 8.1.1"></head>
+
+<body>
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/archives/"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/atom.xml"
+            target="_self"
+            >
+            RSS
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-AIAgent-SKILLS" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">AIAgent - SKILLS</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2026.03.19</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>林嘉伟</span>
+        </span>
+      
+
+      
+
+
+      
+
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>系列文章:</p>
+<ol>
+<li><a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">AIAgent - 简易框架搭建</a></li>
+<li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">AIAgent - 流式输出与视觉支持</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/">AIAgent - MCP</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/">AIAgent - SKILLS</a></li>
+</ol>
+<p>在上一篇博客我们讲了mcp的原理,但就近期ai圈来看mcp的热点已经逐渐降低了,搭建更多开始关注<a href="https://agentskills.io/what-are-skills">skills</a>.</p>
+<p>从原理上来讲skills也是一个比较简单的东西,基本上就是人类或者llm可读的操作文档按照一定格式存放:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">my-skill/</span><br><span class="line">├── SKILL.md          # 必要: 具体的操作文档 + 元数据</span><br><span class="line">├── scripts/          # 可选: 脚本</span><br><span class="line">├── references/       # 可选: 二级文档</span><br><span class="line">└── assets/           # 可选: 各种资源</span><br></pre></td></tr></table></figure>
+
+<p>例如我demo里面的<a href="https://github.com/bluesky466/SimpleAgent/tree/main/skills/clean-up-computer">clean-up-computer</a>这个skill。其中对格式要求最强的就是这个SKILL.md了,它要求文档的开头以YAML的格式定义文档的元数据。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">name: 清理电脑垃圾</span><br><span class="line">description: 删除电脑上无用的文件</span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">各个目录的文件删除规则如下</span><br><span class="line"></span><br><span class="line">- ~/Downloads : references/下载目录清理规则.md</span><br><span class="line">- ~/Documents :  使用scripts/clean_documents.py去清理,该脚本需要你传入需要清理的绝对路径</span><br><span class="line">- ~/Movies : 所有非视频类的文件都可以删除</span><br></pre></td></tr></table></figure>
+
+<p>例如上面这个skill,它的名字就是<code>清理电脑垃圾</code>,概要描述就是<code>删除电脑上无用的文件</code>。</p>
+<p>agent在初始化的时候会扫描skills目录下的SKILL.md,<a href="https://github.com/bluesky466/SimpleAgent/blob/main/skill_loader.py">加载</a>他们的元数据作为系统提示词。也就是说每次传给llm的只是元数据的内容,这样消耗的token就会很少:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SkillLoader</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_load_skills</span>(<span class="params">self</span>):</span><br><span class="line">        skills = []</span><br><span class="line">        <span class="keyword">for</span> file <span class="keyword">in</span> os.listdir(<span class="variable language_">self</span>._skill_dir):</span><br><span class="line">            skill_path = os.path.join(<span class="variable language_">self</span>._skill_dir, file, <span class="string">&quot;SKILL.md&quot;</span>)</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(skill_path):</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="keyword">with</span> <span class="built_in">open</span>(skill_path, <span class="string">&quot;r&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">                content = f.read()</span><br><span class="line">                metadata = <span class="variable language_">self</span>._get_skill_metadata(content)</span><br><span class="line">                metadata[<span class="string">&quot;location&quot;</span>] = skill_path</span><br><span class="line">                skills.append(metadata)</span><br><span class="line">        <span class="keyword">return</span> skills</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_get_skill_metadata</span>(<span class="params">self, content: <span class="built_in">str</span></span>) -&gt; <span class="built_in">dict</span> | <span class="literal">None</span>:</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> content.startswith(<span class="string">&quot;---&quot;</span>):</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line">        <span class="keyword">match</span> = re.<span class="keyword">match</span>(<span class="string">r&quot;^---\n(.*?)\n---&quot;</span>, content, re.DOTALL)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> <span class="keyword">match</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line">        metadata = &#123;&#125;</span><br><span class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> <span class="keyword">match</span>.group(<span class="number">1</span>).split(<span class="string">&quot;\n&quot;</span>):</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&quot;:&quot;</span> <span class="keyword">in</span> line:</span><br><span class="line">                key, value = line.split(<span class="string">&quot;:&quot;</span>, <span class="number">1</span>)</span><br><span class="line">                metadata[key.strip()] = value.strip().strip(<span class="string">&#x27;&quot;\&#x27;&#x27;</span>)</span><br><span class="line">        <span class="keyword">return</span> metadata</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>然后我们在系统提示词里将skills列出来给ai,并且要求它在需要的时候再向用户请求加载完整的内容:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SkillLoader</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">get_skills_prompt</span>(<span class="params">self</span>):</span><br><span class="line">        prompt = <span class="string">&quot;下面是你的SKILLS列表,在需要的时候向用户请求加载skill权限通过后读取对应SKILL的完整描述并执行. \n&quot;</span></span><br><span class="line">        prompt += <span class="string">&quot;&lt;skills&gt;\n&quot;</span></span><br><span class="line">        <span class="keyword">for</span> skill <span class="keyword">in</span> <span class="variable language_">self</span>._load_skills():</span><br><span class="line">            prompt += <span class="string">f&quot;    &lt;skill&gt;\n&quot;</span></span><br><span class="line">            prompt += <span class="string">f&quot;        &lt;name&gt;<span class="subst">&#123;skill[<span class="string">&#x27;name&#x27;</span>]&#125;</span>&lt;/name&gt;\n&quot;</span></span><br><span class="line">            prompt += <span class="string">f&quot;        &lt;description&gt;<span class="subst">&#123;skill[<span class="string">&#x27;description&#x27;</span>]&#125;</span>&lt;/description&gt;\n&quot;</span></span><br><span class="line">            prompt += <span class="string">f&quot;        &lt;location&gt;<span class="subst">&#123;skill[<span class="string">&#x27;location&#x27;</span>]&#125;</span>&lt;/location&gt;\n&quot;</span></span><br><span class="line">            prompt += <span class="string">f&quot;    &lt;/skill&gt;\n&quot;</span></span><br><span class="line">        prompt += <span class="string">&quot;&lt;/skills&gt;\n&quot;</span></span><br><span class="line">        <span class="keyword">return</span> prompt</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">AgentMemory</span>:</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_get_system_prompt</span>(<span class="params">self, skills_prompt: <span class="built_in">str</span></span>):</span><br><span class="line">        runtime = <span class="string">f&quot;<span class="subst">&#123;platform.system()&#125;</span> <span class="subst">&#123;platform.machine()&#125;</span>, Python <span class="subst">&#123;platform.python_version()&#125;</span>&quot;</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">f&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">你是一个AI智能助手.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">## 运行环境</span></span><br><span class="line"><span class="string"><span class="subst">&#123;runtime&#125;</span></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">## SKILLS</span></span><br><span class="line"><span class="string"><span class="subst">&#123;skills_prompt&#125;</span></span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>完整的系统提示词打印出来是这样的:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">你是一个AI智能助手.</span><br><span class="line"></span><br><span class="line">## 运行环境</span><br><span class="line">Darwin arm64, Python 3.12.12</span><br><span class="line"></span><br><span class="line">## SKILLS</span><br><span class="line">下面是你的SKILLS列表,在需要的时候向用户请求加载skill权限通过后读取对应SKILL的完整描述并执行.</span><br><span class="line">&lt;skills&gt;</span><br><span class="line">    &lt;skill&gt;</span><br><span class="line">        &lt;name&gt;清理电脑垃圾&lt;/name&gt;</span><br><span class="line">        &lt;description&gt;删除电脑上无用的文件&lt;/description&gt;</span><br><span class="line">        &lt;location&gt;/Users/linjw/workspace/py-agent/skills/clean-up-computer/SKILL.md&lt;/location&gt;</span><br><span class="line">    &lt;/skill&gt;</span><br><span class="line">&lt;/skills&gt;</span><br></pre></td></tr></table></figure>
+
+<p>llm在接收到用户<code>清理电脑</code>的指令的时候就可以从skills列表里面找到<code>清理电脑垃圾</code>这个skill并且知道它的路径是<code>/Users/linjw/workspace/py-agent/skills/clean-up-computer/SKILL.md</code>,然后他就会通过我们新增加的<a href="https://github.com/bluesky466/SimpleAgent/blob/main/tool/local_tool.py">request_load_skill_permission</a>这个工具去请求权限:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">LocalToolProvider</span>(<span class="title class_ inherited__">ToolProvider</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, skill_loader: SkillLoader</span>):</span><br><span class="line">        <span class="variable language_">self</span>._skill_loader = skill_loader</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">read_file</span>(<span class="params">self, path: <span class="built_in">str</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        读取指定文件的内容</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            path: 要读取的文件路径</span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            文件内容</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">with</span> <span class="built_in">open</span>(os.path.expanduser(path), <span class="string">&quot;r&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">            <span class="keyword">return</span> f.read()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">request_load_skill_permission</span>(<span class="params">self, skill_name: <span class="built_in">str</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        请求加载skill的权限</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            skill_name: 需要加载的skill的名字</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>._skill_loader.request_load_skill_permission(skill_name)</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SkillLoader</span>:</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">request_load_skill_permission</span>(<span class="params">self, skill_name: <span class="built_in">str</span></span>):</span><br><span class="line">        user_input = <span class="built_in">input</span>(<span class="string">f&quot;是否运行加载skill <span class="subst">&#123;skill_name&#125;</span> (Y/N): &quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> user_input.upper() == <span class="string">&quot;Y&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>一旦用户输入y或者Y,它就会用我们之前定义的<code>read_file</code>工具去读取完整的<a href="https://github.com/bluesky466/SimpleAgent/blob/main/skills/clean-up-computer/SKILL.md">SKILL.md</a>:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">name: 清理电脑垃圾</span><br><span class="line">description: 删除电脑上无用的文件</span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">各个目录的文件删除规则如下</span><br><span class="line"></span><br><span class="line">- ~/Downloads : references/下载目录清理规则.md</span><br><span class="line">- ~/Documents :  使用scripts/clean_documents.py去清理,该脚本需要你传入需要清理的绝对路径</span><br><span class="line">- ~/Movies : 所有非视频类的文件都可以删除</span><br></pre></td></tr></table></figure>
+
+<p>agent就会根据定义的规则先使用<code>read_file</code>工具读取<a href="https://github.com/bluesky466/SimpleAgent/blob/main/skills/clean-up-computer/references/%E4%B8%8B%E8%BD%BD%E7%9B%AE%E5%BD%95%E6%B8%85%E7%90%86%E8%A7%84%E5%88%99.md">下载目录清理规则.md</a>的内容:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">下载目录的所有文件都可以删除</span><br></pre></td></tr></table></figure>
+
+<p>然后再使用<code>list_dir</code>工具列出<code>~/Downloads</code>目录的所有文件,然后一个个调用<code>remove_file</code>去删除(为了安全我这里只是打印了下并没有真的删除文件):</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">LocalToolProvider</span>(<span class="title class_ inherited__">ToolProvider</span>):</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">list_dir</span>(<span class="params">self, path: <span class="built_in">str</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        列出指定目录下的文件和目录</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            path: 要列出的目录路径</span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            目录下的文件和目录列表</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        expanded_path = os.path.expanduser(path)</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">return</span> os.listdir(expanded_path)</span><br><span class="line">        <span class="keyword">except</span> FileNotFoundError <span class="keyword">as</span> e:</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">str</span>(e)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">remove_file</span>(<span class="params">self, path: <span class="built_in">str</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        删除指定了解的文件</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            path: 要删除的文件路径</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;模拟删除文件: <span class="subst">&#123;path&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>然后再去调用我们新增的<code>exec_skill_py_script</code>工具执行scripts/clean_documents.py去清理<code>~/Documents</code>目录:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">exec_skill_py_script</span>(<span class="params">self, script_path: <span class="built_in">str</span>, arguments: <span class="built_in">list</span>[<span class="built_in">str</span>]</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    执行指定路径的Python脚本</span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        script_path: 要执行的脚本路径</span></span><br><span class="line"><span class="string">        arguments: 要执行的脚本参数列表,类型为list[str]</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="variable language_">self</span>._skill_loader.exec_skill_py_script(script_path, arguments)</span><br></pre></td></tr></table></figure>
+
+<p>最后的<code>~/Movies</code>同样是用<code>list_dir</code>列出文件然后判断是否为视频文件决定是否删除</p>
+<p>完整的运行视频如下:</p>
+<p><video src="https://blog.islinjw.cn/AIAgent-SKILLS/video.mp4" controls width="600" style="display: block; margin: 0 auto;"></video></p>
+
+    
+  </div>
+</article>
+
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/archives/"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/atom.xml"
+              target="_self"
+              >
+              RSS
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+
+    
+
+
+
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235687', function() {
+      // load success
+    });
+  }
+</script>
+
+  <footer style="flex: 0 0 auto;text-align: center;">
+<a style="font-size:12px; color:#6C6C6C" target="_blank">© 2021  林嘉伟 ❤ <a style="font-size:12px; color:#6C6C6C" target="_blank" href="http://beian.miit.gov.cn/" rel="nofollow">粤ICP备2021021473号</a></footer>
+</body>
+</html>

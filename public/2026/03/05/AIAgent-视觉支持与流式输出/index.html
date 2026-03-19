@@ -15,16 +15,16 @@
     <meta name="keywords" content="技术相关,AI Agent," />
   
 
-  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP  流式输出目前我们的agent每次对话的耗时可能会比较久，一方面是我们需要等到完整的响应到来之后才一次性打印，另一方也是因为很多模型在深度思考的过程中也会占用时间。LiteLLM也是支持流式输出的,然后深度思考的数据放在reasoning_cont">
+  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS  流式输出目前我们的agent每次对话的耗时可能会比较久，一方面是我们需要等到完整的响应到来之后才一次性打印，另一方也是因为很多模型在深度思考的过程中也会占用时间。LiteLLM也是支持流式输出的,然后深度思考的数">
 <meta property="og:type" content="article">
 <meta property="og:title" content="AIAgent - 流式输出与视觉支持">
 <meta property="og:url" content="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/index.html">
 <meta property="og:site_name" content="编程代码笔记">
-<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP  流式输出目前我们的agent每次对话的耗时可能会比较久，一方面是我们需要等到完整的响应到来之后才一次性打印，另一方也是因为很多模型在深度思考的过程中也会占用时间。LiteLLM也是支持流式输出的,然后深度思考的数据放在reasoning_cont">
+<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS  流式输出目前我们的agent每次对话的耗时可能会比较久，一方面是我们需要等到完整的响应到来之后才一次性打印，另一方也是因为很多模型在深度思考的过程中也会占用时间。LiteLLM也是支持流式输出的,然后深度思考的数">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.islinjw.cn/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/img.png">
 <meta property="article:published_time" content="2026-03-05T13:26:29.000Z">
-<meta property="article:modified_time" content="2026-03-18T10:11:42.462Z">
+<meta property="article:modified_time" content="2026-03-19T12:09:18.828Z">
 <meta property="article:author" content="林嘉伟">
 <meta property="article:tag" content="AI Agent">
 <meta property="article:tag" content="技术相关">
@@ -188,6 +188,7 @@
 <li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
 <li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">AIAgent - 流式输出与视觉支持</a></li>
 <li><a href="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/">AIAgent - MCP</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/">AIAgent - SKILLS</a></li>
 </ol>
 <h1 id="流式输出"><a href="#流式输出" class="headerlink" title="流式输出"></a>流式输出</h1><p>目前我们的agent每次对话的耗时可能会比较久，一方面是我们需要等到完整的响应到来之后才一次性打印，另一方也是因为很多模型在深度思考的过程中也会占用时间。LiteLLM也是支持<a href="https://docs.litellm.ai/docs/completion/stream">流式输出</a>的,然后<a href="https://docs.litellm.ai/docs/reasoning_content">深度思考</a>的数据放在<code>reasoning_content</code>里面。</p>
 <p>所以我们只需要对我们的agent做简单的<a href="https://github.com/bluesky466/SimpleAgent/blob/feature/stream/agent_brain.py">改造</a>即可:</p>
