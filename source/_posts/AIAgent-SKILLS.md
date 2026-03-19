@@ -13,7 +13,7 @@ tags:
 1. [AIAgent - MCP](https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/)
 1. [AIAgent - SKILLS](https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/)
 
-在上一篇博客我们讲了mcp的原理,但就近期ai圈来看mcp的热点已经逐渐降低了,搭建更多开始关注[skills](https://agentskills.io/what-are-skills).
+在上一篇博客我们讲了mcp的原理,但就近期ai圈来看mcp的热点已经逐渐降低了,大家更多开始关注[skills](https://agentskills.io/what-are-skills).
 
 从原理上来讲skills也是一个比较简单的东西,基本上就是人类或者llm可读的操作文档按照一定格式存放:
 
