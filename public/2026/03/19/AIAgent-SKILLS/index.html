@@ -23,7 +23,7 @@
 <meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS  在上一篇博客我们讲了mcp的原理,但就近期ai圈来看mcp的热点已经逐渐降低了,大家更多开始关注skills. 从原理上来讲skills也是一个比较简单的东西,基本上就是人类或者llm可读的操作文档按照一定格式存">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-03-19T12:06:39.000Z">
-<meta property="article:modified_time" content="2026-03-19T12:11:12.664Z">
+<meta property="article:modified_time" content="2026-03-19T14:48:42.625Z">
 <meta property="article:author" content="林嘉伟">
 <meta property="article:tag" content="AI Agent">
 <meta property="article:tag" content="技术相关">
@@ -215,8 +215,9 @@
 <p>然后再去调用我们新增的<code>exec_skill_py_script</code>工具执行scripts/clean_documents.py去清理<code>~/Documents</code>目录:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">exec_skill_py_script</span>(<span class="params">self, script_path: <span class="built_in">str</span>, arguments: <span class="built_in">list</span>[<span class="built_in">str</span>]</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    执行指定路径的Python脚本</span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        script_path: 要执行的脚本路径</span></span><br><span class="line"><span class="string">        arguments: 要执行的脚本参数列表,类型为list[str]</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="variable language_">self</span>._skill_loader.exec_skill_py_script(script_path, arguments)</span><br></pre></td></tr></table></figure>
 
-<p>最后的<code>~/Movies</code>同样是用<code>list_dir</code>列出文件然后判断是否为视频文件决定是否删除</p>
-<p>完整的运行视频如下:</p>
+<p>我们在SKILL.md里面说明了这个<code>clean_documents.py</code>的使用方式,但实际上即使我们不说,足够聪明的模型也会自己调用<code>read_file</code>工具去读取脚本内容然后自己分析出应该如何调用。</p>
+<p>最后的<code>~/Movies</code>同样是用<code>list_dir</code>列出文件然后再由llm去判断是否为视频文件再决定是否删除</p>
+<p>整个demo完整的运行视频如下:</p>
 <p><video src="https://blog.islinjw.cn/AIAgent-SKILLS/video.mp4" controls width="600" style="display: block; margin: 0 auto;"></video></p>
 
     

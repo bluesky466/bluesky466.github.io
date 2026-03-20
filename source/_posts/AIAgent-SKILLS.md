@@ -222,9 +222,10 @@ def exec_skill_py_script(self, script_path: str, arguments: list[str]):
     return self._skill_loader.exec_skill_py_script(script_path, arguments)
 ```
 
-最后的`~/Movies`同样是用`list_dir`列出文件然后判断是否为视频文件决定是否删除
+我们在SKILL.md里面说明了这个`clean_documents.py`的使用方式,但实际上即使我们不说,足够聪明的模型也会自己调用`read_file`工具去读取脚本内容然后自己分析出应该如何调用。
 
+最后的`~/Movies`同样是用`list_dir`列出文件然后再由llm去判断是否为视频文件再决定是否删除
 
-完整的运行视频如下:
+整个demo完整的运行视频如下:
 
 <video src="https://blog.islinjw.cn/AIAgent-SKILLS/video.mp4" controls width="600" style="display: block; margin: 0 auto;"></video>
