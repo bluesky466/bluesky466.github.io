@@ -1,9 +1,18 @@
-title: RAG - 基础
+title: AIAgent - RAG基础
 date: 2026-03-27 19:52:57
 tags:
     - 技术相关
-    - RAG
+    - AI Agent
 ---
+
+系列文章:
+
+1. [AIAgent - 简易框架搭建](https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)
+1. [AIAgent - LiteLLM](https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/)
+1. [AIAgent - 流式输出与视觉支持](https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/)
+1. [AIAgent - MCP](https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/)
+1. [AIAgent - SKILLS](https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/)
+1. [AIAgent - RAG基础](https://blog.islinjw.cn/2026/03/27/AIAgent-RAG%E5%9F%BA%E7%A1%80/)
 
 LLM是基于某个时间点之前的数据集训练出来的,这就意味着它无法知道在这个时间点之后的事情,也无法知道这个训练集(例如企业的内部文档)之外的事情。
 
@@ -30,7 +39,7 @@ LLM <- 用户 : 询问问题
 LLM -> 用户 : 结合文档分块和问题回复
 {% endplantuml %}
 
-我这边截取了部分[阿里巴巴java开发手册](https://developer.aliyun.com/article/1589859)的[内容](),我们将以它为例子介绍下如何使用python实现整个rag的流程
+我这边截取了部分[阿里巴巴java开发手册](https://developer.aliyun.com/article/1589859)的[内容](https://github.com/bluesky466/SimpleAgent/blob/feature/rag/mcps/rag_demo/coding-standards.md),我们将以它为例子介绍下如何使用python实现整个rag的流程
 
 # 离线阶段
 
@@ -108,11 +117,11 @@ embeddings = {chunk: embed_chunk(chunk) for chunk in chunks}
 
 模型选择可以参考huggingface的[MTEB(Massive Text Embedding Benchmark)排行榜](https://huggingface.co/spaces/mteb/leaderboard):
 
-{% img /RAG-基础/leaderboard.png %}
+{% img /AIAgent-RAG基础/leaderboard.png %}
 
 或者我们可以切到`Performance per Model Size`气泡图去更直观的对比每个模型的性能、成本、文本长度等维度
 
-{% img /RAG-基础/leaderboard2.png %}
+{% img /AIAgent-RAG基础/leaderboard2.png %}
 
 - 横轴 : 模型参数量 (Number of Parameters),就是llm里面常说的多少多少B,参数量越大一般能力越强但对内存显存等硬件性能的要求越高
 - 纵轴 : 得分(Mean Task),使用一些列的测试集去测试模型得出一个分数,分数越高代表这个模型的语义理解能力越强
@@ -197,8 +206,131 @@ reranked_chunks = rerank(query, retrieved_chunks, 3)
 
 召回是广撒网,重排就是对召回的数据精加工。而重排部分也会有专门的rerank模型去做。可以在[排行榜](https://huggingface.co/spaces/mteb/leaderboard)这里筛选rerank模型去选择:
 
-{% img /RAG-基础/leaderboard3.png %}
+{% img /AIAgent-RAG基础/leaderboard3.png %}
 
 ### 生成
 
-这个时候就可以在重排结果里面选择相关性最高的3个或者5个与用户问题一起发给llm做最终结果的生成了。完整的demo可以在[github](https://github.com/bluesky466/RAG-DEMO)上查看
+这个时候就可以在重排结果里面选择相关性最高的3个或者5个与用户问题一起发给llm做最终结果的生成了。我们可以为这个RAG搭一个简单的[mcp server](https://github.com/bluesky466/SimpleAgent/blob/feature/rag/mcps/rag_demo/coding_standards_rag_server.py)导入我们的AiAgent里面:
+
+```json
+{
+	"llm": {
+		...
+	},
+	"mcp": {
+		...
+		"coding-standards-rag-server" : {
+			"command": "python3",
+			"args": [
+				"./mcps/rag_demo/coding_standards_rag_server.py"
+			]
+		},
+		...
+	}
+}
+```
+
+然后就可以和它对话去使用rag查询编码规范了:
+
+```
+请输入(Ctrl+C 退出): java的枚举类和c语言的枚举有什么差别     
+....................
+...省略这部分内容...
+====================
+请输入(Ctrl+C 退出): 根据我们的编码规范，它的命名有什么要求
+....................
+...思考中...
+用户问的是关于枚举类命名的编码规范要求。我需要使用RAG检索编码规范的相关内容来回答这个问题。我应该搜索关于枚举命名的内容。我来
+帮您查找编码规范中关于枚举命名的要求。
+调用工具: MCP$coding-standards-rag-server$get_result, 参数: {'query': '枚举命名 enum 命名规范'}
+工具调用结果: ["{\"type\":\"text\",\"text\":\"[\\\"\\\\u3010\\\\u53c2\\\\u8003\\\\u3011\\\\u679a\\\\u4e3e\\\\u7c7b\\\\u540d\\
+\\u5efa\\\\u8bae\\\\u5e26\\\\u4e0a Enum \\\\u540e\\\\u7f00\\\\uff0c\\\\u679a\\\\u4e3e\\\\u6210\\\\u5458\\\\u540d\\\\u79f0\\\\
+u9700\\\\u8981\\\\u5168\\\\u5927\\\\u5199\\\\uff0c\\\\u5355\\\\u8bcd\\\\u95f4\\\\u7528\\\\u4e0b\\\\u5212\\\\u7ebf\\\\u9694\\\
+\u5f00\\\\u3002\\\\n\\\\u8bf4\\\\u660e\\\\uff1a\\\\u679a\\\\u4e3e\\\\u5176\\\\u5b9e\\\\u5c31\\\\u662f\\\\u7279\\\\u6b8a\\\\u7
+684\\\\u5e38\\\\u91cf\\\\u7c7b\\\\uff0c\\\\u4e14\\\\u6784\\\\u9020\\\\u65b9\\\\u6cd5\\\\u88ab\\\\u9ed8\\\\u8ba4\\\\u5f3a\\\\u
+5236\\\\u662f\\\\u79c1\\\\u6709\\\\u3002\\\\n\\\\u6b63\\\\u4f8b\\\\uff1a\\\\u679a\\\\u4e3e\\\\u540d\\\\u5b57\\\\u4e3a Process
+StatusEnum \\\\u7684\\\\u6210\\\\u5458\\\\u540d\\\\u79f0\\\\uff1aSUCCESS / UNKOWN_REASON\\\\u3002\\\", \\\"\\\\u3010\\\\u53c2
+\\\\u8003\\\\u3011\\\\u5404\\\\u5c42\\\\u547d\\\\u540d\\\\u89c4\\\\u7ea6\\\\uff1a\\\\nA) Service/DAO \\\\u5c42\\\\u65b9\\\\u6
+cd5\\\\u547d\\\\u540d\\\\u89c4\\\\u7ea6\\\\n1\\\\uff09 \\\\u83b7\\\\u53d6\\\\u5355\\\\u4e2a\\\\u5bf9\\\\u8c61\\\\u7684\\\\u65
+b9\\\\u6cd5\\\\u7528 get \\\\u505a\\\\u524d\\\\u7f00\\\\u3002\\\\n2\\\\uff09 \\\\u83b7\\\\u53d6\\\\u591a\\\\u4e2a\\\\u5bf9\\\
+\u8c61\\\\u7684\\\\u65b9\\\\u6cd5\\\\u7528 list \\\\u505a\\\\u524d\\\\u7f00\\\\u3002\\\\n3\\\\uff09 \\\\u83b7\\\\u53d6\\\\u7e
+df\\\\u8ba1\\\\u503c\\\\u7684\\\\u65b9\\\\u6cd5\\\\u7528 count \\\\u505a\\\\u524d\\\\u7f00\\\\u3002\\\\n4\\\\uff09 \\\\u63d2\
+\\\u5165\\\\u7684\\\\u65b9\\\\u6cd5\\\\u7528 save/insert \\\\u505a\\\\u524d\\\\u7f00\\\\u3002\\\\n5\\\\uff09 \\\\u5220\\\\u96
+64\\\\u7684\\\\u65b9\\\\u6cd5\\\\u7528 remove/delete \\\\u505a\\\\u524d\\\\u7f00\\\\u3002\\\\n6\\\\uff09 \\\\u4fee\\\\u6539\\
+\\u7684\\\\u65b9\\\\u6cd5\\\\u7528 update \\\\u505a\\\\u524d\\\\u7f00\\\\u3002\\\\nB) \\\\u9886\\\\u57df\\\\u6a21\\\\u578b\\\
+\u547d\\\\u540d\\\\u89c4\\\\u7ea6\\\\n1\\\\uff09 \\\\u6570\\\\u636e\\\\u5bf9\\\\u8c61\\\\uff1axxxDO\\\\uff0cxxx \\\\u5373\\\\
+u4e3a\\\\u6570\\\\u636e\\\\u8868\\\\u540d\\\\u3002\\\\n2\\\\uff09 \\\\u6570\\\\u636e\\\\u4f20\\\\u8f93\\\\u5bf9\\\\u8c61\\\\u
+ff1axxxDTO\\\\uff0cxxx \\\\u4e3a\\\\u4e1a\\\\u52a1\\\\u9886\\\\u57df\\\\u76f8\\\\u5173\\\\u7684\\\\u540d\\\\u79f0\\\\u3002\\\
+\n3\\\\uff09 \\\\u5c55\\\\u793a\\\\u5bf9\\\\u8c61\\\\uff1axxxVO\\\\uff0cxxx \\\\u4e00\\\\u822c\\\\u4e3a\\\\u7f51\\\\u9875\\\\
+u540d\\\\u79f0\\\\u3002\\\\n4\\\\uff09 POJO \\\\u662f DO/DTO/BO/VO \\\\u7684\\\\u7edf\\\\u79f0\\\\uff0c\\\\u7981\\\\u6b62\\\\
+u547d\\\\u540d\\\\u6210 xxxPOJO\\\\u3002\\\\n1.2 \\\\u5e38\\\\u91cf\\\\u5b9a\\\\u4e49\\\", \\\"\\\\u3010\\\\u63a8\\\\u8350\\\
+\u3011\\\\u5982\\\\u679c\\\\u53d8\\\\u91cf\\\\u503c\\\\u4ec5\\\\u5728\\\\u4e00\\\\u4e2a\\\\u8303\\\\u56f4\\\\u5185\\\\u53d8\\
+\\u5316\\\\uff0c\\\\u4e14\\\\u5e26\\\\u6709\\\\u540d\\\\u79f0\\\\u4e4b\\\\u5916\\\\u7684\\\\u5ef6\\\\u4f38\\\\u5c5e\\\\u6027\
+\\\uff0c\\\\u5b9a\\\\u4e49\\\\u4e3a\\\\u679a\\\\u4e3e\\\\u7c7b\\\\u3002\\\\u4e0b\\\\u9762\\\\n\\\\u6b63\\\\u4f8b\\\\u4e2d\\\\
+u7684\\\\u6570\\\\u5b57\\\\u5c31\\\\u662f\\\\u5ef6\\\\u4f38\\\\u4fe1\\\\u606f\\\\uff0c\\\\u8868\\\\u793a\\\\u661f\\\\u671f\\\
+\u51e0\\\\u3002\\\\n\\\\u6b63\\\\u4f8b\\\\uff1apublic Enum { MONDAY(1), TUESDAY(2), WEDNESDAY(3), THURSDAY(4), FRIDAY(5), SAT
+URDAY(6),\\\\nSUNDAY(7);}\\\\n1.3 \\\\u4ee3\\\\u7801\\\\u683c\\\\u5f0f\\\"]\",\"annotations\":null,\"meta\":null}"]
+根据编码规范的查询结果，我找到了关于枚举命名的要求。让我整理一下关键信息：
+1. 枚举类名建议带上 Enum 后缀
+2. 枚举成员名称需要全大写，单词间用下划线隔开
+
+从查询结果来看，这是完整的枚举命名规范要求，我可以直接向用户提供这些信息。根据我们的编码规范，枚举类的命名有明确要求：
+...中间部分省略...
+...思考结束...
+根据我们的编码规范，枚举类的命名有明确要求：
+
+## 枚举命名规范
+
+### 1. 枚举类名
+- **建议**带上 `Enum` 后缀
+- 示例：`ProcessStatusEnum`
+
+### 2. 枚举成员名称
+- 必须**全大写**
+- 单词之间用**下划线**隔开
+- 示例：`SUCCESS`、`UNKNOWN_REASON`
+
+## 3. 完整示例
+
+public enum ProcessStatusEnum {
+    SUCCESS,           // 成功
+    FAILED,            // 失败
+    UNKNOWN_REASON     // 未知原因
+}
+
+或者带有构造参数的枚举：
+
+public enum DayEnum {
+    MONDAY(1),
+    TUESDAY(2),
+    WEDNESDAY(3),
+    THURSDAY(4),
+    FRIDAY(5),
+    SATURDAY(6),
+    SUNDAY(7);
+
+    private int value;
+
+    DayEnum(int value) {
+        this.value = value;
+    }
+}
+====================
+
+## 使用建议
+规范还提到，如果变量值仅在一个范围内变化，且带有名称之外的扩展属性，应该定义为枚举类。例如上面的 `DayEnum` 中，数字就是扩展信
+息，表示星期几。
+
+这样命名可以提高代码的可读性和一致性，便于团队协作维护。
+```
+
+从上面可以看到我们问它的两个问题是
+1. java的枚举类和c语言的枚举有什么差别
+2. 根据我们的编码规范，它的命名有什么要求
+
+然后从它调用mcp的日志可以看出它自动联系上下文将请求的query改写成了`枚举命名 enum 命名规范`:
+
+```
+调用工具: MCP$coding-standards-rag-server$get_result, 参数: {'query': '枚举命名 enum 命名规范'}
+```
+
