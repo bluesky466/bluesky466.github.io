@@ -1,4 +1,4 @@
-title: AIAgent - SKILLS
+title: 动手做一个AIAgent - SKILLS
 date: 2026-03-19 20:06:39
 tags:
     - 技术相关
@@ -7,13 +7,12 @@ tags:
 
 系列文章:
 
-1. [AIAgent - 简易框架搭建](https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)
-1. [AIAgent - LiteLLM](https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/)
-1. [AIAgent - 流式输出与视觉支持](https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/)
-1. [AIAgent - MCP](https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/)
-1. [AIAgent - SKILLS](https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/)
-1. [AIAgent - RAG基础](https://blog.islinjw.cn/2026/03/27/AIAgent-RAG%E5%9F%BA%E7%A1%80/)
-
+1. [动手做一个AIAgent - 简易框架搭建](https://blog.islinjw.cn/2026/02/25/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)
+1. [动手做一个AIAgent - LiteLLM](https://blog.islinjw.cn/2026/02/26/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-LiteLLM/)
+1. [动手做一个AIAgent - 流式输出与视觉支持](https://blog.islinjw.cn/2026/03/05/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/)
+1. [动手做一个AIAgent - MCP](https://blog.islinjw.cn/2026/03/16/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-MCP/)
+1. [动手做一个AIAgent - SKILLS](https://blog.islinjw.cn/2026/03/19/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-SKILLS/)
+1. [动手做一个AIAgent - RAG基础](https://blog.islinjw.cn/2026/03/27/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-RAG%E5%9F%BA%E7%A1%80/)
 在上一篇博客我们讲了mcp的原理,但就近期ai圈来看mcp的热点已经逐渐降低了,大家更多开始关注[skills](https://agentskills.io/what-are-skills).
 
 从原理上来讲skills也是一个比较简单的东西,基本上就是人类或者llm可读的操作文档按照一定格式存放:

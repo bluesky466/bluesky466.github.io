@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>AIAgent - MCP | 编程代码笔记</title>
+  <title>动手做一个AIAgent - MCP | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -15,22 +15,22 @@
     <meta name="keywords" content="技术相关,AI Agent," />
   
 
-  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS AIAgent - RAG基础  在之前的文章里我们已经知道agent里llm是如何去调用tool的,但我们之前的tool是直接写在python代码里面的。 如何支持用户接入第三方的工具给llm调用呢?这就要用到m">
+  <meta name="description" content="系列文章:  动手做一个AIAgent - 简易框架搭建 动手做一个AIAgent - LiteLLM 动手做一个AIAgent - 流式输出与视觉支持 动手做一个AIAgent - MCP 动手做一个AIAgent - SKILLS 动手做一个AIAgent - RAG基础  在之前的文章里我们已经知道agent里llm是如何去调用tool的,但我们之前的tool是直接写在python代码里面的">
 <meta property="og:type" content="article">
-<meta property="og:title" content="AIAgent - MCP">
-<meta property="og:url" content="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/index.html">
+<meta property="og:title" content="动手做一个AIAgent - MCP">
+<meta property="og:url" content="https://blog.islinjw.cn/2026/03/16/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-MCP/index.html">
 <meta property="og:site_name" content="编程代码笔记">
-<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS AIAgent - RAG基础  在之前的文章里我们已经知道agent里llm是如何去调用tool的,但我们之前的tool是直接写在python代码里面的。 如何支持用户接入第三方的工具给llm调用呢?这就要用到m">
+<meta property="og:description" content="系列文章:  动手做一个AIAgent - 简易框架搭建 动手做一个AIAgent - LiteLLM 动手做一个AIAgent - 流式输出与视觉支持 动手做一个AIAgent - MCP 动手做一个AIAgent - SKILLS 动手做一个AIAgent - RAG基础  在之前的文章里我们已经知道agent里llm是如何去调用tool的,但我们之前的tool是直接写在python代码里面的">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/lifecycle.png">
+<meta property="og:image" content="https://blog.islinjw.cn/2026/03/16/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-MCP/lifecycle.png">
 <meta property="og:image" content="https://blog.islinjw.cn/AIAgent-MCP/lifecycle.png">
 <meta property="article:published_time" content="2026-03-16T12:08:14.000Z">
-<meta property="article:modified_time" content="2026-03-27T15:02:59.397Z">
+<meta property="article:modified_time" content="2026-03-29T12:06:44.957Z">
 <meta property="article:author" content="林嘉伟">
 <meta property="article:tag" content="AI Agent">
 <meta property="article:tag" content="技术相关">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/lifecycle.png">
+<meta name="twitter:image" content="https://blog.islinjw.cn/2026/03/16/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-MCP/lifecycle.png">
 
   
     <link rel="alternate" href="/atom.xml" title="编程代码笔记" type="application/atom+xml">
@@ -156,9 +156,9 @@
 
 
 <div class="content content-post CENTER">
-   <article id="post-AIAgent-MCP" class="article article-type-post" itemprop="blogPost">
+   <article id="post-动手做一个AIAgent-MCP" class="article article-type-post" itemprop="blogPost">
   <header class="article-header">
-    <h1 class="post-title">AIAgent - MCP</h1>
+    <h1 class="post-title">动手做一个AIAgent - MCP</h1>
 
     <div class="article-meta">
       <span>
@@ -185,17 +185,17 @@
     
       <p>系列文章:</p>
 <ol>
-<li><a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">AIAgent - 简易框架搭建</a></li>
-<li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">AIAgent - 流式输出与视觉支持</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/">AIAgent - MCP</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/">AIAgent - SKILLS</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/27/AIAgent-RAG%E5%9F%BA%E7%A1%80/">AIAgent - RAG基础</a></li>
+<li><a href="https://blog.islinjw.cn/2026/02/25/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">动手做一个AIAgent - 简易框架搭建</a></li>
+<li><a href="https://blog.islinjw.cn/2026/02/26/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-LiteLLM/">动手做一个AIAgent - LiteLLM</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/05/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">动手做一个AIAgent - 流式输出与视觉支持</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/16/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-MCP/">动手做一个AIAgent - MCP</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/19/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-SKILLS/">动手做一个AIAgent - SKILLS</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/27/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-RAG%E5%9F%BA%E7%A1%80/">动手做一个AIAgent - RAG基础</a></li>
 </ol>
 <p>在之前的文章里我们已经知道agent里llm是如何去调用tool的,但我们之前的tool是直接写在python代码里面的。</p>
 <p>如何支持用户接入第三方的工具给llm调用呢?这就要用到<a href="https://modelcontextprotocol.io/docs/getting-started/intro">mcp</a>了。</p>
 <p>mcp本质上是一套基于json的发送和接收数据的协议,用于告诉llm有哪些工具可以使用和如何使用:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">package &quot;MCP Host (AI Agent)&quot; &#123;</span><br><span class="line">    rectangle &quot;MCP Client1&quot;</span><br><span class="line">    rectangle &quot;MCP Client2&quot;</span><br><span class="line">&#125;</span><br><span class="line">package &quot;远程业务如天气查询&quot; &#123;</span><br><span class="line">    rectangle &quot;MCP Server1&quot;</span><br><span class="line">    rectangle &quot;远程数据库&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">package &quot;本地业务如文件系统操作&quot; &#123;</span><br><span class="line">rectangle &quot;MCP Server2&quot;</span><br><span class="line">rectangle &quot;本地文件系统&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&quot;MCP Client1&quot; &lt;-left-&gt; &quot;MCP Server1&quot; :  &quot;      mcp协议(json)      &quot;</span><br><span class="line">&quot;MCP Client2&quot; &lt;-right-&gt; &quot;MCP Server2&quot; : &quot;      mcp协议(json)      &quot;</span><br><span class="line"></span><br><span class="line">&quot;MCP Server1&quot; &lt;--&gt; &quot;远程数据库&quot;</span><br><span class="line">&quot;MCP Server2&quot; &lt;--&gt; &quot;本地文件系统&quot;</span><br></pre></td></tr></table></figure>
+<img  src=http://www.plantuml.com/plantuml/svg/AqXCpavCJrLGydKEKF38BovHq73qL71CJyqhqLHIgEPI08AYrEIInBpq7AWgvvnCeAoX4cuv8oMkMgu2cCalzizvlgBxoOvPJxiMFbtMz7J9ocSRfZoRl_J5-aKuR0XEBIfBBSAq0MBIiwaRdlMkUxfhCiWMX3NFvgnvEcS3t9fdqzgVxDxsVFFkvxldFvlS-sJl791bM2q2EXT9768EidQmFLmeVbUmqSr9JIlHjKDri8ALWeAI0XZa9XSyxUr_iMwTHbPnVfucH5292oMKWAOKPQPde1bZ1386lobSgBRQw89Cm0WTL3CXYh3u3W00>
 
 <p>从上面的图我们可以看到mcp协议里面分为三个角色:</p>
 <ul>

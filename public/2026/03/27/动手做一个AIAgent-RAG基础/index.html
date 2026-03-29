@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>AIAgent - RAG基础 | 编程代码笔记</title>
+  <title>动手做一个AIAgent - RAG基础 | 编程代码笔记</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -15,18 +15,18 @@
     <meta name="keywords" content="技术相关,AI Agent," />
   
 
-  <meta name="description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS AIAgent - RAG基础  LLM是基于某个时间点之前的数据集训练出来的,这就意味着它无法知道在这个时间点之后的事情,也无法知道这个训练集(例如企业的内部文档)之外的事情。 你当然可以将需要告诉它的文档写到p">
+  <meta name="description" content="系列文章:  动手做一个AIAgent - 简易框架搭建 动手做一个AIAgent - LiteLLM 动手做一个AIAgent - 流式输出与视觉支持 动手做一个AIAgent - MCP 动手做一个AIAgent - SKILLS 动手做一个AIAgent - RAG基础  LLM是基于某个时间点之前的数据集训练出来的,这就意味着它无法知道在这个时间点之后的事情,也无法知道这个训练集(例如企业">
 <meta property="og:type" content="article">
-<meta property="og:title" content="AIAgent - RAG基础">
-<meta property="og:url" content="https://blog.islinjw.cn/2026/03/27/AIAgent-RAG%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:title" content="动手做一个AIAgent - RAG基础">
+<meta property="og:url" content="https://blog.islinjw.cn/2026/03/27/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-RAG%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="编程代码笔记">
-<meta property="og:description" content="系列文章:  AIAgent - 简易框架搭建 AIAgent - LiteLLM AIAgent - 流式输出与视觉支持 AIAgent - MCP AIAgent - SKILLS AIAgent - RAG基础  LLM是基于某个时间点之前的数据集训练出来的,这就意味着它无法知道在这个时间点之后的事情,也无法知道这个训练集(例如企业的内部文档)之外的事情。 你当然可以将需要告诉它的文档写到p">
+<meta property="og:description" content="系列文章:  动手做一个AIAgent - 简易框架搭建 动手做一个AIAgent - LiteLLM 动手做一个AIAgent - 流式输出与视觉支持 动手做一个AIAgent - MCP 动手做一个AIAgent - SKILLS 动手做一个AIAgent - RAG基础  LLM是基于某个时间点之前的数据集训练出来的,这就意味着它无法知道在这个时间点之后的事情,也无法知道这个训练集(例如企业">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://blog.islinjw.cn/AIAgent-RAG%E5%9F%BA%E7%A1%80/leaderboard.png">
 <meta property="og:image" content="https://blog.islinjw.cn/AIAgent-RAG%E5%9F%BA%E7%A1%80/leaderboard2.png">
 <meta property="og:image" content="https://blog.islinjw.cn/AIAgent-RAG%E5%9F%BA%E7%A1%80/leaderboard3.png">
 <meta property="article:published_time" content="2026-03-27T11:52:57.000Z">
-<meta property="article:modified_time" content="2026-03-27T15:02:41.844Z">
+<meta property="article:modified_time" content="2026-03-29T12:06:42.781Z">
 <meta property="article:author" content="林嘉伟">
 <meta property="article:tag" content="AI Agent">
 <meta property="article:tag" content="技术相关">
@@ -157,9 +157,9 @@
 
 
 <div class="content content-post CENTER">
-   <article id="post-AIAgent-RAG基础" class="article article-type-post" itemprop="blogPost">
+   <article id="post-动手做一个AIAgent-RAG基础" class="article article-type-post" itemprop="blogPost">
   <header class="article-header">
-    <h1 class="post-title">AIAgent - RAG基础</h1>
+    <h1 class="post-title">动手做一个AIAgent - RAG基础</h1>
 
     <div class="article-meta">
       <span>
@@ -186,12 +186,12 @@
     
       <p>系列文章:</p>
 <ol>
-<li><a href="https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">AIAgent - 简易框架搭建</a></li>
-<li><a href="https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/">AIAgent - LiteLLM</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">AIAgent - 流式输出与视觉支持</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/">AIAgent - MCP</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/">AIAgent - SKILLS</a></li>
-<li><a href="https://blog.islinjw.cn/2026/03/27/AIAgent-RAG%E5%9F%BA%E7%A1%80/">AIAgent - RAG基础</a></li>
+<li><a href="https://blog.islinjw.cn/2026/02/25/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/">动手做一个AIAgent - 简易框架搭建</a></li>
+<li><a href="https://blog.islinjw.cn/2026/02/26/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-LiteLLM/">动手做一个AIAgent - LiteLLM</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/05/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/">动手做一个AIAgent - 流式输出与视觉支持</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/16/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-MCP/">动手做一个AIAgent - MCP</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/19/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-SKILLS/">动手做一个AIAgent - SKILLS</a></li>
+<li><a href="https://blog.islinjw.cn/2026/03/27/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-RAG%E5%9F%BA%E7%A1%80/">动手做一个AIAgent - RAG基础</a></li>
 </ol>
 <p>LLM是基于某个时间点之前的数据集训练出来的,这就意味着它无法知道在这个时间点之后的事情,也无法知道这个训练集(例如企业的内部文档)之外的事情。</p>
 <p>你当然可以将需要告诉它的文档写到prompt里面一股脑发给他再来提问。但文档本身可能会很大,这样一方面会造成token的浪费,另一方面LLM也会由于过多的冗余信息而造成更多的幻觉。还有研究表明LLM处理长上下文的时候会出现只记得开头结尾的信息而丢失了中间部分内容的情况,也就是”Lost in the Middle”现象。</p>

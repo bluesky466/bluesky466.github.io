@@ -1,4 +1,4 @@
-title: AIAgent - LiteLLM
+title: 动手做一个AIAgent - LiteLLM
 date: 2026-02-26 23:55:38
 tags:
     - 技术相关
@@ -7,14 +7,14 @@ tags:
 
 系列文章:
 
-1. [AIAgent - 简易框架搭建](https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)
-1. [AIAgent - LiteLLM](https://blog.islinjw.cn/2026/02/26/AIAgent-LiteLLM/)
-1. [AIAgent - 流式输出与视觉支持](https://blog.islinjw.cn/2026/03/05/AIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/)
-1. [AIAgent - MCP](https://blog.islinjw.cn/2026/03/16/AIAgent-MCP/)
-1. [AIAgent - SKILLS](https://blog.islinjw.cn/2026/03/19/AIAgent-SKILLS/)
-1. [AIAgent - RAG基础](https://blog.islinjw.cn/2026/03/27/AIAgent-RAG%E5%9F%BA%E7%A1%80/)
+1. [动手做一个AIAgent - 简易框架搭建](https://blog.islinjw.cn/2026/02/25/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)
+1. [动手做一个AIAgent - LiteLLM](https://blog.islinjw.cn/2026/02/26/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-LiteLLM/)
+1. [动手做一个AIAgent - 流式输出与视觉支持](https://blog.islinjw.cn/2026/03/05/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E8%A7%86%E8%A7%89%E6%94%AF%E6%8C%81%E4%B8%8E%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA/)
+1. [动手做一个AIAgent - MCP](https://blog.islinjw.cn/2026/03/16/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-MCP/)
+1. [动手做一个AIAgent - SKILLS](https://blog.islinjw.cn/2026/03/19/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-SKILLS/)
+1. [动手做一个AIAgent - RAG基础](https://blog.islinjw.cn/2026/03/27/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-RAG%E5%9F%BA%E7%A1%80/)
 
-上篇[文章](https://blog.islinjw.cn/2026/02/25/AIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？
+上篇[文章](https://blog.islinjw.cn/2026/02/25/%E5%8A%A8%E6%89%8B%E5%81%9A%E4%B8%80%E4%B8%AAAIAgent-%E7%AE%80%E6%98%93%E6%A1%86%E6%9E%B6%E6%90%AD%E5%BB%BA/)讲了如何用智谱的api搭建一个简单的ai agent，但各家llm的api多多少少都会有一些差异，是否意味着我们要一家家对接过去呢？
 
 其实业界早就有[LiteLLM](https://docs.litellm.ai/docs/#litellm-python-sdk)这种兼容[各家api](https://docs.litellm.ai/docs/providers)的统一调用库，我们只需要对接liteLLM就能通过简单的配置切换种llm的api。
 
